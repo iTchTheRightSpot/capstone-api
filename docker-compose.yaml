@@ -1,0 +1,35 @@
+version: '3.9'
+services:
+  # MySQL server
+  mysql:
+    image: "mysql:latest"
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: sara
+      MYSQL_DATABASE: sara_brand_db
+      MYSQL_USER: sara
+      MYSQL_PASSWORD: sara
+    healthcheck:
+      test: [ "CMD-SHELL", "mysqladmin ping -h localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db-data:/var/lib/mysql
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    environment:
+      REDIS_HOST: localhost
+      REDIS_PASSWORD: sara
+#    volumes:
+#      - redis-data:/data
+
+volumes:
+  db-data: {}
+  redis-data: {}

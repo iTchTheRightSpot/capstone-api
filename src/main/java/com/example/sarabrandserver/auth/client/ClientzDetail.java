@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.client.detial;
+package com.example.sarabrandserver.auth.client;
 
 import com.example.sarabrandserver.client.entity.Clientz;
 import org.springframework.security.core.GrantedAuthority;

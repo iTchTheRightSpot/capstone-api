@@ -1,6 +1,5 @@
 package com.example.sarabrandserver.client.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -16,6 +15,7 @@ import java.util.stream.Collectors;
 
 import static jakarta.persistence.CascadeType.*;
 import static jakarta.persistence.FetchType.EAGER;
+import static jakarta.persistence.FetchType.LAZY;
 
 @Table(name = "clientz")
 @Entity
@@ -32,14 +32,14 @@ public class Clientz implements Serializable {
     @Column(name = "firstname", nullable = false)
     private String firstname;
 
-    @Column(name = "lastname")
+    @Column(name = "lastname", nullable = false)
     private String lastname;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "username", nullable = false, unique = true)
-    private String username;
+    @Column(name = "phone_number", nullable = false)
+    private String phoneNumber;
 
     @Column(name = "password", nullable = false)
     private String password;
@@ -56,17 +56,44 @@ public class Clientz implements Serializable {
     @Column(name = "locked", nullable = false)
     private boolean locked;
 
-    @JsonIgnore
     @OneToMany(cascade = {PERSIST, MERGE, REMOVE}, fetch = EAGER, mappedBy = "clientz", orphanRemoval = true)
-    private Set<ClientRole> clientRole;
+    private Set<ClientRole> clientRole = new HashSet<>();
 
-    public Clientz() {
-        this.clientRole = new HashSet<>();
+    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "clientz", orphanRemoval = true)
+    private Set<ClientAddress> clientAddress = new HashSet<>();
+
+    public Clientz() {}
+
+    public Clientz(
+            String firstname,
+            String lastname,
+            String email,
+            String phoneNumber,
+            String password,
+            boolean enabled,
+            boolean credentialsNonExpired,
+            boolean accountNonExpired,
+            boolean locked
+    ) {
+        this.firstname = firstname;
+        this.lastname = lastname;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.password = password;
+        this.enabled = enabled;
+        this.credentialsNonExpired = credentialsNonExpired;
+        this.accountNonExpired = accountNonExpired;
+        this.locked = locked;
     }
 
     public void addRole(ClientRole role) {
         this.clientRole.add(role);
         role.setClientz(this);
+    }
+
+    public void addClientAddress(ClientAddress address) {
+        this.clientAddress.add(address);
+        address.setClientz(this);
     }
 
     public Collection<? extends GrantedAuthority> getAuthorities() {

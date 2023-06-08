@@ -1,25 +1,25 @@
-package com.example.sarabrandserver.client.detial;
+package com.example.sarabrandserver.auth.worker;
 
-import com.example.sarabrandserver.client.repository.ClientRepo;
 import com.example.sarabrandserver.exception.CustomNotFoundException;
+import com.example.sarabrandserver.auth.worker.WorkerDetail;
+import com.example.sarabrandserver.worker.repository.WorkerRepo;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-@Service(value = "clientDetailService")
-public class ClientDetailService implements UserDetailsService {
+@Service(value = "workerDetailService")
+public class WorkerDetailService implements UserDetailsService {
 
-    private final ClientRepo clientRepo;
+    private final WorkerRepo workerRepo;
 
-    public ClientDetailService(ClientRepo clientRepo) {
-        this.clientRepo = clientRepo;
+    public WorkerDetailService(WorkerRepo workerRepo) {
+        this.workerRepo = workerRepo;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return this.clientRepo.findByPrincipal(username).map(ClientzDetail::new)
+        return this.workerRepo.findByPrincipal(username).map(WorkerDetail::new)
                 .orElseThrow(() -> new CustomNotFoundException(username + " not found"));
     }
-
 }

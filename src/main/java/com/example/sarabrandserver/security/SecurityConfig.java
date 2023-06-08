@@ -1,5 +1,6 @@
 package com.example.sarabrandserver.security;
 
+import com.example.sarabrandserver.util.Routes;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -45,26 +46,18 @@ public class SecurityConfig {
         this.authEntryPoint = authEntry;
     }
 
-    private String[] publicRoutes() {
-        return new String[]{
-                "/api/v1/auth/client/register",
-//                "/api/v1/auth/worker/register",
-                "/api/v1/auth/client/login",
-                "/api/v1/auth/worker/login"
-        };
-    }
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(publicRoutes()).permitAll();
+                    auth.requestMatchers(new Routes().publicRoutes()).permitAll();
                     auth.anyRequest().authenticated();
                 })
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(IF_REQUIRED) //
+                        .sessionAuthenticationStrategy(new CustomStrategy(this.redisIndexedSessionRepository, sessionRegistry()))
                         .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::newSession) //
                         .maximumSessions(MAX_SESSION) //
                         .sessionRegistry(sessionRegistry())

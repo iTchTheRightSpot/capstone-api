@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.worker.detail;
+package com.example.sarabrandserver.auth.worker;
 
 import com.example.sarabrandserver.worker.entity.Worker;
 import org.springframework.security.core.GrantedAuthority;

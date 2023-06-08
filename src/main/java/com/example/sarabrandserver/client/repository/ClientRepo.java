@@ -10,6 +10,9 @@ import java.util.Optional;
 
 @Repository
 public interface ClientRepo extends JpaRepository<Clientz, Long> {
-    @Query("SELECT c FROM Clientz c WHERE c.email = :principal OR c.username = :principal")
+    @Query("SELECT c FROM Clientz c WHERE c.email = :principal")
     Optional<Clientz> findByPrincipal(@Param(value = "principal") String principal);
+
+    @Query("SELECT COUNT (c.clientId) FROM Clientz c WHERE c.email = :email")
+    int principalExists(@Param(value = "email") String email);
 }

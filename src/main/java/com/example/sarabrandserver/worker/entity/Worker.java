@@ -1,8 +1,6 @@
 package com.example.sarabrandserver.worker.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
@@ -53,13 +51,10 @@ public class Worker implements Serializable {
     @Column(name = "locked", nullable = false)
     private boolean locked;
 
-    @JsonIgnore
     @OneToMany(cascade = {PERSIST, MERGE, REMOVE}, fetch = EAGER, mappedBy = "worker", orphanRemoval = true)
-    private Set<WorkerRole> workerRole;
+    private Set<WorkerRole> workerRole = new HashSet<>();
 
-    public Worker() {
-       this.workerRole = new HashSet<>();
-    }
+    public Worker() {}
 
     public Worker(
             String name,

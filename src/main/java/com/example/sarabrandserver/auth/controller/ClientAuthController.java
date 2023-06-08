@@ -1,0 +1,35 @@
+package com.example.sarabrandserver.auth.controller;
+
+import com.example.sarabrandserver.auth.service.AuthService;
+import com.example.sarabrandserver.client.dto.ClientRegisterDTO;
+import com.example.sarabrandserver.dto.LoginDTO;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/** All routes in class a public */
+@RestController @RequestMapping(path = "api/v1/auth/client")
+public class ClientAuthController {
+
+    private final AuthService authService;
+
+    public ClientAuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @PostMapping(path = "/register", consumes = "application/json")
+    public ResponseEntity<?> register(@Valid @RequestBody ClientRegisterDTO dto) {
+        return this.authService.clientRegister(dto);
+    }
+
+    @PostMapping(path = "/login", consumes = "application/json")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginDTO dto, HttpServletRequest req, HttpServletResponse res) {
+        return this.authService.login("client", dto, req, res);
+    }
+
+}

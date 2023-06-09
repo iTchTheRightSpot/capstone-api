@@ -13,8 +13,8 @@ import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
-import java.util.List;
 
+/** Objective of class is to keep track of Max Session */
 @Component(value = "customStrategy")
 public class CustomStrategy implements SessionAuthenticationStrategy {
 
@@ -41,12 +41,10 @@ public class CustomStrategy implements SessionAuthenticationStrategy {
             HttpServletResponse res
     ) throws SessionAuthenticationException {
         var principal = (UserDetails) authentication.getPrincipal();
-        List<SessionInformation> sessions = this.sessionRegistry.getAllSessions(principal, false);
-
-        if (sessions.size() >= MAX_SESSION) {
-            sessions.stream() //
-                    // Gets the oldest session
-                    .min(Comparator.comparing(SessionInformation::getLastRequest)) //
+        if (this.sessionRegistry.getAllSessions(principal, false).size() >= MAX_SESSION) {
+            this.sessionRegistry.getAllSessions(principal, false)
+                    .stream() //
+                    .min(Comparator.comparing(SessionInformation::getLastRequest)) // Gets the oldest session
                     .ifPresent(sessionInfo -> this.redisIndexedSessionRepository.deleteById(sessionInfo.getSessionId()));
         }
     }

@@ -1,5 +1,6 @@
-package com.example.sarabrandserver.address;
+package com.example.sarabrandserver.address.entity;
 
+import com.example.sarabrandserver.address.entity.Address;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

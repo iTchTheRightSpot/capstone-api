@@ -1,6 +1,7 @@
-package com.example.sarabrandserver.client.entity;
+package com.example.sarabrandserver.address.entity;
 
-import com.example.sarabrandserver.address.Address;
+import com.example.sarabrandserver.address.entity.Address;
+import com.example.sarabrandserver.client.entity.Clientz;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

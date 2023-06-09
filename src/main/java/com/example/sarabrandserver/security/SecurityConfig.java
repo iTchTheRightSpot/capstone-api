@@ -1,10 +1,10 @@
 package com.example.sarabrandserver.security;
 
-import com.example.sarabrandserver.util.Routes;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -46,13 +46,22 @@ public class SecurityConfig {
         this.authEntryPoint = authEntry;
     }
 
+    private String[] publicRoutes() {
+        return new String[]{
+                "/api/v1/auth/client/register",
+                "/api/v1/auth/client/login",
+                "/api/v1/auth/worker/login"
+        };
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(new Routes().publicRoutes()).permitAll();
+                    auth.requestMatchers(publicRoutes()).permitAll();
+                    auth.requestMatchers(HttpMethod.GET, "/api/v1/category").permitAll();
                     auth.anyRequest().authenticated();
                 })
                 .sessionManagement(sessionManagement -> sessionManagement

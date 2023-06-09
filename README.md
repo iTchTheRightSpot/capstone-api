@@ -10,5 +10,9 @@ Server side code for Sara Brand e-commerce. Will become a private repo on comple
 * Integration test using test containers
 
 ### Schema
-Schema everything apart from payment
+This is the rough (subject to change) schema of what I am going for. Note I will not be saving credit card information
 ![](schema.png)
+
+### Credit
+Shout out to [link](https://www.youtube.com/watch?v=1HamqOuv2Cw&t=657s&ab_channel=DatabaseStar) for inspiration of DB
+schema

@@ -1,5 +1,6 @@
 package com.example.sarabrandserver.client.entity;
 
+import com.example.sarabrandserver.address.entity.ClientAddress;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -62,7 +63,7 @@ public class Clientz implements Serializable {
     @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "clientz", orphanRemoval = true)
     private Set<ClientAddress> clientAddress = new HashSet<>();
 
-    public Clientz() {}
+    public Clientz() { }
 
     public Clientz(
             String firstname,

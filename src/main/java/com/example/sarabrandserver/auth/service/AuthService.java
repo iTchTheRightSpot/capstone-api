@@ -155,7 +155,7 @@ public class AuthService {
      * Note Transactional annotation is used because Clientz has properties with fetch type LAZY
      *
      * @param key parses the request to know if is a client or worker request
-     * @param dto consist of principal(username or password) and password.
+     * @param dto consist of principal(username or email) and password.
      * @param req of type HttpServletRequest
      * @param res of type HttpServletResponse
      * @throws IllegalArgumentException is thrown when wrong key is entered

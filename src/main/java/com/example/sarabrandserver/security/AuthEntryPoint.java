@@ -11,6 +11,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 
+/** Class is a global exception handler. It allows ControllerAdvices class to take effect */
 @Component(value = "authEntryPoint")
 public class AuthEntryPoint implements AuthenticationEntryPoint {
     private final HandlerExceptionResolver resolver;

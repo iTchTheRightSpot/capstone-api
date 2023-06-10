@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.promotion.entiy;
+package com.example.sarabrandserver.product.promotion.entiy;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -7,7 +7,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -15,6 +15,10 @@ import java.util.Set;
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.EAGER;
 
+/**
+ * Look at the link as far as understanding choice of date
+ * <a href="https://vladmihalcea.com/date-timestamp-jpa-hibernate/">...</a>
+ * */
 @Table(name = "promotion")
 @Entity
 @NoArgsConstructor
@@ -37,15 +41,17 @@ public class Promotion implements Serializable {
     private BigDecimal discountRate;
 
     @Column(name = "start_date", nullable = false)
-    private Timestamp startDate;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date startDate;
 
     @Column(name = "end_date", nullable = false)
-    private Timestamp endDate;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date endDate;
 
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "promotion", orphanRemoval = true)
-    private Set<PromotionCategory> promotionCategories = new HashSet<>();
+    private Set<ProductPromotion> promotionCategories = new HashSet<>();
 
-    public void addPromotionCategory(PromotionCategory category) {
+    public void addPromotionCategory(ProductPromotion category) {
         this.promotionCategories.add(category);
         category.setPromotion(this);
     }

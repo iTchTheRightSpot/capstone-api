@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.product.entity.category.dto;
+package com.example.sarabrandserver.product.category.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;
@@ -6,22 +6,21 @@ import jakarta.validation.constraints.NotNull;
 
 import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonValue;
-import java.util.List;
 
-public record CategoryDTO(
+public record UpdateCategoryDTO (
         @NotNull @NotEmpty
         @JsonProperty(value = "category_name", required = true)
         String category_name,
         @NotNull @NotEmpty
         @JsonProperty(value = "sub_category", required = true)
-        List<String> sub_category
+        String sub_category
 ) {
 
     public JsonObject toJson() {
         return Json.createObjectBuilder()
                 .add("category_name", category_name())
-                .add("sub_category", (JsonValue) sub_category())
+                .add("sub_category", sub_category())
                 .build();
     }
+
 }

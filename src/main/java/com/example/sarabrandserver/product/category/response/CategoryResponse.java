@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.product.entity.category.response;
+package com.example.sarabrandserver.product.category.response;
 
 import java.util.List;
 

@@ -1,8 +1,7 @@
-package com.example.sarabrandserver.product.entity.category.entity;
+package com.example.sarabrandserver.product.category.entity;
 
 import com.example.sarabrandserver.product.entity.Product;
-import com.example.sarabrandserver.product.entity.variation.Variation;
-import com.example.sarabrandserver.promotion.entiy.PromotionCategory;
+import com.example.sarabrandserver.product.variation.Variation;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -42,9 +41,6 @@ public class ProductCategory implements Serializable {
     private Set<Product> product = new HashSet<>();
 
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productCategory", orphanRemoval = true)
-    private Set<PromotionCategory> promotionCategory = new HashSet<>();
-
-    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productCategory", orphanRemoval = true)
     private Set<Variation> variations = new HashSet<>();
 
     public ProductCategory(String categoryName) {
@@ -61,11 +57,6 @@ public class ProductCategory implements Serializable {
         product.setProductCategory(this);
     }
 
-    public void addPromotionCategory(PromotionCategory category) {
-        this.promotionCategory.add(category);
-        category.setProductCategory(this);
-    }
-
     public void addVariation(Variation variation) {
         this.variations.add(variation);
         variation.setProductCategory(this);
@@ -80,7 +71,6 @@ public class ProductCategory implements Serializable {
                 && Objects.equals(getProductCategory(), that.getProductCategory())
                 && Objects.equals(getProductCategories(), that.getProductCategories())
                 && Objects.equals(getProduct(), that.getProduct())
-                && Objects.equals(getPromotionCategory(), that.getPromotionCategory())
                 && Objects.equals(getVariations(), that.getVariations());
     }
 
@@ -91,7 +81,6 @@ public class ProductCategory implements Serializable {
                 getProductCategory(),
                 getProductCategories(),
                 getProduct(),
-                getPromotionCategory(),
                 getVariations());
     }
 }

@@ -1,6 +1,6 @@
 package com.example.sarabrandserver.product.entity;
 
-import com.example.sarabrandserver.product.entity.variation.VariationOption;
+import com.example.sarabrandserver.product.variation.VariationOption;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

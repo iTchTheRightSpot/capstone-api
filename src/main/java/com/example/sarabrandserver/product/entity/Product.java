@@ -1,6 +1,6 @@
 package com.example.sarabrandserver.product.entity;
 
-import com.example.sarabrandserver.product.entity.category.entity.ProductCategory;
+import com.example.sarabrandserver.product.category.entity.ProductCategory;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

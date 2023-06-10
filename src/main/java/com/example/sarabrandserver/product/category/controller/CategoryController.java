@@ -1,8 +1,8 @@
-package com.example.sarabrandserver.product.entity.category.controller;
+package com.example.sarabrandserver.product.category.controller;
 
-import com.example.sarabrandserver.product.entity.category.dto.CategoryDTO;
-import com.example.sarabrandserver.product.entity.category.dto.UpdateCategoryDTO;
-import com.example.sarabrandserver.product.entity.category.service.CategoryService;
+import com.example.sarabrandserver.product.category.dto.CategoryDTO;
+import com.example.sarabrandserver.product.category.dto.UpdateCategoryDTO;
+import com.example.sarabrandserver.product.category.service.CategoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

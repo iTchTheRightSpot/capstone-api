@@ -1,6 +1,6 @@
-package com.example.sarabrandserver.product.entity.category.repository;
+package com.example.sarabrandserver.product.category.repository;
 
-import com.example.sarabrandserver.product.entity.category.entity.ProductCategory;
+import com.example.sarabrandserver.product.category.entity.ProductCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,6 +24,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     @Query("SELECT pc FROM ProductCategory pc WHERE pc.categoryName = :name")
     Optional<ProductCategory> findByName(@Param(value = "name") String name);
 
+    @Query("")
     void update();
 
 }

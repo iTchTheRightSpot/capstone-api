@@ -1,9 +1,10 @@
 package com.example.sarabrandserver.product.entity.category.service;
 
-import com.example.sarabrandserver.product.entity.category.dto.CategoryDTO;
-import com.example.sarabrandserver.product.entity.category.entity.ProductCategory;
-import com.example.sarabrandserver.product.entity.category.repository.CategoryRepository;
-import com.example.sarabrandserver.product.entity.category.response.CategoryResponse;
+import com.example.sarabrandserver.product.category.dto.CategoryDTO;
+import com.example.sarabrandserver.product.category.entity.ProductCategory;
+import com.example.sarabrandserver.product.category.repository.CategoryRepository;
+import com.example.sarabrandserver.product.category.response.CategoryResponse;
+import com.example.sarabrandserver.product.category.service.CategoryService;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

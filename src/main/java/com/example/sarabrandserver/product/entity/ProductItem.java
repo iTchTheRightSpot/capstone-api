@@ -1,6 +1,8 @@
 package com.example.sarabrandserver.product.entity;
 
+import com.example.sarabrandserver.product.promotion.entiy.ProductPromotion;
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,6 +18,7 @@ import static jakarta.persistence.FetchType.EAGER;
 @Table(name = "product_item")
 @Entity
 @NoArgsConstructor
+@EqualsAndHashCode
 @Getter
 @Setter
 public class ProductItem implements Serializable {
@@ -40,6 +43,9 @@ public class ProductItem implements Serializable {
     @ManyToOne
     @JoinColumn(name = "product_id", referencedColumnName = "product_id")
     private Product product;
+
+    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productItem", orphanRemoval = true)
+    private Set<ProductPromotion> productPromotions = new HashSet<>();
 
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productItem", orphanRemoval = true)
     private Set<ProductConfiguration> productConfigurations = new HashSet<>();

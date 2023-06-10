@@ -1,12 +1,12 @@
-package com.example.sarabrandserver.product.entity.category.service;
+package com.example.sarabrandserver.product.category.service;
 
 import com.example.sarabrandserver.exception.CustomNotFoundException;
 import com.example.sarabrandserver.exception.DuplicateException;
-import com.example.sarabrandserver.product.entity.category.dto.CategoryDTO;
-import com.example.sarabrandserver.product.entity.category.dto.UpdateCategoryDTO;
-import com.example.sarabrandserver.product.entity.category.entity.ProductCategory;
-import com.example.sarabrandserver.product.entity.category.repository.CategoryRepository;
-import com.example.sarabrandserver.product.entity.category.response.CategoryResponse;
+import com.example.sarabrandserver.product.category.dto.UpdateCategoryDTO;
+import com.example.sarabrandserver.product.category.dto.CategoryDTO;
+import com.example.sarabrandserver.product.category.entity.ProductCategory;
+import com.example.sarabrandserver.product.category.repository.CategoryRepository;
+import com.example.sarabrandserver.product.category.response.CategoryResponse;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

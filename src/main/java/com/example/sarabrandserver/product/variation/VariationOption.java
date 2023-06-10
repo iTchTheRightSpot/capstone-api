@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.product.entity.variation;
+package com.example.sarabrandserver.product.variation;
 
 import com.example.sarabrandserver.product.entity.ProductConfiguration;
 import jakarta.persistence.*;

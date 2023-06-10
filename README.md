@@ -10,7 +10,7 @@ Server side code for Sara Brand e-commerce. Will become a private repo on comple
 * Integration test using test containers
 
 ### Schema
-This is the rough (subject to change) schema of what I am going for. Note I will not be saving credit card information
+This is the most update schema for this application. It will be subject to change
 ![](schema.png)
 
 

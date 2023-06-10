@@ -2,6 +2,7 @@ package com.example.sarabrandserver.worker.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,6 +19,7 @@ import static jakarta.persistence.FetchType.EAGER;
 
 @Table(name = "worker")
 @Entity
+@NoArgsConstructor
 @Getter
 @Setter
 public class Worker implements Serializable {
@@ -51,10 +53,12 @@ public class Worker implements Serializable {
     @Column(name = "locked", nullable = false)
     private boolean locked;
 
+    @OneToOne(cascade = ALL)
+    @JoinColumn(name = "reset_id", referencedColumnName = "reset_id")
+    private WorkerPasswordResetToken token;
+
     @OneToMany(cascade = {PERSIST, MERGE, REMOVE}, fetch = EAGER, mappedBy = "worker", orphanRemoval = true)
     private Set<WorkerRole> workerRole = new HashSet<>();
-
-    public Worker() {}
 
     public Worker(
             String name,

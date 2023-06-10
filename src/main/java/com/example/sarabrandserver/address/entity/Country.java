@@ -1,15 +1,16 @@
 package com.example.sarabrandserver.address.entity;
 
-import com.example.sarabrandserver.address.entity.Address;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
 
 @Table(name = "country")
 @Entity
+@NoArgsConstructor
 @Getter
 @Setter
 @EqualsAndHashCode
@@ -25,8 +26,6 @@ public class Country implements Serializable {
 
     @OneToOne(mappedBy = "country")
     private Address address;
-
-    public Country() { }
 
     public Country(String country) {
         this.country = country;

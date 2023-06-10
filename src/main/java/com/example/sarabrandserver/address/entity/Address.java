@@ -1,5 +1,6 @@
 package com.example.sarabrandserver.address.entity;
 
+import com.example.sarabrandserver.order.entity.OrderDetail;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -7,13 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
-import static jakarta.persistence.FetchType.EAGER;
 
-// TODO RELATIONSHIP WITH SHOP ORDER
 @Table(name = "address")
 @Entity
 @NoArgsConstructor
@@ -48,21 +45,21 @@ public class Address implements Serializable {
     @Column(name = "postal_code")
     private String postalCode;
 
-    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "address", orphanRemoval = true)
-    private Set<ClientAddress> clientAddress = new HashSet<>();
-
     @OneToOne(cascade = ALL)
     @JoinColumn(name = "country_id", referencedColumnName = "country_id", nullable = false)
     private Country country;
 
-    public void addClientAddress(ClientAddress address) {
-        this.clientAddress.add(address);
-        address.setAddress(this);
-    }
+    @OneToOne(mappedBy = "address")
+    private OrderDetail orderDetail;
 
     public void setCountry(Country country) {
         this.country = country;
         country.setAddress(this);
+    }
+
+    public void setOrderDetail(OrderDetail detail) {
+        this.orderDetail = detail;
+        detail.setAddress(this);
     }
 
 }

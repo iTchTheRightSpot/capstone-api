@@ -1,6 +1,9 @@
 package com.example.sarabrandserver.product.entity;
 
-import com.example.sarabrandserver.product.category.entity.ProductCategory;
+import com.example.sarabrandserver.cart.entity.ShoppingSession;
+import com.example.sarabrandserver.category.entity.ProductCategory;
+import com.example.sarabrandserver.collection.entity.ProductCollection;
+import com.example.sarabrandserver.order.entity.OrderItem;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,10 +11,8 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
-import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.EAGER;
 
 @Table(name = "product")
@@ -29,43 +30,31 @@ public class Product implements Serializable {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "description")
-    private String description;
-
-    @Column(name = "image_path", nullable = false)
-    private String imagePath;
+    @Column(name = "default_image_path", nullable = false)
+    private String defaultImagePath;
 
     @ManyToOne
     @JoinColumn(name = "category_id", referencedColumnName = "category_id")
     private ProductCategory productCategory;
 
-    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "product", orphanRemoval = true)
-    private Set<ProductItem> productItems = new HashSet<>();
+    @ManyToOne
+    @JoinColumn(name = "product_collection_id", referencedColumnName = "product_collection_id")
+    private ProductCollection productCollection;
 
-    public void addProductItem(ProductItem item) {
-        this.productItems.add(item);
-        item.setProduct(this);
+    @ManyToOne
+    @JoinColumn(name = "session_id", referencedColumnName = "session_id")
+    private ShoppingSession shoppingSession;
+
+    @ManyToOne
+    @JoinColumn(name = "order_item_id", referencedColumnName = "order_item_id")
+    private OrderItem orderItem;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = EAGER, mappedBy = "product", orphanRemoval = true)
+    private Set<ProductDetail> productDetails = new HashSet<>();
+
+    public void addProductDetail(ProductDetail detail) {
+        this.productDetails.add(detail);
+        detail.setProduct(this);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Product product)) return false;
-        return Objects.equals(getProductId(), product.getProductId())
-                && Objects.equals(getName(), product.getName())
-                && Objects.equals(getDescription(), product.getDescription())
-                && Objects.equals(getImagePath(), product.getImagePath())
-                && Objects.equals(getProductCategory(), product.getProductCategory())
-                && Objects.equals(getProductItems(), product.getProductItems());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getProductId(),
-                getName(),
-                getDescription(),
-                getImagePath(),
-                getProductCategory(),
-                getProductItems());
-    }
 }

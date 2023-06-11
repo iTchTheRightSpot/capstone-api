@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS order_item (
 
 CREATE TABLE IF NOT EXISTS product_category (
     category_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
-    category_name VARCHAR(32) NOT NULL UNIQUE,
+    category_name VARCHAR(50) NOT NULL UNIQUE,
     created_at DATETIME NOT NULL,
     modified_at DATETIME,
     deleted_at DATETIME,

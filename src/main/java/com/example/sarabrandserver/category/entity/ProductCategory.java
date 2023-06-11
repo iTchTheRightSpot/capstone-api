@@ -2,7 +2,6 @@ package com.example.sarabrandserver.category.entity;
 
 import com.example.sarabrandserver.product.entity.Product;
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,7 +17,6 @@ import static jakarta.persistence.FetchType.EAGER;
 @Table(name = "product_category")
 @Entity
 @NoArgsConstructor
-@EqualsAndHashCode
 @Getter
 @Setter
 public class ProductCategory implements Serializable {
@@ -28,7 +26,7 @@ public class ProductCategory implements Serializable {
     @Column(name = "category_id", nullable = false, unique = true)
     private Long categoryId;
 
-    @Column(name = "category_name", nullable = false, unique = true, length = 32)
+    @Column(name = "category_name", nullable = false, unique = true, length = 50)
     private String categoryName;
 
     @Column(name = "created_at", nullable = false)
@@ -55,6 +53,11 @@ public class ProductCategory implements Serializable {
 
     public ProductCategory(String categoryName) {
         this.categoryName = categoryName;
+    }
+
+    public ProductCategory(String categoryName, Date createAt) {
+        this.categoryName = categoryName;
+        this.createAt = createAt;
     }
 
     public void addCategory(ProductCategory category) {

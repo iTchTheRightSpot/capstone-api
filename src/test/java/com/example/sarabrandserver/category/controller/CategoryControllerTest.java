@@ -1,5 +1,11 @@
 package com.example.sarabrandserver.category.controller;
 
+import com.example.sarabrandserver.category.dto.CategoryDTO;
+import com.example.sarabrandserver.category.dto.UpdateCategoryDTO;
+import com.example.sarabrandserver.category.repository.CategoryRepository;
+import com.example.sarabrandserver.category.service.CategoryService;
+import com.example.sarabrandserver.exception.DuplicateException;
+import com.github.javafaker.Faker;
 import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,6 +14,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -19,6 +26,17 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import java.util.*;
+
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @RunWith(SpringRunner.class)
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -28,6 +46,16 @@ import org.testcontainers.utility.DockerImageName;
 class CategoryControllerTest {
 
     @Autowired private MockMvc MOCK_MVC;
+
+    @Autowired private CategoryService categoryService;
+
+    @Autowired private CategoryRepository categoryRepository;
+
+    private CategoryDTO categoryDTO;
+
+    private final int max = 50;
+
+    private Set<String> parentCategory = new HashSet<>();
 
     @Container private static final MySQLContainer<?> container;
 
@@ -53,21 +81,97 @@ class CategoryControllerTest {
 
     @BeforeEach
     void setUp() {
+        for (int i = 0; i < max; i++) parentCategory.add(new Faker().commerce().productName());
+
+        for (String str : parentCategory) {
+            this.categoryDTO = new CategoryDTO(str, new ArrayList<>());
+
+            for (int i = 0; i < 1; i++) {
+                this.categoryDTO.sub_category().add(UUID.randomUUID().toString());
+            }
+
+            this.categoryService.create(this.categoryDTO);
+        }
+
     }
 
     @AfterEach
-    void tearDown() {}
+    void tearDown() {
+        this.categoryRepository.deleteAll();
+    }
 
     @Test
-    void allCategories() {}
+    void allCategories() throws Exception {
+        // Then
+        this.MOCK_MVC
+                .perform(get("/api/v1/category"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.[*].category_name").isArray())
+                .andExpect(jsonPath("$.[*].category_name").value(hasSize(max)));
+    }
 
-    @Test
-    void create() {}
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
+    void create() throws Exception {
+        // Given
+        var dto = new CategoryDTO(new Faker().name().lastName(), new ArrayList<>());
+        for (int i = 0; i < 1; i++) dto.sub_category().add(new Faker().name().firstName());
 
-    @Test
-    void update() {}
+        // Then
+        this.MOCK_MVC
+                .perform(post("/api/v1/category")
+                        .contentType(APPLICATION_JSON)
+                        .content(dto.toJson().toString())
+                )
+                .andDo(print())
+                .andExpect(status().isCreated());
+    }
 
-    @Test
-    void delete() {}
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
+    void create_existing() throws Exception {
+        // Then
+        this.MOCK_MVC
+                .perform(post("/api/v1/category")
+                        .contentType(APPLICATION_JSON)
+                        .content(this.categoryDTO.toJson().toString())
+                )
+                .andExpect(status().isConflict())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException))
+                .andExpect(result -> assertEquals(
+                        "Duplicate name or sub category",
+                        Objects.requireNonNull(result.getResolvedException()).getMessage()
+                ));
+    }
+
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
+    void update() throws Exception {
+        // Given
+        var dto = new UpdateCategoryDTO(
+                this.categoryDTO.category_name(),
+                "Updated category name"
+        ).toJson().toString();
+
+        // Then
+        this.MOCK_MVC
+                .perform(put("/api/v1/category").contentType(APPLICATION_JSON).content(dto))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
+    void custom_delete() throws Exception {
+        this.MOCK_MVC
+                .perform(delete("/api/v1/category/{category_id}", this.categoryDTO.category_name()))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+
+        // Validate delete request
+        this.MOCK_MVC
+                .perform(get("/api/v1/category"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.[*].category_name").isArray())
+                .andExpect(jsonPath("$.[*].category_name", hasSize(parentCategory.size() - 1)));
+    }
 
 }

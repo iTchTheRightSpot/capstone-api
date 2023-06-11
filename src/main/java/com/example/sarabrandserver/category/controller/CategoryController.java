@@ -29,7 +29,7 @@ public class CategoryController {
     }
 
     @PutMapping(consumes = "application/json") @PreAuthorize(value = "hasAnyAuthority('WORKER')")
-    public ResponseEntity<?> update(UpdateCategoryDTO dto) {
+    public ResponseEntity<?> update(@Valid @RequestBody UpdateCategoryDTO dto) {
         return this.categoryService.update(dto);
     }
 

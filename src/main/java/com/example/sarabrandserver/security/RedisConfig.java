@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisIndexedHttpSession;
 import org.springframework.session.web.context.AbstractHttpSessionApplicationInitializer;
@@ -23,8 +24,14 @@ public class RedisConfig extends AbstractHttpSessionApplicationInitializer {
         RedisStandaloneConfiguration configuration =
                 new RedisStandaloneConfiguration(this.redisProperties.getHost(), this.redisProperties.getPort());
         configuration.setPassword(redisProperties.getPassword());
-
         return new LettuceConnectionFactory(configuration);
+    }
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate() {
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(connectionFactory());
+        return redisTemplate;
     }
 
     @Bean

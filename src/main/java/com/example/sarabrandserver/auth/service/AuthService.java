@@ -1,22 +1,17 @@
 package com.example.sarabrandserver.auth.service;
 
-import com.example.sarabrandserver.client.dto.ClientRegisterDTO;
-import com.example.sarabrandserver.client.entity.ClientRole;
-import com.example.sarabrandserver.client.entity.Clientz;
-import com.example.sarabrandserver.client.repository.ClientRepo;
 import com.example.sarabrandserver.dto.LoginDTO;
 import com.example.sarabrandserver.exception.DuplicateException;
 import com.example.sarabrandserver.response.AuthResponse;
-import com.example.sarabrandserver.worker.dto.WorkerRegisterDTO;
-import com.example.sarabrandserver.worker.entity.Worker;
-import com.example.sarabrandserver.worker.entity.WorkerRole;
-import com.example.sarabrandserver.worker.repository.WorkerRepo;
+import com.example.sarabrandserver.user.dto.ClientRegisterDTO;
+import com.example.sarabrandserver.user.entity.ClientRole;
+import com.example.sarabrandserver.user.entity.Clientz;
+import com.example.sarabrandserver.user.repository.ClientRepo;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import static com.example.sarabrandserver.enumeration.RoleEnum.CLIENT;
 import static com.example.sarabrandserver.enumeration.RoleEnum.WORKER;
@@ -57,15 +53,11 @@ public class AuthService {
     @Value(value = "${server.servlet.session.cookie.secure}")
     private boolean COOKIE_SECURE;
 
-    private final WorkerRepo workerRepo;
-
     private final ClientRepo clientRepo;
 
     private final PasswordEncoder passwordEncoder;
 
-    private final AuthenticationManager clientAuthManager;
-
-    private final AuthenticationManager workerAuthManager;
+    private final AuthenticationManager authManager;
 
     private final SecurityContextRepository securityContextRepository;
 
@@ -74,74 +66,65 @@ public class AuthService {
     private final SessionAuthenticationStrategy sessionAuthenticationStrategy;
 
     public AuthService(
-            WorkerRepo workerRepo,
             ClientRepo clientRepo,
             PasswordEncoder passwordEncoder,
-            @Qualifier(value = "clientAuthManager") AuthenticationManager clientAuthManager,
-            @Qualifier(value = "workerAuthManager") AuthenticationManager workerAuthManager,
+            AuthenticationManager authManager,
             SecurityContextRepository securityContextRepository,
             SessionAuthenticationStrategy sessionAuthenticationStrategy
     ) {
-        this.workerRepo = workerRepo;
         this.clientRepo = clientRepo;
         this.passwordEncoder = passwordEncoder;
-        this.clientAuthManager = clientAuthManager;
-        this.workerAuthManager = workerAuthManager;
+        this.authManager = authManager;
         this.securityContextRepository = securityContextRepository;
         this.sessionAuthenticationStrategy = sessionAuthenticationStrategy;
         this.securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
     }
 
     /**
-     * Method is responsible for registering a new worker
+     * Method is responsible for registering a new worker. The logic is basically update Clientz to a role of worker if
+     * he/she exists else create and save new Clientz object.
      *
      * @param dto of type WorkerRegisterDTO
-     * @throws DuplicateException when user principal exists
+     * @throws DuplicateException when user principal exists and has a role of worker
      * @return ResponseEntity of type String
      * */
-    public ResponseEntity<?> workerRegister(WorkerRegisterDTO dto) {
-        if (this.workerRepo.principalExists(dto.email().trim(), dto.username()) > 0) {
-            throw new DuplicateException(dto.email() + " exists");
+    public ResponseEntity<?> workerRegister(ClientRegisterDTO dto) {
+        Optional<Clientz> exists = this.clientRepo.workerExists(dto.email().trim(), dto.username().trim());
+
+        if (exists.isPresent()) {
+            if (exists.get().getClientRole().stream().map(ClientRole::getRole).toList().contains(WORKER)) {
+                throw new DuplicateException(dto.email() + " exists");
+            }
+            exists.get().addRole(new ClientRole(WORKER));
+            this.clientRepo.save(exists.get());
+            return new ResponseEntity<>("Updated", OK);
         }
 
-        var worker = new Worker(
-                dto.name().trim(),
-                dto.email().trim(),
-                dto.username().trim(),
-                passwordEncoder.encode(dto.password()),
-                true, true, true, true
-        );
-        worker.addRole(new WorkerRole(WORKER));
-        worker.addRole(new WorkerRole(CLIENT));
+        // Create Client and add role of worker
+        var clientz = createClient(dto);
+        clientz.addRole(new ClientRole(WORKER));
 
-        this.workerRepo.save(worker);
+        // Save client
+        this.clientRepo.save(clientz);
         return new ResponseEntity<>("Registered", CREATED);
     }
 
     // TODO validate dto not null, empty etc
     /**
-     * Method is responsible for registering a new client
-     *
+     * Method is responsible for registering a new user
      * @param dto of type ClientRegisterDTO
      * @throws DuplicateException when user principal exists
      * @return ResponseEntity of type String
      * */
     public ResponseEntity<?> clientRegister(ClientRegisterDTO dto) {
-        if (this.clientRepo.principalExists(dto.email().trim()) > 0) {
+        if (this.clientRepo.principalExists(dto.email().trim(), dto.username().trim()) > 0) {
             throw new DuplicateException(dto.email() + " exists");
         }
 
-        var clientz = new Clientz(
-                dto.firstname().trim(),
-                dto.lastname().trim(),
-                dto.email().trim(),
-                dto.phone_number().trim(),
-                passwordEncoder.encode(dto.password()),
-                true, true, true, true
-        );
-        clientz.addRole(new ClientRole(CLIENT));
+        // Create clientz
+        var clientz = createClient(dto);
 
-        // Save client
+        // Create and Save client
         this.clientRepo.save(clientz);
         return new ResponseEntity<>("Registered", CREATED);
     }
@@ -165,11 +148,8 @@ public class AuthService {
     @Transactional
     public ResponseEntity<?> login(String key, LoginDTO dto, HttpServletRequest req, HttpServletResponse res) {
         switch (key) {
-            case "client" -> {
-                return loginLogic(this.clientAuthManager, dto, req, res);
-            }
-            case "worker" -> {
-                return loginLogic(this.workerAuthManager, dto, req, res);
+            case "client", "worker" -> {
+                return loginLogic(this.authManager, dto, req, res);
             }
             default -> throw new IllegalArgumentException("Invalid key");
         }
@@ -210,6 +190,20 @@ public class AuthService {
         res.addCookie(cookie);
 
         return new ResponseEntity<>(new AuthResponse(dto.principal()), OK);
+    }
+
+    private Clientz createClient(ClientRegisterDTO dto) {
+        var clientz = new Clientz(
+                dto.firstname().trim(),
+                dto.lastname().trim(),
+                dto.email().trim(),
+                dto.username().trim(),
+                dto.phone_number().trim(),
+                passwordEncoder.encode(dto.password()),
+                true, true, true, true
+        );
+        clientz.addRole(new ClientRole(CLIENT));
+        return clientz;
     }
 
 }

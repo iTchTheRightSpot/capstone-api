@@ -1,5 +1,5 @@
 # Sara Brand Server
-Server side code for Sara Brand e-commerce. Will become a private repo on completion of product relationship
+Server side code for Sara Brand e-commerce.
 
 ### Technologies Thus Far
 * Java 17
@@ -10,8 +10,8 @@ Server side code for Sara Brand e-commerce. Will become a private repo on comple
 * Integration test using test containers
 
 ### Schema
-This is the most update schema for this application. It will be subject to change
-![](schema.png)
+This is the most update schema for this application.
+[Link](https://dbdiagram.io/d/6483c4d5722eb77494b791a1)
 
 
 ### Reference Documentation

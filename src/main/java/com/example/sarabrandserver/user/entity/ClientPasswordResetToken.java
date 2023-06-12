@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.client.entity;
+package com.example.sarabrandserver.user.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

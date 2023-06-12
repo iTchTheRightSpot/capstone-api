@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.client.config;
+package com.example.sarabrandserver.user.auth;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -12,9 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class ClientConfig {
-
     private final UserDetailsService clientDetailService;
-
     private final PasswordEncoder passwordEncoder;
 
     public ClientConfig(
@@ -34,8 +32,8 @@ public class ClientConfig {
         return provider;
     }
 
-    @Bean(name = "clientAuthManager")
-    public AuthenticationManager clientAuthManager() {
+    @Bean
+    public AuthenticationManager authenticationManager() {
         return new ProviderManager(clientAuthProvider());
     }
 

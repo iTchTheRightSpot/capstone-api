@@ -1,9 +1,9 @@
 package com.example.sarabrandserver.auth.controller;
 
 import com.example.sarabrandserver.auth.service.AuthService;
-import com.example.sarabrandserver.client.dto.ClientRegisterDTO;
-import com.example.sarabrandserver.client.repository.ClientRepo;
-import com.example.sarabrandserver.client.repository.ClientRoleRepo;
+import com.example.sarabrandserver.user.dto.ClientRegisterDTO;
+import com.example.sarabrandserver.user.repository.ClientRepo;
+import com.example.sarabrandserver.user.repository.ClientRoleRepo;
 import com.example.sarabrandserver.dto.LoginDTO;
 import com.example.sarabrandserver.exception.DuplicateException;
 import com.example.sarabrandserver.security.CustomStrategy;
@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -33,6 +34,7 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -48,6 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ClientAuthControllerTest {
 
     private final String ADMIN_EMAIL = "SEJU@development.com";
+    private final String ADMIN_USERNAME = "SEJU Development";
 
     private final String ADMIN_PASSWORD = "123#-SEJU-Development";
 
@@ -92,6 +95,7 @@ class ClientAuthControllerTest {
                 "SEJU",
                 "Development",
                 ADMIN_EMAIL,
+                ADMIN_USERNAME,
                 "00-000-0000",
                 ADMIN_PASSWORD
         ));
@@ -109,6 +113,7 @@ class ClientAuthControllerTest {
                 "firstname",
                 "Development",
                 "yes@yes.com",
+                "yes development",
                 "00-000-0000",
                 ADMIN_PASSWORD
         );
@@ -116,6 +121,7 @@ class ClientAuthControllerTest {
         this.MOCK_MVC
                 .perform(post("/api/v1/auth/client/register").contentType(APPLICATION_JSON)
                         .content(dto.toJson().toString())
+                        .with(csrf())
                 )
                 .andExpect(status().isCreated());
     }
@@ -126,13 +132,14 @@ class ClientAuthControllerTest {
                 "SEJU",
                 "Development",
                 ADMIN_EMAIL,
+                ADMIN_USERNAME,
                 "00-000-0000",
                 ADMIN_PASSWORD
         );
 
         this.MOCK_MVC
                 .perform(post("/api/v1/auth/client/register").contentType(APPLICATION_JSON)
-                        .content(dto.toJson().toString()))
+                        .content(dto.toJson().toString()).with(csrf()))
                 .andExpect(status().isConflict())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException))
                 .andExpect(result -> assertEquals(
@@ -145,6 +152,7 @@ class ClientAuthControllerTest {
     void login() throws Exception {
         MvcResult login = this.MOCK_MVC
                 .perform(post("/api/v1/auth/client/login")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
                 )
@@ -161,12 +169,18 @@ class ClientAuthControllerTest {
     void login_wrong_password() throws Exception {
         this.MOCK_MVC
                 .perform(post("/api/v1/auth/client/login")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, "fFeubfrom@#$%^124234").convertToJSON().toString())
                 )
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Bad credentials"))
-                .andExpect(jsonPath("$.httpStatus").value("UNAUTHORIZED"));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof BadCredentialsException))
+                .andExpect(result -> assertEquals(
+                        "Bad credentials",
+                        Objects.requireNonNull(result.getResolvedException()).getMessage()
+                ));
+//                .andExpect(jsonPath("$.message").value("Bad credentials"))
+//                .andExpect(jsonPath("$.httpStatus").value("UNAUTHORIZED"));
     }
 
     @Test @Order(5)
@@ -174,6 +188,7 @@ class ClientAuthControllerTest {
         // Login
         MvcResult login = this.MOCK_MVC
                 .perform(post("/api/v1/auth/client/login")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
                 )
@@ -182,8 +197,8 @@ class ClientAuthControllerTest {
         Cookie cookie = login.getResponse().getCookie(COOKIE_NAME);
 
         // Logout
-        this.MOCK_MVC.perform(get("/api/v1/auth/logout").cookie(cookie))
-                .andExpect(status().isOk());
+        this.MOCK_MVC
+                .perform(post("/api/v1/auth/logout").cookie(cookie).with(csrf())).andExpect(status().isOk());
 
         // Verify cookie is invalid
         this.MOCK_MVC.perform(get("/test/client").cookie(cookie))
@@ -200,6 +215,7 @@ class ClientAuthControllerTest {
         // Browser 1
         MvcResult login_one = this.MOCK_MVC
                 .perform(post("/api/v1/auth/client/login")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
                 )
@@ -211,6 +227,7 @@ class ClientAuthControllerTest {
         // Browser 2
         MvcResult login_two = this.MOCK_MVC
                 .perform(post("/api/v1/auth/client/login")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
                 )

@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.client.dto;
+package com.example.sarabrandserver.user.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;
@@ -18,6 +18,9 @@ public record ClientRegisterDTO(
         @JsonProperty(value = "email")
         String email,
         @NotNull @NotEmpty
+        @JsonProperty(value = "username")
+        String username,
+        @NotNull @NotEmpty
         @JsonProperty(value = "phone_number")
         String phone_number,
         @NotNull @NotEmpty
@@ -29,6 +32,7 @@ public record ClientRegisterDTO(
                 .add("firstname", firstname())
                 .add("lastname", lastname())
                 .add("email", email())
+                .add("username", username())
                 .add("phone_number", phone_number())
                 .add("password", password())
                 .build();

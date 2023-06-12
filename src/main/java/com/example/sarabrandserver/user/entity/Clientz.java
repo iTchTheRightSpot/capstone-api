@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.client.entity;
+package com.example.sarabrandserver.user.entity;
 
 import com.example.sarabrandserver.cart.entity.ShoppingSession;
 import jakarta.persistence.*;
@@ -40,6 +40,9 @@ public class Clientz implements Serializable {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
+    @Column(name = "username", nullable = false, unique = true)
+    private String username;
+
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
@@ -72,6 +75,7 @@ public class Clientz implements Serializable {
             String firstname,
             String lastname,
             String email,
+            String username,
             String phoneNumber,
             String password,
             boolean enabled,
@@ -82,6 +86,7 @@ public class Clientz implements Serializable {
         this.firstname = firstname;
         this.lastname = lastname;
         this.email = email;
+        this.username = username;
         this.phoneNumber = phoneNumber;
         this.password = password;
         this.enabled = enabled;

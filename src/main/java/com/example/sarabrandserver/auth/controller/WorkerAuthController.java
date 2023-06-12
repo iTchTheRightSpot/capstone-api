@@ -2,7 +2,7 @@ package com.example.sarabrandserver.auth.controller;
 
 import com.example.sarabrandserver.auth.service.AuthService;
 import com.example.sarabrandserver.dto.LoginDTO;
-import com.example.sarabrandserver.worker.dto.WorkerRegisterDTO;
+import com.example.sarabrandserver.user.dto.ClientRegisterDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -24,7 +24,7 @@ public class WorkerAuthController {
 
     @PostMapping(path = "/register", consumes = "application/json")
     @PreAuthorize(value = "hasAnyAuthority('WORKER')")
-    public ResponseEntity<?> register(@Valid @RequestBody WorkerRegisterDTO dto) {
+    public ResponseEntity<?> register(@Valid @RequestBody ClientRegisterDTO dto) {
         return this.authService.workerRegister(dto);
     }
 

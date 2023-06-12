@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
 
-/** Objective of class is to keep track of Max Session */
+/** Objective of class is to keep track of each user max Session */
 @Component(value = "customStrategy")
 public class CustomStrategy implements SessionAuthenticationStrategy {
 

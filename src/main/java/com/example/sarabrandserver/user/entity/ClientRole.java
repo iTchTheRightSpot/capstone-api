@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.worker.entity;
+package com.example.sarabrandserver.user.entity;
 
 import com.example.sarabrandserver.enumeration.RoleEnum;
 import jakarta.persistence.*;
@@ -8,27 +8,28 @@ import lombok.Setter;
 
 import java.io.Serializable;
 
-@Table(name = "worker_role")
+@Table(name = "client_role")
 @Entity
 @NoArgsConstructor
 @Getter
 @Setter
-public class WorkerRole implements Serializable {
+public class ClientRole implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "worker_role_id", nullable = false, unique = true)
+    @Column(name = "client_role_id", nullable = false, unique = true)
     private Long roleId;
 
+    @Enumerated(value = EnumType.STRING)
     @Column(name = "role", nullable = false)
-    @Enumerated(EnumType.STRING)
     private RoleEnum role;
 
     @ManyToOne
-    @JoinColumn(name = "worker_id", nullable = false, referencedColumnName = "worker_id")
-    private Worker worker;
+    @JoinColumn(name = "client_id", nullable = false, referencedColumnName = "client_id")
+    private Clientz clientz;
 
-    public WorkerRole(RoleEnum roleEnum) {
+    public ClientRole(RoleEnum roleEnum) {
         this.role = roleEnum;
     }
+
 }

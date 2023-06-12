@@ -1,44 +1,44 @@
-package com.example.sarabrandserver.auth.worker;
+package com.example.sarabrandserver.user.auth;
 
-import com.example.sarabrandserver.worker.entity.Worker;
+import com.example.sarabrandserver.user.entity.Clientz;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
-public record WorkerDetail(Worker worker) implements UserDetails {
+public record ClientzDetail(Clientz clientz) implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.worker.getAuthorities();
+        return this.clientz.getAuthorities();
     }
 
     @Override
     public String getPassword() {
-        return this.worker.getPassword();
+        return this.clientz.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return this.worker.getEmail();
+        return this.clientz.getEmail();
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return this.worker.isAccountNonExpired();
+        return this.clientz.isAccountNonExpired();
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return this.worker.isLocked();
+        return this.clientz.isLocked();
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return this.worker.isCredentialsNonExpired();
+        return this.clientz.isCredentialsNonExpired();
     }
 
     @Override
     public boolean isEnabled() {
-        return this.worker.isEnabled();
+        return this.clientz.isEnabled();
     }
 }

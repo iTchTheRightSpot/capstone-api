@@ -32,6 +32,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -55,7 +56,7 @@ class CategoryControllerTest {
 
     private final int max = 50;
 
-    private Set<String> parentCategory = new HashSet<>();
+    private final Set<String> parentCategory = new HashSet<>();
 
     @Container private static final MySQLContainer<?> container;
 
@@ -120,6 +121,7 @@ class CategoryControllerTest {
         // Then
         this.MOCK_MVC
                 .perform(post("/api/v1/category")
+                        .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(dto.toJson().toString())
                 )
@@ -132,6 +134,7 @@ class CategoryControllerTest {
         // Then
         this.MOCK_MVC
                 .perform(post("/api/v1/category")
+                        .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(this.categoryDTO.toJson().toString())
                 )
@@ -153,7 +156,7 @@ class CategoryControllerTest {
 
         // Then
         this.MOCK_MVC
-                .perform(put("/api/v1/category").contentType(APPLICATION_JSON).content(dto))
+                .perform(put("/api/v1/category").with(csrf()).contentType(APPLICATION_JSON).content(dto))
                 .andDo(print())
                 .andExpect(status().isOk());
     }
@@ -161,7 +164,8 @@ class CategoryControllerTest {
     @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
     void custom_delete() throws Exception {
         this.MOCK_MVC
-                .perform(delete("/api/v1/category/{category_id}", this.categoryDTO.category_name()))
+                .perform(delete("/api/v1/category/{category_id}", this.categoryDTO.category_name())
+                        .with(csrf()))
                 .andDo(print())
                 .andExpect(status().isNoContent());
 

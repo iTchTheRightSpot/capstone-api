@@ -4,9 +4,9 @@ import com.example.sarabrandserver.auth.service.AuthService;
 import com.example.sarabrandserver.dto.LoginDTO;
 import com.example.sarabrandserver.exception.DuplicateException;
 import com.example.sarabrandserver.security.CustomStrategy;
-import com.example.sarabrandserver.worker.dto.WorkerRegisterDTO;
-import com.example.sarabrandserver.worker.repository.WorkerRepo;
-import com.example.sarabrandserver.worker.repository.WorkerRoleRepo;
+import com.example.sarabrandserver.user.dto.ClientRegisterDTO;
+import com.example.sarabrandserver.user.repository.ClientRepo;
+import com.example.sarabrandserver.user.repository.ClientRoleRepo;
 import com.redis.testcontainers.RedisContainer;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
@@ -33,6 +33,7 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -49,7 +50,7 @@ class WorkerAuthControllerTest {
 
     private final String ADMIN_EMAIL = "SEJU@development.com";
 
-    private final String USERNAME = "test username";
+    private final String USERNAME = "SEJU Development";
 
     private final String ADMIN_PASSWORD = "123#-SEJU-Development";
 
@@ -61,9 +62,9 @@ class WorkerAuthControllerTest {
 
     @Autowired private AuthService authService;
 
-    @Autowired private WorkerRepo workerRepo;
+    @Autowired private ClientRoleRepo clientRoleRepo;
 
-    @Autowired private WorkerRoleRepo workerRoleRepo;
+    @Autowired private ClientRepo clientRepo;
 
     @Container
     private static final MySQLContainer<?> container;
@@ -91,18 +92,20 @@ class WorkerAuthControllerTest {
     @BeforeEach
     void setUp() {
         this.customStrategy.setMAX_SESSION(1);
-        this.authService.workerRegister(new WorkerRegisterDTO(
-                "James",
+        this.authService.workerRegister(new ClientRegisterDTO(
+                "SEJU",
+                "Development",
                 ADMIN_EMAIL,
                 USERNAME,
+                "00-000-0000",
                 ADMIN_PASSWORD
         ));
     }
 
     @AfterEach
     void tearDown() {
-        this.workerRoleRepo.deleteAll();
-        this.workerRepo.deleteAll();
+        this.clientRoleRepo.deleteAll();
+        this.clientRepo.deleteAll();
     }
 
     /** Method does two things in one. Login and Register. To register, worker has to have a role WORKER */
@@ -111,6 +114,7 @@ class WorkerAuthControllerTest {
         // Login
         MvcResult login = this.MOCK_MVC
                 .perform(post("/api/v1/auth/worker/login")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
                 )
@@ -119,14 +123,17 @@ class WorkerAuthControllerTest {
                 .andReturn();
 
         // Register
-        var dto = new WorkerRegisterDTO(
+        var dto = new ClientRegisterDTO(
                 "James",
                 "james@james.com",
+                "james@james.com",
                 "james development",
+                "0000000000",
                 "A;D@#$13245eifdkj"
         );
         this.MOCK_MVC
                 .perform(post("/api/v1/auth/worker/register")
+                        .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(dto.toJson().toString())
                         .cookie(login.getResponse().getCookie(COOKIE_NAME))
@@ -134,11 +141,13 @@ class WorkerAuthControllerTest {
                 .andExpect(status().isCreated());
     }
 
+    /** Simulates registering an existing worker */
     @Test @Order(2)
     void register_with_existing_credentials() throws Exception {
         // Login
         MvcResult login = this.MOCK_MVC
                 .perform(post("/api/v1/auth/worker/login")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
                 )
@@ -146,19 +155,22 @@ class WorkerAuthControllerTest {
                 .andExpect(jsonPath("$.principal").value(ADMIN_EMAIL))
                 .andReturn();
 
-        var dto = new WorkerRegisterDTO(
-                "James",
+        var dto = new ClientRegisterDTO(
+                "SEJU",
+                "Development",
                 ADMIN_EMAIL,
                 USERNAME,
+                "00-000-0000",
                 ADMIN_PASSWORD
         );
 
         this.MOCK_MVC
-                .perform(post("/api/v1/auth/worker/register").contentType(APPLICATION_JSON)
+                .perform(post("/api/v1/auth/worker/register")
+                        .contentType(APPLICATION_JSON)
+                        .with(csrf())
                         .content(dto.toJson().toString())
                         .cookie(login.getResponse().getCookie(COOKIE_NAME))
                 )
-                .andExpect(status().isConflict())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException))
                 .andExpect(result -> assertEquals(
                         dto.email() + " exists",
@@ -166,11 +178,43 @@ class WorkerAuthControllerTest {
                 ));
     }
 
-    @Test @Order(3)
+    @Test
+    @Order(3)
+    void login() throws Exception {
+        MvcResult login = this.MOCK_MVC
+                .perform(post("/api/v1/auth/worker/login")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.principal").value(ADMIN_EMAIL))
+                .andReturn();
+
+        this.MOCK_MVC
+                .perform(get("/test/worker").cookie(login.getResponse().getCookie(COOKIE_NAME)))
+                .andExpect(status().isOk());
+    }
+
+    @Test @Order(4)
+    void login_wrong_password() throws Exception {
+        this.MOCK_MVC
+                .perform(post("/api/v1/auth/worker/login")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new LoginDTO(ADMIN_EMAIL, "fFeubfrom@#$%^124234").convertToJSON().toString())
+                )
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Bad credentials"))
+                .andExpect(jsonPath("$.httpStatus").value("UNAUTHORIZED"));
+    }
+
+    @Test @Order(5)
     void logout() throws Exception {
         // Login
         MvcResult login = this.MOCK_MVC
                 .perform(post("/api/v1/auth/worker/login")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
                 )
@@ -181,7 +225,7 @@ class WorkerAuthControllerTest {
         Cookie cookie = login.getResponse().getCookie(COOKIE_NAME);
 
         // Logout
-        this.MOCK_MVC.perform(get("/api/v1/auth/logout").cookie(cookie))
+        this.MOCK_MVC.perform(post("/api/v1/auth/logout").cookie(cookie).with(csrf()))
                 .andExpect(status().isOk());
 
         // Verify cookie is invalid

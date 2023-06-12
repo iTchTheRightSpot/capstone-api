@@ -1,6 +1,6 @@
 package com.example.sarabrandserver.cart.entity;
 
-import com.example.sarabrandserver.client.entity.Clientz;
+import com.example.sarabrandserver.user.entity.Clientz;
 import com.example.sarabrandserver.product.entity.Product;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;

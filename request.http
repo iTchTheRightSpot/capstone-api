@@ -19,3 +19,25 @@ Content-Type: application/json
  "principal":"yes@yes.com",
  "password":"123#-SEJU-Development"
 }
+
+
+### Worker register
+POST http://localhost:1997/api/v1/auth/worker/register
+Content-Type: application/json
+
+{
+  "name": "firstname",
+  "username": "Development",
+  "email": "admin@yes.com",
+  "password": "123#-SEJU-Development"
+}
+
+
+### Worker Login
+POST http://localhost:1997/api/v1/auth/worker/login
+Content-Type: application/json
+
+{
+  "principal":"admin@yes.com",
+  "password":"123#-SEJU-Development"
+}

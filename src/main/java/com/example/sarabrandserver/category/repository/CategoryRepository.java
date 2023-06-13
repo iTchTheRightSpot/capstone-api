@@ -1,12 +1,12 @@
 package com.example.sarabrandserver.category.repository;
 
 import com.example.sarabrandserver.category.entity.ProductCategory;
-import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -57,7 +57,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     @Query("SELECT pc FROM ProductCategory pc WHERE pc.categoryName = :name")
     Optional<ProductCategory> findByName(@Param(value = "name") String name);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query("""
         UPDATE ProductCategory pc
@@ -70,7 +70,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
             @Param(value = "oldName") String oldName
     );
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query("UPDATE ProductCategory pc SET pc.modifiedAt = :date, pc.deletedAt = :date WHERE pc.categoryName = :name")
     void custom_delete(@Param(value = "date") Date date, @Param(value = "name") String name);

@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.response;
+package com.example.sarabrandserver.auth.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

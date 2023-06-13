@@ -2,14 +2,16 @@ package com.example.sarabrandserver.user.repository;
 
 import com.example.sarabrandserver.user.entity.Clientz;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Repository
-public interface ClientRepo extends JpaRepository<Clientz, Long> {
+public interface ClientRepository extends JpaRepository<Clientz, Long> {
     @Query(value = "SELECT c FROM Clientz c WHERE c.email = :principal OR c.username = :principal")
     Optional<Clientz> findByPrincipal(@Param(value = "principal") String principal);
 
@@ -27,7 +29,9 @@ public interface ClientRepo extends JpaRepository<Clientz, Long> {
     """)
     Optional<Clientz> workerExists(@Param(value = "email") String email, @Param(value = "username") String username);
 
-    @Query(value = "UPDATE Clientz c SET c.locked = :bool WHERE c.clientId = :id")
-    void lockClientz(@Param(value = "bool") boolean bool, @Param(value = "id") Long id);
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Transactional
+    @Query(value = "UPDATE Clientz c SET c.accountNoneLocked = ?1 WHERE c.clientId = ?2")
+    void lockClientAccount(@Param(value = "bool") boolean bool, @Param(value = "id") Long id);
 
 }

@@ -1,6 +1,5 @@
-package com.example.sarabrandserver.security.bruteforce.repository;
+package com.example.sarabrandserver.security.bruteforce;
 
-import com.example.sarabrandserver.security.bruteforce.entity.BruteForceEntity;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
@@ -10,7 +9,7 @@ import java.util.Optional;
 @Repository
 public class BruteForceRepo {
     private final String KEY = "BRUTE-FORCE-ENTITY";
-    private final HashOperations<String, String, BruteForceEntity> hashOperations; //to access Redis cache
+    private final HashOperations<String, String, BruteForceEntity> hashOperations;
 
     public BruteForceRepo(RedisTemplate<String, Object> redisTemplate) {
         this.hashOperations = redisTemplate.opsForHash();

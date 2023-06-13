@@ -1,11 +1,12 @@
 package com.example.sarabrandserver.auth.controller;
 
 import com.example.sarabrandserver.auth.service.AuthService;
-import com.example.sarabrandserver.dto.LoginDTO;
+import com.example.sarabrandserver.auth.dto.LoginDTO;
 import com.example.sarabrandserver.exception.DuplicateException;
 import com.example.sarabrandserver.security.CustomStrategy;
+import com.example.sarabrandserver.security.bruteforce.BruteForceService;
 import com.example.sarabrandserver.user.dto.ClientRegisterDTO;
-import com.example.sarabrandserver.user.repository.ClientRepo;
+import com.example.sarabrandserver.user.repository.ClientRepository;
 import com.example.sarabrandserver.user.repository.ClientRoleRepo;
 import com.redis.testcontainers.RedisContainer;
 import jakarta.servlet.http.Cookie;
@@ -48,6 +49,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(locations = "classpath:application-dev.properties")
 class WorkerAuthControllerTest {
 
+    private final int MAX_FAILED_AUTH = 3;
+
     private final String ADMIN_EMAIL = "SEJU@development.com";
 
     private final String USERNAME = "SEJU Development";
@@ -64,10 +67,11 @@ class WorkerAuthControllerTest {
 
     @Autowired private ClientRoleRepo clientRoleRepo;
 
-    @Autowired private ClientRepo clientRepo;
+    @Autowired private ClientRepository clientRepository;
 
-    @Container
-    private static final MySQLContainer<?> container;
+    @Autowired private BruteForceService bruteForceService;
+
+    @Container private static final MySQLContainer<?> container;
 
     @Container private static final RedisContainer redis;
 
@@ -92,6 +96,7 @@ class WorkerAuthControllerTest {
     @BeforeEach
     void setUp() {
         this.customStrategy.setMAX_SESSION(1);
+        this.bruteForceService.setMAX(MAX_FAILED_AUTH);
         this.authService.workerRegister(new ClientRegisterDTO(
                 "SEJU",
                 "Development",
@@ -105,7 +110,7 @@ class WorkerAuthControllerTest {
     @AfterEach
     void tearDown() {
         this.clientRoleRepo.deleteAll();
-        this.clientRepo.deleteAll();
+        this.clientRepository.deleteAll();
     }
 
     /** Method does two things in one. Login and Register. To register, worker has to have a role WORKER */
@@ -113,7 +118,7 @@ class WorkerAuthControllerTest {
     void register() throws Exception {
         // Login
         MvcResult login = this.MOCK_MVC
-                .perform(post("/api/v1/auth/worker/login")
+                .perform(post("/api/v1/worker/auth/login")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
@@ -132,7 +137,7 @@ class WorkerAuthControllerTest {
                 "A;D@#$13245eifdkj"
         );
         this.MOCK_MVC
-                .perform(post("/api/v1/auth/worker/register")
+                .perform(post("/api/v1/worker/auth/register")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(dto.toJson().toString())
@@ -146,7 +151,7 @@ class WorkerAuthControllerTest {
     void register_with_existing_credentials() throws Exception {
         // Login
         MvcResult login = this.MOCK_MVC
-                .perform(post("/api/v1/auth/worker/login")
+                .perform(post("/api/v1/worker/auth/login")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
@@ -165,7 +170,7 @@ class WorkerAuthControllerTest {
         );
 
         this.MOCK_MVC
-                .perform(post("/api/v1/auth/worker/register")
+                .perform(post("/api/v1/worker/auth/register")
                         .contentType(APPLICATION_JSON)
                         .with(csrf())
                         .content(dto.toJson().toString())
@@ -182,7 +187,7 @@ class WorkerAuthControllerTest {
     @Order(3)
     void login() throws Exception {
         MvcResult login = this.MOCK_MVC
-                .perform(post("/api/v1/auth/worker/login")
+                .perform(post("/api/v1/worker/auth/login")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
@@ -199,7 +204,7 @@ class WorkerAuthControllerTest {
     @Test @Order(4)
     void login_wrong_password() throws Exception {
         this.MOCK_MVC
-                .perform(post("/api/v1/auth/worker/login")
+                .perform(post("/api/v1/worker/auth/login")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, "fFeubfrom@#$%^124234").convertToJSON().toString())
@@ -213,7 +218,7 @@ class WorkerAuthControllerTest {
     void logout() throws Exception {
         // Login
         MvcResult login = this.MOCK_MVC
-                .perform(post("/api/v1/auth/worker/login")
+                .perform(post("/api/v1/worker/auth/login")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
@@ -235,6 +240,40 @@ class WorkerAuthControllerTest {
                         .value("Full authentication is required to access this resource")
                 )
                 .andExpect(jsonPath("$.httpStatus").value("UNAUTHORIZED"));
+    }
+
+    // TODO Might be a JPA Bug
+    /** Test simulates a brute force attack. The loop simulates concurrent failed login */
+    @Test @Order(6)
+    void attack() throws Exception {
+        // Login normal
+        this.MOCK_MVC
+                .perform(post("/api/v1/worker/auth/login")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new LoginDTO(USERNAME, ADMIN_PASSWORD).convertToJSON().toString())
+                )
+                .andExpect(status().isOk());
+
+        // Simulate concurrent failed login attempts
+        for (int i = 0; i <= MAX_FAILED_AUTH + 2; i++) {
+            this.MOCK_MVC
+                    .perform(post("/api/v1/worker/auth/login")
+                            .with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(new LoginDTO(ADMIN_EMAIL, "iwei36SD902#$&*").convertToJSON().toString())
+                    )
+                    .andExpect(status().isUnauthorized());
+        }
+
+        // locked account
+        this.MOCK_MVC
+                .perform(post("/api/v1/worker/auth/login")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new LoginDTO(USERNAME, ADMIN_PASSWORD).convertToJSON().toString())
+                )
+                .andExpect(status().isUnauthorized());
     }
 
 }

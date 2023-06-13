@@ -6,8 +6,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationEventPublisher;
-import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
+import org.springframework.security.authentication.*;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -54,17 +53,17 @@ public class SecurityConfig {
 
     private String[] publicRoutes() {
         return new String[]{
-                "/api/v1/auth/client/register",
-                "/api/v1/auth/client/login",
-                "/api/v1/auth/worker/login"
+                "/api/v1/client/auth/register",
+                "/api/v1/client/auth/login",
+                "/api/v1/worker/auth/login"
         };
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-//                .csrf(AbstractHttpConfigurer::disable)
+//                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+                .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(publicRoutes()).permitAll();
@@ -101,16 +100,24 @@ public class SecurityConfig {
         return new HttpSessionSecurityContextRepository();
     }
 
+    @Bean
+    public AuthenticationManager authenticationManager(
+            @Qualifier(value = "clientAuthProvider") AuthenticationProvider provider,
+            @Qualifier(value = "authenticationEventPublisher") AuthenticationEventPublisher publisher
+    ) {
+        ProviderManager providerManager = new ProviderManager(provider);
+        providerManager.setAuthenticationEventPublisher(publisher);
+        return providerManager;
+    }
+
     /**
      * For each authentication that succeeds or fails, a AuthenticationSuccessEvent or AuthenticationFailureEvent,
      * respectively, is fired.
      * <a href="https://docs.spring.io/spring-security/reference/servlet/authentication/events.html">...</a>
      * */
-    @Bean
-    public AuthenticationEventPublisher authenticationEventPublisher(
-            ApplicationEventPublisher applicationEventPublisher
-    ) {
-        return new DefaultAuthenticationEventPublisher(applicationEventPublisher);
+    @Bean(name = "authenticationEventPublisher")
+    public AuthenticationEventPublisher authenticationEventPublisher(ApplicationEventPublisher publisher) {
+        return new DefaultAuthenticationEventPublisher(publisher);
     }
 
 }

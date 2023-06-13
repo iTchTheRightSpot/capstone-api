@@ -31,4 +31,5 @@ public class ProductColour implements Serializable {
     public ProductColour(String colour) {
         this.colour = colour;
     }
+
 }

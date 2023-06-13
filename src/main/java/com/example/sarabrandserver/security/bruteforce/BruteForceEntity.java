@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.security.bruteforce.entity;
+package com.example.sarabrandserver.security.bruteforce;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,7 +6,7 @@ import org.springframework.data.redis.core.RedisHash;
 
 import java.io.Serializable;
 
-@RedisHash("Student") @Getter @Setter
+@RedisHash("BruteForceEntity") @Getter @Setter
 public class BruteForceEntity implements Serializable {
     private int failedAttempt;
     private String principal; // Represents username and email

@@ -5,11 +5,10 @@ import com.example.sarabrandserver.category.entity.ProductCategory;
 import com.example.sarabrandserver.collection.entity.ProductCollection;
 import com.example.sarabrandserver.order.entity.OrderItem;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,6 +17,9 @@ import static jakarta.persistence.FetchType.EAGER;
 @Table(name = "product")
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
+@Data
+@Builder
 @Getter
 @Setter
 public class Product implements Serializable {
@@ -27,11 +29,15 @@ public class Product implements Serializable {
     @Column(name = "product_id", nullable = false, unique = true)
     private Long productId;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", length = 25, unique = true, nullable = false)
     private String name;
 
     @Column(name = "default_image_path", nullable = false)
     private String defaultImagePath;
+
+    @Column(name = "deleted_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date deletedAt;
 
     @ManyToOne
     @JoinColumn(name = "category_id", referencedColumnName = "category_id")
@@ -51,6 +57,11 @@ public class Product implements Serializable {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = EAGER, mappedBy = "product", orphanRemoval = true)
     private Set<ProductDetail> productDetails = new HashSet<>();
+
+    public Product(String name, String defaultImagePath) {
+        this.name = name;
+        this.defaultImagePath = defaultImagePath;
+    }
 
     public void addProductDetail(ProductDetail detail) {
         this.productDetails.add(detail);

@@ -1,6 +1,6 @@
 package com.example.sarabrandserver.security;
 
-import com.example.sarabrandserver.security.bruteforce.service.BruteForceService;
+import com.example.sarabrandserver.security.bruteforce.BruteForceService;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;

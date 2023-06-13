@@ -2,9 +2,9 @@ package com.example.sarabrandserver.auth.controller;
 
 import com.example.sarabrandserver.auth.service.AuthService;
 import com.example.sarabrandserver.user.dto.ClientRegisterDTO;
-import com.example.sarabrandserver.user.repository.ClientRepo;
+import com.example.sarabrandserver.user.repository.ClientRepository;
 import com.example.sarabrandserver.user.repository.ClientRoleRepo;
-import com.example.sarabrandserver.dto.LoginDTO;
+import com.example.sarabrandserver.auth.dto.LoginDTO;
 import com.example.sarabrandserver.exception.DuplicateException;
 import com.example.sarabrandserver.security.CustomStrategy;
 import com.redis.testcontainers.RedisContainer;
@@ -60,7 +60,7 @@ class ClientAuthControllerTest {
 
     @Autowired private ClientRoleRepo clientRoleRepo;
 
-    @Autowired private ClientRepo clientRepo;
+    @Autowired private ClientRepository clientRepository;
 
     @Autowired private AuthService authService;
 
@@ -104,7 +104,7 @@ class ClientAuthControllerTest {
     @AfterEach
     void tearDown() {
         this.clientRoleRepo.deleteAll();
-        this.clientRepo.deleteAll();
+        this.clientRepository.deleteAll();
     }
 
     @Test @Order(1)
@@ -119,7 +119,7 @@ class ClientAuthControllerTest {
         );
 
         this.MOCK_MVC
-                .perform(post("/api/v1/auth/client/register").contentType(APPLICATION_JSON)
+                .perform(post("/api/v1/client/auth/register").contentType(APPLICATION_JSON)
                         .content(dto.toJson().toString())
                         .with(csrf())
                 )
@@ -138,7 +138,7 @@ class ClientAuthControllerTest {
         );
 
         this.MOCK_MVC
-                .perform(post("/api/v1/auth/client/register").contentType(APPLICATION_JSON)
+                .perform(post("/api/v1/client/auth/register").contentType(APPLICATION_JSON)
                         .content(dto.toJson().toString()).with(csrf()))
                 .andExpect(status().isConflict())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException))
@@ -151,7 +151,7 @@ class ClientAuthControllerTest {
     @Test @Order(3)
     void login() throws Exception {
         MvcResult login = this.MOCK_MVC
-                .perform(post("/api/v1/auth/client/login")
+                .perform(post("/api/v1/client/auth/login")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
@@ -168,7 +168,7 @@ class ClientAuthControllerTest {
     @Test @Order(4)
     void login_wrong_password() throws Exception {
         this.MOCK_MVC
-                .perform(post("/api/v1/auth/client/login")
+                .perform(post("/api/v1/client/auth/login")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, "fFeubfrom@#$%^124234").convertToJSON().toString())
@@ -187,7 +187,7 @@ class ClientAuthControllerTest {
     void logout() throws Exception {
         // Login
         MvcResult login = this.MOCK_MVC
-                .perform(post("/api/v1/auth/client/login")
+                .perform(post("/api/v1/client/auth/login")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
@@ -214,7 +214,7 @@ class ClientAuthControllerTest {
     void validate_max_session() throws Exception {
         // Browser 1
         MvcResult login_one = this.MOCK_MVC
-                .perform(post("/api/v1/auth/client/login")
+                .perform(post("/api/v1/client/auth/login")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
@@ -226,7 +226,7 @@ class ClientAuthControllerTest {
 
         // Browser 2
         MvcResult login_two = this.MOCK_MVC
-                .perform(post("/api/v1/auth/client/login")
+                .perform(post("/api/v1/client/auth/login")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())

@@ -25,11 +25,7 @@ import org.testcontainers.utility.DockerImageName;
 @ActiveProfiles("dev")
 @TestPropertySource(locations = "classpath:application-dev.properties")
 class ApplicationTests {
-
-
-    @Container
-    private static final MySQLContainer<?> container;
-
+    @Container private static final MySQLContainer<?> container;
     @Container private static final RedisContainer redis;
 
     static {

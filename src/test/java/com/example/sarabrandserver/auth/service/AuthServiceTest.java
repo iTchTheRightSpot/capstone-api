@@ -1,13 +1,13 @@
 package com.example.sarabrandserver.auth.service;
 
-import com.example.sarabrandserver.dto.LoginDTO;
+import com.example.sarabrandserver.auth.dto.LoginDTO;
 import com.example.sarabrandserver.enumeration.RoleEnum;
 import com.example.sarabrandserver.exception.DuplicateException;
-import com.example.sarabrandserver.response.AuthResponse;
+import com.example.sarabrandserver.auth.response.AuthResponse;
 import com.example.sarabrandserver.user.dto.ClientRegisterDTO;
 import com.example.sarabrandserver.user.entity.ClientRole;
 import com.example.sarabrandserver.user.entity.Clientz;
-import com.example.sarabrandserver.user.repository.ClientRepo;
+import com.example.sarabrandserver.user.repository.ClientRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,7 +62,7 @@ class AuthServiceTest {
 
     private AuthService authService;
 
-    @Mock private ClientRepo clientRepo;
+    @Mock private ClientRepository clientRepository;
 
     @Mock private PasswordEncoder passwordEncoder;
 
@@ -75,7 +75,7 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         this.authService = new AuthService(
-                this.clientRepo,
+                this.clientRepository,
                 this.passwordEncoder,
                 this.authenticationManager,
                 this.securityContextRepository,
@@ -102,14 +102,14 @@ class AuthServiceTest {
         );
 
         // When
-        when(this.clientRepo.workerExists(anyString(), anyString())).thenReturn(Optional.empty());
-        when(this.clientRepo.save(any(Clientz.class))).thenReturn(worker());
+        when(this.clientRepository.workerExists(anyString(), anyString())).thenReturn(Optional.empty());
+        when(this.clientRepository.save(any(Clientz.class))).thenReturn(worker());
 
         // Then
         var response = this.authService.workerRegister(dto);
         assertEquals(response.getBody(), "Registered");
         assertEquals(response.getStatusCode(), CREATED);
-        verify(this.clientRepo, times(1)).save(any(Clientz.class));
+        verify(this.clientRepository, times(1)).save(any(Clientz.class));
     }
 
     /** Simulates registering a worker but he or she has a role of WORKER */
@@ -126,7 +126,7 @@ class AuthServiceTest {
         );
 
         // When
-        when(this.clientRepo.workerExists(anyString(), anyString())).thenReturn(Optional.of(worker()));
+        when(this.clientRepository.workerExists(anyString(), anyString())).thenReturn(Optional.of(worker()));
 
         // Then
         assertThrows(DuplicateException.class, () -> this.authService.workerRegister(dto));
@@ -146,14 +146,14 @@ class AuthServiceTest {
         );
 
         // When
-        when(this.clientRepo.workerExists(anyString(), anyString())).thenReturn(Optional.of(client()));
-        when(this.clientRepo.save(any(Clientz.class))).thenReturn(worker());
+        when(this.clientRepository.workerExists(anyString(), anyString())).thenReturn(Optional.of(client()));
+        when(this.clientRepository.save(any(Clientz.class))).thenReturn(worker());
 
         // Then
         var response = this.authService.workerRegister(dto);
         assertEquals(response.getBody(), "Updated");
         assertEquals(response.getStatusCode(), OK);
-        verify(this.clientRepo, times(1)).save(any(Clientz.class));
+        verify(this.clientRepository, times(1)).save(any(Clientz.class));
     }
 
     @Test
@@ -214,15 +214,15 @@ class AuthServiceTest {
         );
 
         // When
-        when(this.clientRepo.principalExists(anyString(), anyString())).thenReturn(0);
+        when(this.clientRepository.principalExists(anyString(), anyString())).thenReturn(0);
         when(this.passwordEncoder.encode(anyString())).thenReturn(dto.password());
-        when(this.clientRepo.save(any(Clientz.class))).thenReturn(client());
+        when(this.clientRepository.save(any(Clientz.class))).thenReturn(client());
 
         // Then
         var response = this.authService.clientRegister(dto);
         assertEquals(response.getBody(), "Registered");
         assertEquals(response.getStatusCode(), HttpStatus.CREATED);
-        verify(this.clientRepo, times(1)).save(any(Clientz.class));
+        verify(this.clientRepository, times(1)).save(any(Clientz.class));
     }
 
     @Test
@@ -238,7 +238,7 @@ class AuthServiceTest {
         );
 
         // When
-        when(this.clientRepo.principalExists(anyString(), anyString())).thenReturn(1);
+        when(this.clientRepository.principalExists(anyString(), anyString())).thenReturn(1);
 
         // Then
         assertThrows(DuplicateException.class, () -> this.authService.clientRegister(dto));
@@ -287,7 +287,7 @@ class AuthServiceTest {
         user.setPhoneNumber("000-000-0000");
         user.setPassword("password");
         user.setEnabled(true);
-        user.setLocked(true);
+        user.setAccountNoneLocked(true);
         user.setCredentialsNonExpired(true);
         user.setAccountNonExpired(true);
         user.addRole(new ClientRole(RoleEnum.CLIENT));
@@ -303,7 +303,7 @@ class AuthServiceTest {
         user.setPhoneNumber("000-000-0000");
         user.setPassword("password");
         user.setEnabled(true);
-        user.setLocked(true);
+        user.setAccountNoneLocked(true);
         user.setCredentialsNonExpired(true);
         user.setAccountNonExpired(true);
         user.addRole(new ClientRole(RoleEnum.CLIENT));

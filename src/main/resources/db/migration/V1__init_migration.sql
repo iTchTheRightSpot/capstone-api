@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS clientz (
     enabled BOOLEAN NOT NULL,
     credentials_none_expired BOOLEAN NOT NULL,
     account_none_expired BOOLEAN NOT NULL,
-    locked BOOLEAN NOT NULL,
+    account_none_locked BOOLEAN NOT NULL,
     reset_id BIGINT,
     PRIMARY KEY (client_id),
     FOREIGN KEY (reset_id) REFERENCES client_password_reset_token (reset_id)
@@ -113,9 +113,9 @@ CREATE TABLE IF NOT EXISTS product_collection (
 
 CREATE TABLE IF NOT EXISTS product (
     product_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
-    description VARCHAR(255),
+    name VARCHAR(25) NOT NULL UNIQUE,
     default_image_path VARCHAR(255) NOT NULL,
+    deleted_at DATETIME,
     category_id BIGINT,
     product_collection_id BIGINT,
     session_id BIGINT,
@@ -128,8 +128,10 @@ CREATE TABLE IF NOT EXISTS product (
 CREATE TABLE IF NOT EXISTS product_detail (
     product_detail_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
     description VARCHAR(255),
-    sku VARCHAR(255) NOT NULL UNIQUE,
+    sku VARCHAR(50) NOT NULL UNIQUE,
     qty INTEGER NOT NULL,
+    price DECIMAL NOT NULL,
+    currency VARCHAR(25) NOT NULL,
     created_at DATETIME NOT NULL,
     modified_at DATETIME,
     deleted_at DATETIME,
@@ -160,20 +162,4 @@ CREATE TABLE IF NOT EXISTS product_colour (
     product_detail_id BIGINT,
     PRIMARY KEY (product_colour_id),
     FOREIGN KEY (product_detail_id) REFERENCES product_detail(product_detail_id)
-);
-
-CREATE TABLE IF NOT EXISTS product_price (
-    product_price_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
-    price DECIMAL NOT NULL,
-    product_detail_id BIGINT,
-    PRIMARY KEY (product_price_id),
-    FOREIGN KEY (product_detail_id) REFERENCES product_detail(product_detail_id)
-);
-
-CREATE TABLE IF NOT EXISTS currency_entity (
-    currency_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
-    currency VARCHAR(25) NOT NULL,
-    product_price_id BIGINT,
-    PRIMARY KEY (currency_id),
-    FOREIGN KEY (product_price_id) REFERENCES product_price(product_price_id)
 );

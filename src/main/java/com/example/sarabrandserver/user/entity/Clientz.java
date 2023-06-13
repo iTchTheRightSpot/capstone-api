@@ -2,10 +2,7 @@ package com.example.sarabrandserver.user.entity;
 
 import com.example.sarabrandserver.cart.entity.ShoppingSession;
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -21,6 +18,9 @@ import static jakarta.persistence.FetchType.EAGER;
 @Table(name = "clientz")
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
+//@Data
 @Getter
 @Setter
 @EqualsAndHashCode
@@ -58,8 +58,8 @@ public class Clientz implements Serializable {
     @Column(name = "account_none_expired", nullable = false)
     private boolean accountNonExpired;
 
-    @Column(name = "locked", nullable = false)
-    private boolean locked;
+    @Column(name = "account_none_locked", nullable = false)
+    private boolean accountNoneLocked;
 
     @OneToOne(cascade = ALL)
     @JoinColumn(name = "reset_id", referencedColumnName = "reset_id")
@@ -81,7 +81,7 @@ public class Clientz implements Serializable {
             boolean enabled,
             boolean credentialsNonExpired,
             boolean accountNonExpired,
-            boolean locked
+            boolean accountNoneLocked
     ) {
         this.firstname = firstname;
         this.lastname = lastname;
@@ -92,7 +92,7 @@ public class Clientz implements Serializable {
         this.enabled = enabled;
         this.credentialsNonExpired = credentialsNonExpired;
         this.accountNonExpired = accountNonExpired;
-        this.locked = locked;
+        this.accountNoneLocked = accountNoneLocked;
     }
 
     public void addRole(ClientRole role) {

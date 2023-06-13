@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.dto;
+package com.example.sarabrandserver.auth.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;

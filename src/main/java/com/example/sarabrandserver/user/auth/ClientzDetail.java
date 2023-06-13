@@ -29,7 +29,7 @@ public record ClientzDetail(Clientz clientz) implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return this.clientz.isLocked();
+        return this.clientz.isAccountNoneLocked();
     }
 
     @Override

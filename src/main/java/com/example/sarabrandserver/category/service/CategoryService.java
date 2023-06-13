@@ -21,7 +21,6 @@ import static org.springframework.http.HttpStatus.*;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
-
     private final DateUTC dateUTC;
 
     public CategoryService(CategoryRepository categoryRepository, DateUTC dateUTC) {
@@ -142,9 +141,13 @@ public class CategoryService {
         return new ResponseEntity<>(NO_CONTENT);
     }
 
-    private ProductCategory findByName(String name) {
+    public ProductCategory findByName(String name) {
         return this.categoryRepository.findByName(name)
                 .orElseThrow(() -> new CustomNotFoundException("Does not exist"));
+    }
+
+    public void save(ProductCategory category) {
+        this.categoryRepository.save(category);
     }
 
 }

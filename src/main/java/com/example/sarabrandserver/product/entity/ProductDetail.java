@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,13 +29,19 @@ public class ProductDetail implements Serializable {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "sku", nullable = false, unique = true)
+    @Column(name = "sku", nullable = false, unique = true, length = 50)
     private String sku;
 
     @Column(name = "qty", nullable = false)
     private int quantity;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "price", nullable = false)
+    private BigDecimal price;
+
+    @Column(name = "currency", nullable = false, length = 25)
+    private String currency;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createAt;
 
@@ -59,9 +66,6 @@ public class ProductDetail implements Serializable {
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productDetail", orphanRemoval = true)
     private Set<ProductColour> productColours = new HashSet<>();
 
-    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productDetail", orphanRemoval = true)
-    private Set<ProductPrice> productPrices = new HashSet<>();
-
     public void addImage(ProductImage image) {
         this.productImages.add(image);
         image.setProductDetail(this);
@@ -75,11 +79,6 @@ public class ProductDetail implements Serializable {
     public void addColour(ProductColour colour){
         this.productColours.add(colour);
         colour.setProductDetail(this);
-    }
-
-    public void addPrices(ProductPrice price) {
-        this.productPrices.add(price);
-        price.setProductDetail(this);
     }
 
     public boolean decrementQuantity() {

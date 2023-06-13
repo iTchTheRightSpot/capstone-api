@@ -1,7 +1,7 @@
 package com.example.sarabrandserver.auth.controller;
 
 import com.example.sarabrandserver.auth.service.AuthService;
-import com.example.sarabrandserver.dto.LoginDTO;
+import com.example.sarabrandserver.auth.dto.LoginDTO;
 import com.example.sarabrandserver.user.dto.ClientRegisterDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController @RequestMapping(path = "api/v1/auth/worker")
+@RestController @RequestMapping(path = "api/v1/worker/auth")
 public class WorkerAuthController {
 
     private final AuthService authService;

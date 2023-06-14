@@ -142,6 +142,7 @@ CREATE TABLE IF NOT EXISTS product_detail (
 
 CREATE TABLE IF NOT EXISTS product_image (
     product_image_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
+    image_key VARCHAR(50) NOT NULL,
     image_path VARCHAR(255) NOT NULL,
     product_detail_id BIGINT,
     PRIMARY KEY (product_image_id),

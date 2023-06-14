@@ -7,6 +7,7 @@ import com.example.sarabrandserver.user.dto.ClientRegisterDTO;
 import com.example.sarabrandserver.user.entity.ClientRole;
 import com.example.sarabrandserver.user.entity.Clientz;
 import com.example.sarabrandserver.user.repository.ClientRepository;
+import com.github.javafaker.Faker;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.Optional;
 
 import static com.example.sarabrandserver.enumeration.RoleEnum.CLIENT;
@@ -193,17 +195,21 @@ public class AuthService {
     }
 
     private Clientz createClient(ClientRegisterDTO dto) {
-        var clientz = new Clientz(
-                dto.firstname().trim(),
-                dto.lastname().trim(),
-                dto.email().trim(),
-                dto.username().trim(),
-                dto.phone_number().trim(),
-                passwordEncoder.encode(dto.password()),
-                true, true, true, true
-        );
-        clientz.addRole(new ClientRole(CLIENT));
-        return clientz;
+        var client = Clientz.builder()
+                .firstname(dto.firstname().trim())
+                .lastname(dto.lastname().trim())
+                .email(dto.email().trim())
+                .username(dto.username().trim())
+                .phoneNumber(dto.phone_number().trim())
+                .password(passwordEncoder.encode(dto.password()))
+                .enabled(true)
+                .credentialsNonExpired(true)
+                .accountNonExpired(true)
+                .accountNoneLocked(true)
+                .clientRole(new HashSet<>())
+                .build();
+        client.addRole(new ClientRole(CLIENT));
+        return client;
     }
 
 }

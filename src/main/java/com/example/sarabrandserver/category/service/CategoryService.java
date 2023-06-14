@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.*;
@@ -65,16 +66,18 @@ public class CategoryService {
             throw new DuplicateException("Duplicate name or sub category");
         }
 
-        var date = this.dateUTC.toUTC(new Date());
+        var date = this.dateUTC.toUTC(new Date()).isEmpty() ? new Date() : this.dateUTC.toUTC(new Date()).get();
 
-        if (date.isEmpty()) {
-            return new ResponseEntity<>(
-                    "Server error please try again or call developer if error persists", INTERNAL_SERVER_ERROR);
-        }
+        // Parent Category
+        var category = ProductCategory.builder()
+                .categoryName(dto.category_name().trim())
+                .createAt(date)
+                .productCategories(new HashSet<>())
+                .product(new HashSet<>())
+                .build();
 
-        var category = new ProductCategory(dto.category_name(), date.get());
-
-        dto.sub_category().forEach(str -> category.addCategory(new ProductCategory(str, date.get())));
+        // Sub Category
+        dto.sub_category().forEach(str -> category.addCategory(new ProductCategory(str, date)));
         this.categoryRepository.save(category);
         return new ResponseEntity<>("created", CREATED);
     }
@@ -120,11 +123,7 @@ public class CategoryService {
         }
 
         // Get date in UTC
-        var date = this.dateUTC.toUTC(new Date());
-        if (date.isEmpty()) {
-            return new ResponseEntity<>(
-                    "Server error please try again or call developer if error persists", INTERNAL_SERVER_ERROR);
-        }
+        var date = this.dateUTC.toUTC(new Date()).isEmpty() ? new Date() : this.dateUTC.toUTC(new Date()).get();
 
         // Find product by node
         var parent = findByName(node.trim());
@@ -133,10 +132,10 @@ public class CategoryService {
         var children = this.categoryRepository.getChildCategoriesWhereDeletedIsNull(parent.getCategoryId());
 
         // Custom delete all children
-        children.forEach(childName -> this.categoryRepository.custom_delete(date.get(), childName));
+        children.forEach(childName -> this.categoryRepository.custom_delete(date, childName));
 
         // Custom delete parent
-        this.categoryRepository.custom_delete(date.get(), parent.getCategoryName());
+        this.categoryRepository.custom_delete(date, parent.getCategoryName());
 
         return new ResponseEntity<>(NO_CONTENT);
     }

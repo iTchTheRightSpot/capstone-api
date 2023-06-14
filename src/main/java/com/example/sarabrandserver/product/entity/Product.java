@@ -9,16 +9,15 @@ import lombok.*;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
 import static jakarta.persistence.FetchType.EAGER;
+import static jakarta.persistence.FetchType.LAZY;
 
 @Table(name = "product")
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 @Builder
 @Getter
 @Setter
@@ -39,24 +38,24 @@ public class Product implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date deletedAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY) // Fetch type Lazy until business requirement changes
     @JoinColumn(name = "category_id", referencedColumnName = "category_id")
     private ProductCategory productCategory;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY) // Fetch type Lazy until business requirement changes
     @JoinColumn(name = "product_collection_id", referencedColumnName = "product_collection_id")
     private ProductCollection productCollection;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "session_id", referencedColumnName = "session_id")
     private ShoppingSession shoppingSession;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "order_item_id", referencedColumnName = "order_item_id")
     private OrderItem orderItem;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = EAGER, mappedBy = "product", orphanRemoval = true)
-    private Set<ProductDetail> productDetails = new HashSet<>();
+    private Set<ProductDetail> productDetails;
 
     public Product(String name, String defaultImagePath) {
         this.name = name;

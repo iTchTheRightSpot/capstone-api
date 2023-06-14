@@ -2,21 +2,21 @@ package com.example.sarabrandserver.category.entity;
 
 import com.example.sarabrandserver.product.entity.Product;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.EAGER;
+import static jakarta.persistence.FetchType.LAZY;
 
 @Table(name = "product_category")
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Getter
 @Setter
 public class ProductCategory implements Serializable {
@@ -46,10 +46,10 @@ public class ProductCategory implements Serializable {
     private ProductCategory productCategory;
 
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productCategory", orphanRemoval = true)
-    private Set<ProductCategory> productCategories = new HashSet<>();
+    private Set<ProductCategory> productCategories;
 
-    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productCategory", orphanRemoval = true)
-    private Set<Product> product = new HashSet<>();
+    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "productCategory", orphanRemoval = true)
+    private Set<Product> product;
 
     public ProductCategory(String categoryName) {
         this.categoryName = categoryName;

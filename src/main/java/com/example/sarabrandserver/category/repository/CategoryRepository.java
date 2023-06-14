@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<ProductCategory, Long> {
@@ -23,7 +24,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
         WHERE p.categoryName = :name
         OR p2.categoryName IN :list
     """)
-    int duplicateCategoryName(@Param(value = "name") String name, @Param(value = "list") List<String> list);
+    int duplicateCategoryName(@Param(value = "name") String name, @Param(value = "list") Set<String> list);
 
     /**
      * Because category is a self join, the query below selects categories that do not have any parents and have not

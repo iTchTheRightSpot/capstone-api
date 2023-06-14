@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 import javax.json.Json;
 import javax.json.JsonObject;
-import java.util.List;
+import java.util.Set;
 
 public record CategoryDTO(
         @NotNull @NotEmpty @Size(max = 50, message = "category name cannot exceed length of 50")
@@ -15,7 +15,7 @@ public record CategoryDTO(
         String category_name,
         @NotNull @NotEmpty
         @JsonProperty(value = "sub_category", required = true)
-        List<String> sub_category
+        Set<String> sub_category
 ) {
     public JsonObject toJson() {
         return Json.createObjectBuilder()

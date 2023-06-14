@@ -22,4 +22,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("UPDATE Product p SET p.deletedAt = :date WHERE p.name = :name")
     void custom_delete(@Param(value = "date") Date date, @Param(value = "name") String name);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Transactional
+    @Query("UPDATE Product p SET p.name = :name WHERE p.productId = :id")
+    void updateName(@Param(value = "name") String name, @Param(value = "id") long id);
+
 }

@@ -8,11 +8,10 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.EAGER;
 
 @Table(name = "clientz")
@@ -20,7 +19,6 @@ import static jakarta.persistence.FetchType.EAGER;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-//@Data
 @Getter
 @Setter
 @EqualsAndHashCode
@@ -68,8 +66,8 @@ public class Clientz implements Serializable {
     @OneToOne(mappedBy = "clientz")
     private ShoppingSession shoppingSession;
 
-    @OneToMany(cascade = {PERSIST, MERGE, REMOVE}, fetch = EAGER, mappedBy = "clientz", orphanRemoval = true)
-    private Set<ClientRole> clientRole = new HashSet<>();
+    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "clientz", orphanRemoval = true)
+    private Set<ClientRole> clientRole;
 
     public Clientz(
             String firstname,

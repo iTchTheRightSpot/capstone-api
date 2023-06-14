@@ -1,14 +1,12 @@
 package com.example.sarabrandserver.product.entity;
 
+import com.example.sarabrandserver.product.response.ColourResponse;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
@@ -17,13 +15,15 @@ import static jakarta.persistence.FetchType.EAGER;
 @Table(name = "product_detail")
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Getter
 @Setter
 public class ProductDetail implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "product_detail_id", nullable = false, unique = true)
+    @Column(name = "product_detail_id", nullable = false, unique = true, updatable = false)
     private Long productDetailId;
 
     @Column(name = "description")
@@ -58,13 +58,13 @@ public class ProductDetail implements Serializable {
     private Product product;
 
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productDetail", orphanRemoval = true)
-    private Set<ProductImage> productImages = new HashSet<>();
+    private Set<ProductImage> productImages;
 
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productDetail", orphanRemoval = true)
-    private Set<ProductSize> productSizes = new HashSet<>();
+    private Set<ProductSize> productSizes;
 
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productDetail", orphanRemoval = true)
-    private Set<ProductColour> productColours = new HashSet<>();
+    private Set<ProductColour> productColours;
 
     public void addImage(ProductImage image) {
         this.productImages.add(image);

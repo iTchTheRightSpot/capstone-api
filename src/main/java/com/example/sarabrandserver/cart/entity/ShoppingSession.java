@@ -1,7 +1,7 @@
 package com.example.sarabrandserver.cart.entity;
 
-import com.example.sarabrandserver.user.entity.Clientz;
 import com.example.sarabrandserver.product.entity.Product;
+import com.example.sarabrandserver.user.entity.Clientz;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -10,7 +10,6 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
@@ -45,7 +44,7 @@ public class ShoppingSession {
     private Clientz clientz;
 
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "shoppingSession", orphanRemoval = true)
-    private Set<Product> products = new HashSet<>();
+    private Set<Product> products;
 
     public void setClientz(Clientz client) {
         this.clientz = client;

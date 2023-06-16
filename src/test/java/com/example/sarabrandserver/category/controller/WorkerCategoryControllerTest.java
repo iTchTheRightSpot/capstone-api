@@ -3,7 +3,7 @@ package com.example.sarabrandserver.category.controller;
 import com.example.sarabrandserver.category.dto.CategoryDTO;
 import com.example.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.example.sarabrandserver.category.repository.CategoryRepository;
-import com.example.sarabrandserver.category.service.CategoryService;
+import com.example.sarabrandserver.category.service.WorkerCategoryService;
 import com.example.sarabrandserver.exception.DuplicateException;
 import com.github.javafaker.Faker;
 import com.redis.testcontainers.RedisContainer;
@@ -38,23 +38,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+// TODO Refactor tests because an update
 @RunWith(SpringRunner.class)
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
 @TestPropertySource(locations = "classpath:application-dev.properties")
-class CategoryControllerTest {
+class WorkerCategoryControllerTest {
 
     @Autowired private MockMvc MOCK_MVC;
 
-    @Autowired private CategoryService categoryService;
+    @Autowired private WorkerCategoryService workerCategoryService;
 
     @Autowired private CategoryRepository categoryRepository;
 
     private CategoryDTO categoryDTO;
 
-    private final int max = 50;
+    private final int max = 3;
+
+    private final int subMax = 5;
 
     private final Set<String> parentCategory = new HashSet<>();
 
@@ -82,16 +85,18 @@ class CategoryControllerTest {
 
     @BeforeEach
     void setUp() {
-        for (int i = 0; i < max; i++) parentCategory.add(new Faker().commerce().productName());
+        for (int i = 0; i < max; i++) {
+            parentCategory.add(new Faker().commerce().productName());
+        }
 
         for (String str : parentCategory) {
-            this.categoryDTO = new CategoryDTO(str, new ArrayList<>());
+            this.categoryDTO = new CategoryDTO(str, true, new HashSet<>());
 
-            for (int i = 0; i < 1; i++) {
+            for (int i = 0; i < subMax; i++) {
                 this.categoryDTO.sub_category().add(UUID.randomUUID().toString());
             }
 
-            this.categoryService.create(this.categoryDTO);
+            this.workerCategoryService.create(this.categoryDTO);
         }
 
     }
@@ -106,17 +111,18 @@ class CategoryControllerTest {
         // Then
         this.MOCK_MVC
                 .perform(get("/api/v1/category"))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.[*].category_name").isArray())
-                .andExpect(jsonPath("$.[*].category_name").value(hasSize(max)));
+                .andExpect(jsonPath("$.[*].category_name")
+                        .value(hasSize(this.parentCategory.size())))
+                .andExpect(jsonPath("$.[*].sub_category").isArray());
     }
 
     @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
     void create() throws Exception {
         // Given
-        var dto = new CategoryDTO(new Faker().name().lastName(), new ArrayList<>());
-        for (int i = 0; i < 1; i++) dto.sub_category().add(new Faker().name().firstName());
+        var dto = new CategoryDTO(new Faker().name().lastName(), true, new HashSet<>());
+        for (int i = 0; i < 20; i++) dto.sub_category().add(UUID.randomUUID().toString());
 
         // Then
         this.MOCK_MVC

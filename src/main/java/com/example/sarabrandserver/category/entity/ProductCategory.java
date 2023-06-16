@@ -29,7 +29,7 @@ public class ProductCategory implements Serializable {
     @Column(name = "category_name", nullable = false, unique = true, length = 50)
     private String categoryName;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createAt;
 
@@ -37,9 +37,8 @@ public class ProductCategory implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date modifiedAt;
 
-    @Column(name = "deleted_at")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date deletedAt;
+    @Column(name = "is_visible")
+    private boolean isVisible;
 
     @ManyToOne
     @JoinColumn(name = "parent_category_id", referencedColumnName = "category_id")
@@ -48,7 +47,7 @@ public class ProductCategory implements Serializable {
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productCategory", orphanRemoval = true)
     private Set<ProductCategory> productCategories;
 
-    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "productCategory", orphanRemoval = true)
+    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "productCategory")
     private Set<Product> product;
 
     public ProductCategory(String categoryName) {

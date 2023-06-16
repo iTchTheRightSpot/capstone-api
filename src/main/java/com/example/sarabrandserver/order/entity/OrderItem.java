@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -41,6 +40,6 @@ public class OrderItem implements Serializable {
     private OrderDetail orderDetail;
 
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "orderItem", orphanRemoval = true)
-    private List<Product> products = new ArrayList<>();
+    private List<Product> products;
 
 }

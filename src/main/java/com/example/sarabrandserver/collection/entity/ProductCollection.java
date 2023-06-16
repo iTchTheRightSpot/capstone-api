@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
 import static jakarta.persistence.FetchType.EAGER;
@@ -26,10 +25,10 @@ public class ProductCollection {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "product_collection_id", nullable = false, unique = true)
-    private Long productCollectionId;
+    @Column(name = "collection_id", nullable = false, unique = true)
+    private Long collectionId;
 
-    @Column(name = "collection", nullable = false, unique = true, length = 32)
+    @Column(name = "collection", nullable = false, unique = true, length = 50)
     private String collection;
 
     @Column(name = "created_at", nullable = false)
@@ -45,6 +44,6 @@ public class ProductCollection {
     private Date deletedAt;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = EAGER, mappedBy = "productCollection", orphanRemoval = true)
-    private Set<Product> products = new HashSet<>();
+    private Set<Product> products;
 
 }

@@ -1,6 +1,7 @@
 package com.example.sarabrandserver.category.repository;
 
 import com.example.sarabrandserver.category.entity.ProductCategory;
+import com.example.sarabrandserver.category.projection.CategoryPojo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,48 +16,50 @@ import java.util.Set;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<ProductCategory, Long> {
-
     @Query("""
-        SELECT COUNT(p.categoryId)
-        FROM ProductCategory p
-        LEFT JOIN ProductCategory p2
-        ON p.categoryId = p2.categoryId
-        WHERE p.categoryName = :name
-        OR p2.categoryName IN :list
+    SELECT COUNT(p.categoryId)
+    FROM ProductCategory p
+    WHERE p.categoryName = :name
+    OR p.categoryName IN :list
     """)
     int duplicateCategoryName(@Param(value = "name") String name, @Param(value = "list") Set<String> list);
 
-    /**
-     * Because category is a self join, the query below selects categories that do not have any parents and have not
-     * been deleted.
-     * @return List of Object of param Long representing categoryId and String representing categoryName
+    /** Equivalent sql statement because jpa can be confusing at times hahaha
+     * select parent.category_name, group_concat(child.category_name)
+     * from product_category parent
+     * left join product_category child on parent.category_id = child.parent_category_id
+     * where parent.parent_category_id is null
+     * group by parent.category_name, parent.created_at
+     * order by parent.created_at
      * */
     @Query(value = """
-    SELECT p.categoryId, p.categoryName
-    FROM ProductCategory p
-    LEFT JOIN ProductCategory p2
-    ON p.categoryId = p2.categoryId
-    WHERE p.productCategory.categoryId IS NULL
-    AND p.deletedAt IS NULL
-    ORDER BY p.createAt
+    SELECT parent.categoryName AS category, parent.isVisible AS status, GROUP_CONCAT(child.categoryName) AS sub
+    FROM ProductCategory parent
+    LEFT JOIN ProductCategory child ON parent.categoryId = child.productCategory.categoryId
+    WHERE parent.productCategory.categoryId IS NULL
+    GROUP BY parent.categoryName, parent.createAt, parent.isVisible
+    ORDER BY parent.createAt
     """)
-    List<Object> getParentCategoriesWithIdNull();
+    List<CategoryPojo> fetchCategories();
 
-    /**
-     * Query fetches all child nodes of a parent
-     * @return List of String categoryName
-     * */
     @Query(value = """
-    SELECT p.categoryName
-    FROM ProductCategory p
-    WHERE p.productCategory.categoryId = :id
-    AND p.deletedAt IS NULL
-    ORDER BY p.createAt
+    SELECT parent.categoryName AS category, parent.isVisible AS status, GROUP_CONCAT(child.categoryName) AS sub
+    FROM ProductCategory parent
+    LEFT JOIN ProductCategory child ON parent.categoryId = child.productCategory.categoryId
+    WHERE parent.productCategory.categoryId IS NULL AND parent.isVisible = true
+    GROUP BY parent.categoryName, parent.createAt, parent.isVisible
+    ORDER BY parent.createAt
     """)
-    List<String> getChildCategoriesWhereDeletedIsNull(@Param(value = "id") Long id);
+    List<CategoryPojo> fetchCategoriesClient();
 
     @Query("SELECT pc FROM ProductCategory pc WHERE pc.categoryName = :name")
     Optional<ProductCategory> findByName(@Param(value = "name") String name);
+
+    @Query(value = """
+    SELECT COUNT(pc.categoryName) FROM ProductCategory pc
+    WHERE pc.categoryName = :newName
+    """)
+    int duplicateCategoryForUpdate(@Param(value = "newName") String newName);
 
     @Modifying(clearAutomatically = true)
     @Transactional
@@ -67,13 +70,8 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     """)
     void update(
             @Param(value = "date") Date date,
-            @Param(value = "newName") String newName,
-            @Param(value = "oldName") String oldName
+            @Param(value = "oldName") String oldName,
+            @Param(value = "newName") String newName
     );
-
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Transactional
-    @Query("UPDATE ProductCategory pc SET pc.modifiedAt = :date, pc.deletedAt = :date WHERE pc.categoryName = :name")
-    void custom_delete(@Param(value = "date") Date date, @Param(value = "name") String name);
 
 }

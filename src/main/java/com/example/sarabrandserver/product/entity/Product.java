@@ -8,9 +8,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.math.BigDecimal;
 import java.util.Set;
 
+import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 
@@ -28,22 +29,27 @@ public class Product implements Serializable {
     @Column(name = "product_id", nullable = false, unique = true)
     private Long productId;
 
-    @Column(name = "name", length = 25, unique = true, nullable = false)
+    @Column(name = "name", length = 80, unique = true, nullable = false)
     private String name;
 
     @Column(name = "default_image_path", nullable = false)
     private String defaultImagePath;
 
-    @Column(name = "deleted_at")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date deletedAt;
+    @Column(name = "description")
+    private String description;
 
-    @ManyToOne(fetch = LAZY) // Fetch type Lazy until business requirement changes
+    @Column(name = "price", nullable = false)
+    private BigDecimal price;
+
+    @Column(name = "currency", nullable = false, length = 50)
+    private String currency;
+
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "category_id", referencedColumnName = "category_id")
     private ProductCategory productCategory;
 
-    @ManyToOne(fetch = LAZY) // Fetch type Lazy until business requirement changes
-    @JoinColumn(name = "product_collection_id", referencedColumnName = "product_collection_id")
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "collection_id", referencedColumnName = "collection_id")
     private ProductCollection productCollection;
 
     @ManyToOne(fetch = LAZY)
@@ -54,7 +60,7 @@ public class Product implements Serializable {
     @JoinColumn(name = "order_item_id", referencedColumnName = "order_item_id")
     private OrderItem orderItem;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = EAGER, mappedBy = "product", orphanRemoval = true)
+    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "product", orphanRemoval = true)
     private Set<ProductDetail> productDetails;
 
     public Product(String name, String defaultImagePath) {
@@ -62,7 +68,7 @@ public class Product implements Serializable {
         this.defaultImagePath = defaultImagePath;
     }
 
-    public void addProductDetail(ProductDetail detail) {
+    public void addDetails(ProductDetail detail) {
         this.productDetails.add(detail);
         detail.setProduct(this);
     }

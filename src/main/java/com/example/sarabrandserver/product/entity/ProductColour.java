@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.Set;
 
 @Table(name = "product_colour")
 @Entity
@@ -17,15 +18,14 @@ public class ProductColour implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "product_colour_id", nullable = false, unique = true)
+    @Column(name = "colour_id", nullable = false, unique = true)
     private Long productColourId;
 
-    @Column(name = "colour", nullable = false, length = 20)
+    @Column(name = "colour", nullable = false, length = 50)
     private String colour;
 
-    @ManyToOne
-    @JoinColumn(name = "product_detail_id", referencedColumnName = "product_detail_id")
-    private ProductDetail productDetail;
+    @OneToMany(mappedBy = "productColour")
+    private Set<ProductDetail> productDetails;
 
     public ProductColour(String colour) {
         this.colour = colour;

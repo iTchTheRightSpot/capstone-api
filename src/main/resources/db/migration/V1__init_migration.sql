@@ -96,71 +96,77 @@ CREATE TABLE IF NOT EXISTS product_category (
     category_name VARCHAR(50) NOT NULL UNIQUE,
     created_at DATETIME NOT NULL,
     modified_at DATETIME,
-    deleted_at DATETIME,
+    is_visible BOOLEAN,
     parent_category_id BIGINT,
     PRIMARY KEY (category_id),
     FOREIGN KEY (parent_category_id) REFERENCES product_category (category_id)
 );
 
 CREATE TABLE IF NOT EXISTS product_collection (
-    product_collection_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
-    collection VARCHAR(32) NOT NULL UNIQUE,
+    collection_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
+    collection VARCHAR(50) NOT NULL UNIQUE,
     created_at DATETIME NOT NULL,
     modified_at DATETIME,
     deleted_at DATETIME,
-    PRIMARY KEY (product_collection_id)
+    PRIMARY KEY (collection_id)
 );
 
 CREATE TABLE IF NOT EXISTS product (
     product_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
-    name VARCHAR(25) NOT NULL UNIQUE,
+    name VARCHAR(80) NOT NULL UNIQUE,
     default_image_path VARCHAR(255) NOT NULL,
-    deleted_at DATETIME,
+    description VARCHAR(255),
+    price DECIMAL NOT NULL,
+    currency VARCHAR(50) NOT NULL,
     category_id BIGINT,
-    product_collection_id BIGINT,
+    collection_id BIGINT,
     session_id BIGINT,
     order_item_id BIGINT,
     PRIMARY KEY (product_id),
     FOREIGN KEY (category_id) REFERENCES product_category (category_id),
-    FOREIGN KEY (product_collection_id) REFERENCES product_collection (product_collection_id)
-);
-
-CREATE TABLE IF NOT EXISTS product_detail (
-    product_detail_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
-    description VARCHAR(255),
-    sku VARCHAR(50) NOT NULL UNIQUE,
-    qty INTEGER NOT NULL,
-    price DECIMAL NOT NULL,
-    currency VARCHAR(25) NOT NULL,
-    created_at DATETIME NOT NULL,
-    modified_at DATETIME,
-    deleted_at DATETIME,
-    product_id BIGINT,
-    PRIMARY KEY (product_detail_id),
-    FOREIGN KEY (product_id) REFERENCES product(product_id)
+    FOREIGN KEY (collection_id) REFERENCES product_collection (collection_id)
 );
 
 CREATE TABLE IF NOT EXISTS product_image (
-    product_image_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
+    image_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
     image_key VARCHAR(50) NOT NULL,
     image_path VARCHAR(255) NOT NULL,
-    product_detail_id BIGINT,
-    PRIMARY KEY (product_image_id),
-    FOREIGN KEY (product_detail_id) REFERENCES product_detail(product_detail_id)
+    PRIMARY KEY (image_id)
 );
 
 CREATE TABLE IF NOT EXISTS product_size (
-    product_size_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
-    size VARCHAR(255) NOT NULL,
-    product_detail_id BIGINT,
-    PRIMARY KEY (product_size_id),
-    FOREIGN KEY (product_detail_id) REFERENCES product_detail(product_detail_id)
+    size_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
+    size VARCHAR(100) NOT NULL,
+    PRIMARY KEY (size_id)
 );
 
 CREATE TABLE IF NOT EXISTS product_colour (
-    product_colour_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
-    colour VARCHAR(20) NOT NULL,
-    product_detail_id BIGINT,
-    PRIMARY KEY (product_colour_id),
-    FOREIGN KEY (product_detail_id) REFERENCES product_detail(product_detail_id)
+    colour_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
+    colour VARCHAR(50) NOT NULL,
+    PRIMARY KEY (colour_id)
+);
+
+CREATE TABLE IF NOT EXISTS product_inventory (
+    inventory_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
+    quantity INTEGER NOT NULL,
+    PRIMARY KEY (inventory_id)
+);
+
+CREATE TABLE IF NOT EXISTS product_detail (
+    detail_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
+    sku VARCHAR(100) NOT NULL UNIQUE,
+    is_disabled BOOLEAN,
+    created_at DATETIME NOT NULL,
+    modified_at DATETIME,
+    size_id BIGINT NOT NULL,
+    inventory_id BIGINT NOT NULL,
+    image_id BIGINT NOT NULL,
+    colour_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    PRIMARY KEY (detail_id),
+    FOREIGN KEY (size_id) REFERENCES product_size (size_id),
+    FOREIGN KEY (inventory_id) REFERENCES product_inventory (inventory_id),
+    FOREIGN KEY (image_id) REFERENCES product_image (image_id),
+    FOREIGN KEY (colour_id) REFERENCES product_colour (colour_id),
+    FOREIGN KEY (product_id) REFERENCES product (product_id)
 );

@@ -11,7 +11,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
@@ -52,6 +51,6 @@ public class UpdateProductDTO implements Serializable {
 
     @JsonProperty(required = true, value = "price")
     @NotNull @NotEmpty
-    private BigDecimal price;
+    private Double price;
 
 }

@@ -4,7 +4,6 @@ import com.example.sarabrandserver.category.dto.CategoryDTO;
 import com.example.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.example.sarabrandserver.category.entity.ProductCategory;
 import com.example.sarabrandserver.category.repository.CategoryRepository;
-import com.example.sarabrandserver.category.response.CategoryResponse;
 import com.example.sarabrandserver.exception.CustomNotFoundException;
 import com.example.sarabrandserver.exception.DuplicateException;
 import com.example.sarabrandserver.util.DateUTC;
@@ -18,7 +17,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -29,9 +31,9 @@ import static org.springframework.http.HttpStatus.*;
 @ExtendWith({MockitoExtension.class, SpringExtension.class})
 @ActiveProfiles("dev")
 @TestPropertySource(locations = "classpath:application-dev.properties")
-class CategoryServiceTest {
+class WorkerCategoryServiceTest {
 
-    private CategoryService categoryService;
+    private WorkerCategoryService workerCategoryService;
 
     @Mock private CategoryRepository categoryRepository;
 
@@ -39,40 +41,33 @@ class CategoryServiceTest {
 
     @BeforeEach
     void setUp() {
-        this.categoryService = new CategoryService(this.categoryRepository, this.dateUTC);
-    }
-
-    @Test
-    void fetchAll() {
-        // Given
-        List<Object> parent = new ArrayList<>();
-        parent.add(new Object[]{1L, new Faker().commerce().productName() + 1});
-        parent.add(new Object[]{2L, new Faker().commerce().productName() + 2});
-
-        List<String> child = new ArrayList<>();
-        for (int i = 0; i < 5; i++) child.add(new Faker().animal().name());
-
-        // When
-        when(this.categoryRepository.getParentCategoriesWithIdNull()).thenReturn(parent);
-        when(this.categoryRepository.getChildCategoriesWhereDeletedIsNull(anyLong())).thenReturn(child);
-
-        // Then
-        var req = this.categoryService.fetchAll();
-        assertEquals(parent.size(), req.size());
-        assertEquals(child.size(), req.get(0).sub_category().size());
-        assertEquals(CategoryResponse.class, req.get(0).getClass());
-        verify(this.categoryRepository, times(1)).getParentCategoriesWithIdNull();
-        verify(this.categoryRepository, times(parent.size())).getChildCategoriesWhereDeletedIsNull(anyLong());
+        this.workerCategoryService = new WorkerCategoryService(this.categoryRepository, this.dateUTC);
     }
 
     @Test
     void create() {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().productName(), new ArrayList<>());
-        for (int i = 0; i < 1; i++) dto.sub_category().add(new Faker().commerce().productName());
+        var dto = new CategoryDTO(UUID.randomUUID().toString(), true, new HashSet<>());
+        for (int i = 0; i < 50; i++) dto.sub_category().add(new Faker().commerce().productName());
 
-        var category = new ProductCategory(dto.category_name(), new Date());
-        dto.sub_category().forEach(str -> category.addCategory(new ProductCategory(str)));
+        var category = ProductCategory.builder()
+                .categoryName(dto.category_name().trim())
+                .createAt(new Date())
+                .productCategories(new HashSet<>())
+                .product(new HashSet<>())
+                .build();
+
+        dto.sub_category().forEach(str -> {
+            var sub = ProductCategory.builder()
+                    .categoryName(dto.category_name().trim())
+                    .isVisible(dto.status())
+                    .createAt(category.getCreateAt())
+                    .modifiedAt(null)
+                    .productCategories(new HashSet<>())
+                    .product(new HashSet<>())
+                    .build();
+            category.addCategory(sub);
+        });
 
         // When
         when(this.categoryRepository.duplicateCategoryName(dto.category_name(), dto.sub_category()))
@@ -81,7 +76,7 @@ class CategoryServiceTest {
         when(this.categoryRepository.save(any(ProductCategory.class))).thenReturn(category);
 
         // Then
-        var res = this.categoryService.create(dto);
+        var res = this.workerCategoryService.create(dto);
         assertEquals(CREATED, res.getStatusCode());
         verify(this.categoryRepository, times(1)).save(any(ProductCategory.class));
     }
@@ -90,35 +85,45 @@ class CategoryServiceTest {
     @Test
     void duplicate_name() {
         // Given
-        List<String> list = new ArrayList<>();
-        var dto = new CategoryDTO(new Faker().commerce().productName(), new ArrayList<>());
-        for (int i = 0; i < 1; i++) {
-            dto.sub_category().add(new Faker().commerce().productName());
-        }
+        var dto = new CategoryDTO(UUID.randomUUID().toString(), true, new HashSet<>());
+        for (int i = 0; i < 50; i++) dto.sub_category().add(new Faker().commerce().productName());
 
-        var category = new ProductCategory(dto.category_name(), new Date());
+        var category = ProductCategory.builder()
+                .categoryName(dto.category_name().trim())
+                .createAt(new Date())
+                .isVisible(true)
+                .productCategories(new HashSet<>())
+                .product(new HashSet<>())
+                .build();
         dto.sub_category().forEach(str -> category.addCategory(new ProductCategory(str)));
 
         // When
         when(this.categoryRepository.duplicateCategoryName(dto.category_name(), dto.sub_category()))
-                .thenReturn(1);
+                .thenReturn(5);
 
         // Then
-        assertThrows(DuplicateException.class, () -> this.categoryService.create(dto));
+        assertThrows(DuplicateException.class, () -> this.workerCategoryService.create(dto));
     }
 
     @Test
     void update() {
         // Given
         var dto = new UpdateCategoryDTO(new Faker().commerce().productName(), new Faker().commerce().productName());
-        var category = new ProductCategory(new Faker().commerce().productName(), new Date());
+        var category = ProductCategory.builder()
+                .categoryName(dto.old_name())
+                .createAt(new Date())
+                .isVisible(true)
+                .productCategories(new HashSet<>())
+                .product(new HashSet<>())
+                .build();
 
         // When
         when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.of(category));
+        doReturn(0).when(this.categoryRepository).duplicateCategoryForUpdate(anyString());
         when(this.dateUTC.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
+
         // Then
-        var res = this.categoryService.update(dto);
-        assertEquals(OK, res.getStatusCode());
+        assertEquals(OK, this.workerCategoryService.update(dto).getStatusCode());
         verify(this.categoryRepository, times(1))
                 .update(any(Date.class), anyString(), anyString());
     }
@@ -132,23 +137,27 @@ class CategoryServiceTest {
         when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.empty());
 
         // Then
-        assertThrows(CustomNotFoundException.class, () -> this.categoryService.update(dto));
+        assertThrows(CustomNotFoundException.class, () -> this.workerCategoryService.update(dto));
     }
 
     @Test
     void delete() {
         // Given
-        var category = new ProductCategory(new Faker().commerce().productName(), new Date());
+        var category = ProductCategory.builder()
+                .categoryName("Test Category")
+                .createAt(new Date())
+                .modifiedAt(null)
+                .isVisible(true)
+                .productCategories(new HashSet<>())
+                .product(new HashSet<>())
+                .build();
 
         // When
-        Date date = new Date();
-        when(this.dateUTC.toUTC(any(Date.class))).thenReturn(Optional.of(date));
-        when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.of(category));
+        doReturn(Optional.of(category)).when(this.categoryRepository).findByName(anyString());
 
         // Then
-        assertEquals(NO_CONTENT, this.categoryService.delete(category.getCategoryName()).getStatusCode());
-        verify(this.categoryRepository, times(1))
-                .custom_delete(date, category.getCategoryName());
+        assertEquals(NO_CONTENT, this.workerCategoryService.delete(category.getCategoryName()).getStatusCode());
+        verify(this.categoryRepository, times(1)).delete(any(ProductCategory.class));
     }
 
 }

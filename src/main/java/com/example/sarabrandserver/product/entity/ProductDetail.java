@@ -1,13 +1,9 @@
 package com.example.sarabrandserver.product.entity;
 
-import com.example.sarabrandserver.product.response.ColourResponse;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.Date;
-import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.EAGER;
@@ -19,27 +15,18 @@ import static jakarta.persistence.FetchType.EAGER;
 @Builder
 @Getter
 @Setter
-public class ProductDetail implements Serializable {
+public class ProductDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "product_detail_id", nullable = false, unique = true, updatable = false)
+    @Column(name = "detail_id", nullable = false, unique = true)
     private Long productDetailId;
 
-    @Column(name = "description")
-    private String description;
-
-    @Column(name = "sku", nullable = false, unique = true, length = 50)
+    @Column(name = "sku", nullable = false, unique = true, length = 100)
     private String sku;
 
-    @Column(name = "qty", nullable = false)
-    private int quantity;
-
-    @Column(name = "price", nullable = false)
-    private BigDecimal price;
-
-    @Column(name = "currency", nullable = false, length = 25)
-    private String currency;
+    @Column(name = "is_disabled")
+    private boolean isDisabled;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -49,40 +36,43 @@ public class ProductDetail implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date modifiedAt;
 
-    @Column(name = "deleted_at")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date deletedAt;
+    @ManyToOne(fetch = EAGER, cascade = ALL)
+    @JoinColumn(name = "size_id", referencedColumnName = "size_id", nullable = false)
+    private ProductSize productSize;
+
+    @ManyToOne(fetch = EAGER, cascade = ALL)
+    @JoinColumn(name = "inventory_id", referencedColumnName = "inventory_id", nullable = false)
+    private ProductInventory productInventory;
+
+    @ManyToOne(fetch = EAGER, cascade = ALL)
+    @JoinColumn(name = "image_id", referencedColumnName = "image_id", nullable = false)
+    private ProductImage productImage;
+
+    @ManyToOne(fetch = EAGER, cascade = ALL)
+    @JoinColumn(name = "colour_id", referencedColumnName = "colour_id", nullable = false)
+    private ProductColour productColour;
 
     @ManyToOne
-    @JoinColumn(name = "product_id", referencedColumnName = "product_id")
+    @JoinColumn(name = "product_id", referencedColumnName = "product_id", nullable = false)
     private Product product;
 
-    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productDetail", orphanRemoval = true)
-    private Set<ProductImage> productImages;
-
-    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productDetail", orphanRemoval = true)
-    private Set<ProductSize> productSizes;
-
-    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productDetail", orphanRemoval = true)
-    private Set<ProductColour> productColours;
-
-    public void addImage(ProductImage image) {
-        this.productImages.add(image);
-        image.setProductDetail(this);
+    public void setProductSize(ProductSize productSize) {
+        this.productSize = productSize;
+        this.productSize.getProductDetails().add(this);
     }
 
-    public void addSize(ProductSize size) {
-        this.productSizes.add(size);
-        size.setProductDetail(this);
+    public void setProductInventory(ProductInventory productInventory) {
+        this.productInventory = productInventory;
+        this.productInventory.getProductDetails().add(this);
     }
 
-    public void addColour(ProductColour colour){
-        this.productColours.add(colour);
-        colour.setProductDetail(this);
+    public void setProductImage(ProductImage productImage) {
+        this.productImage = productImage;
+        this.productImage.getProductDetails().add(this);
     }
 
-    public boolean decrementQuantity() {
-        return getQuantity() > 0;
+    public void setProductColour(ProductColour productColour) {
+        this.productColour = productColour;
+        this.productColour.getProductDetails().add(this);
     }
-
 }

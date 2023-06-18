@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS product_collection (
     collection VARCHAR(50) NOT NULL UNIQUE,
     created_at DATETIME NOT NULL,
     modified_at DATETIME,
-    deleted_at DATETIME,
+    is_visible BOOLEAN,
     PRIMARY KEY (collection_id)
 );
 
@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS product_inventory (
 CREATE TABLE IF NOT EXISTS product_detail (
     detail_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
     sku VARCHAR(100) NOT NULL UNIQUE,
-    is_disabled BOOLEAN,
+    is_visible BOOLEAN,
     created_at DATETIME NOT NULL,
     modified_at DATETIME,
     size_id BIGINT NOT NULL,

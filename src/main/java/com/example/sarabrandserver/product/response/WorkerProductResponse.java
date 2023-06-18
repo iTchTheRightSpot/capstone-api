@@ -1,6 +1,6 @@
 package com.example.sarabrandserver.product.response;
 
-import com.example.sarabrandserver.product.projection.ProductPojo;
+import com.example.sarabrandserver.product.projection.WorkerProductPojo;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Data
 @Builder
-public class ProductResponse implements ProductPojo {
+public class WorkerProductResponse implements WorkerProductPojo {
 
     // Primitive
     @JsonProperty(value = "product_name")

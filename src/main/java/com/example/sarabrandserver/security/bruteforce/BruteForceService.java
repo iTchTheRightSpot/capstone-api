@@ -1,11 +1,13 @@
 package com.example.sarabrandserver.security.bruteforce;
 
-import com.example.sarabrandserver.user.repository.ClientRepository;
+import com.example.sarabrandserver.clientz.repository.ClientRepository;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service @Setter @Slf4j
 public class BruteForceService {
@@ -25,31 +27,29 @@ public class BruteForceService {
     @Transactional
     public void registerLoginFailure(Authentication auth) {
         log.info("MAX BEFORE BEING BLOCKED {}", this.MAX);
-        var clientz = this.clientRepository.findByPrincipal(auth.getName()).orElse(null);
-        
-        if (clientz == null || !clientz.isAccountNoneLocked()) {
-            log.info("In IF Client {}", clientz.isAccountNoneLocked());
-            return;
-        }
+        this.clientRepository.findByPrincipal(auth.getName()).ifPresent(clientz -> {
+            if (!clientz.isAccountNoneLocked()) {
+                return;
+            }
+            log.info("Client is none locked?");
 
-        log.info("Client is none locked? {}", clientz.isAccountNoneLocked());
-        
-        // Using redis for caching and concurrency
-        var bruteEntity = this.bruteForceRepo.findByPrincipal(auth.getName());
+            // Using redis for caching and concurrency
+            AtomicBoolean bool = new AtomicBoolean(true);
+            this.bruteForceRepo.findByPrincipal(auth.getName()).ifPresent(entity -> {
+                bool.set(false);
+                if (entity.getFailedAttempt() < this.MAX) {
+                    entity.setFailedAttempt(entity.getFailedAttempt() + 1);
+                    this.bruteForceRepo.update(entity);
+                    return;
+                }
+                this.clientRepository.lockClientAccount(false, clientz.getClientId());
+                // TODO send client email to change password
+            });
 
-        if (bruteEntity.isEmpty()) {
-            this.bruteForceRepo.save(new BruteForceEntity(0, auth.getName()));
-            return;
-        }
-
-        if (bruteEntity.get().getFailedAttempt() < this.MAX) {
-            bruteEntity.get().setFailedAttempt(bruteEntity.get().getFailedAttempt() + 1);
-            this.bruteForceRepo.update(bruteEntity.get());
-            return;
-        }
-
-        this.clientRepository.lockClientAccount(false, clientz.getClientId());
-        // TODO send client email to change password
+            if (bool.get()) {
+                this.bruteForceRepo.save(new BruteForceEntity(0, auth.getName()));
+            }
+        });
     }
 
 

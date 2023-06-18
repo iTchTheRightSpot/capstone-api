@@ -48,19 +48,19 @@ class WorkerCategoryServiceTest {
     void create() {
         // Given
         var dto = new CategoryDTO(UUID.randomUUID().toString(), true, new HashSet<>());
-        for (int i = 0; i < 50; i++) dto.sub_category().add(new Faker().commerce().productName());
+        for (int i = 0; i < 50; i++) dto.getSub_category().add(new Faker().commerce().productName());
 
         var category = ProductCategory.builder()
-                .categoryName(dto.category_name().trim())
+                .categoryName(dto.getCategory_name().trim())
                 .createAt(new Date())
                 .productCategories(new HashSet<>())
                 .product(new HashSet<>())
                 .build();
 
-        dto.sub_category().forEach(str -> {
+        dto.getSub_category().forEach(str -> {
             var sub = ProductCategory.builder()
-                    .categoryName(dto.category_name().trim())
-                    .isVisible(dto.status())
+                    .categoryName(dto.getCategory_name().trim())
+                    .isVisible(dto.getStatus())
                     .createAt(category.getCreateAt())
                     .modifiedAt(null)
                     .productCategories(new HashSet<>())
@@ -70,7 +70,7 @@ class WorkerCategoryServiceTest {
         });
 
         // When
-        when(this.categoryRepository.duplicateCategoryName(dto.category_name(), dto.sub_category()))
+        when(this.categoryRepository.duplicateCategoryName(dto.getCategory_name(), dto.getSub_category()))
                 .thenReturn(0);
         when(this.dateUTC.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
         when(this.categoryRepository.save(any(ProductCategory.class))).thenReturn(category);
@@ -86,19 +86,19 @@ class WorkerCategoryServiceTest {
     void duplicate_name() {
         // Given
         var dto = new CategoryDTO(UUID.randomUUID().toString(), true, new HashSet<>());
-        for (int i = 0; i < 50; i++) dto.sub_category().add(new Faker().commerce().productName());
+        for (int i = 0; i < 50; i++) dto.getSub_category().add(new Faker().commerce().productName());
 
         var category = ProductCategory.builder()
-                .categoryName(dto.category_name().trim())
+                .categoryName(dto.getCategory_name().trim())
                 .createAt(new Date())
                 .isVisible(true)
                 .productCategories(new HashSet<>())
                 .product(new HashSet<>())
                 .build();
-        dto.sub_category().forEach(str -> category.addCategory(new ProductCategory(str)));
+        dto.getSub_category().forEach(str -> category.addCategory(new ProductCategory(str)));
 
         // When
-        when(this.categoryRepository.duplicateCategoryName(dto.category_name(), dto.sub_category()))
+        when(this.categoryRepository.duplicateCategoryName(dto.getCategory_name(), dto.getSub_category()))
                 .thenReturn(5);
 
         // Then
@@ -108,9 +108,13 @@ class WorkerCategoryServiceTest {
     @Test
     void update() {
         // Given
-        var dto = new UpdateCategoryDTO(new Faker().commerce().productName(), new Faker().commerce().productName());
+        var dto = UpdateCategoryDTO.builder()
+                .old_name(new Faker().commerce().productName())
+                .new_name("Updated category name")
+                .build();
+
         var category = ProductCategory.builder()
-                .categoryName(dto.old_name())
+                .categoryName(dto.getOld_name())
                 .createAt(new Date())
                 .isVisible(true)
                 .productCategories(new HashSet<>())
@@ -131,7 +135,10 @@ class WorkerCategoryServiceTest {
     @Test
     void update_none_existing_category_name() {
         // Given
-        var dto = new UpdateCategoryDTO(new Faker().commerce().productName(), new Faker().commerce().productName());
+        var dto = UpdateCategoryDTO.builder()
+                .old_name(new Faker().commerce().productName())
+                .new_name(new Faker().commerce().productName())
+                .build();
 
         // When
         when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.empty());

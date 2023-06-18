@@ -21,7 +21,6 @@ import static org.springframework.http.HttpStatus.*;
 
 @Service
 public class WorkerCategoryService {
-
     private final CategoryRepository categoryRepository;
     private final DateUTC dateUTC;
 
@@ -47,9 +46,9 @@ public class WorkerCategoryService {
     @Transactional
     public ResponseEntity<?> create(CategoryDTO dto) {
         boolean bool = this.categoryRepository
-                .duplicateCategoryName(dto.category_name().trim(), dto.sub_category()) > 0;
+                .duplicateCategoryName(dto.getCategory_name().trim(), dto.getSub_category()) > 0;
 
-        if (bool || dto.sub_category().contains(dto.category_name())) {
+        if (bool || dto.getSub_category().contains(dto.getCategory_name())) {
             throw new DuplicateException("Duplicate name or sub category");
         }
 
@@ -57,8 +56,8 @@ public class WorkerCategoryService {
 
         // Parent Category
         var category = ProductCategory.builder()
-                .categoryName(dto.category_name().trim())
-                .isVisible(dto.status())
+                .categoryName(dto.getCategory_name().trim())
+                .isVisible(dto.getStatus())
                 .createAt(date)
                 .modifiedAt(null)
                 .productCategories(new HashSet<>())
@@ -66,10 +65,10 @@ public class WorkerCategoryService {
                 .build();
 
         // Persist sub-category to Category
-        dto.sub_category().forEach(str -> {
+        dto.getSub_category().forEach(str -> {
             var sub = ProductCategory.builder()
-                    .categoryName(dto.category_name().trim())
-                    .isVisible(dto.status())
+                    .categoryName(dto.getCategory_name().trim())
+                    .isVisible(dto.getStatus())
                     .createAt(date)
                     .modifiedAt(null)
                     .productCategories(new HashSet<>())
@@ -90,13 +89,13 @@ public class WorkerCategoryService {
      * */
     @Transactional
     public ResponseEntity<?> update(UpdateCategoryDTO dto) {
-        var category = findByName(dto.old_name().trim());
+        var category = findByName(dto.getOld_name().trim());
 
-        if (this.categoryRepository.duplicateCategoryForUpdate(dto.new_name().trim()) > 0) {
-            return new ResponseEntity<>(dto.new_name() + " is a duplicate", CONFLICT);
+        if (this.categoryRepository.duplicateCategoryForUpdate(dto.getNew_name().trim()) > 0) {
+            return new ResponseEntity<>(dto.getNew_name() + " is a duplicate", CONFLICT);
         }
         var date = this.dateUTC.toUTC(new Date()).isEmpty() ? new Date() : this.dateUTC.toUTC(new Date()).get();
-        this.categoryRepository.update(date, category.getCategoryName(), dto.new_name().trim());
+        this.categoryRepository.update(date, category.getCategoryName(), dto.getNew_name().trim());
         return new ResponseEntity<>("updated", OK);
     }
 

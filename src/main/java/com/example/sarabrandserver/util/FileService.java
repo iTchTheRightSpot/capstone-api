@@ -11,7 +11,6 @@ public class FileService {
 
     /**
      * Methods receives an image path to return the image name from the path
-     *
      * @param photo meaning the path of the image
      * @return String
      * */
@@ -22,7 +21,6 @@ public class FileService {
     /**
      * Methods receives an image path to return the mediaType of the image
      * e.g. image.png -> png
-     *
      * @param photo meaning the path of the image
      * @return String
      * */

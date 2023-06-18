@@ -1,6 +1,6 @@
-package com.example.sarabrandserver.user.auth;
+package com.example.sarabrandserver.clientz.auth;
 
-import com.example.sarabrandserver.user.entity.Clientz;
+import com.example.sarabrandserver.clientz.entity.Clientz;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 

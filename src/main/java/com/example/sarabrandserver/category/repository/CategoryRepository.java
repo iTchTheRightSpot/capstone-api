@@ -2,6 +2,8 @@ package com.example.sarabrandserver.category.repository;
 
 import com.example.sarabrandserver.category.entity.ProductCategory;
 import com.example.sarabrandserver.category.projection.CategoryPojo;
+import com.example.sarabrandserver.product.projection.ClientProductPojo;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -51,6 +53,27 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     ORDER BY parent.createAt
     """)
     List<CategoryPojo> fetchCategoriesClient();
+
+    @Query(value = """
+    SELECT p.name AS name,
+    p.description AS desc,
+    p.price AS price,
+    p.currency AS currency,
+    pd.sku AS sku,
+    ps.size AS size,
+    inv.quantity AS quantity,
+    img.imageKey AS image,
+    pc.colour AS colour
+    FROM ProductCategory cat
+    INNER JOIN Product p ON p.productCategory.categoryId = cat.categoryId
+    INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
+    INNER JOIN ProductSize ps ON pd.productSize.productSizeId = ps.productSizeId
+    INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
+    INNER JOIN ProductImage img ON pd.productImage.productImageId = img.productImageId
+    INNER JOIN ProductColour pc ON pd.productColour.productColourId = pc.productColourId
+    WHERE cat.categoryName = :name AND pd.isVisible = true
+    """)
+    List<ClientProductPojo> fetchByProductName(@Param(value = "name") String name, Pageable pageable);
 
     @Query("SELECT pc FROM ProductCategory pc WHERE pc.categoryName = :name")
     Optional<ProductCategory> findByName(@Param(value = "name") String name);

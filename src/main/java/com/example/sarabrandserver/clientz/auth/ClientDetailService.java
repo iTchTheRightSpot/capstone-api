@@ -1,6 +1,6 @@
-package com.example.sarabrandserver.user.auth;
+package com.example.sarabrandserver.clientz.auth;
 
-import com.example.sarabrandserver.user.repository.ClientRepository;
+import com.example.sarabrandserver.clientz.repository.ClientRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

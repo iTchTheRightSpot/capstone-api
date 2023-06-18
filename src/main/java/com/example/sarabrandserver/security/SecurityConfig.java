@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,11 +14,12 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.session.Session;
 import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.session.security.SpringSessionBackedSessionRegistry;
@@ -55,6 +56,9 @@ public class SecurityConfig {
         return new String[]{
                 "/api/v1/client/auth/register",
                 "/api/v1/client/auth/login",
+                "/api/v1/client/product/**",
+                "/api/v1/client/category/**",
+                "/api/v1/client/collection/**",
                 "/api/v1/worker/auth/login"
         };
     }
@@ -67,12 +71,14 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(publicRoutes()).permitAll();
-                    auth.requestMatchers(HttpMethod.GET, "/api/v1/category").permitAll();
                     auth.anyRequest().authenticated();
                 })
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(IF_REQUIRED) //
-                        .sessionAuthenticationStrategy(new CustomStrategy(this.redisIndexedSessionRepository, sessionRegistry()))
+                        .sessionAuthenticationStrategy(new CustomStrategy(
+                                this.redisIndexedSessionRepository,
+                                sessionRegistry()
+                        ))
                         .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::newSession) //
                         .maximumSessions(MAX_SESSION) //
                         .sessionRegistry(sessionRegistry())
@@ -98,6 +104,17 @@ public class SecurityConfig {
     @Bean
     public SecurityContextRepository securityContextRepository() {
         return new HttpSessionSecurityContextRepository();
+    }
+
+    @Bean(name = "clientAuthProvider")
+    public AuthenticationProvider clientAuthProvider(
+            @Qualifier(value = "clientDetailService") UserDetailsService clientDetailService,
+            @Qualifier(value = "passwordEncoder") PasswordEncoder passwordEncoder
+    ) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setPasswordEncoder(passwordEncoder);
+        provider.setUserDetailsService(clientDetailService);
+        return provider;
     }
 
     @Bean

@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.user.entity;
+package com.example.sarabrandserver.clientz.entity;
 
 import com.example.sarabrandserver.cart.entity.ShoppingSession;
 import jakarta.persistence.*;
@@ -68,30 +68,6 @@ public class Clientz implements Serializable {
 
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "clientz", orphanRemoval = true)
     private Set<ClientRole> clientRole;
-
-    public Clientz(
-            String firstname,
-            String lastname,
-            String email,
-            String username,
-            String phoneNumber,
-            String password,
-            boolean enabled,
-            boolean credentialsNonExpired,
-            boolean accountNonExpired,
-            boolean accountNoneLocked
-    ) {
-        this.firstname = firstname;
-        this.lastname = lastname;
-        this.email = email;
-        this.username = username;
-        this.phoneNumber = phoneNumber;
-        this.password = password;
-        this.enabled = enabled;
-        this.credentialsNonExpired = credentialsNonExpired;
-        this.accountNonExpired = accountNonExpired;
-        this.accountNoneLocked = accountNoneLocked;
-    }
 
     public void addRole(ClientRole role) {
         this.clientRole.add(role);

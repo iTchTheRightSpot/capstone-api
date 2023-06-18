@@ -4,9 +4,10 @@ import com.example.sarabrandserver.enumeration.RoleEnum;
 import com.example.sarabrandserver.security.bruteforce.BruteForceService;
 import com.example.sarabrandserver.security.bruteforce.BruteForceEntity;
 import com.example.sarabrandserver.security.bruteforce.BruteForceRepo;
-import com.example.sarabrandserver.user.entity.ClientRole;
-import com.example.sarabrandserver.user.entity.Clientz;
-import com.example.sarabrandserver.user.repository.ClientRepository;
+import com.example.sarabrandserver.clientz.entity.ClientRole;
+import com.example.sarabrandserver.clientz.entity.Clientz;
+import com.example.sarabrandserver.clientz.repository.ClientRepository;
+import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.HashSet;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.anyString;
@@ -40,34 +42,36 @@ class BruteForceServiceTest {
     @Test
     void registerLoginFailure() {
         // Given
-        var bruteEntity = new BruteForceEntity(0, client().getEmail());
+        var client = client();
+        var bruteEntity = new BruteForceEntity(0, client.getEmail());
         var authentication = mock(Authentication.class);
 
         // When
-        when(authentication.getName()).thenReturn(client().getEmail());
-        when(this.clientRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client()));
+        when(authentication.getName()).thenReturn(client.getEmail());
+        when(this.clientRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client));
         when(this.bruteForceRepo.findByPrincipal(anyString())).thenReturn(Optional.of(bruteEntity));
 
         // Then
         this.bruteForceService.registerLoginFailure(authentication);
-        verify(clientRepository, times(1)).findByPrincipal(client().getEmail());
-        verify(bruteForceRepo, times(1)).findByPrincipal(client().getEmail());
+        verify(this.clientRepository, times(1)).findByPrincipal(client.getEmail());
+        verify(this.bruteForceRepo, times(1)).findByPrincipal(client.getEmail());
     }
 
     /** Method tests when this.bruteForceRepo.findByPrincipal is empty */
     @Test
     void em() {
         // Given
+        var client = client();
         var authentication = mock(Authentication.class);
 
         // When
-        when(authentication.getName()).thenReturn(client().getEmail());
-        when(this.clientRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client()));
+        when(authentication.getName()).thenReturn(client.getEmail());
+        when(this.clientRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client));
         when(this.bruteForceRepo.findByPrincipal(anyString())).thenReturn(Optional.empty());
 
         // Then
         this.bruteForceService.registerLoginFailure(authentication);
-        verify(clientRepository, times(1)).findByPrincipal(client().getEmail());
+        verify(clientRepository, times(1)).findByPrincipal(client.getEmail());
         verify(bruteForceRepo, times(1)).save(any(BruteForceEntity.class));
         verify(this.clientRepository, times(0)).lockClientAccount(anyBoolean(), anyLong());
         verify(this.bruteForceRepo, times(0)).update(any(BruteForceEntity.class));
@@ -77,31 +81,33 @@ class BruteForceServiceTest {
     @Test
     void tt() {
         // Given
-        var bruteEntity = new BruteForceEntity(this.MAX, client().getEmail());
+        var client = client();
+        var bruteEntity = new BruteForceEntity(this.MAX, client.getEmail());
         var authentication = mock(Authentication.class);
 
         // When
-        when(authentication.getName()).thenReturn(client().getEmail());
-        when(this.clientRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client()));
+        when(authentication.getName()).thenReturn(client.getEmail());
+        when(this.clientRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client));
         when(this.bruteForceRepo.findByPrincipal(anyString())).thenReturn(Optional.of(bruteEntity));
 
         // Then
         this.bruteForceService.registerLoginFailure(authentication);
-        verify(this.clientRepository, times(1)).findByPrincipal(client().getEmail());
-        verify(this.bruteForceRepo, times(1)).findByPrincipal(client().getEmail());
+        verify(this.clientRepository, times(1)).findByPrincipal(client.getEmail());
+        verify(this.bruteForceRepo, times(1)).findByPrincipal(client.getEmail());
         verify(this.bruteForceRepo, times(0)).save(any(BruteForceEntity.class));
-        verify(this.clientRepository, times(1)).lockClientAccount(false, client().getClientId());
+        verify(this.clientRepository, times(1)).lockClientAccount(false, client.getClientId());
     }
 
     @Test
     void resetBruteForceCounter() {
         // Given
-        var bruteEntity = new BruteForceEntity(this.MAX, client().getEmail());
+        var client = client();
+        var bruteEntity = new BruteForceEntity(this.MAX, client.getEmail());
         var authentication = mock(Authentication.class);
 
         // When
-        when(authentication.getName()).thenReturn(client().getEmail());
-        when(this.clientRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client()));
+        when(authentication.getName()).thenReturn(client.getEmail());
+        when(this.clientRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client));
         when(this.bruteForceRepo.findByPrincipal(anyString())).thenReturn(Optional.of(bruteEntity));
 
         // Then
@@ -110,20 +116,21 @@ class BruteForceServiceTest {
     }
 
     private Clientz client() {
-        var user = new Clientz();
-        user.setClientId(1L);
-        user.setFirstname("SEJU");
-        user.setLastname("development");
-        user.setEmail("admin@admin.com");
-        user.setUsername("Admin Development");
-        user.setPhoneNumber("000-000-0000");
-        user.setPassword("password");
-        user.setEnabled(true);
-        user.setAccountNoneLocked(true);
-        user.setCredentialsNonExpired(true);
-        user.setAccountNonExpired(true);
-        user.addRole(new ClientRole(RoleEnum.CLIENT));
-        return user;
+        var client = Clientz.builder()
+                .firstname(new Faker().name().firstName())
+                .lastname(new Faker().name().lastName())
+                .email(new Faker().name().fullName())
+                .username(new Faker().name().username())
+                .phoneNumber(new Faker().phoneNumber().phoneNumber())
+                .password(new Faker().phoneNumber().phoneNumber())
+                .enabled(true)
+                .credentialsNonExpired(true)
+                .accountNonExpired(true)
+                .accountNoneLocked(true)
+                .clientRole(new HashSet<>())
+                .build();
+        client.addRole(new ClientRole(RoleEnum.CLIENT));
+        return client;
     }
 
 }

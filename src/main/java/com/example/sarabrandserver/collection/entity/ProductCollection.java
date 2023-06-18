@@ -39,11 +39,10 @@ public class ProductCollection {
     @Temporal(TemporalType.TIMESTAMP)
     private Date modifiedAt;
 
-    @Column(name = "deleted_at")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date deletedAt;
+    @Column(name = "is_visible")
+    private boolean isVisible;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = EAGER, mappedBy = "productCollection", orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, fetch = EAGER, mappedBy = "productCollection")
     private Set<Product> products;
 
 }

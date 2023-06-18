@@ -6,8 +6,9 @@ import com.example.sarabrandserver.product.dto.CreateProductDTO;
 import com.example.sarabrandserver.product.dto.UpdateProductDTO;
 import com.example.sarabrandserver.product.entity.*;
 import com.example.sarabrandserver.product.repository.ProductRepository;
-import com.example.sarabrandserver.product.response.ProductResponse;
+import com.example.sarabrandserver.product.response.WorkerProductResponse;
 import com.example.sarabrandserver.util.DateUTC;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,8 @@ import static org.springframework.http.HttpStatus.*;
 
 @Service
 public class WorkerProductService {
+    @Value(value = "${s3.pre-assigned.url}")
+    private String PRE_ASSIGNED_URL;
     private final ProductRepository productRepository;
     private final WorkerCategoryService workerCategoryService;
     private final DateUTC dateUTC;
@@ -41,11 +44,11 @@ public class WorkerProductService {
      * @param size is the max amount to be displayed on a page
      * @return List of type ProductResponse
      * */
-    public List<ProductResponse> fetchAll(int page, int size) {
+    public List<WorkerProductResponse> fetchAll(int page, int size) {
         return this.productRepository
                 .fetchAll(PageRequest.of(page, Math.max(size, 50))) //
                 .stream() //
-                .map(pojo -> ProductResponse.builder()
+                .map(pojo -> WorkerProductResponse.builder()
                         .name(pojo.getName())
                         .desc(pojo.getDesc())
                         .price(pojo.getPrice())
@@ -54,7 +57,7 @@ public class WorkerProductService {
                         .status(pojo.getStatus())
                         .size(pojo.getSizes())
                         .quantity(pojo.getQuantity())
-                        .imageUrl(pojo.getImage()) // Add S3 URL
+                        .imageUrl(PRE_ASSIGNED_URL + pojo.getImage()) // Add pre-assigned URL S3 URL
                         .colour(pojo.getColour())
                         .build()
                 ) //
@@ -105,6 +108,7 @@ public class WorkerProductService {
         return new ResponseEntity<>("Created", CREATED);
     }
 
+    // Helper method to de-clutter create method
     private ProductDetail productDetail(CreateProductDTO dto, MultipartFile file, Date createdAt, Date modified) {
         // ProductSize
         var size = ProductSize.builder()
@@ -130,7 +134,7 @@ public class WorkerProductService {
         // ProductDetail
         var detail = ProductDetail.builder()
                 .sku(UUID.randomUUID().toString())
-                .isDisabled(dto.getDetailDTO().getIsVisible())
+                .isVisible(dto.getDetailDTO().getIsVisible())
                 .createAt(createdAt)
                 .modifiedAt(modified)
                 .build();

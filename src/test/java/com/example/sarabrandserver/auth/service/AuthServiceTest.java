@@ -4,10 +4,11 @@ import com.example.sarabrandserver.auth.dto.LoginDTO;
 import com.example.sarabrandserver.enumeration.RoleEnum;
 import com.example.sarabrandserver.exception.DuplicateException;
 import com.example.sarabrandserver.auth.response.AuthResponse;
-import com.example.sarabrandserver.user.dto.ClientRegisterDTO;
-import com.example.sarabrandserver.user.entity.ClientRole;
-import com.example.sarabrandserver.user.entity.Clientz;
-import com.example.sarabrandserver.user.repository.ClientRepository;
+import com.example.sarabrandserver.clientz.dto.ClientRegisterDTO;
+import com.example.sarabrandserver.clientz.entity.ClientRole;
+import com.example.sarabrandserver.clientz.entity.Clientz;
+import com.example.sarabrandserver.clientz.repository.ClientRepository;
+import com.github.javafaker.Faker;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -103,7 +105,7 @@ class AuthServiceTest {
 
         // When
         when(this.clientRepository.workerExists(anyString(), anyString())).thenReturn(Optional.empty());
-        when(this.clientRepository.save(any(Clientz.class))).thenReturn(worker());
+        doReturn(worker()).when(this.clientRepository).save(any(Clientz.class));
 
         // Then
         var response = this.authService.workerRegister(dto);
@@ -126,7 +128,7 @@ class AuthServiceTest {
         );
 
         // When
-        when(this.clientRepository.workerExists(anyString(), anyString())).thenReturn(Optional.of(worker()));
+        doReturn(1).when(this.clientRepository).isAdmin(anyString(), anyString(), any(RoleEnum.class));
 
         // Then
         assertThrows(DuplicateException.class, () -> this.authService.workerRegister(dto));
@@ -146,8 +148,8 @@ class AuthServiceTest {
         );
 
         // When
-        when(this.clientRepository.workerExists(anyString(), anyString())).thenReturn(Optional.of(client()));
-        when(this.clientRepository.save(any(Clientz.class))).thenReturn(worker());
+        doReturn(Optional.of(client())).when(this.clientRepository).workerExists(anyString(), anyString());
+        doReturn(worker()).when(this.clientRepository).save(any(Clientz.class));
 
         // Then
         var response = this.authService.workerRegister(dto);
@@ -215,8 +217,8 @@ class AuthServiceTest {
 
         // When
         when(this.clientRepository.principalExists(anyString(), anyString())).thenReturn(0);
-        when(this.passwordEncoder.encode(anyString())).thenReturn(dto.password());
-        when(this.clientRepository.save(any(Clientz.class))).thenReturn(client());
+        when(this.passwordEncoder.encode(anyString())).thenReturn(dto.getPassword());
+        doReturn(client()).when(this.clientRepository).save(any(Clientz.class));
 
         // Then
         var response = this.authService.clientRegister(dto);
@@ -279,36 +281,40 @@ class AuthServiceTest {
     }
 
     private Clientz client() {
-        var user = new Clientz();
-        user.setFirstname("SEJU");
-        user.setLastname("development");
-        user.setEmail("admin@admin.com");
-        user.setUsername("Admin Development");
-        user.setPhoneNumber("000-000-0000");
-        user.setPassword("password");
-        user.setEnabled(true);
-        user.setAccountNoneLocked(true);
-        user.setCredentialsNonExpired(true);
-        user.setAccountNonExpired(true);
-        user.addRole(new ClientRole(RoleEnum.CLIENT));
-        return user;
+        var client = Clientz.builder()
+                .firstname(new Faker().name().firstName())
+                .lastname(new Faker().name().lastName())
+                .email(new Faker().name().fullName())
+                .username(new Faker().name().username())
+                .phoneNumber(new Faker().phoneNumber().phoneNumber())
+                .password(new Faker().phoneNumber().phoneNumber())
+                .enabled(true)
+                .credentialsNonExpired(true)
+                .accountNonExpired(true)
+                .accountNoneLocked(true)
+                .clientRole(new HashSet<>())
+                .build();
+        client.addRole(new ClientRole(RoleEnum.CLIENT));
+        return client;
     }
 
     private Clientz worker() {
-        var user = new Clientz();
-        user.setFirstname("SEJU");
-        user.setLastname("development");
-        user.setEmail("admin@admin.com");
-        user.setUsername("Admin Development");
-        user.setPhoneNumber("000-000-0000");
-        user.setPassword("password");
-        user.setEnabled(true);
-        user.setAccountNoneLocked(true);
-        user.setCredentialsNonExpired(true);
-        user.setAccountNonExpired(true);
-        user.addRole(new ClientRole(RoleEnum.CLIENT));
-        user.addRole(new ClientRole(RoleEnum.WORKER));
-        return user;
+        var client = Clientz.builder()
+                .firstname(new Faker().name().firstName())
+                .lastname(new Faker().name().lastName())
+                .email(new Faker().name().fullName())
+                .username(new Faker().name().username())
+                .phoneNumber(new Faker().phoneNumber().phoneNumber())
+                .password(new Faker().phoneNumber().phoneNumber())
+                .enabled(true)
+                .credentialsNonExpired(true)
+                .accountNonExpired(true)
+                .accountNoneLocked(true)
+                .clientRole(new HashSet<>())
+                .build();
+        client.addRole(new ClientRole(RoleEnum.CLIENT));
+        client.addRole(new ClientRole(RoleEnum.WORKER));
+        return client;
     }
 
 }

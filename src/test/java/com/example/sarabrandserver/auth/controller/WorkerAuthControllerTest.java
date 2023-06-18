@@ -5,9 +5,9 @@ import com.example.sarabrandserver.auth.dto.LoginDTO;
 import com.example.sarabrandserver.exception.DuplicateException;
 import com.example.sarabrandserver.security.CustomStrategy;
 import com.example.sarabrandserver.security.bruteforce.BruteForceService;
-import com.example.sarabrandserver.user.dto.ClientRegisterDTO;
-import com.example.sarabrandserver.user.repository.ClientRepository;
-import com.example.sarabrandserver.user.repository.ClientRoleRepo;
+import com.example.sarabrandserver.clientz.dto.ClientRegisterDTO;
+import com.example.sarabrandserver.clientz.repository.ClientRepository;
+import com.example.sarabrandserver.clientz.repository.ClientRoleRepo;
 import com.redis.testcontainers.RedisContainer;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
@@ -178,7 +178,7 @@ class WorkerAuthControllerTest {
                 )
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException))
                 .andExpect(result -> assertEquals(
-                        dto.email() + " exists",
+                        dto.getEmail() + " exists",
                         Objects.requireNonNull(result.getResolvedException()).getMessage()
                 ));
     }

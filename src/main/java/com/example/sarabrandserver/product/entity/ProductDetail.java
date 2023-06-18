@@ -25,8 +25,8 @@ public class ProductDetail {
     @Column(name = "sku", nullable = false, unique = true, length = 100)
     private String sku;
 
-    @Column(name = "is_disabled")
-    private boolean isDisabled;
+    @Column(name = "is_visible")
+    private boolean isVisible;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)

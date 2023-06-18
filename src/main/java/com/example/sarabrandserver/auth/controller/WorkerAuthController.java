@@ -2,7 +2,7 @@ package com.example.sarabrandserver.auth.controller;
 
 import com.example.sarabrandserver.auth.service.AuthService;
 import com.example.sarabrandserver.auth.dto.LoginDTO;
-import com.example.sarabrandserver.user.dto.ClientRegisterDTO;
+import com.example.sarabrandserver.clientz.dto.ClientRegisterDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;

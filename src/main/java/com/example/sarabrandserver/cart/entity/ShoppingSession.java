@@ -1,7 +1,7 @@
 package com.example.sarabrandserver.cart.entity;
 
+import com.example.sarabrandserver.clientz.entity.Clientz;
 import com.example.sarabrandserver.product.entity.Product;
-import com.example.sarabrandserver.user.entity.Clientz;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -43,7 +43,7 @@ public class ShoppingSession {
     @JoinColumn(name = "client_id", referencedColumnName = "client_id")
     private Clientz clientz;
 
-    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "shoppingSession", orphanRemoval = true)
+    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "shoppingSession")
     private Set<Product> products;
 
     public void setClientz(Clientz client) {

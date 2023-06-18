@@ -93,7 +93,7 @@ class WorkerCategoryControllerTest {
             this.categoryDTO = new CategoryDTO(str, true, new HashSet<>());
 
             for (int i = 0; i < subMax; i++) {
-                this.categoryDTO.sub_category().add(UUID.randomUUID().toString());
+                this.categoryDTO.getSub_category().add(UUID.randomUUID().toString());
             }
 
             this.workerCategoryService.create(this.categoryDTO);
@@ -122,7 +122,7 @@ class WorkerCategoryControllerTest {
     void create() throws Exception {
         // Given
         var dto = new CategoryDTO(new Faker().name().lastName(), true, new HashSet<>());
-        for (int i = 0; i < 20; i++) dto.sub_category().add(UUID.randomUUID().toString());
+        for (int i = 0; i < 20; i++) dto.getSub_category().add(UUID.randomUUID().toString());
 
         // Then
         this.MOCK_MVC
@@ -155,22 +155,25 @@ class WorkerCategoryControllerTest {
     @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
     void update() throws Exception {
         // Given
-        var dto = new UpdateCategoryDTO(
-                this.categoryDTO.category_name(),
-                "Updated category name"
-        ).toJson().toString();
+        var dto = UpdateCategoryDTO.builder()
+                .old_name(this.categoryDTO.getCategory_name())
+                .new_name("Updated category name")
+                .build();
 
         // Then
         this.MOCK_MVC
-                .perform(put("/api/v1/category").with(csrf()).contentType(APPLICATION_JSON).content(dto))
-                .andDo(print())
+                .perform(put("/api/v1/category")
+                        .with(csrf())
+                        .contentType(APPLICATION_JSON)
+                        .content(dto.toJson().toString())
+                )
                 .andExpect(status().isOk());
     }
 
     @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
     void custom_delete() throws Exception {
         this.MOCK_MVC
-                .perform(delete("/api/v1/category/{category_id}", this.categoryDTO.category_name())
+                .perform(delete("/api/v1/category/{category_id}", this.categoryDTO.getCategory_name())
                         .with(csrf()))
                 .andDo(print())
                 .andExpect(status().isNoContent());

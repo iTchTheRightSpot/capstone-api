@@ -1,7 +1,8 @@
 package com.example.sarabrandserver.product.repository;
 
 import com.example.sarabrandserver.product.entity.Product;
-import com.example.sarabrandserver.product.projection.ProductPojo;
+import com.example.sarabrandserver.product.projection.ClientProductPojo;
+import com.example.sarabrandserver.product.projection.WorkerProductPojo;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -25,7 +26,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     p.price AS price,
     p.currency AS currency,
     pd.sku AS sku,
-    pd.isDisabled AS status,
+    pd.isVisible AS status,
     ps.size AS sizes,
     inv.quantity AS quantity,
     img.imageKey AS image,
@@ -37,7 +38,27 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     INNER JOIN ProductImage img ON pd.productImage.productImageId = img.productImageId
     INNER JOIN ProductColour pc ON pd.productColour.productColourId = pc.productColourId
     """)
-    List<ProductPojo> fetchAll(Pageable pageable);
+    List<WorkerProductPojo> fetchAll(Pageable pageable);
+
+    @Query(value = """
+    SELECT p.name AS name,
+    p.description AS desc,
+    p.price AS price,
+    p.currency AS currency,
+    pd.sku AS sku,
+    ps.size AS size,
+    inv.quantity AS quantity,
+    img.imageKey AS image,
+    pc.colour AS colour
+    FROM Product p
+    INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
+    INNER JOIN ProductSize ps ON pd.productSize.productSizeId = ps.productSizeId
+    INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
+    INNER JOIN ProductImage img ON pd.productImage.productImageId = img.productImageId
+    INNER JOIN ProductColour pc ON pd.productColour.productColourId = pc.productColourId
+    WHERE pd.isVisible = true
+    """)
+    List<ClientProductPojo> fetchAllClient(Pageable pageable);
 
     /**
      * Query method finds a ProductDetail by its Product name and ProductDetail sku

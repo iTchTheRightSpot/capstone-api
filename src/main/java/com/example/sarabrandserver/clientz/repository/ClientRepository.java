@@ -1,6 +1,7 @@
-package com.example.sarabrandserver.user.repository;
+package com.example.sarabrandserver.clientz.repository;
 
-import com.example.sarabrandserver.user.entity.Clientz;
+import com.example.sarabrandserver.clientz.entity.Clientz;
+import com.example.sarabrandserver.enumeration.RoleEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -33,5 +34,17 @@ public interface ClientRepository extends JpaRepository<Clientz, Long> {
     @Transactional
     @Query(value = "UPDATE Clientz c SET c.accountNoneLocked = ?1 WHERE c.clientId = ?2")
     void lockClientAccount(@Param(value = "bool") boolean bool, @Param(value = "id") Long id);
+
+    @Query(value = """
+    SELECT COUNT(c.clientId) FROM Clientz c
+    JOIN ClientRole r ON c.clientId = r.clientz.clientId
+    WHERE (c.email = :email OR c.username = :username)
+    AND r.role = :role
+    """)
+    int isAdmin(
+            @Param(value = "email") String email,
+            @Param(value = "username") String username,
+            @Param(value = "role") RoleEnum role
+    );
 
 }

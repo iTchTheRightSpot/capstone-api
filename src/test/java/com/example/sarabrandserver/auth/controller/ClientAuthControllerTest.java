@@ -1,9 +1,9 @@
 package com.example.sarabrandserver.auth.controller;
 
 import com.example.sarabrandserver.auth.service.AuthService;
-import com.example.sarabrandserver.user.dto.ClientRegisterDTO;
-import com.example.sarabrandserver.user.repository.ClientRepository;
-import com.example.sarabrandserver.user.repository.ClientRoleRepo;
+import com.example.sarabrandserver.clientz.dto.ClientRegisterDTO;
+import com.example.sarabrandserver.clientz.repository.ClientRepository;
+import com.example.sarabrandserver.clientz.repository.ClientRoleRepo;
 import com.example.sarabrandserver.auth.dto.LoginDTO;
 import com.example.sarabrandserver.exception.DuplicateException;
 import com.example.sarabrandserver.security.CustomStrategy;
@@ -143,7 +143,7 @@ class ClientAuthControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException))
                 .andExpect(result -> assertEquals(
-                        dto.email() + " exists",
+                        dto.getEmail() + " exists",
                         Objects.requireNonNull(result.getResolvedException()).getMessage()
                 ));
     }

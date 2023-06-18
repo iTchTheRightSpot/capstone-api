@@ -1,13 +1,12 @@
 package com.example.sarabrandserver.auth.service;
 
 import com.example.sarabrandserver.auth.dto.LoginDTO;
-import com.example.sarabrandserver.exception.DuplicateException;
 import com.example.sarabrandserver.auth.response.AuthResponse;
-import com.example.sarabrandserver.user.dto.ClientRegisterDTO;
-import com.example.sarabrandserver.user.entity.ClientRole;
-import com.example.sarabrandserver.user.entity.Clientz;
-import com.example.sarabrandserver.user.repository.ClientRepository;
-import com.github.javafaker.Faker;
+import com.example.sarabrandserver.clientz.dto.ClientRegisterDTO;
+import com.example.sarabrandserver.clientz.entity.ClientRole;
+import com.example.sarabrandserver.clientz.entity.Clientz;
+import com.example.sarabrandserver.clientz.repository.ClientRepository;
+import com.example.sarabrandserver.exception.DuplicateException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,10 +26,8 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Service;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
-import java.util.Optional;
+import java.util.UUID;
 
 import static com.example.sarabrandserver.enumeration.RoleEnum.CLIENT;
 import static com.example.sarabrandserver.enumeration.RoleEnum.WORKER;
@@ -91,12 +88,12 @@ public class AuthService {
      * @return ResponseEntity of type String
      * */
     public ResponseEntity<?> workerRegister(ClientRegisterDTO dto) {
-        Optional<Clientz> exists = this.clientRepository.workerExists(dto.email().trim(), dto.username().trim());
+        if (this.clientRepository.isAdmin(dto.getEmail().trim(), dto.getUsername().trim(), WORKER) > 0) {
+            throw new DuplicateException(dto.getUsername() + " exists");
+        }
 
+        var exists = this.clientRepository.workerExists(dto.getEmail().trim(), dto.getUsername().trim());
         if (exists.isPresent()) {
-            if (exists.get().getClientRole().stream().map(ClientRole::getRole).toList().contains(WORKER)) {
-                throw new DuplicateException(dto.email() + " exists");
-            }
             exists.get().addRole(new ClientRole(WORKER));
             this.clientRepository.save(exists.get());
             return new ResponseEntity<>("Updated", OK);
@@ -111,7 +108,6 @@ public class AuthService {
         return new ResponseEntity<>("Registered", CREATED);
     }
 
-    // TODO validate dto not null, empty etc
     /**
      * Method is responsible for registering a new user
      * @param dto of type ClientRegisterDTO
@@ -119,8 +115,8 @@ public class AuthService {
      * @return ResponseEntity of type String
      * */
     public ResponseEntity<?> clientRegister(ClientRegisterDTO dto) {
-        if (this.clientRepository.principalExists(dto.email().trim(), dto.username().trim()) > 0) {
-            throw new DuplicateException(dto.email() + " exists");
+        if (this.clientRepository.principalExists(dto.getEmail().trim(), dto.getUsername().trim()) > 0) {
+            throw new DuplicateException(dto.getEmail() + " exists");
         }
 
         // Create clientz
@@ -164,7 +160,7 @@ public class AuthService {
             HttpServletResponse res
     ) {
         Authentication authentication = manager
-                .authenticate(UsernamePasswordAuthenticationToken.unauthenticated(dto.principal(), dto.password()));
+                .authenticate(UsernamePasswordAuthenticationToken.unauthenticated(dto.getPrincipal(), dto.getPassword()));
 
         // Validate max session
         this.sessionAuthenticationStrategy.onAuthentication(authentication, req, res);
@@ -178,10 +174,8 @@ public class AuthService {
         this.securityContextRepository.saveContext(context, req, res);
 
         // Build response
-        String list = authentication.getAuthorities().stream().map(String::valueOf).toList().toString();
-
         // Set custom cookie to replace using local storage to keep track of isLogged in. Look auth.service.ts
-        Cookie cookie = new Cookie(IS_LOGGED_IN, URLEncoder.encode(list, StandardCharsets.UTF_8));
+        Cookie cookie = new Cookie(IS_LOGGED_IN, UUID.randomUUID().toString());
         cookie.setDomain(COOKIE_DOMAIN);
         cookie.setPath(COOKIE_PATH);
         cookie.setSecure(COOKIE_SECURE);
@@ -191,17 +185,17 @@ public class AuthService {
         // Add custom cookie to response
         res.addCookie(cookie);
 
-        return new ResponseEntity<>(new AuthResponse(dto.principal()), OK);
+        return new ResponseEntity<>(new AuthResponse(dto.getPrincipal()), OK);
     }
 
     private Clientz createClient(ClientRegisterDTO dto) {
         var client = Clientz.builder()
-                .firstname(dto.firstname().trim())
-                .lastname(dto.lastname().trim())
-                .email(dto.email().trim())
-                .username(dto.username().trim())
-                .phoneNumber(dto.phone_number().trim())
-                .password(passwordEncoder.encode(dto.password()))
+                .firstname(dto.getFirstname().trim())
+                .lastname(dto.getLastname().trim())
+                .email(dto.getEmail().trim())
+                .username(dto.getUsername().trim())
+                .phoneNumber(dto.getPhone_number().trim())
+                .password(passwordEncoder.encode(dto.getPassword()))
                 .enabled(true)
                 .credentialsNonExpired(true)
                 .accountNonExpired(true)

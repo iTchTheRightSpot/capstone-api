@@ -6,7 +6,7 @@ import com.example.sarabrandserver.product.dto.CreateProductDTO;
 import com.example.sarabrandserver.product.dto.ProductDetailDTO;
 import com.example.sarabrandserver.product.entity.*;
 import com.example.sarabrandserver.product.repository.ProductRepository;
-import com.example.sarabrandserver.product.response.ProductResponse;
+import com.example.sarabrandserver.product.response.WorkerProductResponse;
 import com.example.sarabrandserver.util.DateUTC;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +33,6 @@ import static org.springframework.http.HttpStatus.CREATED;
 @ActiveProfiles("dev")
 @TestPropertySource(locations = "classpath:application-dev.properties")
 class WorkerProductServiceTest {
-
     private WorkerProductService productService;
 
     @Mock private ProductRepository productRepository;
@@ -56,13 +55,14 @@ class WorkerProductServiceTest {
         var given = pageRequest();
 
         // When
-        doReturn(given)
-                .when(this.productRepository).fetchAll(PageRequest.of(page, size));
+        doReturn(given).when(this.productRepository).fetchAll(PageRequest.of(page, size));
 
         // Then
         var fetch = this.productService.fetchAll(page, size);
         assertEquals(given.size(), fetch.size());
-        assertEquals(given.get(0), fetch.get(0));
+        assertEquals(given.get(0).getClass(), fetch.get(0).getClass());
+        assertEquals(given.get(0).getPrice(), fetch.get(0).getPrice());
+        assertEquals(given.get(0).getName(), fetch.get(0).getName());
     }
 
     @Test
@@ -120,17 +120,17 @@ class WorkerProductServiceTest {
     @Test
     void deleteProductDetail() {}
 
-    private List<ProductResponse> pageRequest() {
-        List<ProductResponse> list = new ArrayList<>();
+    private List<WorkerProductResponse> pageRequest() {
+        List<WorkerProductResponse> list = new ArrayList<>();
 
         for (Product pojo : products()) {
-            var res = ProductResponse.builder()
+            var res = WorkerProductResponse.builder()
                     .name(pojo.getName())
                     .desc(pojo.getDescription())
                     .price(pojo.getPrice())
                     .currency(pojo.getCurrency())
                     .sku(pojo.getProductDetails().stream().map(ProductDetail::getSku).findAny().get())
-                    .status(pojo.getProductDetails().stream().map(ProductDetail::isDisabled).findAny().get())
+                    .status(pojo.getProductDetails().stream().map(ProductDetail::isVisible).findAny().get())
                     .size(pojo.getProductDetails()
                             .stream()
                             .map(ProductDetail::getProductSize)
@@ -208,7 +208,7 @@ class WorkerProductServiceTest {
                 // ProductDetail
                 var detail = ProductDetail.builder()
                         .sku(UUID.randomUUID().toString())
-                        .isDisabled(false)
+                        .isVisible(false)
                         .createAt(new Date())
                         .modifiedAt(null)
                         .build();

@@ -119,7 +119,7 @@ public class TestService {
                 // ProductDetail
                 var detail = ProductDetail.builder()
                         .sku(UUID.randomUUID().toString())
-                        .isDisabled(false)
+                        .isVisible(false)
                         .createAt(new Date())
                         .modifiedAt(null)
                         .build();

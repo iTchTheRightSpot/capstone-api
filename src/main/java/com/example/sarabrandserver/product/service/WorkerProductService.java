@@ -1,6 +1,7 @@
 package com.example.sarabrandserver.product.service;
 
 import com.example.sarabrandserver.category.service.WorkerCategoryService;
+import com.example.sarabrandserver.collection.service.WorkerCollectionService;
 import com.example.sarabrandserver.exception.CustomNotFoundException;
 import com.example.sarabrandserver.product.dto.CreateProductDTO;
 import com.example.sarabrandserver.product.dto.UpdateProductDTO;
@@ -27,15 +28,18 @@ public class WorkerProductService {
     private final ProductRepository productRepository;
     private final WorkerCategoryService workerCategoryService;
     private final DateUTC dateUTC;
+    private final WorkerCollectionService collectionService;
 
     public WorkerProductService(
             ProductRepository productRepository,
             WorkerCategoryService workerCategoryService,
-            DateUTC dateUTC
+            DateUTC dateUTC,
+            WorkerCollectionService collectionService
     ) {
         this.productRepository = productRepository;
         this.workerCategoryService = workerCategoryService;
         this.dateUTC = dateUTC;
+        this.collectionService = collectionService;
     }
 
     /**
@@ -68,17 +72,18 @@ public class WorkerProductService {
      * Method is responsible for creating and saving a Product.
      * @param file of type MultipartFile
      * @param dto of type CreateProductDTO
-     * @throws CustomNotFoundException is thrown when category name does not exist
+     * @throws CustomNotFoundException is thrown when category or collection name does not exist
      * @return ResponseEntity of type String
      * */
     @Transactional
-    public ResponseEntity<?> create(CreateProductDTO dto, MultipartFile file) {
-        var category = this.workerCategoryService.findByName(dto.getCategoryName().trim());
-        var findProduct = this.productRepository.findByProductName(dto.getProductName().trim());
+    public ResponseEntity<?> create(CreateProductDTO dto, MultipartFile[] file) {
+        var category = this.workerCategoryService.findByName(dto.getCategory().trim());
+        var findProduct = this.productRepository.findByProductName(dto.getName().trim());
 
         ProductDetail detail;
         var date = this.dateUTC.toUTC(new Date()).isPresent() ? this.dateUTC.toUTC(new Date()).get() : new Date();
 
+        // TODO REFACTOR
         if (findProduct.isPresent()) {
             // Build ProductDetail
             detail = productDetail(dto, file, date, date);
@@ -91,15 +96,23 @@ public class WorkerProductService {
         detail = productDetail(dto, file, date, null);
         // Create new Product
         var product = Product.builder()
-                .name(dto.getProductName().trim())
+                .name(dto.getName().trim())
                 .description(dto.getDesc())
                 .price(BigDecimal.valueOf(dto.getPrice()))
                 .currency(dto.getCurrency()) // Default USD
-                .defaultImagePath(Objects.requireNonNull(file.getOriginalFilename()).trim())
+                .defaultImageKey("")
                 .productDetails(new HashSet<>())
                 .build();
         product.addDetails(detail);
         var saved = this.productRepository.save(product);
+
+
+        // Update Collection if it is not null
+        if (dto.getCollection().trim().length() > 0) {
+            var collection = this.collectionService.findByName(dto.getCollection().trim());
+            collection.addProduct(product);
+            this.collectionService.save(collection);
+        }
 
         // Update Category of new Product
         category.addProduct(saved);
@@ -109,39 +122,44 @@ public class WorkerProductService {
     }
 
     // Helper method to de-clutter create method
-    private ProductDetail productDetail(CreateProductDTO dto, MultipartFile file, Date createdAt, Date modified) {
+    private ProductDetail productDetail(CreateProductDTO dto, MultipartFile[] files, Date createdAt, Date modified) {
         // ProductSize
         var size = ProductSize.builder()
-                .size(dto.getDetailDTO().getSize())
+                .size(dto.getSize())
                 .productDetails(new HashSet<>())
                 .build();
         // ProductInventory
         var inventory = ProductInventory.builder()
-                .quantity(dto.getDetailDTO().getQty())
+                .quantity(dto.getQty())
                 .productDetails(new HashSet<>())
                 .build();
-        // ProductImage
-        var image = ProductImage.builder()
-                .imageKey(UUID.randomUUID().toString())
-                .imagePath(Objects.requireNonNull(file.getOriginalFilename()).trim())
-                .productDetails(new HashSet<>())
-                .build();
+
         // ProductColour
         var colour = ProductColour.builder()
-                .colour(dto.getDetailDTO().getColour())
+                .colour(dto.getColour())
                 .productDetails(new HashSet<>())
                 .build();
         // ProductDetail
         var detail = ProductDetail.builder()
                 .sku(UUID.randomUUID().toString())
-                .isVisible(dto.getDetailDTO().getIsVisible())
+                .isVisible(dto.getVisible())
                 .createAt(createdAt)
                 .modifiedAt(modified)
                 .build();
         detail.setProductSize(size);
         detail.setProductInventory(inventory);
-        detail.setProductImage(image);
         detail.setProductColour(colour);
+
+        // ProductImage
+        for (MultipartFile file : files) {
+            var image = ProductImage.builder()
+                    .imageKey(UUID.randomUUID().toString())
+                    .imagePath(Objects.requireNonNull(file.getOriginalFilename()).trim())
+                    .productDetails(new HashSet<>())
+                    .build();
+
+            detail.setProductImage(image);
+        }
 
         return detail;
     }

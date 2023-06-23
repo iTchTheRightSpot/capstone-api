@@ -1,4 +1,4 @@
-package com.example.sarabrandserver.clientz.auth;
+package com.example.sarabrandserver.clientz.service;
 
 import com.example.sarabrandserver.clientz.entity.Clientz;
 import org.springframework.security.core.GrantedAuthority;

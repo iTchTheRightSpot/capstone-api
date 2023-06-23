@@ -30,7 +30,6 @@ import static org.springframework.security.config.http.SessionCreationPolicy.IF_
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-
     @Value(value = "${custom.max.session}")
     private int MAX_SESSION;
 
@@ -41,7 +40,6 @@ public class SecurityConfig {
     private String LOGGED_IN;
 
     private final RedisIndexedSessionRepository redisIndexedSessionRepository;
-
     private final AuthenticationEntryPoint authEntryPoint;
 
     public SecurityConfig(
@@ -59,7 +57,7 @@ public class SecurityConfig {
                 "/api/v1/client/product/**",
                 "/api/v1/client/category/**",
                 "/api/v1/client/collection/**",
-                "/api/v1/worker/auth/login"
+                "/api/v1/worker/auth/login",
         };
     }
 
@@ -70,8 +68,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(publicRoutes()).permitAll();
-                    auth.anyRequest().authenticated();
+//                    auth.requestMatchers(publicRoutes()).permitAll();
+//                    auth.anyRequest().authenticated();
+                    auth.anyRequest().permitAll();
                 })
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(IF_REQUIRED) //

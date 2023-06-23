@@ -1,7 +1,9 @@
 package com.example.sarabrandserver.clientz.repository;
 
 import com.example.sarabrandserver.clientz.entity.Clientz;
+import com.example.sarabrandserver.clientz.projection.ClientzPojo;
 import com.example.sarabrandserver.enumeration.RoleEnum;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -9,10 +11,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ClientRepository extends JpaRepository<Clientz, Long> {
+public interface ClientzRepository extends JpaRepository<Clientz, Long> {
     @Query(value = "SELECT c FROM Clientz c WHERE c.email = :principal OR c.username = :principal")
     Optional<Clientz> findByPrincipal(@Param(value = "principal") String principal);
 
@@ -47,4 +50,16 @@ public interface ClientRepository extends JpaRepository<Clientz, Long> {
             @Param(value = "role") RoleEnum role
     );
 
+    @Query(value = """
+    SELECT c.firstname AS namw FROM Clientz c
+    INNER JOIN ClientRole r ON c.clientId = r.clientz.clientId
+    WHERE r.role = :role
+    AND (
+    c.accountNoneLocked IS TRUE
+    AND c.enabled IS TRUE
+    AND c.accountNonExpired IS TRUE
+    AND c.credentialsNonExpired IS TRUE
+    )
+    """)
+    List<ClientzPojo> fetchAll(@Param(value = "role") RoleEnum role, Pageable request);
 }

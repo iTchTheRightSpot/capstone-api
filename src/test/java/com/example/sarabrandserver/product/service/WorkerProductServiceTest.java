@@ -2,8 +2,9 @@ package com.example.sarabrandserver.product.service;
 
 import com.example.sarabrandserver.category.entity.ProductCategory;
 import com.example.sarabrandserver.category.service.WorkerCategoryService;
+import com.example.sarabrandserver.collection.entity.ProductCollection;
+import com.example.sarabrandserver.collection.service.WorkerCollectionService;
 import com.example.sarabrandserver.product.dto.CreateProductDTO;
-import com.example.sarabrandserver.product.dto.ProductDetailDTO;
 import com.example.sarabrandserver.product.entity.*;
 import com.example.sarabrandserver.product.repository.ProductRepository;
 import com.example.sarabrandserver.product.response.WorkerProductResponse;
@@ -38,13 +39,15 @@ class WorkerProductServiceTest {
     @Mock private ProductRepository productRepository;
     @Mock private WorkerCategoryService workerCategoryService;
     @Mock private DateUTC dateUTC;
+    @Mock private WorkerCollectionService collectionService;
 
     @BeforeEach
     void setUp() {
         this.productService = new WorkerProductService(
                 this.productRepository,
                 this.workerCategoryService,
-                this.dateUTC
+                this.dateUTC,
+                this.collectionService
         );
     }
 
@@ -68,27 +71,27 @@ class WorkerProductServiceTest {
     @Test
     void create() {
         // Given
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "uploads/image1.jpeg",
-                "image/jpeg",
-                "Test image content".getBytes()
-        );
+        MockMultipartFile[] arr = {
+                new MockMultipartFile(
+                        "file",
+                        "uploads/image1.jpeg",
+                        "image/jpeg",
+                        "Test image content".getBytes()
+                )
+        };
         var pojo = pageRequest().get(0);
         var product = products().get(0);
         var dto = CreateProductDTO.builder()
-                .categoryName("Example Category")
-                .productName(product.getName())
+                .category("Example Category")
+                .collection("Example Collection")
+                .name(product.getName())
                 .desc(product.getDescription())
                 .price(product.getPrice().doubleValue())
                 .currency(product.getCurrency())
-                .detailDTO(ProductDetailDTO.builder()
-                        .isVisible(true)
-                        .qty(pojo.getQuantity())
-                        .size(pojo.getSize())
-                        .colour(pojo.getColour())
-                        .build()
-                )
+                .visible(true)
+                .qty(pojo.getQuantity())
+                .size(pojo.getSize())
+                .colour(pojo.getColour())
                 .build();
         var category = ProductCategory.builder()
                 .categoryName("Example Category")
@@ -98,17 +101,28 @@ class WorkerProductServiceTest {
                 .productCategories(new HashSet<>())
                 .product(new HashSet<>())
                 .build();
+        category.addProduct(product);
+        var collection = ProductCollection.builder()
+                .collection("Example Collection")
+                .products(new HashSet<>())
+                .createAt(new Date())
+                .modifiedAt(null)
+                .isVisible(true)
+                .build();
+        collection.addProduct(product);
 
         // When
         doReturn(category).when(this.workerCategoryService).findByName(anyString());
         doReturn(Optional.empty()).when(this.productRepository).findByProductName(anyString());
         doReturn(Optional.of(new Date())).when(this.dateUTC).toUTC(any(Date.class));
         doReturn(product).when(this.productRepository).save(any(Product.class));
+        doReturn(collection).when(this.collectionService).findByName(dto.getCollection());
 
         // Then
-        var res = this.productService.create(dto, file);
+        var res = this.productService.create(dto, arr);
         assertEquals(CREATED, res.getStatusCode());
         verify(this.workerCategoryService, times(1)).save(any(ProductCategory.class));
+        verify(this.collectionService, times(1)).save(any(ProductCollection.class));
     }
 
     @Test
@@ -179,7 +193,7 @@ class WorkerProductServiceTest {
                     .description(new Faker().lorem().characters(50))
                     .price(new BigDecimal(new Faker().commerce().price()))
                     .currency(new Faker().currency().name())
-                    .defaultImagePath(new Faker().file().fileName())
+                    .defaultImageKey(new Faker().file().fileName())
                     .productDetails(new HashSet<>())
                     .build();
 

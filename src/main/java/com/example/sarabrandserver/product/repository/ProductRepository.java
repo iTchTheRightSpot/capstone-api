@@ -1,8 +1,8 @@
 package com.example.sarabrandserver.product.repository;
 
+import com.example.sarabrandserver.product.projection.WorkerProductPojo;
 import com.example.sarabrandserver.product.entity.Product;
 import com.example.sarabrandserver.product.projection.ClientProductPojo;
-import com.example.sarabrandserver.product.projection.WorkerProductPojo;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

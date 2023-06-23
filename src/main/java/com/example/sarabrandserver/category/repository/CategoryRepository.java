@@ -2,6 +2,7 @@ package com.example.sarabrandserver.category.repository;
 
 import com.example.sarabrandserver.category.entity.ProductCategory;
 import com.example.sarabrandserver.category.projection.CategoryPojo;
+import com.example.sarabrandserver.category.projection.NamePojo;
 import com.example.sarabrandserver.product.projection.ClientProductPojo;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -43,6 +44,9 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     ORDER BY parent.createAt
     """)
     List<CategoryPojo> fetchCategories();
+
+    @Query(value = "SELECT c.categoryName AS category FROM ProductCategory c")
+    List<NamePojo> fetchCategoriesWorker();
 
     @Query(value = """
     SELECT parent.categoryName AS category, parent.isVisible AS status, GROUP_CONCAT(child.categoryName) AS sub

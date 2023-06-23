@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS product_collection (
 CREATE TABLE IF NOT EXISTS product (
     product_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
     name VARCHAR(80) NOT NULL UNIQUE,
-    default_image_path VARCHAR(255) NOT NULL,
+    default_image_key VARCHAR(255) NOT NULL,
     description VARCHAR(255),
     price DECIMAL NOT NULL,
     currency VARCHAR(50) NOT NULL,

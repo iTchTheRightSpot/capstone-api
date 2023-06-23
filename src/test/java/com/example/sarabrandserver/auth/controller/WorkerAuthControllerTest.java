@@ -1,13 +1,13 @@
 package com.example.sarabrandserver.auth.controller;
 
+import com.example.sarabrandserver.clientz.repository.ClientRoleRepo;
 import com.example.sarabrandserver.auth.service.AuthService;
 import com.example.sarabrandserver.auth.dto.LoginDTO;
 import com.example.sarabrandserver.exception.DuplicateException;
 import com.example.sarabrandserver.security.CustomStrategy;
 import com.example.sarabrandserver.security.bruteforce.BruteForceService;
 import com.example.sarabrandserver.clientz.dto.ClientRegisterDTO;
-import com.example.sarabrandserver.clientz.repository.ClientRepository;
-import com.example.sarabrandserver.clientz.repository.ClientRoleRepo;
+import com.example.sarabrandserver.clientz.repository.ClientzRepository;
 import com.redis.testcontainers.RedisContainer;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
@@ -67,7 +67,7 @@ class WorkerAuthControllerTest {
 
     @Autowired private ClientRoleRepo clientRoleRepo;
 
-    @Autowired private ClientRepository clientRepository;
+    @Autowired private ClientzRepository clientzRepository;
 
     @Autowired private BruteForceService bruteForceService;
 
@@ -110,7 +110,7 @@ class WorkerAuthControllerTest {
     @AfterEach
     void tearDown() {
         this.clientRoleRepo.deleteAll();
-        this.clientRepository.deleteAll();
+        this.clientzRepository.deleteAll();
     }
 
     /** Method does two things in one. Login and Register. To register, worker has to have a role WORKER */

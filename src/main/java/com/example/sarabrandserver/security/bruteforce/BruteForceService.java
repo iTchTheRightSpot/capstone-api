@@ -1,6 +1,6 @@
 package com.example.sarabrandserver.security.bruteforce;
 
-import com.example.sarabrandserver.clientz.repository.ClientRepository;
+import com.example.sarabrandserver.clientz.repository.ClientzRepository;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -13,11 +13,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class BruteForceService {
     private int MAX = 5;
     private final BruteForceRepo bruteForceRepo;
-    private final ClientRepository clientRepository;
+    private final ClientzRepository clientzRepository;
 
-    public BruteForceService(BruteForceRepo bruteForceRepo, ClientRepository clientRepository) {
+    public BruteForceService(BruteForceRepo bruteForceRepo, ClientzRepository clientzRepository) {
         this.bruteForceRepo = bruteForceRepo;
-        this.clientRepository = clientRepository;
+        this.clientzRepository = clientzRepository;
     }
 
     /**
@@ -27,7 +27,7 @@ public class BruteForceService {
     @Transactional
     public void registerLoginFailure(Authentication auth) {
         log.info("MAX BEFORE BEING BLOCKED {}", this.MAX);
-        this.clientRepository.findByPrincipal(auth.getName()).ifPresent(clientz -> {
+        this.clientzRepository.findByPrincipal(auth.getName()).ifPresent(clientz -> {
             if (!clientz.isAccountNoneLocked()) {
                 return;
             }
@@ -42,7 +42,7 @@ public class BruteForceService {
                     this.bruteForceRepo.update(entity);
                     return;
                 }
-                this.clientRepository.lockClientAccount(false, clientz.getClientId());
+                this.clientzRepository.lockClientAccount(false, clientz.getClientId());
                 // TODO send client email to change password
             });
 
@@ -58,7 +58,7 @@ public class BruteForceService {
      * @param auth of type Spring Core Authentication
      */
     public void resetBruteForceCounter(Authentication auth) {
-        this.clientRepository.findByPrincipal(auth.getName()) //
+        this.clientzRepository.findByPrincipal(auth.getName()) //
                 .flatMap(clientz -> this.bruteForceRepo.findByPrincipal(auth.getName())) //
                 .ifPresent(entity -> this.bruteForceRepo.delete(entity.getPrincipal()));
     }

@@ -1,9 +1,9 @@
 package com.example.sarabrandserver.auth.controller;
 
+import com.example.sarabrandserver.clientz.repository.ClientRoleRepo;
 import com.example.sarabrandserver.auth.service.AuthService;
 import com.example.sarabrandserver.clientz.dto.ClientRegisterDTO;
-import com.example.sarabrandserver.clientz.repository.ClientRepository;
-import com.example.sarabrandserver.clientz.repository.ClientRoleRepo;
+import com.example.sarabrandserver.clientz.repository.ClientzRepository;
 import com.example.sarabrandserver.auth.dto.LoginDTO;
 import com.example.sarabrandserver.exception.DuplicateException;
 import com.example.sarabrandserver.security.CustomStrategy;
@@ -60,7 +60,7 @@ class ClientAuthControllerTest {
 
     @Autowired private ClientRoleRepo clientRoleRepo;
 
-    @Autowired private ClientRepository clientRepository;
+    @Autowired private ClientzRepository clientzRepository;
 
     @Autowired private AuthService authService;
 
@@ -104,7 +104,7 @@ class ClientAuthControllerTest {
     @AfterEach
     void tearDown() {
         this.clientRoleRepo.deleteAll();
-        this.clientRepository.deleteAll();
+        this.clientzRepository.deleteAll();
     }
 
     @Test @Order(1)

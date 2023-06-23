@@ -14,9 +14,6 @@ import java.math.BigDecimal;
 @Data
 @Builder
 public class WorkerProductResponse implements WorkerProductPojo {
-
-    // Primitive
-    @JsonProperty(value = "product_name")
     private String name;
     private String desc;
     private BigDecimal price;
@@ -25,7 +22,7 @@ public class WorkerProductResponse implements WorkerProductPojo {
     private boolean status;
     private String size;
     private int quantity;
-    @JsonProperty(value = "image_url")
+    @JsonProperty(value = "url")
     private String imageUrl;
     private String colour;
 

@@ -4,6 +4,7 @@ import com.example.sarabrandserver.category.dto.CategoryDTO;
 import com.example.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.example.sarabrandserver.category.entity.ProductCategory;
 import com.example.sarabrandserver.category.projection.CategoryPojo;
+import com.example.sarabrandserver.category.projection.NamePojo;
 import com.example.sarabrandserver.category.repository.CategoryRepository;
 import com.example.sarabrandserver.exception.CustomNotFoundException;
 import com.example.sarabrandserver.exception.DuplicateException;
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -31,10 +31,10 @@ public class WorkerCategoryService {
 
     /**
      * Responsible for getting a list of parent category name and child category names.
-     * @return List of CategoryResponse
+     * @return List of CategoryPojo
      * */
-    public List<CategoryPojo> fetchAll() {
-        return this.categoryRepository.fetchCategories();
+    public List<NamePojo> fetchAll() {
+        return this.categoryRepository.fetchCategoriesWorker();
     }
 
     /**
@@ -89,11 +89,11 @@ public class WorkerCategoryService {
      * */
     @Transactional
     public ResponseEntity<?> update(UpdateCategoryDTO dto) {
-        var category = findByName(dto.getOld_name().trim());
-
         if (this.categoryRepository.duplicateCategoryForUpdate(dto.getNew_name().trim()) > 0) {
             return new ResponseEntity<>(dto.getNew_name() + " is a duplicate", CONFLICT);
         }
+
+        var category = findByName(dto.getOld_name().trim());
         var date = this.dateUTC.toUTC(new Date()).isEmpty() ? new Date() : this.dateUTC.toUTC(new Date()).get();
         this.categoryRepository.update(date, category.getCategoryName(), dto.getNew_name().trim());
         return new ResponseEntity<>("updated", OK);
@@ -114,13 +114,11 @@ public class WorkerCategoryService {
 
     public ProductCategory findByName(String name) {
         return this.categoryRepository.findByName(name)
-                .orElseThrow(() -> new CustomNotFoundException("Does not exist"));
+                .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));
     }
 
     public void save(ProductCategory category) {
         this.categoryRepository.save(category);
     }
-
-    private record CategoryMapper(String parent, Set<String> subCategory) {}
 
 }

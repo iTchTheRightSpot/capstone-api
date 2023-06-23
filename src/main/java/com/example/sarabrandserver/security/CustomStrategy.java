@@ -17,12 +17,10 @@ import java.util.Comparator;
 /** Objective of class is to keep track of each user max Session */
 @Component(value = "customStrategy")
 public class CustomStrategy implements SessionAuthenticationStrategy {
-
     @Value(value = "${custom.max.session}")
     private int MAX_SESSION;
 
     private final RedisIndexedSessionRepository redisIndexedSessionRepository;
-
     private final SessionRegistry sessionRegistry;
 
     public CustomStrategy(RedisIndexedSessionRepository redisIndexedSessionRepository, SessionRegistry sessionRegistry) {

@@ -1,17 +1,19 @@
 package com.example.sarabrandserver.auth.service;
 
-import com.example.sarabrandserver.auth.dto.LoginDTO;
 import com.example.sarabrandserver.auth.response.AuthResponse;
 import com.example.sarabrandserver.clientz.dto.ClientRegisterDTO;
 import com.example.sarabrandserver.clientz.entity.ClientRole;
 import com.example.sarabrandserver.clientz.entity.Clientz;
-import com.example.sarabrandserver.clientz.repository.ClientRepository;
+import com.example.sarabrandserver.clientz.repository.ClientzRepository;
+import com.example.sarabrandserver.enumeration.RoleEnum;
 import com.example.sarabrandserver.exception.DuplicateException;
+import com.example.sarabrandserver.auth.dto.LoginDTO;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,8 +31,6 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.UUID;
 
-import static com.example.sarabrandserver.enumeration.RoleEnum.CLIENT;
-import static com.example.sarabrandserver.enumeration.RoleEnum.WORKER;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 
@@ -52,7 +52,7 @@ public class AuthService {
     @Value(value = "${server.servlet.session.cookie.secure}")
     private boolean COOKIE_SECURE;
 
-    private final ClientRepository clientRepository;
+    private final ClientzRepository clientzRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -65,13 +65,13 @@ public class AuthService {
     private final SessionAuthenticationStrategy sessionAuthenticationStrategy;
 
     public AuthService(
-            ClientRepository clientRepository,
+            ClientzRepository clientzRepository,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authManager,
             SecurityContextRepository securityContextRepository,
-            SessionAuthenticationStrategy sessionAuthenticationStrategy
+            @Qualifier(value = "customStrategy") SessionAuthenticationStrategy sessionAuthenticationStrategy
     ) {
-        this.clientRepository = clientRepository;
+        this.clientzRepository = clientzRepository;
         this.passwordEncoder = passwordEncoder;
         this.authManager = authManager;
         this.securityContextRepository = securityContextRepository;
@@ -88,23 +88,23 @@ public class AuthService {
      * @return ResponseEntity of type String
      * */
     public ResponseEntity<?> workerRegister(ClientRegisterDTO dto) {
-        if (this.clientRepository.isAdmin(dto.getEmail().trim(), dto.getUsername().trim(), WORKER) > 0) {
+        if (this.clientzRepository.isAdmin(dto.getEmail().trim(), dto.getUsername().trim(), RoleEnum.WORKER) > 0) {
             throw new DuplicateException(dto.getUsername() + " exists");
         }
 
-        var exists = this.clientRepository.workerExists(dto.getEmail().trim(), dto.getUsername().trim());
+        var exists = this.clientzRepository.workerExists(dto.getEmail().trim(), dto.getUsername().trim());
         if (exists.isPresent()) {
-            exists.get().addRole(new ClientRole(WORKER));
-            this.clientRepository.save(exists.get());
+            exists.get().addRole(new ClientRole(RoleEnum.WORKER));
+            this.clientzRepository.save(exists.get());
             return new ResponseEntity<>("Updated", OK);
         }
 
         // Create Client and add role of worker
         var clientz = createClient(dto);
-        clientz.addRole(new ClientRole(WORKER));
+        clientz.addRole(new ClientRole(RoleEnum.WORKER));
 
         // Save client
-        this.clientRepository.save(clientz);
+        this.clientzRepository.save(clientz);
         return new ResponseEntity<>("Registered", CREATED);
     }
 
@@ -115,7 +115,7 @@ public class AuthService {
      * @return ResponseEntity of type String
      * */
     public ResponseEntity<?> clientRegister(ClientRegisterDTO dto) {
-        if (this.clientRepository.principalExists(dto.getEmail().trim(), dto.getUsername().trim()) > 0) {
+        if (this.clientzRepository.principalExists(dto.getEmail().trim(), dto.getUsername().trim()) > 0) {
             throw new DuplicateException(dto.getEmail() + " exists");
         }
 
@@ -123,7 +123,7 @@ public class AuthService {
         var clientz = createClient(dto);
 
         // Create and Save client
-        this.clientRepository.save(clientz);
+        this.clientzRepository.save(clientz);
         return new ResponseEntity<>("Registered", CREATED);
     }
 
@@ -159,8 +159,10 @@ public class AuthService {
             HttpServletRequest req,
             HttpServletResponse res
     ) {
-        Authentication authentication = manager
-                .authenticate(UsernamePasswordAuthenticationToken.unauthenticated(dto.getPrincipal(), dto.getPassword()));
+        Authentication authentication = manager.authenticate(UsernamePasswordAuthenticationToken.unauthenticated(
+                dto.getPrincipal(),
+                dto.getPassword()
+        ));
 
         // Validate max session
         this.sessionAuthenticationStrategy.onAuthentication(authentication, req, res);
@@ -202,7 +204,7 @@ public class AuthService {
                 .accountNoneLocked(true)
                 .clientRole(new HashSet<>())
                 .build();
-        client.addRole(new ClientRole(CLIENT));
+        client.addRole(new ClientRole(RoleEnum.CLIENT));
         return client;
     }
 

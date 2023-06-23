@@ -11,4 +11,5 @@ public class ClientCollectionController {
     public ClientCollectionController(ClientCollectionService collectionService) {
         this.collectionService = collectionService;
     }
+    
 }

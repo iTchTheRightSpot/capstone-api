@@ -32,8 +32,8 @@ public class Product implements Serializable {
     @Column(name = "name", length = 80, unique = true, nullable = false)
     private String name;
 
-    @Column(name = "default_image_path", nullable = false)
-    private String defaultImagePath;
+    @Column(name = "default_image_key", nullable = false)
+    private String defaultImageKey;
 
     @Column(name = "description")
     private String description;
@@ -63,9 +63,9 @@ public class Product implements Serializable {
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "product", orphanRemoval = true)
     private Set<ProductDetail> productDetails;
 
-    public Product(String name, String defaultImagePath) {
+    public Product(String name, String defaultImageKey) {
         this.name = name;
-        this.defaultImagePath = defaultImagePath;
+        this.defaultImageKey = defaultImageKey;
     }
 
     public void addDetails(ProductDetail detail) {

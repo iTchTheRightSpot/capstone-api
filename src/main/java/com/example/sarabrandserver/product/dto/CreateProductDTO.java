@@ -10,23 +10,29 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 @Builder
 @Data
 @Getter @Setter
-public class CreateProductDTO {
+public class CreateProductDTO implements Serializable {
 
-    @JsonProperty(required = true, value = "category_name")
-    @JsonInclude(NON_EMPTY)
-    private String categoryName;
-
-    @JsonProperty(required = true, value = "product_name")
+    @JsonProperty(required = true, value = "name")
     @NotNull @NotEmpty
-    @Size(min = 5, max = 80, message = "Min of 5 and max of 80")
-    private String productName;
+    private String category;
 
-    @JsonProperty(value = "description")
+    @JsonProperty(required = true, value = "collection")
+    @JsonInclude(NON_EMPTY)
+    private String collection;
+
+    @JsonProperty(required = true, value = "name")
+    @NotNull @NotEmpty
+    @Size(max = 80, message = "Max of 80")
+    private String name;
+
+    @JsonProperty(value = "desc")
     @Size(max = 255, message = "Max of 255")
     @NotNull @NotEmpty
     private String desc;
@@ -39,8 +45,20 @@ public class CreateProductDTO {
     @NotNull @NotEmpty
     private String currency;
 
-    @JsonProperty(required = true, value = "product_detail")
+    @JsonProperty(required = true, value = "visible")
+    @NotNull
+    private Boolean visible;
+
+    @JsonProperty(required = true, value = "qty")
+    @NotNull
+    private Integer qty;
+
+    @JsonProperty(required = true, value = "size")
     @NotNull @NotEmpty
-    private ProductDetailDTO detailDTO;
+    private String size;
+
+    @JsonProperty(required = true, value = "colour")
+    @NotNull @NotEmpty
+    private String colour;
 
 }

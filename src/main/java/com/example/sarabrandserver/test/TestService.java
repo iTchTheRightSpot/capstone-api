@@ -2,6 +2,8 @@ package com.example.sarabrandserver.test;
 
 import com.example.sarabrandserver.category.entity.ProductCategory;
 import com.example.sarabrandserver.category.repository.CategoryRepository;
+import com.example.sarabrandserver.collection.entity.ProductCollection;
+import com.example.sarabrandserver.collection.repository.CollectionRepository;
 import com.example.sarabrandserver.product.entity.*;
 import com.example.sarabrandserver.product.repository.ProductRepository;
 import com.github.javafaker.Faker;
@@ -12,7 +14,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 @Component @Slf4j
 public class TestService {
@@ -33,10 +38,31 @@ public class TestService {
     private record CatPojo() {}
 
     @Bean
-    public CommandLineRunner commandLineRunner(CategoryRepository repo) {
+    public CommandLineRunner commandLineRunner(CategoryRepository repo, CollectionRepository collectionRepository) {
         return args -> {
-//            categories(repo);
+            categories(repo);
+            collection(collectionRepository);
         };
+    }
+
+    private void collection(CollectionRepository repo) {
+        repo.deleteAll();
+
+        Set<String> set = new HashSet<>();
+        for (int i = 0; i < 20; i++) {
+            set.add(new Faker().commerce().department());
+        }
+
+        for (String str : set) {
+            var collection = ProductCollection.builder()
+                    .collection(str)
+                    .createAt(new Date())
+                    .modifiedAt(null)
+                    .isVisible(true)
+                    .products(new HashSet<>())
+                    .build();
+            repo.save(collection);
+        }
     }
 
     private void categories(CategoryRepository repo) {
@@ -44,7 +70,7 @@ public class TestService {
 
         Set<String> set = new HashSet<>();
         for (int i = 0; i < 10; i++) {
-            set.add(new Faker().commerce().productName());
+            set.add(new Faker().commerce().department());
         }
 
         for (String str : set) {
@@ -70,10 +96,8 @@ public class TestService {
             }
             repo.save(category);
         }
-
-        repo.fetchCategories()
-                .forEach(e -> log.info("Parent Category name {} and children {}", e.getCategory(), e.getSub()));
-
+//        repo.fetchCategories()
+//                .forEach(e -> log.info("Parent Category name {} and children {}", e.getCategory(), e.getSub()));
     }
 
     private void products(ProductRepository repo) {
@@ -90,7 +114,7 @@ public class TestService {
                     .description(new Faker().lorem().characters(50))
                     .price(new BigDecimal(new Faker().commerce().price()))
                     .currency(new Faker().currency().name())
-                    .defaultImagePath(new Faker().file().fileName())
+                    .defaultImageKey(new Faker().file().fileName())
                     .productDetails(new HashSet<>())
                     .build();
 

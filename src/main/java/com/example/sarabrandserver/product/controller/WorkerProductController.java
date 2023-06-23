@@ -6,15 +6,13 @@ import com.example.sarabrandserver.product.service.WorkerProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("api/v1/worker/product")
-@PreAuthorize(value = "hasAnyAuthority('WORKER')")
+//@PreAuthorize(value = "hasAnyAuthority('WORKER')")
 public class WorkerProductController {
-
     private final WorkerProductService workerProductService;
 
     public WorkerProductController(WorkerProductService workerProductService) {
@@ -24,7 +22,7 @@ public class WorkerProductController {
     @GetMapping(produces = "application/json")
     public ResponseEntity<?> fetchAll(
             @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @RequestParam(name = "size", defaultValue = "10") Integer size
+            @RequestParam(name = "size", defaultValue = "50") Integer size
     ) {
         return new ResponseEntity<>(this.workerProductService.fetchAll(page, size), HttpStatus.OK);
     }
@@ -32,15 +30,15 @@ public class WorkerProductController {
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> create(
             @Valid @ModelAttribute CreateProductDTO dto,
-            @RequestParam(name = "file") MultipartFile file
+            @RequestParam(name = "files") MultipartFile[] files
     ) {
-        return workerProductService.create(dto, file);
+        return workerProductService.create(dto, files);
     }
 
     @PutMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> update(
             @Valid @ModelAttribute UpdateProductDTO dto,
-            @RequestParam(name = "file", required = false) MultipartFile file
+            @RequestParam(name = "files", required = false) MultipartFile file
     ) {
         return this.workerProductService.updateProduct(dto, file);
     }

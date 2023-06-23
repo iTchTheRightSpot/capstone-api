@@ -3,9 +3,7 @@ package com.example.sarabrandserver.collection.entity;
 
 import com.example.sarabrandserver.product.entity.Product;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Date;
 import java.util.Set;
@@ -19,8 +17,9 @@ import static jakarta.persistence.FetchType.EAGER;
 @Table(name = "product_collection")
 @Entity
 @NoArgsConstructor
-@Getter
-@Setter
+@AllArgsConstructor
+@Data
+@Builder
 public class ProductCollection {
 
     @Id
@@ -44,5 +43,10 @@ public class ProductCollection {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = EAGER, mappedBy = "productCollection")
     private Set<Product> products;
+
+    public void addProduct(Product product) {
+        this.products.add(product);
+        product.setProductCollection(this);
+    }
 
 }

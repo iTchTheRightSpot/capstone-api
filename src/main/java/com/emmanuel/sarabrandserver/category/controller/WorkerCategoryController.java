@@ -33,8 +33,8 @@ public class WorkerCategoryController {
         return this.workerCategoryService.update(dto);
     }
 
-    @DeleteMapping(path = "/{category_id}")
-    public ResponseEntity<?> delete(@PathVariable(value = "category_id") String id) {
+    @DeleteMapping(path = "/{name}")
+    public ResponseEntity<?> delete(@PathVariable(value = "name") String id) {
         return this.workerCategoryService.delete(id);
     }
 

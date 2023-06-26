@@ -1,0 +1,290 @@
+package com.emmanuel.sarabrandserver.product.worker;
+
+import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
+import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
+import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
+import com.emmanuel.sarabrandserver.product.dto.CreateProductDTO;
+import com.emmanuel.sarabrandserver.product.dto.DetailDTO;
+import com.emmanuel.sarabrandserver.product.dto.ProductDTO;
+import com.emmanuel.sarabrandserver.product.entity.*;
+import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
+import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
+import com.emmanuel.sarabrandserver.product.response.DetailResponse;
+import com.emmanuel.sarabrandserver.product.response.ProductResponse;
+import com.emmanuel.sarabrandserver.util.DateUTC;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.math.BigDecimal;
+import java.util.*;
+
+import static org.springframework.http.HttpStatus.*;
+
+@Service
+public class WorkerProductService {
+    private String defaultKey;
+
+    @Value(value = "${s3.pre-assigned.url}")
+    private String ASSIGNED_URL;
+
+    private final ProductRepository productRepository;
+    private final ProductDetailRepo detailRepo;
+    private final WorkerCategoryService categoryService;
+    private final DateUTC dateUTC;
+    private final WorkerCollectionService collectionService;
+
+    public WorkerProductService(
+            ProductRepository productRepository,
+            ProductDetailRepo detailRepo,
+            WorkerCategoryService categoryService,
+            DateUTC dateUTC,
+            WorkerCollectionService collectionService
+    ) {
+        this.productRepository = productRepository;
+        this.detailRepo = detailRepo;
+        this.categoryService = categoryService;
+        this.dateUTC = dateUTC;
+        this.collectionService = collectionService;
+    }
+
+    /**
+     * Method fetches a list of ProductResponse. Note fetchAllProductsWorker query method returns a list of
+     * ProductPojo using spring jpa projection. It only returns a Product not Including its details.
+     * @param page is the UI page number
+     * @param size is the max amount to be displayed on a page
+     * @return List of type ProductResponse
+     * */
+    public List<ProductResponse> fetchAll(int page, int size) {
+        return this.productRepository
+                .fetchAllProductsWorker(PageRequest.of(page, Math.max(size, 30))) //
+                .stream() //
+                .map(pojo -> new ProductResponse(
+                        pojo.getId(),
+                        pojo.getName(),
+                        pojo.getDesc(),
+                        pojo.getPrice().doubleValue(),
+                        pojo.getCurrency(),
+                        ASSIGNED_URL + pojo.getKey()
+                )) //
+                .toList();
+    }
+
+    /**
+     * Method returns a list of DetailResponse. Note findDetailByProductNameWorker query method returns a list of
+     * DetailPojo using spring jpa projection.
+     * @param name is the name of the product
+     * @param page is amount of size based on the page
+     * @param size is the amount of items list. Note the max is set to 30 as to not overload Heap memory
+     * @return List of DetailResponse
+     * */
+    public List<DetailResponse> fetchAll(String name, int page, int size) {
+        return this.productRepository
+                .findDetailByProductNameWorker(name, PageRequest.of(page, Math.min(size, 30))) //
+                .stream() //
+                .map(p -> new DetailResponse(
+                        p.getSku(), p.getVisible(), p.getSize(), p.getQty(), p.getColour(), p.getKey()
+                )) //
+                .toList();
+    }
+
+    /**
+     * Method is responsible for creating and saving a Product.
+     * @param files of type MultipartFile
+     * @param dto of type CreateProductDTO
+     * @throws CustomNotFoundException is thrown when category or collection name does not exist
+     * @return ResponseEntity of type HttpStatus
+     * */
+    @Transactional
+    public ResponseEntity<?> create(CreateProductDTO dto, MultipartFile[] files) {
+        var category = this.categoryService.findByName(dto.getCategory().trim());
+        var findProduct = this.productRepository.findByProductName(dto.getName().trim());
+        var date = this.dateUTC.toUTC(new Date()).isPresent() ? this.dateUTC.toUTC(new Date()).get() : new Date();
+
+        // Persist new ProductDetail if Product exist
+        if (findProduct.isPresent()) {
+            // Build ProductDetail
+            var productDetail = productDetail(dto, files, date);
+            productDetail.setModifiedAt(date);
+
+            // Add ProductDetail to Product, save and return response
+            findProduct.get().addDetail(productDetail);
+            this.productRepository.save(findProduct.get());
+            return new ResponseEntity<>(CREATED);
+        }
+
+        // Build/Save ProductDetail and Product
+        var detail = productDetail(dto, files, date);
+        var product = Product.builder()
+                .name(dto.getName().trim())
+                .description(dto.getDesc().trim())
+                .defaultKey(this.defaultKey)
+                .price(BigDecimal.valueOf(dto.getPrice()))
+                .currency(dto.getCurrency()) // default is USD
+                .productDetails(new HashSet<>())
+                .build();
+        product.addDetail(detail);
+        this.productRepository.save(product);
+
+        // Update Collection if it is not blank
+        if (!dto.getCollection().isBlank()) {
+            var collection = this.collectionService.findByName(dto.getCollection().trim());
+            collection.setModifiedAt(date);
+            collection.addProduct(product);
+            this.collectionService.save(collection);
+        }
+
+        // Update Category of new Product
+        category.addProduct(product);
+        category.setModifiedAt(date);
+        this.categoryService.save(category);
+
+        return new ResponseEntity<>(CREATED);
+    }
+
+    // Build ProductDetail
+    private ProductDetail productDetail(CreateProductDTO dto, MultipartFile[] files, Date createdAt) {
+        // ProductSize
+        var size = ProductSize.builder()
+                .size(dto.getSize())
+                .productDetails(new HashSet<>())
+                .build();
+        // ProductInventory
+        var inventory = ProductInventory.builder()
+                .quantity(dto.getQty())
+                .productDetails(new HashSet<>())
+                .build();
+
+        // ProductColour
+        var colour = ProductColour.builder()
+                .colour(dto.getColour())
+                .productDetails(new HashSet<>())
+                .build();
+        // ProductDetail
+        var detail = ProductDetail.builder()
+                .createAt(createdAt)
+                .modifiedAt(null)
+                .sku(UUID.randomUUID().toString())
+                .isVisible(dto.getVisible())
+                .productImages(new HashSet<>())
+                .build();
+        detail.setProductSize(size);
+        detail.setProductInventory(inventory);
+        detail.setProductColour(colour);
+
+        // Add ProductImage to ProductDetail as ProductDetail has a one-to-many relationship with ProductImage
+        for (MultipartFile file : files) {
+            String key = UUID.randomUUID().toString();
+            setDefaultKey(key); // Set default key
+            var image = ProductImage.builder()
+                    .imageKey(key)
+                    .imagePath(Objects.requireNonNull(file.getOriginalFilename()).trim())
+                    .build();
+            detail.addImages(image);
+        }
+
+        return detail;
+    }
+
+    /**
+     * Method updates just a Product only if the id exists. Not ProductDetail is not updated.
+     * @param dto of type UpdateProductDTO
+     * @return ResponseEntity of type HttpStatus
+     * */
+    @Transactional
+    public ResponseEntity<?> updateProduct(final ProductDTO dto) {
+        this.productRepository.updateProduct(
+                dto.getId(),
+                dto.getName().trim(),
+                dto.getDesc().trim(),
+                BigDecimal.valueOf(dto.getPrice())
+        );
+        return new ResponseEntity<>(OK);
+    }
+
+    /**
+     * Method updates just a ProductDetail. We are not updating the colour because image will have to be updated if
+     * it is a different colour.
+     * @param dto of type DetailDTO
+     * @throws CustomNotFoundException is thrown when Product name or sku does not exist
+     * @return ResponseEntity of type HttpStatus
+     * */
+    @Transactional
+    public ResponseEntity<?> updateProductDetail(final DetailDTO dto) {
+        // Find ProductDetail by it sku
+        var detail = findByDetailBySku(dto.getSku().trim());
+        var date = this.dateUTC.toUTC(new Date()).isPresent() ? this.dateUTC.toUTC(new Date()).get() : new Date();
+
+        // Fetch type is eager for the properties I am updating
+        detail.setModifiedAt(date);
+        detail.setVisible(dto.getVisible());
+        detail.getProductInventory().setQuantity(dto.getQty());
+        detail.getProductSize().setSize(dto.getSize());
+
+        // Save detail
+        this.detailRepo.save(detail);
+
+        return new ResponseEntity<>(OK);
+    }
+
+    /**
+     * Method permanently deletes a Product and children from db.
+     * @param id is the product id
+     * @throws CustomNotFoundException is thrown when Product name or sku does not exist
+     * @return ResponseEntity of type HttpStatus
+     * */
+    @Transactional
+    public ResponseEntity<?> deleteProduct(final long id) {
+        var product = this.productRepository.findProductByProductId(id)
+                .orElseThrow(() -> new CustomNotFoundException("Product does not exist"));
+        this.productRepository.delete(product);
+        return new ResponseEntity<>(NO_CONTENT);
+    }
+
+    /**
+     * Method permanently deletes a ProductDetail from Product. Since Product has a 1 to many relationship with
+     * ProductDetail, removeDetail is a custom method in Product entity class which removes ProductDetail from
+     * ProductDetails set.
+     * @param name is the Product name
+     * @param sku is a unique String for each ProductDetail
+     * @throws CustomNotFoundException is thrown when Product name or sku does not exist
+     * @return ResponseEntity of type HttpStatus
+     * */
+    @Transactional
+    public ResponseEntity<?> deleteProductDetail(final String name, final String sku) {
+        var product = findProductByName(name);
+        var detail = findByDetailBySku(sku);
+
+        // TODO get all the image keys and remove from S3
+        deleteFromS3(detail);
+
+        // Remove detail from Product and Save Product
+        product.removeDetail(detail);
+        this.productRepository.save(product);
+        return new ResponseEntity<>(NO_CONTENT);
+    }
+
+    /** After a ProductDetail is deleted, images in s3 has to be deleted to save resources. */
+    private void deleteFromS3(ProductDetail detail) { }
+
+    // Find Product by name
+    private Product findProductByName(String name) {
+        return this.productRepository.findByProductName(name)
+                .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));
+    }
+
+    // Find ProductDetail by sku
+    private ProductDetail findByDetailBySku(String sku) {
+        return this.productRepository.findDetailBySku(sku)
+                .orElseThrow(() -> new CustomNotFoundException("SKU does not exist"));
+    }
+
+    // Set Default Image Key
+    private void setDefaultKey(String str) {
+        this.defaultKey = str;
+    }
+
+}

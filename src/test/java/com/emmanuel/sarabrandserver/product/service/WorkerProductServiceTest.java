@@ -6,16 +6,16 @@ import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
 import com.emmanuel.sarabrandserver.product.dto.CreateProductDTO;
 import com.emmanuel.sarabrandserver.product.entity.*;
+import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
-import com.emmanuel.sarabrandserver.product.response.WorkerProductResponse;
+import com.emmanuel.sarabrandserver.product.response.ProductResponse;
+import com.emmanuel.sarabrandserver.product.worker.WorkerProductService;
 import com.emmanuel.sarabrandserver.util.DateUTC;
 import com.github.javafaker.Faker;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockMultipartFile;
@@ -25,6 +25,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,11 +43,13 @@ class WorkerProductServiceTest {
     @Mock private WorkerCategoryService workerCategoryService;
     @Mock private DateUTC dateUTC;
     @Mock private WorkerCollectionService collectionService;
+    @Mock private ProductDetailRepo productDetailRepo;
 
     @BeforeEach
     void setUp() {
         this.productService = new WorkerProductService(
                 this.productRepository,
+                this.productDetailRepo,
                 this.workerCategoryService,
                 this.dateUTC,
                 this.collectionService
@@ -60,16 +63,17 @@ class WorkerProductServiceTest {
         var given = pageRequest();
 
         // When
-        doReturn(given).when(this.productRepository).fetchAll(PageRequest.of(page, size));
+        doReturn(given).when(this.productRepository).fetchAllProductsWorker(PageRequest.of(page, size));
 
         // Then
         var fetch = this.productService.fetchAll(page, size);
         assertEquals(given.size(), fetch.size());
-        Assertions.assertEquals(given.get(0).getClass(), fetch.get(0).getClass());
-        Assertions.assertEquals(given.get(0).getPrice(), fetch.get(0).getPrice());
-        Assertions.assertEquals(given.get(0).getName(), fetch.get(0).getName());
+        assertEquals(given.get(0).getClass(), fetch.get(0).getClass());
+        assertEquals(given.get(0).getPrice(), fetch.get(0).getPrice());
+        assertEquals(given.get(0).getName(), fetch.get(0).getName());
     }
 
+    /** Simulates creating a product with name not existing */
     @Test
     void create() {
         // Given
@@ -79,9 +83,21 @@ class WorkerProductServiceTest {
                         "uploads/image1.jpeg",
                         "image/jpeg",
                         "Test image content".getBytes()
-                )
+                ),
+                new MockMultipartFile(
+                        "file",
+                        "uploads/image3.jpeg",
+                        "image/jpeg",
+                        "Test image content".getBytes()
+                ),
+                new MockMultipartFile(
+                        "file",
+                        "uploads/image2.jpeg",
+                        "image/jpeg",
+                        "Test image content".getBytes()
+                ),
         };
-        var pojo = pageRequest().get(0);
+
         var product = products().get(0);
         var dto = CreateProductDTO.builder()
                 .category("Example Category")
@@ -91,9 +107,9 @@ class WorkerProductServiceTest {
                 .price(product.getPrice().doubleValue())
                 .currency(product.getCurrency())
                 .visible(true)
-                .qty(pojo.getQuantity())
-                .size(pojo.getSize())
-                .colour(pojo.getColour())
+                .qty(50)
+                .size("medium")
+                .colour("red")
                 .build();
         var category = ProductCategory.builder()
                 .categoryName("Example Category")
@@ -104,6 +120,7 @@ class WorkerProductServiceTest {
                 .product(new HashSet<>())
                 .build();
         category.addProduct(product);
+
         var collection = ProductCollection.builder()
                 .collection("Example Collection")
                 .products(new HashSet<>())
@@ -117,14 +134,82 @@ class WorkerProductServiceTest {
         doReturn(category).when(this.workerCategoryService).findByName(anyString());
         doReturn(Optional.empty()).when(this.productRepository).findByProductName(anyString());
         doReturn(Optional.of(new Date())).when(this.dateUTC).toUTC(any(Date.class));
-        Mockito.doReturn(product).when(this.productRepository).save(any(Product.class));
         doReturn(collection).when(this.collectionService).findByName(dto.getCollection());
 
         // Then
-        var res = this.productService.create(dto, arr);
-        assertEquals(CREATED, res.getStatusCode());
+        assertEquals(CREATED, this.productService.create(dto, arr).getStatusCode());
+        verify(this.productRepository, times(1)).save(any(Product.class));
         verify(this.workerCategoryService, times(1)).save(any(ProductCategory.class));
         verify(this.collectionService, times(1)).save(any(ProductCollection.class));
+    }
+
+    /** Simulates creating a product with product name existing */
+    @Test
+    void createExist() {
+        // Given
+        MockMultipartFile[] arr = {
+                new MockMultipartFile(
+                        "file",
+                        "uploads/image1.jpeg",
+                        "image/jpeg",
+                        "Test image content".getBytes()
+                ),
+                new MockMultipartFile(
+                        "file",
+                        "uploads/image3.jpeg",
+                        "image/jpeg",
+                        "Test image content".getBytes()
+                ),
+                new MockMultipartFile(
+                        "file",
+                        "uploads/image2.jpeg",
+                        "image/jpeg",
+                        "Test image content".getBytes()
+                ),
+        };
+
+        var product = products().get(0);
+        var dto = CreateProductDTO.builder()
+                .category("Example Category")
+                .collection("Example Collection")
+                .name(product.getName())
+                .desc(product.getDescription())
+                .price(product.getPrice().doubleValue())
+                .currency(product.getCurrency())
+                .visible(true)
+                .qty(50)
+                .size("medium")
+                .colour("red")
+                .build();
+        var category = ProductCategory.builder()
+                .categoryName("Example Category")
+                .createAt(new Date())
+                .modifiedAt(null)
+                .isVisible(true)
+                .productCategories(new HashSet<>())
+                .product(new HashSet<>())
+                .build();
+        category.addProduct(product);
+
+        var collection = ProductCollection.builder()
+                .collection("Example Collection")
+                .products(new HashSet<>())
+                .createAt(new Date())
+                .modifiedAt(null)
+                .isVisible(true)
+                .build();
+        collection.addProduct(product);
+
+
+        // When
+        doReturn(category).when(this.workerCategoryService).findByName(anyString());
+        doReturn(Optional.of(product)).when(this.productRepository).findByProductName(anyString());
+        doReturn(Optional.of(new Date())).when(this.dateUTC).toUTC(any(Date.class));
+
+        // Then
+        assertEquals(CREATED, this.productService.create(dto, arr).getStatusCode());
+        verify(this.productRepository, times(1)).save(any(Product.class));
+        verify(this.workerCategoryService, times(1)).findByName(any(String.class));
     }
 
     @Test
@@ -136,11 +221,11 @@ class WorkerProductServiceTest {
     @Test
     void deleteProductDetail() {}
 
-    private List<WorkerProductResponse> pageRequest() {
-        List<WorkerProductResponse> list = new ArrayList<>();
+    private List<ProductResponse> pageRequest() {
+        List<ProductResponse> list = new ArrayList<>();
 
         for (Product pojo : products()) {
-            var res = WorkerProductResponse.builder()
+            var res = ProductResponse.builder()
                     .name(pojo.getName())
                     .desc(pojo.getDescription())
                     .price(pojo.getPrice())
@@ -163,11 +248,11 @@ class WorkerProductServiceTest {
                     )
                     .imageUrl(pojo.getProductDetails()
                             .stream()
-                            .map(ProductDetail::getProductImage)
-                            .map(ProductImage::getImageKey)
-                            .findAny()
-                            .get()
-                    ) // Add S3 URL
+                            .flatMap(detail -> detail.getProductImages()
+                                    .stream()
+                                    .map(ProductImage::getImageKey)).collect(Collectors.toSet()
+                            ).stream().findFirst().get()
+                    )
                     .colour(pojo.getProductDetails()
                             .stream()
                             .map(ProductDetail::getProductColour)
@@ -185,7 +270,7 @@ class WorkerProductServiceTest {
         List<Product> list = new ArrayList<>();
         Set<String> set = new HashSet<>();
 
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 10; i++) {
             set.add(new Faker().commerce().productName());
         }
 
@@ -195,11 +280,10 @@ class WorkerProductServiceTest {
                     .description(new Faker().lorem().characters(50))
                     .price(new BigDecimal(new Faker().commerce().price()))
                     .currency(new Faker().currency().name())
-                    .defaultImageKey(new Faker().file().fileName())
                     .productDetails(new HashSet<>())
                     .build();
 
-            for (int j = 0; j < 20; j++) {
+            for (int j = 0; j < 3; j++) {
                 // ProductSize
                 var size = ProductSize.builder()
                         .size(new Faker().numerify(String.valueOf(j)))
@@ -214,7 +298,6 @@ class WorkerProductServiceTest {
                 var image = ProductImage.builder()
                         .imageKey(UUID.randomUUID().toString())
                         .imagePath(new Faker().file().fileName())
-                        .productDetails(new HashSet<>())
                         .build();
                 // ProductColour
                 var colour = ProductColour.builder()
@@ -227,13 +310,14 @@ class WorkerProductServiceTest {
                         .isVisible(false)
                         .createAt(new Date())
                         .modifiedAt(null)
+                        .productImages(new HashSet<>())
                         .build();
+                detail.addImages(image);
                 detail.setProductSize(size);
                 detail.setProductInventory(inventory);
-                detail.setProductImage(image);
                 detail.setProductColour(colour);
                 // Add detail to product
-                product.addDetails(detail);
+                product.addDetail(detail);
             }
             list.add(product);
         }

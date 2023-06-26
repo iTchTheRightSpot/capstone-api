@@ -45,47 +45,58 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Method is responsible for creating a new category.
+     * The logic to creating a new ProductCategory object is a worker can either add dto.name (child ProductCategory)
+     * to an existing dto.parent (parent ProductCategory) or create new ProductCategory who has no parent.
      * @param dto of type CategoryDTO
-     * @throws DuplicateException when a category name exists
+     * @throws DuplicateException when dto.name exists
+     * @throws CustomNotFoundException when dto.parent (Parent Category) does not exist
      * @return ResponseEntity of HttpStatus
      * */
     @Transactional
     public ResponseEntity<?> create(CategoryDTO dto) {
-        boolean bool = this.categoryRepository
-                .duplicateCategoryName(dto.getCategory_name().trim(), dto.getSub_category()) > 0;
-
-        if (bool || dto.getSub_category().contains(dto.getCategory_name())) {
-            throw new DuplicateException("Duplicate name or sub category");
-        }
-
         var date = this.dateUTC.toUTC(new Date()).isEmpty() ? new Date() : this.dateUTC.toUTC(new Date()).get();
 
-        // Parent Category
-        var category = ProductCategory.builder()
-                .categoryName(dto.getCategory_name().trim())
-                .isVisible(dto.getStatus())
+        // Handle cases based on the logic explained above.
+        var category = dto.getParent().isBlank() ?
+                parentCategoryIsBlank(dto, date) : parentCategoryNotBlank(dto, date);
+
+        this.categoryRepository.save(category);
+        return new ResponseEntity<>(CREATED);
+    }
+
+    private ProductCategory parentCategoryIsBlank(CategoryDTO dto, Date date) {
+        if (this.categoryRepository.findByName(dto.getName().trim()).isPresent()) {
+            throw new DuplicateException(dto.getName() + " exists");
+        }
+
+        return ProductCategory.builder()
+                .categoryName(dto.getName().trim())
+                .isVisible(dto.getVisible())
+                .createAt(date)
+                .modifiedAt(null)
+                .productCategories(new HashSet<>())
+                .product(new HashSet<>())
+                .build();
+    }
+
+    private ProductCategory parentCategoryNotBlank(CategoryDTO dto, Date date) {
+        var parentCategory = findByName(dto.getParent().trim());
+        parentCategory.setModifiedAt(date);
+
+        var childCategory = ProductCategory.builder()
+                .categoryName(dto.getName().trim())
+                .isVisible(dto.getVisible())
                 .createAt(date)
                 .modifiedAt(null)
                 .productCategories(new HashSet<>())
                 .product(new HashSet<>())
                 .build();
 
-        // Persist sub-category to Category
-        dto.getSub_category().forEach(str -> {
-            var sub = ProductCategory.builder()
-                    .categoryName(dto.getCategory_name().trim())
-                    .isVisible(dto.getStatus())
-                    .createAt(date)
-                    .modifiedAt(null)
-                    .productCategories(new HashSet<>())
-                    .product(new HashSet<>())
-                    .build();
-            category.addCategory(sub);
-        });
+        // Add child category to parent
+        // addCategory automatically persists child to the database
+        parentCategory.addCategory(childCategory);
 
-        this.categoryRepository.save(category);
-        return new ResponseEntity<>(CREATED);
+        return parentCategory;
     }
 
     /**
@@ -107,7 +118,7 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Method permanently deletes a ProductCategory and SubCategories if exists
+     * Method permanently deletes a ProductCategory and its children.
      * @param node is the ProductCategory name
      * @throws CustomNotFoundException is thrown if category node does not exist
      * @return ResponseEntity

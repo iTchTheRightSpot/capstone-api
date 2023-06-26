@@ -6,42 +6,29 @@ import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
 import com.emmanuel.sarabrandserver.collection.repository.CollectionRepository;
 import com.emmanuel.sarabrandserver.product.entity.*;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
+import com.emmanuel.sarabrandserver.product.worker.WorkerProductService;
 import com.github.javafaker.Faker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Component @Slf4j
 public class TestService {
 
-    private record Pojo(
-            String name,
-            String des,
-            BigDecimal price,
-            String curr,
-            String sku,
-            boolean status,
-            String size,
-            int quantity,
-            String image,
-            String colour
-    ) {}
-
-    private record CatPojo() {}
-
     @Bean
-    public CommandLineRunner commandLineRunner(CategoryRepository repo, CollectionRepository collectionRepository) {
+    public CommandLineRunner commandLineRunner(
+            ProductRepository prodRepo,
+            CategoryRepository repo,
+            CollectionRepository collectionRepository
+    ) {
         return args -> {
             categories(repo);
             collection(collectionRepository);
+            products(prodRepo);
         };
     }
 
@@ -96,13 +83,10 @@ public class TestService {
             }
             repo.save(category);
         }
-//        repo.fetchCategories()
-//                .forEach(e -> log.info("Parent Category name {} and children {}", e.getCategory(), e.getSub()));
     }
 
-    private void products(ProductRepository repo) {
+    private void products(WorkerProductService service, ProductRepository repo) {
         repo.deleteAll();
-
         Set<String> set = new HashSet<>();
         for (int i = 0; i < 10; i++) {
             set.add(new Faker().commerce().productName());
@@ -113,90 +97,96 @@ public class TestService {
                     .name(str)
                     .description(new Faker().lorem().characters(50))
                     .price(new BigDecimal(new Faker().commerce().price()))
-                    .currency(new Faker().currency().name())
-                    .defaultImageKey(new Faker().file().fileName())
+                    .currency("USD")
                     .productDetails(new HashSet<>())
                     .build();
-
-            for (int j = 0; j < 3; j++) {
-                // ProductSize
-                var size = ProductSize.builder()
-                        .size(new Faker().numerify(String.valueOf(j)))
-                        .productDetails(new HashSet<>())
-                        .build();
-                // ProductInventory
-                var inventory = ProductInventory.builder()
-                        .quantity(new Faker().number().numberBetween(10, 40))
-                        .productDetails(new HashSet<>())
-                        .build();
-                // ProductImage
-                var image = ProductImage.builder()
-                        .imageKey(UUID.randomUUID().toString())
-                        .imagePath(new Faker().file().fileName())
-                        .productDetails(new HashSet<>())
-                        .build();
-                // ProductColour
-                var colour = ProductColour.builder()
-                        .colour(new Faker().color().name())
-                        .productDetails(new HashSet<>())
-                        .build();
-                // ProductDetail
-                var detail = ProductDetail.builder()
-                        .sku(UUID.randomUUID().toString())
-                        .isVisible(false)
-                        .createAt(new Date())
-                        .modifiedAt(null)
-                        .build();
-                detail.setProductSize(size);
-                detail.setProductInventory(inventory);
-                detail.setProductImage(image);
-                detail.setProductColour(colour);
-                // Add detail to product
-                product.addDetails(detail);
-            }
-            repo.save(product);
         }
 
-        repo.fetchAll(PageRequest.of(0, 100)).forEach(e -> {
-            var pojo = new Pojo(e.getName(), e.getDesc(), e.getPrice(), e.getCurrency(), e.getSku(), e.getStatus(),
-                    e.getSizes(), e.getQuantity(), e.getImage(), e.getColour());
-            log.info("Pojo {}", pojo);
-        });
+//        repo.list().forEach(pojo -> {
+//            String str = """
+//                    name %s, desc %s, price %s, curr %s
+//
+//                    Detail %s
+//                    """.formatted(pojo.getName(), pojo.getDesc(), pojo.getPrice(), pojo.getCurrency(), pojo.getDetail());
+//
+//            log.info(str);
+//        });
 
     }
 
-    private void test(TestEntityRepo repo) {
+    private void products(ProductRepository repo) {
         repo.deleteAll();
-
         Set<String> set = new HashSet<>();
-
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 100; i++) {
             set.add(new Faker().commerce().productName());
         }
 
+        List<Product> list = new ArrayList<>();
         for (String str : set) {
-            var test = TestEntity.builder()
+            var product = Product.builder()
                     .name(str)
-                    .sku(UUID.randomUUID().toString())
+                    .description(new Faker().lorem().characters(50))
+                    .price(new BigDecimal(new Faker().commerce().price()))
+                    .currency("USD")
+                    .productDetails(new HashSet<>())
                     .build();
 
-
-            for (int i = 0; i < 2; i++) {
-                var child = TestChildEntity.builder()
-                        .name(new Faker().commerce().color())
-                        .entities(new HashSet<>())
-                        .build();
-                test.setTestChildEntity(child);
+            for (int i = 0; i < 10; i++) {
+                extracted(product);
             }
-            repo.save(test);
+            list.add(product);
         }
+        repo.saveAll(list);
+    }
 
-        repo.findAll().forEach(e -> {
-            log.info("Name {}", e.getName());
-            log.info("SKU {}", e.getSku());
-            log.info("Child Entities {}", e.getTestChildEntity());
-        });
+    private static void extracted(Product product) {
+        var size = ProductSize.builder()
+                .size(new Faker().commerce().material())
+                .productDetails(new HashSet<>())
+                .build();
+        // ProductInventory
+        var inventory = ProductInventory.builder()
+                .quantity(new Faker().number().numberBetween(10, 40))
+                .productDetails(new HashSet<>())
+                .build();
+        // ProductImage
+        var image0 = ProductImage.builder()
+                .imageKey(UUID.randomUUID().toString())
+                .imagePath(new Faker().file().fileName())
+                .build();
 
+        var image1 = ProductImage.builder()
+                .imageKey(UUID.randomUUID().toString())
+                .imagePath(new Faker().file().fileName())
+                .build();
+
+        var image2 = ProductImage.builder()
+                .imageKey(UUID.randomUUID().toString())
+                .imagePath(new Faker().file().fileName())
+                .build();
+
+        // ProductColour
+        var colour = ProductColour.builder()
+                .colour(new Faker().color().name())
+                .productDetails(new HashSet<>())
+                .build();
+        // ProductDetail
+        var detail = ProductDetail.builder()
+                .sku(UUID.randomUUID().toString())
+                .isVisible(true)
+                .createAt(new Date())
+                .modifiedAt(null)
+                .productImages(new HashSet<>())
+                .build();
+
+        detail.setProductSize(size);
+        detail.setProductInventory(inventory);
+        detail.setProductColour(colour);
+        detail.addImages(image0);
+        detail.addImages(image1);
+        detail.addImages(image2);
+        // Add detail to product
+        product.addDetail(detail);
     }
 
 }

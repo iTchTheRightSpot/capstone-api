@@ -4,7 +4,6 @@ import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
-import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.github.javafaker.Faker;
 import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.AfterEach;
@@ -14,6 +13,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -26,19 +26,19 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// TODO Refactor tests because an update
+/**
+ * Class simulates testing basic CRUD functionalities. It doesn't go depth of testing errors throw etc. because this is
+ * done in  unit testing class.
+ * */
 @RunWith(SpringRunner.class)
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -55,11 +55,7 @@ class WorkerCategoryControllerTest {
 
     private CategoryDTO categoryDTO;
 
-    private final int max = 3;
-
-    private final int subMax = 5;
-
-    private final Set<String> parentCategory = new HashSet<>();
+    private final static String requestMapping = "/api/v1/worker/category";
 
     @Container private static final MySQLContainer<?> container;
 
@@ -85,20 +81,15 @@ class WorkerCategoryControllerTest {
 
     @BeforeEach
     void setUp() {
-        for (int i = 0; i < max; i++) {
-            parentCategory.add(new Faker().commerce().productName());
+        Set<String> parentCategory = new HashSet<>();
+        for (int i = 0; i < 50; i++) {
+            parentCategory.add(new Faker().commerce().department());
         }
 
         for (String str : parentCategory) {
-            this.categoryDTO = new CategoryDTO(str, true, new HashSet<>());
-
-            for (int i = 0; i < subMax; i++) {
-                this.categoryDTO.getSub_category().add(UUID.randomUUID().toString());
-            }
-
+            this.categoryDTO = new CategoryDTO(str, true, "");
             this.workerCategoryService.create(this.categoryDTO);
         }
-
     }
 
     @AfterEach
@@ -107,62 +98,53 @@ class WorkerCategoryControllerTest {
     }
 
     @Test
-    void allCategories() throws Exception {
+    void fetchCategories() throws Exception {
         // Then
         this.MOCK_MVC
-                .perform(get("/api/v1/category"))
+                .perform(get(requestMapping).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.[*].category_name").isArray())
-                .andExpect(jsonPath("$.[*].category_name")
-                        .value(hasSize(this.parentCategory.size())))
-                .andExpect(jsonPath("$.[*].sub_category").isArray());
+                .andExpect(jsonPath("$").isArray());
     }
 
     @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
     void create() throws Exception {
         // Given
-        var dto = new CategoryDTO(new Faker().name().lastName(), true, new HashSet<>());
-        for (int i = 0; i < 20; i++) dto.getSub_category().add(UUID.randomUUID().toString());
+        var dto = new CategoryDTO(new Faker().commerce().productName(), true, "");
 
         // Then
         this.MOCK_MVC
-                .perform(post("/api/v1/category")
+                .perform(post(requestMapping)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(dto.toJson().toString())
                 )
-                .andDo(print())
                 .andExpect(status().isCreated());
     }
 
+    /** Simulates creating a new Category with param parent in CategoryDTO non-empty */
     @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
-    void create_existing() throws Exception {
+    void create1() throws Exception {
+        // Given
+        var dto = new CategoryDTO(new Faker().commerce().productName(), true, this.categoryDTO.getName());
+
         // Then
         this.MOCK_MVC
-                .perform(post("/api/v1/category")
+                .perform(post(requestMapping)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.categoryDTO.toJson().toString())
+                        .content(dto.toJson().toString())
                 )
-                .andExpect(status().isConflict())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException))
-                .andExpect(result -> assertEquals(
-                        "Duplicate name or sub category",
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()
-                ));
+                .andExpect(status().isCreated());
     }
 
     @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
     void update() throws Exception {
         // Given
-        var dto = UpdateCategoryDTO.builder()
-                .old_name(this.categoryDTO.getCategory_name())
-                .new_name("Updated category name")
-                .build();
+        var dto = new UpdateCategoryDTO(this.categoryDTO.getName(), "Updated category name");
 
         // Then
         this.MOCK_MVC
-                .perform(put("/api/v1/category")
+                .perform(put(requestMapping)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(dto.toJson().toString())
@@ -173,18 +155,10 @@ class WorkerCategoryControllerTest {
     @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
     void custom_delete() throws Exception {
         this.MOCK_MVC
-                .perform(delete("/api/v1/category/{category_id}", this.categoryDTO.getCategory_name())
-                        .with(csrf()))
-                .andDo(print())
+                .perform(delete(requestMapping + "/{name}", this.categoryDTO.getName())
+                        .with(csrf())
+                )
                 .andExpect(status().isNoContent());
-
-        // Validate delete request
-        this.MOCK_MVC
-                .perform(get("/api/v1/category"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.[*].category_name").isArray())
-                .andExpect(jsonPath("$.[*].category_name", hasSize(parentCategory.size() - 1)));
     }
 
 }

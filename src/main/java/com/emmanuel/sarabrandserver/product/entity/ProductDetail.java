@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
+import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.EAGER;
@@ -45,16 +46,15 @@ public class ProductDetail {
     private ProductInventory productInventory;
 
     @ManyToOne(fetch = EAGER, cascade = ALL)
-    @JoinColumn(name = "image_id", referencedColumnName = "image_id", nullable = false)
-    private ProductImage productImage;
-
-    @ManyToOne(fetch = EAGER, cascade = ALL)
     @JoinColumn(name = "colour_id", referencedColumnName = "colour_id", nullable = false)
     private ProductColour productColour;
 
     @ManyToOne
     @JoinColumn(name = "product_id", referencedColumnName = "product_id", nullable = false)
     private Product product;
+
+    @OneToMany(fetch = EAGER, cascade = ALL, mappedBy = "productDetails", orphanRemoval = true)
+    private Set<ProductImage> productImages;
 
     public void setProductSize(ProductSize productSize) {
         this.productSize = productSize;
@@ -66,13 +66,14 @@ public class ProductDetail {
         this.productInventory.getProductDetails().add(this);
     }
 
-    public void setProductImage(ProductImage productImage) {
-        this.productImage = productImage;
-        this.productImage.getProductDetails().add(this);
+    public void addImages(ProductImage productImage) {
+        this.productImages.add(productImage);
+        productImage.setProductDetails(this);
     }
 
     public void setProductColour(ProductColour productColour) {
         this.productColour = productColour;
         this.productColour.getProductDetails().add(this);
     }
+
 }

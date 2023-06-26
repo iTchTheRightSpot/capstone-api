@@ -19,24 +19,25 @@ import java.util.Set;
 @Data
 public class CategoryDTO {
 
-    @NotNull
-    @NotEmpty
+    @NotNull(message = "cannot be null")
+    @NotEmpty(message = "cannot be empty")
     @Size(max = 50, message = "category name cannot exceed length of 50")
     @JsonProperty(value = "name", required = true)
-    private String category_name;
+    private String name;
 
-    @NotNull(message = "cannot be null") @JsonProperty(value = "visible", required = true)
-    private Boolean status;
+    @NotNull(message = "cannot be null")
+    @JsonProperty(value = "visible", required = true)
+    private Boolean visible;
 
     @NotNull(message = "cannot be null")
     @JsonProperty(value = "parent")
-    private Set<String> sub_category;
+    private String parent;
 
     public JsonObject toJson() {
         return Json.createObjectBuilder()
-                .add("name", getCategory_name())
-                .add("visible", getStatus())
-                .add("parent", Json.createArrayBuilder(getSub_category()).build())
+                .add("name", getName())
+                .add("visible", getVisible())
+                .add("parent", getParent())
                 .build();
     }
 }

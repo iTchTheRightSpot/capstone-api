@@ -1,6 +1,6 @@
-package com.emmanuel.sarabrandserver.product.controller;
+package com.emmanuel.sarabrandserver.product.client;
 
-import com.emmanuel.sarabrandserver.product.service.ClientProductService;
+import com.emmanuel.sarabrandserver.product.client.ClientProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;

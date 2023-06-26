@@ -46,3 +46,11 @@ Content-Type: application/json
   "principal":"admin@yes.com",
   "password":"123#-SEJU-Development"
 }
+
+
+### Delete a product
+DELETE http://localhost:1997/api/v1/worker/product/Aerodynamic Concrete Watch/3e50943c-c9e5-490c-88df-464dd2ff2bb6
+
+
+### Get All Products Admin
+GET http://localhost:1997/api/v1/worker/product

@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
-import java.util.Set;
 
 @Table(name = "product_image")
 @Entity
@@ -27,8 +26,9 @@ public class ProductImage implements Serializable {
     @Column(name = "image_path", nullable = false)
     private String imagePath;
 
-    @OneToMany(mappedBy = "productImage")
-    private Set<ProductDetail> productDetails;
+    @ManyToOne
+    @JoinColumn(name = "detail_id", nullable = false, referencedColumnName = "detail_id")
+    private ProductDetail productDetails;
 
     public ProductImage(String imageKey, String imagePath) {
         this.imageKey = imageKey;

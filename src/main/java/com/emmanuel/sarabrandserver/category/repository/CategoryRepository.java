@@ -76,7 +76,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
     INNER JOIN ProductSize ps ON pd.productSize.productSizeId = ps.productSizeId
     INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
-    INNER JOIN ProductImage img ON pd.productImage.productImageId = img.productImageId
+    INNER JOIN ProductImage img ON pd.productDetailId = img.productDetails.productDetailId
     INNER JOIN ProductColour pc ON pd.productColour.productColourId = pc.productColourId
     WHERE cat.categoryName = :name AND pd.isVisible = true
     """)

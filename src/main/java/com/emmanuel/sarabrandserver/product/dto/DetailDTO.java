@@ -1,0 +1,34 @@
+package com.emmanuel.sarabrandserver.product.dto;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Data
+public class DetailDTO {
+
+    @JsonProperty(value = "sku")
+    @NotNull @NotEmpty
+    private String sku;
+
+    @JsonProperty(value = "visible")
+    @NotNull
+    private Boolean visible;
+
+    // Properties of many-to-1 and 1-to-many
+    @JsonProperty(required = true, value = "qty")
+    @NotNull @NotEmpty
+    private Integer qty;
+
+    @JsonProperty(required = true, value = "size")
+    @NotNull @NotEmpty
+    private String size;
+
+}

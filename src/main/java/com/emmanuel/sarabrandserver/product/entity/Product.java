@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
-import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Table(name = "product")
@@ -29,14 +28,14 @@ public class Product implements Serializable {
     @Column(name = "product_id", nullable = false, unique = true)
     private Long productId;
 
-    @Column(name = "name", length = 80, unique = true, nullable = false)
+    @Column(name = "name", length = 50, unique = true, nullable = false)
     private String name;
 
-    @Column(name = "default_image_key", nullable = false)
-    private String defaultImageKey;
-
-    @Column(name = "description")
+    @Column(name = "description", nullable = false)
     private String description;
+
+    @Column(name = "default_image_key", nullable = false)
+    private String defaultKey;
 
     @Column(name = "price", nullable = false)
     private BigDecimal price;
@@ -60,16 +59,20 @@ public class Product implements Serializable {
     @JoinColumn(name = "order_item_id", referencedColumnName = "order_item_id")
     private OrderItem orderItem;
 
-    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "product", orphanRemoval = true)
+    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "product", orphanRemoval = true)
     private Set<ProductDetail> productDetails;
 
-    public Product(String name, String defaultImageKey) {
+    public Product(String name) {
         this.name = name;
-        this.defaultImageKey = defaultImageKey;
     }
 
-    public void addDetails(ProductDetail detail) {
+    public void addDetail(ProductDetail detail) {
         this.productDetails.add(detail);
+        detail.setProduct(this);
+    }
+
+    public void removeDetail(ProductDetail detail) {
+        this.productDetails.remove(detail);
         detail.setProduct(this);
     }
 

@@ -10,6 +10,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import java.io.Serializable;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
@@ -19,7 +21,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 @Getter @Setter
 public class CreateProductDTO implements Serializable {
 
-    @JsonProperty(required = true, value = "name")
+    @JsonProperty(required = true, value = "category")
     @NotNull @NotEmpty
     private String category;
 
@@ -27,7 +29,7 @@ public class CreateProductDTO implements Serializable {
     @JsonInclude(NON_EMPTY)
     private String collection;
 
-    @JsonProperty(required = true, value = "name")
+    @JsonProperty(required = true, value = "name") // product_name
     @NotNull @NotEmpty
     @Size(max = 80, message = "Max of 80")
     private String name;
@@ -60,5 +62,20 @@ public class CreateProductDTO implements Serializable {
     @JsonProperty(required = true, value = "colour")
     @NotNull @NotEmpty
     private String colour;
+
+    public JsonObject toJson() {
+        return Json.createObjectBuilder()
+                .add("category", getCategory())
+                .add("collection", getCollection())
+                .add("name", getName())
+                .add("desc", getDesc())
+                .add("price", getPrice())
+                .add("currency", getCurrency())
+                .add("visible", getVisible())
+                .add("qty", getQty())
+                .add("size", getSize())
+                .add("colour", getColour())
+                .build();
+    }
 
 }

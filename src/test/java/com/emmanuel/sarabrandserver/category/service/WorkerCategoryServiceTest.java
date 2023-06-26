@@ -20,7 +20,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -44,62 +43,80 @@ class WorkerCategoryServiceTest {
         this.workerCategoryService = new WorkerCategoryService(this.categoryRepository, this.dateUTC);
     }
 
+    /** Simulates creating a new ProductCategory when CategoryDTO param parent is empty */
     @Test
     void create() {
         // Given
-        var dto = new CategoryDTO(UUID.randomUUID().toString(), true, new HashSet<>());
-        for (int i = 0; i < 50; i++) dto.getSub_category().add(new Faker().commerce().productName());
+        var dto = new CategoryDTO(new Faker().commerce().department(), true, "");
 
         var category = ProductCategory.builder()
-                .categoryName(dto.getCategory_name().trim())
+                .categoryName(dto.getName().trim())
                 .createAt(new Date())
                 .productCategories(new HashSet<>())
                 .product(new HashSet<>())
                 .build();
 
-        dto.getSub_category().forEach(str -> {
-            var sub = ProductCategory.builder()
-                    .categoryName(dto.getCategory_name().trim())
-                    .isVisible(dto.getStatus())
-                    .createAt(category.getCreateAt())
-                    .modifiedAt(null)
-                    .productCategories(new HashSet<>())
-                    .product(new HashSet<>())
-                    .build();
-            category.addCategory(sub);
-        });
-
         // When
-        when(this.categoryRepository.duplicateCategoryName(dto.getCategory_name(), dto.getSub_category()))
-                .thenReturn(0);
         when(this.dateUTC.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
+        when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.empty());
         when(this.categoryRepository.save(any(ProductCategory.class))).thenReturn(category);
 
         // Then
-        var res = this.workerCategoryService.create(dto);
-        assertEquals(CREATED, res.getStatusCode());
+        assertEquals(CREATED, this.workerCategoryService.create(dto).getStatusCode());
         verify(this.categoryRepository, times(1)).save(any(ProductCategory.class));
     }
 
-    /** Test validates correct exception class is thrown for duplicate parent category name */
+    /** Simulates creating a new ProductCategory when CategoryDTO param parent is non-empty */
     @Test
-    void duplicate_name() {
+    void createParent() {
         // Given
-        var dto = new CategoryDTO(UUID.randomUUID().toString(), true, new HashSet<>());
-        for (int i = 0; i < 50; i++) dto.getSub_category().add(new Faker().commerce().productName());
+        var dto = new CategoryDTO(new Faker().commerce().department(), true, new Faker().commerce().productName());
 
         var category = ProductCategory.builder()
-                .categoryName(dto.getCategory_name().trim())
+                .categoryName(new Faker().commerce().department())
                 .createAt(new Date())
-                .isVisible(true)
                 .productCategories(new HashSet<>())
                 .product(new HashSet<>())
                 .build();
-        dto.getSub_category().forEach(str -> category.addCategory(new ProductCategory(str)));
 
         // When
-        when(this.categoryRepository.duplicateCategoryName(dto.getCategory_name(), dto.getSub_category()))
-                .thenReturn(5);
+        when(this.dateUTC.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
+        when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.of(category));
+        when(this.categoryRepository.save(any(ProductCategory.class))).thenReturn(category);
+
+        // Then
+        assertEquals(CREATED, this.workerCategoryService.create(dto).getStatusCode());
+        verify(this.categoryRepository, times(1)).save(any(ProductCategory.class));
+    }
+
+    /** Simulates the correct exception class is thrown for the private method parentCategoryNotBlank. */
+    @Test
+    void duplicate_name() {
+        // Given
+        var dto = new CategoryDTO(new Faker().commerce().department(), true, new Faker().commerce().department());
+
+        // When
+        when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.empty());
+
+        // Then
+        assertThrows(CustomNotFoundException.class, () -> this.workerCategoryService.create(dto));
+    }
+
+    /** Simulates the correct exception class is thrown for duplicate parentCategoryIsBlank method. */
+    @Test
+    void duplicate() {
+        // Given
+        var dto = new CategoryDTO(new Faker().commerce().department(), true, "");
+
+        var category = ProductCategory.builder()
+                .categoryName(new Faker().commerce().department())
+                .createAt(new Date())
+                .productCategories(new HashSet<>())
+                .product(new HashSet<>())
+                .build();
+
+        // When
+        when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.of(category));
 
         // Then
         assertThrows(DuplicateException.class, () -> this.workerCategoryService.create(dto));

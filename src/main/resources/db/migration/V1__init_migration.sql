@@ -113,9 +113,9 @@ CREATE TABLE IF NOT EXISTS product_collection (
 
 CREATE TABLE IF NOT EXISTS product (
     product_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
-    name VARCHAR(80) NOT NULL UNIQUE,
-    default_image_key VARCHAR(255) NOT NULL,
-    description VARCHAR(255),
+    name VARCHAR(50) NOT NULL UNIQUE,
+    description VARCHAR(255) NOT NULL,
+    default_image_key VARCHAR(50) NOT NULL,
     price DECIMAL NOT NULL,
     currency VARCHAR(50) NOT NULL,
     category_id BIGINT,
@@ -125,13 +125,6 @@ CREATE TABLE IF NOT EXISTS product (
     PRIMARY KEY (product_id),
     FOREIGN KEY (category_id) REFERENCES product_category (category_id),
     FOREIGN KEY (collection_id) REFERENCES product_collection (collection_id)
-);
-
-CREATE TABLE IF NOT EXISTS product_image (
-    image_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
-    image_key VARCHAR(50) NOT NULL,
-    image_path VARCHAR(255) NOT NULL,
-    PRIMARY KEY (image_id)
 );
 
 CREATE TABLE IF NOT EXISTS product_size (
@@ -160,13 +153,20 @@ CREATE TABLE IF NOT EXISTS product_detail (
     modified_at DATETIME,
     size_id BIGINT NOT NULL,
     inventory_id BIGINT NOT NULL,
-    image_id BIGINT NOT NULL,
     colour_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
     PRIMARY KEY (detail_id),
     FOREIGN KEY (size_id) REFERENCES product_size (size_id),
     FOREIGN KEY (inventory_id) REFERENCES product_inventory (inventory_id),
-    FOREIGN KEY (image_id) REFERENCES product_image (image_id),
     FOREIGN KEY (colour_id) REFERENCES product_colour (colour_id),
     FOREIGN KEY (product_id) REFERENCES product (product_id)
+);
+
+CREATE TABLE IF NOT EXISTS product_image (
+    image_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
+    image_key VARCHAR(50) NOT NULL,
+    image_path VARCHAR(255) NOT NULL,
+    detail_id BIGINT NOT NULL,
+    PRIMARY KEY (image_id),
+    FOREIGN KEY (detail_id) REFERENCES product_detail (detail_id)
 );

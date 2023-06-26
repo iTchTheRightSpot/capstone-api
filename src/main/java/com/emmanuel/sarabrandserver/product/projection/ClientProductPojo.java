@@ -16,13 +16,13 @@ public interface ClientProductPojo {
     @Value(value = "currency")
     String getCurrency();
     @Value(value = "sku")
-    List<String> getSku();
+    String getSku();
     @Value(value = "size")
-    List<String> getSize();
+    String getSize();
     @Value(value = "qty")
-    List<Integer> getQuantity();
-    @Value(value = "image_url")
-    List<String> getImage();
+    String getQuantity();
     @Value(value = "colour")
-    List<String> getColour();
+    String getColour();
+    @Value(value = "url")
+    List<String> getImage();
 }

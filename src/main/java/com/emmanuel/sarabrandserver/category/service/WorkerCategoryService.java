@@ -29,7 +29,7 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Responsible for getting a ProductCategory.
+     * Returns a lis of ProductCategory parameters.
      * @return List of CategoryResponse
      * */
     public List<CategoryResponse> fetchAll() {
@@ -135,6 +135,7 @@ public class WorkerCategoryService {
                 .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));
     }
 
+    /** Needed in WorkerProductService class */
     public void save(ProductCategory category) {
         this.categoryRepository.save(category);
     }

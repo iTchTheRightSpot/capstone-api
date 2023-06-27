@@ -1,13 +1,13 @@
 package com.emmanuel.sarabrandserver.auth.service;
 
+import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.response.AuthResponse;
+import com.emmanuel.sarabrandserver.clientz.dto.ClientRegisterDTO;
 import com.emmanuel.sarabrandserver.clientz.entity.ClientRole;
 import com.emmanuel.sarabrandserver.clientz.entity.Clientz;
 import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
-import com.emmanuel.sarabrandserver.clientz.dto.ClientRegisterDTO;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
-import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -80,9 +80,8 @@ public class AuthService {
     }
 
     /**
-     * Method is responsible for registering a new worker. The logic is basically update Clientz to a role of worker if
+     * Responsible for registering a new worker. The logic is basically update Clientz to a role of worker if
      * he/she exists else create and save new Clientz object.
-     *
      * @param dto of type WorkerRegisterDTO
      * @throws DuplicateException when user principal exists and has a role of worker
      * @return ResponseEntity of type String
@@ -134,35 +133,17 @@ public class AuthService {
      * 3. Update SecurityContextHolderStrategy and SecurityContextRepository in-between requests.
      * 4. Encode user role and send as cookie to UI inorder to load the right page for based on user role.
      * Note Transactional annotation is used because Clientz has properties with fetch type LAZY
-     *
-     * @param key parses the request to know if is a client or worker request
      * @param dto consist of principal(username or email) and password.
      * @param req of type HttpServletRequest
      * @param res of type HttpServletResponse
-     * @throws IllegalArgumentException is thrown when wrong key is entered
      * @throws AuthenticationException is thrown when credentials do not exist or bad credentials
      * @return ResponseEntity of type AuthResponse and HttpStatus
      * */
     @Transactional
-    public ResponseEntity<?> login(String key, LoginDTO dto, HttpServletRequest req, HttpServletResponse res) {
-        switch (key) {
-            case "client", "worker" -> {
-                return loginLogic(this.authManager, dto, req, res);
-            }
-            default -> throw new IllegalArgumentException("Invalid key");
-        }
-    }
-
-    private ResponseEntity<?> loginLogic(
-            AuthenticationManager manager,
-            LoginDTO dto,
-            HttpServletRequest req,
-            HttpServletResponse res
-    ) {
-        Authentication authentication = manager.authenticate(UsernamePasswordAuthenticationToken.unauthenticated(
-                dto.getPrincipal(),
-                dto.getPassword()
-        ));
+    public ResponseEntity<?> login(LoginDTO dto, HttpServletRequest req, HttpServletResponse res) {
+        Authentication authentication = this.authManager.authenticate(
+                UsernamePasswordAuthenticationToken.unauthenticated(dto.getPrincipal(), dto.getPassword())
+        );
 
         // Validate max session
         this.sessionAuthenticationStrategy.onAuthentication(authentication, req, res);

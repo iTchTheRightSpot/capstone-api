@@ -177,6 +177,7 @@ class WorkerProductServiceTest {
         doReturn(category).when(this.workerCategoryService).findByName(anyString());
         doReturn(Optional.empty()).when(this.productRepository).findByProductName(anyString());
         doReturn(Optional.of(new Date())).when(this.dateUTC).toUTC(any(Date.class));
+        doReturn(product).when(this.productRepository).save(any(Product.class));
         doReturn(collection).when(this.collectionService).findByName(dto.getCollection());
 
         // Then

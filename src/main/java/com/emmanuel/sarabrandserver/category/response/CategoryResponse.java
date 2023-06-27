@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Arrays;
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -18,4 +21,11 @@ public class CategoryResponse {
 
     private String category;
     private boolean visible;
+    private List<String> child;
+
+    public CategoryResponse(String category, String child) {
+        this.category = category;
+        this.child = Arrays.stream(child.split(",")).toList();
+    }
+
 }

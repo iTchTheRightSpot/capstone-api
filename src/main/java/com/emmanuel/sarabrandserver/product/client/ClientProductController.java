@@ -31,14 +31,4 @@ public class ClientProductController {
         return new ResponseEntity<>(this.clientProductService.fetchAll(name), OK);
     }
 
-    /** Returns a list of ProductResponse objects based on category name */
-    @GetMapping(path = "/category/{name}", produces = "application/json")
-    public ResponseEntity<?> fetchProductOnCategory(
-            @NotNull @PathVariable(value = "name") String name,
-            @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "10") Integer size
-    ) {
-        return new ResponseEntity<>(this.clientProductService.fetchAll(name, page, size), OK);
-    }
-
 }

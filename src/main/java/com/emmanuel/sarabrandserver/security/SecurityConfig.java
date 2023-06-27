@@ -20,6 +20,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.session.Session;
 import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.session.security.SpringSessionBackedSessionRegistry;
@@ -64,13 +65,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-//                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+//                .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> {
-//                    auth.requestMatchers(publicRoutes()).permitAll();
-//                    auth.anyRequest().authenticated();
-                    auth.anyRequest().permitAll();
+//                    auth.anyRequest().permitAll();
+                    auth.requestMatchers(publicRoutes()).permitAll();
+                    auth.anyRequest().authenticated();
                 })
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(IF_REQUIRED) //
@@ -105,8 +106,8 @@ public class SecurityConfig {
         return new HttpSessionSecurityContextRepository();
     }
 
-    @Bean(name = "clientAuthProvider")
-    public AuthenticationProvider clientAuthProvider(
+    @Bean
+    public AuthenticationProvider authenticationProvider(
             @Qualifier(value = "clientDetailService") UserDetailsService clientDetailService,
             @Qualifier(value = "passwordEncoder") PasswordEncoder passwordEncoder
     ) {
@@ -118,7 +119,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(
-            @Qualifier(value = "clientAuthProvider") AuthenticationProvider provider,
+            AuthenticationProvider provider,
             @Qualifier(value = "authenticationEventPublisher") AuthenticationEventPublisher publisher
     ) {
         ProviderManager providerManager = new ProviderManager(provider);

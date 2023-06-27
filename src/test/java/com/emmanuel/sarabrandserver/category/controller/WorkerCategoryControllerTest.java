@@ -97,7 +97,7 @@ class WorkerCategoryControllerTest {
         this.categoryRepository.deleteAll();
     }
 
-    @Test
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
     void fetchCategories() throws Exception {
         // Then
         this.MOCK_MVC

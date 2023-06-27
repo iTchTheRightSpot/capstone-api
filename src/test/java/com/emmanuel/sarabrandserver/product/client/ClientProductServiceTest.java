@@ -1,8 +1,6 @@
 package com.emmanuel.sarabrandserver.product.client;
 
-import com.emmanuel.sarabrandserver.product.client.ClientProductService;
 import com.emmanuel.sarabrandserver.product.entity.*;
-import com.emmanuel.sarabrandserver.product.projection.ClientProductPojo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
@@ -107,54 +105,6 @@ class ClientProductServiceTest {
         detail.addImages(image2);
         // Add detail to product
         product.addDetail(detail);
-    }
-
-    private record PojoImpl (Product p) implements ClientProductPojo {
-
-        @Override
-        public String getName() {
-            return p.getName();
-        }
-
-        @Override
-        public String getDesc() {
-            return p.getDescription();
-        }
-
-        @Override
-        public BigDecimal getPrice() {
-            return null;
-        }
-
-        @Override
-        public String getCurrency() {
-            return null;
-        }
-
-        @Override
-        public String getSku() {
-            return null;
-        }
-
-        @Override
-        public String getSize() {
-            return null;
-        }
-
-        @Override
-        public String getQuantity() {
-            return null;
-        }
-
-        @Override
-        public String getColour() {
-            return null;
-        }
-
-        @Override
-        public List<String> getImage() {
-            return null;
-        }
     }
 
 }

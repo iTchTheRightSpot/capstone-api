@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 /** All routes in class a public */
 @RestController @RequestMapping(path = "api/v1/client/auth")
 public class ClientAuthController {
-
     private final AuthService authService;
 
     public ClientAuthController(AuthService authService) {
@@ -29,7 +28,7 @@ public class ClientAuthController {
 
     @PostMapping(path = "/login", consumes = "application/json")
     public ResponseEntity<?> login(@Valid @RequestBody LoginDTO dto, HttpServletRequest req, HttpServletResponse res) {
-        return this.authService.login("client", dto, req, res);
+        return this.authService.login(dto, req, res);
     }
 
 }

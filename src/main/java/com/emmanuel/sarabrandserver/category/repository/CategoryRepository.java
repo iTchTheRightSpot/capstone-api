@@ -1,10 +1,7 @@
 package com.emmanuel.sarabrandserver.category.repository;
 
 import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
-import com.emmanuel.sarabrandserver.category.projection.WorkerCategoryPojo;
-import com.emmanuel.sarabrandserver.product.projection.ClientProductPojo;
 import com.emmanuel.sarabrandserver.category.projection.CategoryPojo;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,19 +12,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<ProductCategory, Long> {
-    @Query("""
-    SELECT COUNT(p.categoryId)
-    FROM ProductCategory p
-    WHERE p.categoryName = :name
-    OR p.categoryName IN :list
+    @Query(value = """
+    SELECT c.categoryName AS category, c.createAt AS created, c.modifiedAt AS modified, c.isVisible AS visible
+    FROM ProductCategory c
     """)
-    int duplicateCategoryName(@Param(value = "name") String name, @Param(value = "list") Set<String> list);
+    List<CategoryPojo> fetchCategoriesWorker();
 
-    /** Equivalent sql statement because jpa can be confusing at times hahaha
+    /** Equivalent sql statement because jpa can be confusing at times haha
      * select parent.category_name, group_concat(child.category_name)
      * from product_category parent
      * left join product_category child on parent.category_id = child.parent_category_id
@@ -36,51 +30,14 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
      * order by parent.created_at
      * */
     @Query(value = """
-    SELECT parent.categoryName AS category, parent.isVisible AS status, GROUP_CONCAT(child.categoryName) AS sub
-    FROM ProductCategory parent
-    LEFT JOIN ProductCategory child ON parent.categoryId = child.productCategory.categoryId
-    WHERE parent.productCategory.categoryId IS NULL
-    GROUP BY parent.categoryName, parent.createAt, parent.isVisible
-    ORDER BY parent.createAt
-    """)
-    List<CategoryPojo> fetchCategories();
-
-    @Query(value = """
-    SELECT c.categoryName AS category, c.createAt AS created, c.modifiedAt AS modified, c.isVisible AS visible
-    FROM ProductCategory c
-    """)
-    List<WorkerCategoryPojo> fetchCategoriesWorker();
-
-    @Query(value = """
-    SELECT parent.categoryName AS category, parent.isVisible AS status, GROUP_CONCAT(child.categoryName) AS sub
+    SELECT parent.categoryName AS category, GROUP_CONCAT(child.categoryName) AS sub
     FROM ProductCategory parent
     LEFT JOIN ProductCategory child ON parent.categoryId = child.productCategory.categoryId
     WHERE parent.productCategory.categoryId IS NULL AND parent.isVisible = true
-    GROUP BY parent.categoryName, parent.createAt, parent.isVisible
+    GROUP BY parent.categoryName
     ORDER BY parent.createAt
     """)
     List<CategoryPojo> fetchCategoriesClient();
-
-    @Query(value = """
-    SELECT p.name AS name,
-    p.description AS desc,
-    p.price AS price,
-    p.currency AS currency,
-    pd.sku AS sku,
-    ps.size AS size,
-    inv.quantity AS quantity,
-    img.imageKey AS image,
-    pc.colour AS colour
-    FROM ProductCategory cat
-    INNER JOIN Product p ON p.productCategory.categoryId = cat.categoryId
-    INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
-    INNER JOIN ProductSize ps ON pd.productSize.productSizeId = ps.productSizeId
-    INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
-    INNER JOIN ProductImage img ON pd.productDetailId = img.productDetails.productDetailId
-    INNER JOIN ProductColour pc ON pd.productColour.productColourId = pc.productColourId
-    WHERE cat.categoryName = :name AND pd.isVisible = true
-    """)
-    List<ClientProductPojo> fetchByProductName(@Param(value = "name") String name, Pageable pageable);
 
     @Query("SELECT pc FROM ProductCategory pc WHERE pc.categoryName = :name")
     Optional<ProductCategory> findByName(@Param(value = "name") String name);

@@ -171,7 +171,7 @@ class AuthServiceTest {
                 .thenReturn(authentication);
 
         // Then
-        var login = this.authService.login("worker", dto, request, response);
+        var login = this.authService.login(dto, request, response);
         assertEquals(AuthResponse.class, Objects.requireNonNull(login.getBody()).getClass());
         assertEquals(login.getStatusCode(), OK);
         verify(this.authenticationManager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
@@ -189,18 +189,7 @@ class AuthServiceTest {
                 .thenThrow(BadCredentialsException.class);
 
         // Then
-        assertThrows(BadCredentialsException.class, () -> this.authService.login("worker", dto, request, response));
-    }
-
-    @Test
-    void wrong_key_entered() {
-        // Given
-        var dto = new LoginDTO(client().getUsername(), client().getPassword());
-        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
-
-        // When Then
-        assertThrows(IllegalArgumentException.class, () -> this.authService.login("key", dto, request, response));
+        assertThrows(BadCredentialsException.class, () -> this.authService.login(dto, request, response));
     }
 
     @Test
@@ -259,7 +248,7 @@ class AuthServiceTest {
                 .thenReturn(authentication);
 
         // Then
-        var login = this.authService.login("client", dto, request, response);
+        var login = this.authService.login(dto, request, response);
         assertEquals(AuthResponse.class, Objects.requireNonNull(login.getBody()).getClass());
         assertEquals(login.getStatusCode(), OK);
         verify(this.authenticationManager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
@@ -277,7 +266,7 @@ class AuthServiceTest {
                 .thenThrow(BadCredentialsException.class);
 
         // Then
-        assertThrows(BadCredentialsException.class, () -> this.authService.login("client", dto, request, response));
+        assertThrows(BadCredentialsException.class, () -> this.authService.login(dto, request, response));
     }
 
     private Clientz client() {

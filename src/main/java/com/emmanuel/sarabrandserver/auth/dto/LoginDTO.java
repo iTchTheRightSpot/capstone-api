@@ -1,6 +1,5 @@
 package com.emmanuel.sarabrandserver.auth.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -16,12 +15,10 @@ import javax.json.JsonObject;
 @Builder
 @Data
 public class LoginDTO {
+    @NotEmpty @NotNull
+    private String principal;
 
     @NotEmpty @NotNull
-    @JsonProperty("principal")
-    private String principal;
-    @NotEmpty @NotNull
-    @JsonProperty("password")
    private String password;
 
     public JsonObject convertToJSON() {

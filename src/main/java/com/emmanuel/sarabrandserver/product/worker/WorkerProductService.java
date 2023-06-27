@@ -26,7 +26,7 @@ import static org.springframework.http.HttpStatus.*;
 
 @Service
 public class WorkerProductService {
-    private String defaultKey;
+    private String defaultKey; // Represents the default_image_key for Product property
 
     private final ProductRepository productRepository;
     private final ProductDetailRepo detailRepo;
@@ -105,7 +105,6 @@ public class WorkerProductService {
         if (findProduct.isPresent()) {
             // Build ProductDetail
             var productDetail = productDetail(dto, files, date);
-            productDetail.setModifiedAt(date);
 
             // Add ProductDetail to Product, save and return response
             findProduct.get().addDetail(productDetail);
@@ -124,18 +123,18 @@ public class WorkerProductService {
                 .productDetails(new HashSet<>())
                 .build();
         product.addDetail(detail);
-        this.productRepository.save(product);
+        var saved = this.productRepository.save(product);
 
         // Update Collection if it is not blank
         if (!dto.getCollection().isBlank()) {
             var collection = this.collectionService.findByName(dto.getCollection().trim());
             collection.setModifiedAt(date);
-            collection.addProduct(product);
+            collection.addProduct(saved);
             this.collectionService.save(collection);
         }
 
         // Update Category of new Product
-        category.addProduct(product);
+        category.addProduct(saved);
         category.setModifiedAt(date);
         this.categoryService.save(category);
 
@@ -277,7 +276,12 @@ public class WorkerProductService {
     }
 
     /** After a ProductDetail is deleted, images in s3 has to be deleted to save resources. */
-    private void deleteFromS3(ProductDetail detail) { }
+    private void deleteFromS3(ProductDetail detail) {
+        // Note fetch type is EAGER so ProductImage are automatically pulled
+        detail.getProductImages().forEach(image -> {
+            // TODO API to S3 to remove
+        });
+    }
 
     // Find Product by name
     private Product findProductByName(String name) {

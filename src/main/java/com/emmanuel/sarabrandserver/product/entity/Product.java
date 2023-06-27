@@ -31,7 +31,7 @@ public class Product implements Serializable {
     @Column(name = "name", length = 50, unique = true, nullable = false)
     private String name;
 
-    @Column(name = "description", nullable = false)
+    @Column(name = "description", length = 400, nullable = false)
     private String description;
 
     @Column(name = "default_image_key", nullable = false)
@@ -61,10 +61,6 @@ public class Product implements Serializable {
 
     @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "product", orphanRemoval = true)
     private Set<ProductDetail> productDetails;
-
-    public Product(String name) {
-        this.name = name;
-    }
 
     public void addDetail(ProductDetail detail) {
         this.productDetails.add(detail);

@@ -3,6 +3,7 @@ package com.emmanuel.sarabrandserver.product.worker;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
+import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.product.dto.CreateProductDTO;
 import com.emmanuel.sarabrandserver.product.dto.DetailDTO;
 import com.emmanuel.sarabrandserver.product.dto.ProductDTO;
@@ -12,7 +13,6 @@ import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.response.DetailResponse;
 import com.emmanuel.sarabrandserver.product.response.ProductResponse;
 import com.emmanuel.sarabrandserver.util.DateUTC;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -27,9 +27,6 @@ import static org.springframework.http.HttpStatus.*;
 @Service
 public class WorkerProductService {
     private String defaultKey;
-
-    @Value(value = "${s3.pre-assigned.url}")
-    private String ASSIGNED_URL;
 
     private final ProductRepository productRepository;
     private final ProductDetailRepo detailRepo;
@@ -60,7 +57,7 @@ public class WorkerProductService {
      * */
     public List<ProductResponse> fetchAll(int page, int size) {
         return this.productRepository
-                .fetchAllProductsWorker(PageRequest.of(page, Math.max(size, 30))) //
+                .fetchAllProductsWorker(PageRequest.of(page, Math.min(size, 30))) //
                 .stream() //
                 .map(pojo -> new ProductResponse(
                         pojo.getId(),
@@ -68,7 +65,7 @@ public class WorkerProductService {
                         pojo.getDesc(),
                         pojo.getPrice().doubleValue(),
                         pojo.getCurrency(),
-                        ASSIGNED_URL + pojo.getKey()
+                        pojo.getKey()
                 )) //
                 .toList();
     }
@@ -192,16 +189,28 @@ public class WorkerProductService {
     /**
      * Method updates just a Product only if the id exists. Not ProductDetail is not updated.
      * @param dto of type UpdateProductDTO
+     * @throws CustomNotFoundException when dto product_id does not exist
+     * @throws DuplicateException when dto name exist
      * @return ResponseEntity of type HttpStatus
      * */
     @Transactional
     public ResponseEntity<?> updateProduct(final ProductDTO dto) {
+        var product = this.productRepository.findProductByProductId(dto.getId())
+                .orElseThrow(() -> new CustomNotFoundException("Product does not exist"));
+
+        // Validate if dto name does not equal ProductName and dto does not exist in DB.
+        if (!product.getName().equals(dto.getName().trim())
+                && this.productRepository.findByProductName(dto.getName().trim()).isPresent()) {
+            throw new  DuplicateException(dto.getName() + " exists");
+        }
+
         this.productRepository.updateProduct(
                 dto.getId(),
                 dto.getName().trim(),
                 dto.getDesc().trim(),
                 BigDecimal.valueOf(dto.getPrice())
         );
+
         return new ResponseEntity<>(OK);
     }
 

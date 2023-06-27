@@ -45,8 +45,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles("dev")
-@TestPropertySource(locations = "classpath:application-dev.properties")
+@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.properties")
 class ClientAuthControllerTest {
 
     private final String ADMIN_EMAIL = "SEJU@development.com";

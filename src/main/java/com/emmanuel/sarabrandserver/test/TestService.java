@@ -11,12 +11,14 @@ import com.github.javafaker.Faker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.*;
 
-@Component @Slf4j
+@Component @Profile(value = {"dev"})
+@Slf4j
 public class TestService {
 
     @Bean
@@ -26,9 +28,9 @@ public class TestService {
             CollectionRepository collectionRepository
     ) {
         return args -> {
-            categories(repo);
-            collection(collectionRepository);
-            products(prodRepo);
+//            categories(repo);
+//            collection(collectionRepository);
+//            products(prodRepo);
         };
     }
 

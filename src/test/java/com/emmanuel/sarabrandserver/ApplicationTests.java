@@ -22,8 +22,8 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles("dev")
-@TestPropertySource(locations = "classpath:application-dev.properties")
+@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.properties")
 class ApplicationTests {
     @Container private static final MySQLContainer<?> container;
     @Container private static final RedisContainer redis;

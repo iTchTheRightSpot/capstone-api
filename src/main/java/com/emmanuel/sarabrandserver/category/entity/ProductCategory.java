@@ -50,15 +50,6 @@ public class ProductCategory implements Serializable {
     @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "productCategory")
     private Set<Product> product;
 
-    public ProductCategory(String categoryName) {
-        this.categoryName = categoryName;
-    }
-
-    public ProductCategory(String categoryName, Date createAt) {
-        this.categoryName = categoryName;
-        this.createAt = createAt;
-    }
-
     public void addCategory(ProductCategory category) {
         this.productCategories.add(category);
         category.setProductCategory(this);

@@ -8,5 +8,5 @@ public interface DetailPojo {
     String getSize();
     int getQty();
     String getColour();
-    List<String> getKey();
+    String getKey();
 }

@@ -1,11 +1,12 @@
-package com.emmanuel.sarabrandserver.product.controller;
+package com.emmanuel.sarabrandserver.product.worker;
 
 import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.product.dto.CreateProductDTO;
+import com.emmanuel.sarabrandserver.product.dto.ProductDTO;
+import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
-import com.emmanuel.sarabrandserver.product.worker.WorkerProductService;
 import com.github.javafaker.Faker;
 import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.AfterEach;
@@ -15,7 +16,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -34,27 +34,27 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles("dev")
-@TestPropertySource(locations = "classpath:application-dev.properties")
+@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.properties")
 class WorkerProductControllerTest {
-    private final static String requestMapping = "/api/v1/worker/category";
+    private final static String requestMapping = "/api/v1/worker/product";
+    private String category = "";
 
     @Autowired private MockMvc MOCK_MVC;
     @Autowired private WorkerProductService workerService;
     @Autowired private ProductRepository productRepository;
     @Autowired private WorkerCategoryService workerCategoryService;
     @Autowired private CategoryRepository categoryRepository;
+    @Autowired private ProductDetailRepo detailRepo;
 
     @Container private static final MySQLContainer<?> container;
     @Container private static final RedisContainer redis;
@@ -86,6 +86,7 @@ class WorkerProductControllerTest {
         }
 
         for (String str : set) {
+            category = str;
             this.workerCategoryService.create(new CategoryDTO(str, true, ""));
         }
 
@@ -124,10 +125,12 @@ class WorkerProductControllerTest {
                     ),
             };
             this.workerService.create(dto, files);
+        }
 
+        for (int i = 0; i < 50; i++) {
             // Validate deleting
             var dto1 = CreateProductDTO.builder()
-                    .category(str)
+                    .category(category)
                     .collection("")
                     .name("custom-product")
                     .desc(new Faker().lorem().characters(255))
@@ -169,89 +172,110 @@ class WorkerProductControllerTest {
         this.categoryRepository.deleteAll();
     }
 
+    /** Testing fetchAll method that returns a ProductResponse. */
     @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
     void fetchAll() throws Exception {
         // Then
         this.MOCK_MVC
-                .perform(get(requestMapping).contentType(MediaType.APPLICATION_JSON))
+                .perform(get(requestMapping)
+                        .param("page", "0")
+                        .param("size", "50")
+                )
+                .andExpect(content().contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
 
+    /** Testing fetchAll method that returns a DetailResponse. */
     @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
-    void create() throws Exception {
-        // Given
-        var dto = CreateProductDTO.builder()
-                .category(new Faker().commerce().department())
-                .collection("")
-                .name(new Faker().commerce().productName())
-                .desc(new Faker().lorem().characters(255))
-                .price(new BigDecimal(new Faker().commerce().price()).doubleValue())
-                .currency("USD")
-                .visible(true)
-                .qty(new Faker().number().numberBetween(10, 30))
-                .size(new Faker().commerce().material())
-                .colour(new Faker().commerce().color())
-                .build();
-
-        MockMultipartFile[] files = {
-                new MockMultipartFile(
-                        "files",
-                        "uploads/image1.jpeg",
-                        "image/jpeg",
-                        "Test image content".getBytes()
-                ),
-                new MockMultipartFile(
-                        "files",
-                        "uploads/image3.jpeg",
-                        "image/jpeg",
-                        "Test image content".getBytes()
-                ),
-                new MockMultipartFile(
-                        "file",
-                        "image2.jpeg",
-                        "image/jpeg",
-                        "Test image upload".getBytes()
-                )
-        };
-
-        // When, Then
+    void fetchAllDetail() throws Exception {
         this.MOCK_MVC
-                .perform(multipart(HttpMethod.POST, requestMapping)
-                        .file(files[0])
-                        .file(files[1])
-                        .file(files[2])
-                        .contentType(MediaType.MULTIPART_FORM_DATA)
-                        .content(dto.toJson().toString())
-                        .with(csrf())
+                .perform(get(requestMapping + "/{name}", "custom-product")
+                        .param("page", "0")
+                        .param("size", "50")
                 )
-                .andExpect(status().isCreated());
+                .andExpect(content().contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$", hasSize(30)));
     }
 
 //    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
-//    void update() { }
+//    void create() throws Exception {
+//        // Given
+//        var dto = CreateProductDTO.builder()
+//                .category(category)
+//                .collection("")
+//                .name(new Faker().commerce().productName())
+//                .desc(new Faker().lorem().characters(255))
+//                .price(new BigDecimal(new Faker().commerce().price()).doubleValue())
+//                .currency("USD")
+//                .visible(true)
+//                .qty(new Faker().number().numberBetween(10, 30))
+//                .size(new Faker().commerce().material())
+//                .colour(new Faker().commerce().color())
+//                .build();
 //
-//    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
-//    void deleteAllProduct() throws Exception { }
+//        MockMultipartFile[] files = {
+//                new MockMultipartFile(
+//                        "files",
+//                        "uploads/image1.jpeg",
+//                        MediaType.IMAGE_JPEG_VALUE,
+//                        "Test image content".getBytes()
+//                ),
+//                new MockMultipartFile(
+//                        "files",
+//                        "uploads/image3.jpeg",
+//                        MediaType.IMAGE_JPEG_VALUE,
+//                        "Test image content".getBytes()
+//                ),
+//                new MockMultipartFile(
+//                        "files",
+//                        "image2.jpeg",
+//                        MediaType.IMAGE_JPEG_VALUE,
+//                        "Test image upload".getBytes()
+//                )
+//        };
+//
+//        // When, Then
+//        this.MOCK_MVC
+//                .perform(multipart(requestMapping)
+//                        .file(files[0])
+//                        .file(files[1])
+//                        .file(files[2])
+//                        .content(dto.toJson().toString())
+//                        .contentType(MediaType.MULTIPART_FORM_DATA)
+//                        .with(csrf())
+//                )
+//                .andExpect(status().isCreated());
+//    }
 
-    /* Validate only product and sku are deleted not products with the same name. */
     @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
-    void deleteAProduct() throws Exception {
-        String name = "custom-product";
+    void updateProduct() throws Exception {
+        // Given
+        long id = this.productRepository.findAll().get(0).getProductId();
+        var dto = ProductDTO.builder()
+                .id(id)
+                .name("SEJU Development")
+                .desc("Lorem 29")
+                .price(Double.parseDouble(new Faker().commerce().price()))
+                .build();
 
-        // Always present because of @BeforeEach
-        var product = this.productRepository.findByProductName(name).get();
-        String sku = product.getProductDetails().stream().findFirst().get().getSku().trim();
-        int count = product.getProductDetails().size();
-
+        // Then
         this.MOCK_MVC
-                .perform(delete(requestMapping + "/{name}/{sku}", name, sku).with(csrf()))
-                .andDo(print())
+                .perform(put(requestMapping)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(dto.toJson().toString())
+                        .with(csrf())
+                )
+                .andExpect(status().isOk());
+    }
+
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
+    void deleteProduct() throws Exception {
+        long id = this.productRepository.findAll().get(0).getProductId();
+        this.MOCK_MVC.perform(delete(requestMapping + "/{id}", id).with(csrf()))
                 .andExpect(status().isNoContent());
-
-        var sub = this.productRepository.findByProductName(name).get().getProductDetails().size();
-
-        assertNotEquals(count, sub);
     }
 
 }

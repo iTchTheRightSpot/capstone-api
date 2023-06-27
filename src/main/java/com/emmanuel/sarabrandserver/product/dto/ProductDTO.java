@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import java.io.Serializable;
 
 @NoArgsConstructor
@@ -25,11 +27,20 @@ public class ProductDTO implements Serializable {
     @NotNull @NotEmpty
     private String name;
 
-    @Size(max = 255, message = "Max of 255")
+    @Size(max = 400, message = "Max of 255")
     @NotNull @NotEmpty
     private String desc;
 
-    @NotNull @NotEmpty
+    @NotNull
     private Double price;
+
+    public JsonObject toJson() {
+        return Json.createObjectBuilder()
+                .add("product_id", getId())
+                .add("name", getName())
+                .add("desc", getDesc())
+                .add("price", getPrice())
+                .build();
+    }
 
 }

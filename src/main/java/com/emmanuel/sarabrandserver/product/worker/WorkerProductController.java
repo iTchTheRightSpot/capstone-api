@@ -28,8 +28,8 @@ public class WorkerProductController {
      * */
     @GetMapping(produces = "application/json")
     public ResponseEntity<?> fetchAll(
-            @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @RequestParam(name = "size", defaultValue = "15") Integer size
+            @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @NotNull @RequestParam(name = "size", defaultValue = "15") Integer size
     ) {
         return new ResponseEntity<>(this.workerProductService.fetchAll(page, size), HttpStatus.OK);
     }
@@ -41,11 +41,11 @@ public class WorkerProductController {
      * @param size is the amount in the list adn
      * @return ResponseEntity of type HttpStatus and DetailResponse
      * */
-    @GetMapping(produces = "application/json")
+    @GetMapping(path = "/{name}", produces = "application/json")
     public ResponseEntity<?> fetchAll(
-            @RequestParam(name = "name") String name,
-            @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @RequestParam(name = "size", defaultValue = "15") Integer size
+            @NotNull @PathVariable(value = "name") String name,
+            @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @NotNull @RequestParam(name = "size", defaultValue = "15") Integer size
     ) {
         return new ResponseEntity<>(this.workerProductService.fetchAll(name, page, size), HttpStatus.OK);
     }
@@ -63,7 +63,7 @@ public class WorkerProductController {
      * @param dto of type ProductDTO
      * @return ResponseEntity of type HttpStatus
      * */
-    @PutMapping(consumes = "multipart/form-data")
+    @PutMapping(consumes = "application/json")
     public ResponseEntity<?> updateProduct(@Valid @RequestBody ProductDTO dto) {
         return this.workerProductService.updateProduct(dto);
     }
@@ -73,7 +73,7 @@ public class WorkerProductController {
      * @param dto of type DetailDTO
      * @return ResponseEntity of type HttpStatus
      * */
-    @PutMapping(path = "/detail", consumes = "multipart/form-data")
+    @PutMapping(path = "/detail", consumes = "application/json")
     public ResponseEntity<?> updateProductDetail(@Valid @RequestBody DetailDTO dto) {
         return this.workerProductService.updateProductDetail(dto);
     }

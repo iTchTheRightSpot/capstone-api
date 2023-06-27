@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.Arrays;
 import java.util.List;
 
 @NoArgsConstructor @Getter @Setter
@@ -23,14 +24,19 @@ public class DetailResponse {
     private String colour;
     private List<String> url;
 
-    public DetailResponse(String sku, boolean isVisible, String size, int qty, String colour, List<String> key) {
+    public DetailResponse(String sku, boolean isVisible, String size, int qty, String colour, String key) {
         this.sku = sku;
         this.isVisible = isVisible;
         this.size = size;
         this.qty = qty;
         this.colour = colour;
-        this.url = key.stream() // Append image key to pre-assigned url
-                .map(str -> ASSIGNED_URL + str).toList();
+        // Append image key to pre-assigned url
+        this.url = Arrays.stream(key.split(",")).map(str -> ASSIGNED_URL + str).toList();
     }
 
+    public DetailResponse(String size, String colour, String key) {
+        this.size = size;
+        this.colour = colour;
+        this.url = Arrays.stream(key.split(",")).map(str -> ASSIGNED_URL + str).toList();
+    }
 }

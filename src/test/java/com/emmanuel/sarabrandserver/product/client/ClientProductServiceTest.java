@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.product.service;
+package com.emmanuel.sarabrandserver.product.client;
 
 import com.emmanuel.sarabrandserver.product.client.ClientProductService;
 import com.emmanuel.sarabrandserver.product.entity.*;
@@ -18,8 +18,8 @@ import java.math.BigDecimal;
 import java.util.*;
 
 @ExtendWith({MockitoExtension.class, SpringExtension.class})
-@ActiveProfiles("dev")
-@TestPropertySource(locations = "classpath:application-dev.properties")
+@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.properties")
 class ClientProductServiceTest {
     private ClientProductService clientService;
 

@@ -43,8 +43,8 @@ import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 
 @ExtendWith({MockitoExtension.class, SpringExtension.class})
-@ActiveProfiles("dev")
-@TestPropertySource(locations = "classpath:application-dev.properties")
+@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.properties")
 class AuthServiceTest {
 
     @Value(value = "${custom.cookie.frontend}")

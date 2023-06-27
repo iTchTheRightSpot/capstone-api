@@ -1,15 +1,18 @@
-package com.emmanuel.sarabrandserver.product.service;
+package com.emmanuel.sarabrandserver.product.worker;
 
 import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
+import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.product.dto.CreateProductDTO;
+import com.emmanuel.sarabrandserver.product.dto.DetailDTO;
+import com.emmanuel.sarabrandserver.product.dto.ProductDTO;
 import com.emmanuel.sarabrandserver.product.entity.*;
+import com.emmanuel.sarabrandserver.product.projection.DetailPojo;
+import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
-import com.emmanuel.sarabrandserver.product.response.ProductResponse;
-import com.emmanuel.sarabrandserver.product.worker.WorkerProductService;
 import com.emmanuel.sarabrandserver.util.DateUTC;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -25,17 +29,17 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.HttpStatus.CREATED;
 
 @ExtendWith({MockitoExtension.class, SpringExtension.class})
-@ActiveProfiles("dev")
-@TestPropertySource(locations = "classpath:application-dev.properties")
+@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.properties")
 class WorkerProductServiceTest {
     private WorkerProductService productService;
 
@@ -43,34 +47,73 @@ class WorkerProductServiceTest {
     @Mock private WorkerCategoryService workerCategoryService;
     @Mock private DateUTC dateUTC;
     @Mock private WorkerCollectionService collectionService;
-    @Mock private ProductDetailRepo productDetailRepo;
+    @Mock private ProductDetailRepo detailRepo;
 
     @BeforeEach
     void setUp() {
         this.productService = new WorkerProductService(
                 this.productRepository,
-                this.productDetailRepo,
+                this.detailRepo,
                 this.workerCategoryService,
                 this.dateUTC,
                 this.collectionService
         );
     }
 
+    /** Testing fetchAll method that returns a ProductResponse. */
+    @Test
+    void fetch() {
+        // Given
+        List<ProductPojo> list = new ArrayList<>();
+
+        for (int i = 0; i < 30; i++) {
+            var pojo = mock(ProductPojo.class);
+            when(pojo.getId()).thenReturn((long) i);
+            when(pojo.getName()).thenReturn(new Faker().commerce().productName());
+            when(pojo.getDesc()).thenReturn(new Faker().lorem().characters(0, 400));
+            when(pojo.getPrice())
+                    .thenReturn(BigDecimal.valueOf(Double.parseDouble(new Faker().commerce().price(5, 300))));
+            when(pojo.getCurrency()).thenReturn("USD");
+            when(pojo.getKey()).thenReturn(UUID.randomUUID().toString());
+            list.add(pojo);
+        }
+
+        // When
+        when(this.productRepository.fetchAllProductsWorker(any(PageRequest.class))).thenReturn(list);
+
+        // Then
+        var res = this.productService.fetchAll(0, 40);
+        assertEquals(30, res.size());
+    }
+
+    /** Testing fetchAll method that returns a ProductResponse. */
     @Test
     void fetchAll() {
         // Given
-        int page = 0, size = 50;
-        var given = pageRequest();
+        List<DetailPojo> list = new ArrayList<>();
+
+        for (int i = 0; i < 30; i++) {
+            var pojo = mock(DetailPojo.class);
+            when(pojo.getSku()).thenReturn(UUID.randomUUID().toString());
+            when(pojo.getVisible()).thenReturn(true);
+            when(pojo.getSize()).thenReturn(new Faker().lorem().characters(1, 15));
+            when(pojo.getColour()).thenReturn(new Faker().commerce().color());
+            var keys = "%s, %s, %s".formatted(
+                    new Faker().file().fileName(),
+                    new Faker().file().fileName(),
+                    new Faker().file().fileName()
+            );
+            when(pojo.getKey()).thenReturn(keys);
+            list.add(pojo);
+        }
 
         // When
-        doReturn(given).when(this.productRepository).fetchAllProductsWorker(PageRequest.of(page, size));
+        when(this.productRepository.findDetailByProductNameWorker(anyString(), any(PageRequest.class)))
+                .thenReturn(list);
 
         // Then
-        var fetch = this.productService.fetchAll(page, size);
-        assertEquals(given.size(), fetch.size());
-        assertEquals(given.get(0).getClass(), fetch.get(0).getClass());
-        assertEquals(given.get(0).getPrice(), fetch.get(0).getPrice());
-        assertEquals(given.get(0).getName(), fetch.get(0).getName());
+        var res = this.productService.fetchAll("products", 0, 40);
+        assertEquals(30, res.size());
     }
 
     /** Simulates creating a product with name not existing */
@@ -213,57 +256,115 @@ class WorkerProductServiceTest {
     }
 
     @Test
-    void updateProduct() {}
+    void updateProduct() {
+        // Given
+        var dto = ProductDTO.builder()
+                .id(1L)
+                .name(new Faker().commerce().productName())
+                .desc(new Faker().lorem().characters(0, 400))
+                .price(Double.parseDouble(new Faker().commerce().price(5, 300)))
+                .build();
+
+        var product = products().get(0);
+
+        // When
+        when(this.productRepository.findProductByProductId(anyLong())).thenReturn(Optional.of(product));
+        when(this.productRepository.findByProductName(anyString())).thenReturn(Optional.empty());
+
+        // Then
+        assertEquals(HttpStatus.OK, this.productService.updateProduct(dto).getStatusCode());
+        verify(this.productRepository, times(1))
+                .updateProduct(any(Long.class), any(String.class), any(String.class), any(BigDecimal.class));
+    }
 
     @Test
-    void deleteProduct() {}
+    void updateProductException() {
+        // Given
+        var dto = ProductDTO.builder()
+                .id(1L)
+                .name(new Faker().commerce().productName())
+                .desc(new Faker().lorem().characters(0, 400))
+                .price(Double.parseDouble(new Faker().commerce().price(5, 300)))
+                .build();
+        var product = products().get(0);
+
+        // When
+        when(this.productRepository.findProductByProductId(anyLong())).thenReturn(Optional.of(product));
+        when(this.productRepository.findByProductName(anyString())).thenReturn(Optional.of(product));
+
+        // Then
+        assertThrows(DuplicateException.class, () -> this.productService.updateProduct(dto));
+    }
 
     @Test
-    void deleteProductDetail() {}
+    void updateProductDetail() {
+        // Given
+        String sku = UUID.randomUUID().toString();
+        var dto = DetailDTO.builder()
+                .sku(sku)
+                .visible(true)
+                .qty(new Faker().number().numberBetween(1, 29))
+                .size(new Faker().commerce().material())
+                .build();
 
-    private List<ProductResponse> pageRequest() {
-        List<ProductResponse> list = new ArrayList<>();
+        var detail = ProductDetail.builder()
+                .productDetailId(1L)
+                .sku(sku)
+                .isVisible(true)
+                .createAt(new Date())
+                .productSize(new ProductSize("Medium"))
+                .productInventory(new ProductInventory(new Faker().number().numberBetween(30, 50)))
+                .productColour(new ProductColour("Brown"))
+                .product(products().get(0))
+                .productImages(new HashSet<>())
+                .build();
 
-        for (Product pojo : products()) {
-            var res = ProductResponse.builder()
-                    .name(pojo.getName())
-                    .desc(pojo.getDescription())
-                    .price(pojo.getPrice())
-                    .currency(pojo.getCurrency())
-                    .sku(pojo.getProductDetails().stream().map(ProductDetail::getSku).findAny().get())
-                    .status(pojo.getProductDetails().stream().map(ProductDetail::isVisible).findAny().get())
-                    .size(pojo.getProductDetails()
-                            .stream()
-                            .map(ProductDetail::getProductSize)
-                            .map(ProductSize::getSize)
-                            .findAny()
-                            .get()
-                    )
-                    .quantity(pojo.getProductDetails()
-                            .stream()
-                            .map(ProductDetail::getProductInventory)
-                            .map(ProductInventory::getQuantity)
-                            .findAny()
-                            .get()
-                    )
-                    .imageUrl(pojo.getProductDetails()
-                            .stream()
-                            .flatMap(detail -> detail.getProductImages()
-                                    .stream()
-                                    .map(ProductImage::getImageKey)).collect(Collectors.toSet()
-                            ).stream().findFirst().get()
-                    )
-                    .colour(pojo.getProductDetails()
-                            .stream()
-                            .map(ProductDetail::getProductColour)
-                            .map(ProductColour::getColour)
-                            .findAny()
-                            .get())
-                    .build();
-            list.add(res);
-        }
+        // When
+        doReturn(Optional.of(detail)).when(this.productRepository).findDetailBySku(anyString());
+        doReturn(Optional.of(new Date())).when(this.dateUTC).toUTC(any(Date.class));
 
-        return list;
+        // Then
+        assertEquals(HttpStatus.OK, this.productService.updateProductDetail(dto).getStatusCode());
+        verify(this.detailRepo, times(1)).save(any(ProductDetail.class));
+    }
+
+    @Test
+    void deleteProduct() {
+        // Given
+        var product = products().get(0);
+
+        // When
+        doReturn(Optional.of(product)).when(this.productRepository).findProductByProductId(1L);
+
+        // Then
+        assertEquals(HttpStatus.NO_CONTENT, this.productService.deleteProduct(1L).getStatusCode());
+        verify(this.productRepository, times(1)).delete(any(Product.class));
+    }
+
+    @Test
+    void deleteProductDetail() {
+        // Given
+        String sku = UUID.randomUUID().toString();
+        var product = products().get(0);
+        var detail = ProductDetail.builder()
+                .productDetailId(1L)
+                .sku(sku)
+                .isVisible(true)
+                .createAt(new Date())
+                .productSize(new ProductSize("Medium"))
+                .productInventory(new ProductInventory(new Faker().number().numberBetween(30, 50)))
+                .productColour(new ProductColour("Brown"))
+                .product(products().get(0))
+                .productImages(new HashSet<>())
+                .build();
+
+        // When
+        doReturn(Optional.of(product)).when(productRepository).findByProductName(anyString());
+        doReturn(Optional.of(detail)).when(productRepository).findDetailBySku(anyString());
+
+        // Then
+        assertEquals(HttpStatus.NO_CONTENT, this.productService.deleteProductDetail(product.getName(), sku).getStatusCode());
+        verify(this.productRepository, times(1)).save(any(Product.class));
     }
 
     private List<Product> products() {

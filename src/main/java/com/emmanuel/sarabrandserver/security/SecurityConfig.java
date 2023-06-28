@@ -11,7 +11,6 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -69,9 +68,9 @@ public class SecurityConfig {
 //                .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> {
-//                    auth.anyRequest().permitAll();
-                    auth.requestMatchers(publicRoutes()).permitAll();
-                    auth.anyRequest().authenticated();
+                    auth.anyRequest().permitAll();
+//                    auth.requestMatchers(publicRoutes()).permitAll();
+//                    auth.anyRequest().authenticated();
                 })
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(IF_REQUIRED) //

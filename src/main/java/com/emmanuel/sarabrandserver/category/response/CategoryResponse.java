@@ -18,11 +18,14 @@ public class CategoryResponse {
     private long created;
     @JsonProperty(value = "modified_at")
     private long modified;
+    @JsonProperty(value = "product_id")
+    private long id;
 
     private String category;
     private boolean visible;
     private List<String> child;
 
+    // For storefront Page
     public CategoryResponse(String category, String child) {
         this.category = category;
         this.child = Arrays.stream(child.split(",")).toList();

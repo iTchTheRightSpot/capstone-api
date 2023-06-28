@@ -1,10 +1,11 @@
 package com.emmanuel.sarabrandserver.product.projection;
 
+// Spring data projection
 public interface DetailPojo {
     String getSku();
-    boolean getVisible();
+    Boolean getVisible();
     String getSize();
-    int getQty();
+    Integer getQty();
     String getColour();
     String getKey();
 }

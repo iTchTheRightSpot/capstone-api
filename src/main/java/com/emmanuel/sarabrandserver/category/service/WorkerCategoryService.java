@@ -36,6 +36,7 @@ public class WorkerCategoryService {
         return this.categoryRepository.fetchCategoriesWorker()
                 .stream()
                 .map(pojo -> CategoryResponse.builder()
+                        .id(pojo.getId())
                         .category(pojo.getCategory())
                         .created(pojo.getCreated().getTime())
                         .modified(pojo.getModified() == null ? 0L : pojo.getModified().getTime())
@@ -100,20 +101,20 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Method is responsible for updating a ProductCategory.
+     * Method is responsible for updating a ProductCategory based on its ID.
      * @param dto of type UpdateCategoryDTO
-     * @throws CustomNotFoundException is thrown if category name does not exist
+     * @throws DuplicateException is thrown if category name exist
      * @return ResponseEntity of type String
      * */
     @Transactional
     public ResponseEntity<?> update(UpdateCategoryDTO dto) {
-        if (this.categoryRepository.duplicateCategoryForUpdate(dto.getNew_name().trim()) > 0) {
-            return new ResponseEntity<>(dto.getNew_name() + " is a duplicate", CONFLICT);
+        if (this.categoryRepository.duplicateCategoryForUpdate(dto.getName().trim()) > 0) {
+            throw new DuplicateException(dto.getName() + " cannot be created. It is a duplicate");
         }
 
-        var category = findByName(dto.getOld_name().trim());
         var date = this.dateUTC.toUTC(new Date()).isEmpty() ? new Date() : this.dateUTC.toUTC(new Date()).get();
-        this.categoryRepository.update(date, category.getCategoryName(), dto.getNew_name().trim());
+
+        this.categoryRepository.update(date, dto.getId(), dto.getName().trim());
         return new ResponseEntity<>(OK);
     }
 

@@ -126,42 +126,33 @@ class WorkerCategoryServiceTest {
     void update() {
         // Given
         var dto = UpdateCategoryDTO.builder()
-                .old_name(new Faker().commerce().productName())
-                .new_name("Updated category name")
-                .build();
-
-        var category = ProductCategory.builder()
-                .categoryName(dto.getOld_name())
-                .createAt(new Date())
-                .isVisible(true)
-                .productCategories(new HashSet<>())
-                .product(new HashSet<>())
+                .id(1L)
+                .name("Updated category name")
                 .build();
 
         // When
-        when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.of(category));
         doReturn(0).when(this.categoryRepository).duplicateCategoryForUpdate(anyString());
         when(this.dateUTC.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
 
         // Then
         assertEquals(OK, this.workerCategoryService.update(dto).getStatusCode());
         verify(this.categoryRepository, times(1))
-                .update(any(Date.class), anyString(), anyString());
+                .update(any(Date.class), anyLong(), anyString());
     }
 
     @Test
-    void update_none_existing_category_name() {
+    void update_category_name_to_existing_name() {
         // Given
         var dto = UpdateCategoryDTO.builder()
-                .old_name(new Faker().commerce().productName())
-                .new_name(new Faker().commerce().productName())
+                .id(1L)
+                .name("Updated category name")
                 .build();
 
         // When
-        when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.empty());
+        when(this.categoryRepository.duplicateCategoryForUpdate(anyString())).thenReturn(1);
 
         // Then
-        assertThrows(CustomNotFoundException.class, () -> this.workerCategoryService.update(dto));
+        assertThrows(DuplicateException.class, () -> this.workerCategoryService.update(dto));
     }
 
     @Test

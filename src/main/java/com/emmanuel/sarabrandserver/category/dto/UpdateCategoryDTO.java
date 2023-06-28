@@ -1,5 +1,6 @@
 package com.emmanuel.sarabrandserver.category.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -17,18 +18,18 @@ import javax.json.JsonObject;
 @Data
 public class UpdateCategoryDTO {
 
-    @NotNull @NotEmpty
-    @Size(max = 50, message = "category name cannot exceed length of 50")
-    private String old_name;
+    @NotNull
+    @JsonProperty(required = true, value = "product_id")
+    private Long id;
 
     @NotNull @NotEmpty
     @Size(max = 50, message = "category name cannot exceed length of 50")
-    private String new_name;
+    private String name;
 
     public JsonObject toJson() {
         return Json.createObjectBuilder()
-                .add("old_name", getOld_name())
-                .add("new_name", getNew_name())
+                .add("id", getId())
+                .add("name", getName())
                 .build();
     }
 

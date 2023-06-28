@@ -6,5 +6,5 @@ public interface CollectionPojo {
     String getCollection();
     Date getCreated();
     Date getModified();
-    boolean getVisible();
+    Boolean getVisible();
 }

@@ -140,7 +140,8 @@ class WorkerCategoryControllerTest {
     @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
     void update() throws Exception {
         // Given
-        var dto = new UpdateCategoryDTO(this.categoryDTO.getName(), "Updated category name");
+        long id = this.categoryRepository.findAll().get(0).getCategoryId();
+        var dto = new UpdateCategoryDTO(id, "Updated category name");
 
         // Then
         this.MOCK_MVC

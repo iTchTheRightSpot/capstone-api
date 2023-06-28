@@ -1,7 +1,6 @@
 package com.emmanuel.sarabrandserver.auth.service;
 
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
-import com.emmanuel.sarabrandserver.auth.response.AuthResponse;
 import com.emmanuel.sarabrandserver.clientz.dto.ClientRegisterDTO;
 import com.emmanuel.sarabrandserver.clientz.entity.ClientRole;
 import com.emmanuel.sarabrandserver.clientz.entity.Clientz;
@@ -29,6 +28,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.CREATED;
@@ -91,20 +91,19 @@ public class AuthService {
             throw new DuplicateException(dto.getUsername() + " exists");
         }
 
-        var exists = this.clientzRepository.workerExists(dto.getEmail().trim(), dto.getUsername().trim());
-        if (exists.isPresent()) {
-            exists.get().addRole(new ClientRole(RoleEnum.WORKER));
-            this.clientzRepository.save(exists.get());
-            return new ResponseEntity<>("Updated", OK);
+        Optional<Clientz> client = this.clientzRepository.workerExists(dto.getEmail().trim(), dto.getUsername().trim());
+
+        if (client.isPresent()) { // Client to ClientRole has a fetch type of EAGER
+            client.get().addRole(new ClientRole(RoleEnum.WORKER));
+        } else {
+            // Create Client and add role of worker
+            client = Optional.of(createClient(dto));
+            client.get().addRole(new ClientRole(RoleEnum.WORKER));
         }
 
-        // Create Client and add role of worker
-        var clientz = createClient(dto);
-        clientz.addRole(new ClientRole(RoleEnum.WORKER));
-
         // Save client
-        this.clientzRepository.save(clientz);
-        return new ResponseEntity<>("Registered", CREATED);
+        this.clientzRepository.save(client.get());
+        return new ResponseEntity<>(CREATED);
     }
 
     /**
@@ -123,7 +122,7 @@ public class AuthService {
 
         // Create and Save client
         this.clientzRepository.save(clientz);
-        return new ResponseEntity<>("Registered", CREATED);
+        return new ResponseEntity<>(CREATED);
     }
 
     /**
@@ -168,7 +167,7 @@ public class AuthService {
         // Add custom cookie to response
         res.addCookie(cookie);
 
-        return new ResponseEntity<>(new AuthResponse(dto.getPrincipal()), OK);
+        return new ResponseEntity<>(OK);
     }
 
     private Clientz createClient(ClientRegisterDTO dto) {

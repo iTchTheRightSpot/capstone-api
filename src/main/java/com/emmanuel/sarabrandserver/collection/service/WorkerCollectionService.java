@@ -28,17 +28,19 @@ public class WorkerCollectionService {
 
     /** Returns a list of CollectionResponse. */
     public List<CollectionResponse> fetchAll() {
-        return this.collectionRepository.getAll().stream().map(pojo -> CollectionResponse.builder()
-                .collection(pojo.getCollection())
-                .created(pojo.getCreated().getTime())
-                .modified(pojo.getModified() == null ? 0L : pojo.getModified().getTime())
-                .visible(pojo.getVisible())
-                .build()
-        ).toList();
+        return this.collectionRepository.getAll() //
+                .stream() //
+                .map(pojo -> CollectionResponse.builder()
+                        .collection(pojo.getCollection())
+                        .created(pojo.getCreated().getTime())
+                        .modified(pojo.getModified() == null ? 0L : pojo.getModified().getTime())
+                        .visible(pojo.getVisible())
+                        .build()
+                ).toList();
     }
 
     /**
-     * Creates a Product Collection
+     * Creates a ProductCollection
      * @param dto of type CollectionDTO
      * @throws DuplicateException when name from dto exists in the DB
      * @return ResponseEntity of type HttpStatus

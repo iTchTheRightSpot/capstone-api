@@ -1,7 +1,6 @@
 package com.emmanuel.sarabrandserver.auth.service;
 
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
-import com.emmanuel.sarabrandserver.auth.response.AuthResponse;
 import com.emmanuel.sarabrandserver.clientz.dto.ClientRegisterDTO;
 import com.emmanuel.sarabrandserver.clientz.entity.ClientRole;
 import com.emmanuel.sarabrandserver.clientz.entity.Clientz;
@@ -18,7 +17,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,7 +29,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -65,13 +62,9 @@ class AuthServiceTest {
     private AuthService authService;
 
     @Mock private ClientzRepository clientzRepository;
-
     @Mock private PasswordEncoder passwordEncoder;
-
     @Mock private AuthenticationManager authenticationManager;
-
     @Mock private SecurityContextRepository securityContextRepository;
-
     @Mock private SessionAuthenticationStrategy sessionAuthenticationStrategy;
 
     @BeforeEach
@@ -90,9 +83,8 @@ class AuthServiceTest {
         this.authService.setIS_LOGGED_IN(IS_LOGGED_IN);
     }
 
-    /** Test simulates registering an existing Clientz but he or she does not have a role WORKER */
     @Test
-    void workerRegister() {
+    void register_worker_that_doesnt_exist() {
         // Given
         var dto = new ClientRegisterDTO(
                 worker().getFirstname(),
@@ -104,19 +96,16 @@ class AuthServiceTest {
         );
 
         // When
+        when(this.clientzRepository.isAdmin(anyString(), anyString(), any(RoleEnum.class))).thenReturn(0);
         when(this.clientzRepository.workerExists(anyString(), anyString())).thenReturn(Optional.empty());
-        Mockito.doReturn(worker()).when(this.clientzRepository).save(any(Clientz.class));
 
         // Then
-        var response = this.authService.workerRegister(dto);
-        assertEquals(response.getBody(), "Registered");
-        assertEquals(response.getStatusCode(), CREATED);
+        assertEquals(CREATED, this.authService.workerRegister(dto).getStatusCode());
         verify(this.clientzRepository, times(1)).save(any(Clientz.class));
     }
 
-    /** Simulates registering a worker but he or she has a role of WORKER */
     @Test
-    void register_existing_worker() {
+    void register_worker_with_already_existing_role_worker() {
         // Given
         var dto = new ClientRegisterDTO(
                 worker().getFirstname(),
@@ -136,7 +125,7 @@ class AuthServiceTest {
 
     /** Simulates registering an existing Clientz but he or she doesn't have a role of WORKER */
     @Test
-    void workerRoleClient() {
+    void register_worker_with_role_only_client() {
         // Given
         var dto = new ClientRegisterDTO(
                 client().getFirstname(),
@@ -148,13 +137,11 @@ class AuthServiceTest {
         );
 
         // When
+        when(this.clientzRepository.isAdmin(anyString(), anyString(), any(RoleEnum.class))).thenReturn(0);
         doReturn(Optional.of(client())).when(this.clientzRepository).workerExists(anyString(), anyString());
-        doReturn(worker()).when(this.clientzRepository).save(any(Clientz.class));
 
         // Then
-        var response = this.authService.workerRegister(dto);
-        assertEquals(response.getBody(), "Updated");
-        assertEquals(response.getStatusCode(), OK);
+        assertEquals(CREATED, this.authService.workerRegister(dto).getStatusCode());
         verify(this.clientzRepository, times(1)).save(any(Clientz.class));
     }
 
@@ -172,7 +159,6 @@ class AuthServiceTest {
 
         // Then
         var login = this.authService.login(dto, request, response);
-        assertEquals(AuthResponse.class, Objects.requireNonNull(login.getBody()).getClass());
         assertEquals(login.getStatusCode(), OK);
         verify(this.authenticationManager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
     }
@@ -207,12 +193,9 @@ class AuthServiceTest {
         // When
         when(this.clientzRepository.principalExists(anyString(), anyString())).thenReturn(0);
         when(this.passwordEncoder.encode(anyString())).thenReturn(dto.getPassword());
-        doReturn(client()).when(this.clientzRepository).save(any(Clientz.class));
 
         // Then
-        var response = this.authService.clientRegister(dto);
-        assertEquals(response.getBody(), "Registered");
-        assertEquals(response.getStatusCode(), HttpStatus.CREATED);
+        assertEquals(CREATED, this.authService.clientRegister(dto).getStatusCode());
         verify(this.clientzRepository, times(1)).save(any(Clientz.class));
     }
 
@@ -248,9 +231,7 @@ class AuthServiceTest {
                 .thenReturn(authentication);
 
         // Then
-        var login = this.authService.login(dto, request, response);
-        assertEquals(AuthResponse.class, Objects.requireNonNull(login.getBody()).getClass());
-        assertEquals(login.getStatusCode(), OK);
+        assertEquals(OK, this.authService.login(dto, request, response).getStatusCode());
         verify(this.authenticationManager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
     }
 

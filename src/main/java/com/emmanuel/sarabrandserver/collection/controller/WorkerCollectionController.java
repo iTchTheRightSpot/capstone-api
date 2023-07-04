@@ -3,6 +3,7 @@ package com.emmanuel.sarabrandserver.collection.controller;
 import com.emmanuel.sarabrandserver.collection.dto.CollectionDTO;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,8 +18,11 @@ public class WorkerCollectionController {
     }
 
     @GetMapping(produces = "application/json")
-    public ResponseEntity<?> fetchAll() {
-        return new ResponseEntity<>(this.collectionService.fetchAll(), HttpStatus.OK);
+    public ResponseEntity<?> fetchAll(
+            @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @NotNull @RequestParam(name = "size", defaultValue = "30") Integer size
+    ) {
+        return new ResponseEntity<>(this.collectionService.fetchAll(page, size), HttpStatus.OK);
     }
 
     @PostMapping(consumes = "application/json")

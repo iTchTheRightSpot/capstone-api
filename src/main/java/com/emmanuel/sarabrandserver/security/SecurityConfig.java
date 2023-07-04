@@ -37,7 +37,7 @@ public class SecurityConfig {
     private String COOKIE_NAME;
 
     @Value(value = "${custom.cookie.frontend}")
-    private String LOGGED_IN;
+    private String LOGGEDSESSION;
 
     private final RedisIndexedSessionRepository redisIndexedSessionRepository;
     private final AuthenticationEntryPoint authEntryPoint;
@@ -86,7 +86,7 @@ public class SecurityConfig {
                 .logout(out -> out
                         .logoutUrl("/api/v1/auth/logout")
                         .invalidateHttpSession(true) // Invalidate all sessions after logout
-                        .deleteCookies(COOKIE_NAME, LOGGED_IN)
+                        .deleteCookies(COOKIE_NAME, LOGGEDSESSION)
                         .addLogoutHandler(new CustomLogoutHandler(this.redisIndexedSessionRepository))
                         .logoutSuccessHandler((request, response, authentication) ->
                                 SecurityContextHolder.clearContext()

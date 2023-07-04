@@ -4,6 +4,7 @@ import com.emmanuel.sarabrandserver.product.entity.Product;
 import com.emmanuel.sarabrandserver.product.entity.ProductDetail;
 import com.emmanuel.sarabrandserver.product.projection.DetailPojo;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,11 +34,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     p.currency AS currency,
     p.defaultKey AS key
     FROM Product p
-    INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
-    INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
-    WHERE pd.isVisible = TRUE AND inv.quantity > 0
     """)
-    List<ProductPojo> fetchAllProductsWorker(Pageable pageable);
+    Page<ProductPojo> fetchAllProductsWorker(Pageable pageable);
 
     @Query(value = """
     SELECT
@@ -51,7 +49,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
     WHERE pd.isVisible = true AND inv.quantity > 0
     """)
-    List<ProductPojo> fetchAllProductsClient(Pageable pageable);
+    Page<ProductPojo> fetchAllProductsClient(Pageable pageable);
 
     @Query(value = """
     SELECT
@@ -106,7 +104,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     WHERE p.name = :name
     GROUP BY pd.sku, ps.size, pc.colour
     """)
-    List<DetailPojo> findDetailByProductNameWorker(@Param(value = "name") String name, Pageable page);
+    Page<DetailPojo> findDetailByProductNameWorker(@Param(value = "name") String name, Pageable page);
 
     @Query(value = """
     SELECT

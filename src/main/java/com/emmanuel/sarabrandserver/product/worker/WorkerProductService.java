@@ -8,11 +8,13 @@ import com.emmanuel.sarabrandserver.product.dto.CreateProductDTO;
 import com.emmanuel.sarabrandserver.product.dto.DetailDTO;
 import com.emmanuel.sarabrandserver.product.dto.ProductDTO;
 import com.emmanuel.sarabrandserver.product.entity.*;
+import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.response.DetailResponse;
 import com.emmanuel.sarabrandserver.product.response.ProductResponse;
 import com.emmanuel.sarabrandserver.util.DateUTC;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -55,10 +57,9 @@ public class WorkerProductService {
      * @param size is the max amount to be displayed on a page
      * @return List of type ProductResponse
      * */
-    public List<ProductResponse> fetchAll(int page, int size) {
+    public Page<ProductResponse> fetchAll(int page, int size) {
         return this.productRepository
-                .fetchAllProductsWorker(PageRequest.of(page, Math.min(size, 30))) //
-                .stream() //
+                .fetchAllProductsWorker(PageRequest.of(page, Math.min(size, 30)))
                 .map(pojo -> new ProductResponse(
                         pojo.getId(),
                         pojo.getName(),
@@ -66,8 +67,7 @@ public class WorkerProductService {
                         pojo.getPrice().doubleValue(),
                         pojo.getCurrency(),
                         pojo.getKey()
-                )) //
-                .toList();
+                ));
     }
 
     /**
@@ -78,14 +78,17 @@ public class WorkerProductService {
      * @param size is the amount of items list. Note the max is set to 30 as to not overload Heap memory
      * @return List of DetailResponse
      * */
-    public List<DetailResponse> fetchAll(String name, int page, int size) {
+    public Page<DetailResponse> fetchAll(String name, int page, int size) {
         return this.productRepository
                 .findDetailByProductNameWorker(name, PageRequest.of(page, Math.min(size, 30))) //
-                .stream() //
                 .map(p -> new DetailResponse(
-                        p.getSku(), p.getVisible(), p.getSize(), p.getQty(), p.getColour(), p.getKey()
-                )) //
-                .toList();
+                        p.getSku(),
+                        p.getVisible(),
+                        p.getSize(),
+                        p.getQty(),
+                        p.getColour(),
+                        p.getKey()
+                ));
     }
 
     /**

@@ -4,6 +4,7 @@ import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +20,11 @@ public class WorkerCategoryController {
     }
 
     @GetMapping(produces = "application/json")
-    public ResponseEntity<?> allCategories() {
-        return new ResponseEntity<>(this.workerCategoryService.fetchAll(), HttpStatus.OK);
+    public ResponseEntity<?> allCategories(
+            @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @NotNull @RequestParam(name = "size", defaultValue = "30") Integer size
+    ) {
+        return new ResponseEntity<>(this.workerCategoryService.fetchAll(page, size), HttpStatus.OK);
     }
 
     @PostMapping(consumes = "application/json")

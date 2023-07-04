@@ -80,7 +80,7 @@ class AuthServiceTest {
         this.authService.setCOOKIE_PATH(COOKIE_PATH);
         this.authService.setCOOKIE_MAX_AGE(COOKIE_MAX_AGE);
         this.authService.setCOOKIE_SECURE(COOKIE_SECURE);
-        this.authService.setIS_LOGGED_IN(IS_LOGGED_IN);
+        this.authService.setLOGGEDSESSION(IS_LOGGED_IN);
     }
 
     @Test

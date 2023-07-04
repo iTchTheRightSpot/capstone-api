@@ -7,12 +7,13 @@ import com.emmanuel.sarabrandserver.collection.response.CollectionResponse;
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.util.DateUTC;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 
 import static org.springframework.http.HttpStatus.CREATED;
 
@@ -27,22 +28,21 @@ public class WorkerCollectionService {
     }
 
     /** Returns a list of CollectionResponse. */
-    public List<CollectionResponse> fetchAll() {
-        return this.collectionRepository.getAll() //
-                .stream() //
+    public Page<CollectionResponse> fetchAll(int page, int size) {
+        return this.collectionRepository.getAll(PageRequest.of(page, size)) //
                 .map(pojo -> CollectionResponse.builder()
                         .collection(pojo.getCollection())
                         .created(pojo.getCreated().getTime())
                         .modified(pojo.getModified() == null ? 0L : pojo.getModified().getTime())
                         .visible(pojo.getVisible())
                         .build()
-                ).toList();
+                );
     }
 
     /**
-     * Creates a ProductCollection
+     * Creates a ProductCollection object
      * @param dto of type CollectionDTO
-     * @throws DuplicateException when name from dto exists in the DB
+     * @throws DuplicateException if collection name exists
      * @return ResponseEntity of type HttpStatus
      * */
     public ResponseEntity<?> create(CollectionDTO dto) {

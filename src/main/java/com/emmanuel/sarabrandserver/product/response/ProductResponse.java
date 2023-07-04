@@ -17,13 +17,13 @@ public class ProductResponse {
     @Value(value = "${s3.pre-assigned.url}")
     private String ASSIGNED_URL;
 
-    @JsonProperty(value = "product_id")
+    @JsonProperty(value = "id")
     private long id;
     private String name;
     private String desc;
     private double price;
     private String currency;
-    @JsonProperty(value = "url")
+    @JsonProperty(value = "image")
     private String imageUrl;
 
     // Constructor needed for responding on the admin UI

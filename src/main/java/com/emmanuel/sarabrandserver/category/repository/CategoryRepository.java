@@ -2,6 +2,8 @@ package com.emmanuel.sarabrandserver.category.repository;
 
 import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
 import com.emmanuel.sarabrandserver.category.projection.CategoryPojo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -24,7 +26,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     c.isVisible AS visible
     FROM ProductCategory c
     """)
-    List<CategoryPojo> fetchCategoriesWorker();
+    Page<CategoryPojo> fetchCategoriesWorker(Pageable pageable);
 
     /** Equivalent sql statement because jpa can be confusing at times haha
      * select parent.category_name, group_concat(child.category_name)

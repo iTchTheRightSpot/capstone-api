@@ -9,12 +9,13 @@ import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.util.DateUTC;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -32,9 +33,9 @@ public class WorkerCategoryService {
      * Returns a lis of ProductCategory parameters.
      * @return List of CategoryResponse
      * */
-    public List<CategoryResponse> fetchAll() {
-        return this.categoryRepository.fetchCategoriesWorker()
-                .stream()
+    public Page<CategoryResponse> fetchAll(int page, int size) {
+        return this.categoryRepository
+                .fetchCategoriesWorker(PageRequest.of(page, size))
                 .map(pojo -> CategoryResponse.builder()
                         .id(pojo.getId())
                         .category(pojo.getCategory())
@@ -42,7 +43,7 @@ public class WorkerCategoryService {
                         .modified(pojo.getModified() == null ? 0L : pojo.getModified().getTime())
                         .visible(pojo.getVisible())
                         .build()
-                ).toList();
+                );
     }
 
     /**

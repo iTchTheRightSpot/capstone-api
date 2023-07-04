@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
@@ -64,26 +66,26 @@ class WorkerProductServiceTest {
     @Test
     void fetch() {
         // Given
-        List<ProductPojo> list = new ArrayList<>();
+        List<ProductPojo> productList = new ArrayList<>();
 
         for (int i = 0; i < 30; i++) {
             var pojo = mock(ProductPojo.class);
             when(pojo.getId()).thenReturn((long) i);
             when(pojo.getName()).thenReturn(new Faker().commerce().productName());
             when(pojo.getDesc()).thenReturn(new Faker().lorem().characters(0, 400));
-            when(pojo.getPrice())
-                    .thenReturn(BigDecimal.valueOf(Double.parseDouble(new Faker().commerce().price(5, 300))));
+            when(pojo.getPrice()).thenReturn(BigDecimal.valueOf(Double.parseDouble(new Faker().commerce().price(5, 300))));
             when(pojo.getCurrency()).thenReturn("USD");
             when(pojo.getKey()).thenReturn(UUID.randomUUID().toString());
-            list.add(pojo);
+            productList.add(pojo);
         }
+
+        Page<ProductPojo> list = new PageImpl<>(productList);
 
         // When
         when(this.productRepository.fetchAllProductsWorker(any(PageRequest.class))).thenReturn(list);
 
         // Then
-        var res = this.productService.fetchAll(0, 40);
-        assertEquals(30, res.size());
+        assertEquals(30, this.productService.fetchAll(0, 40).getSize());
     }
 
     /** Testing fetchAll method that returns a ProductResponse. */
@@ -107,13 +109,14 @@ class WorkerProductServiceTest {
             list.add(pojo);
         }
 
+        Page<DetailPojo> page = new PageImpl<>(list);
+
         // When
         when(this.productRepository.findDetailByProductNameWorker(anyString(), any(PageRequest.class)))
-                .thenReturn(list);
+                .thenReturn(page);
 
         // Then
-        var res = this.productService.fetchAll("products", 0, 40);
-        assertEquals(30, res.size());
+        assertEquals(30, this.productService.fetchAll("products", 0, 40).getSize());
     }
 
     /** Simulates creating a product with name not existing */

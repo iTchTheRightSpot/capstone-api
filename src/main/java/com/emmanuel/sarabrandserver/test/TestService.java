@@ -1,12 +1,13 @@
 package com.emmanuel.sarabrandserver.test;
 
-import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
+import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
-import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
+import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
+import com.emmanuel.sarabrandserver.collection.dto.CollectionDTO;
 import com.emmanuel.sarabrandserver.collection.repository.CollectionRepository;
+import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
 import com.emmanuel.sarabrandserver.product.entity.*;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
-import com.emmanuel.sarabrandserver.product.worker.WorkerProductService;
 import com.github.javafaker.Faker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -25,36 +26,18 @@ public class TestService {
     public CommandLineRunner commandLineRunner(
             ProductRepository prodRepo,
             CategoryRepository repo,
+            WorkerCategoryService service,
+            WorkerCollectionService serv,
             CollectionRepository collectionRepository
     ) {
         return args -> {
-//            categories(repo);
-//            collection(collectionRepository);
-//            products(prodRepo);
+            categories(service, repo);
+            collection(serv, collectionRepository);
+            products(prodRepo);
         };
     }
 
-    private void collection(CollectionRepository repo) {
-        repo.deleteAll();
-
-        Set<String> set = new HashSet<>();
-        for (int i = 0; i < 20; i++) {
-            set.add(new Faker().commerce().department());
-        }
-
-        for (String str : set) {
-            var collection = ProductCollection.builder()
-                    .collection(str)
-                    .createAt(new Date())
-                    .modifiedAt(null)
-                    .isVisible(true)
-                    .products(new HashSet<>())
-                    .build();
-            repo.save(collection);
-        }
-    }
-
-    private void categories(CategoryRepository repo) {
+    private void collection(WorkerCollectionService service, CollectionRepository repo) {
         repo.deleteAll();
 
         Set<String> set = new HashSet<>();
@@ -63,57 +46,21 @@ public class TestService {
         }
 
         for (String str : set) {
-            var category = ProductCategory.builder()
-                    .categoryName(str)
-                    .createAt(new Date())
-                    .modifiedAt(null)
-                    .isVisible(true)
-                    .productCategories(new HashSet<>())
-                    .product(new HashSet<>())
-                    .build();
-
-            for (int j = 0; j < 3; j++) {
-                var sub = ProductCategory.builder()
-                        .categoryName(new Faker().name().firstName())
-                        .createAt(new Date())
-                        .modifiedAt(null)
-                        .isVisible(true)
-                        .productCategories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build();
-                category.addCategory(sub);
-            }
-            repo.save(category);
+            service.create(new CollectionDTO(str, true));
         }
     }
 
-    private void products(WorkerProductService service, ProductRepository repo) {
+    private void categories(WorkerCategoryService service, CategoryRepository repo) {
         repo.deleteAll();
+
         Set<String> set = new HashSet<>();
         for (int i = 0; i < 10; i++) {
-            set.add(new Faker().commerce().productName());
+            set.add(new Faker().commerce().department());
         }
 
         for (String str : set) {
-            var product = Product.builder()
-                    .name(str)
-                    .description(new Faker().lorem().characters(50))
-                    .price(new BigDecimal(new Faker().commerce().price()))
-                    .currency("USD")
-                    .productDetails(new HashSet<>())
-                    .build();
+            service.create(new CategoryDTO(str, true, ""));
         }
-
-//        repo.list().forEach(pojo -> {
-//            String str = """
-//                    name %s, desc %s, price %s, curr %s
-//
-//                    Detail %s
-//                    """.formatted(pojo.getName(), pojo.getDesc(), pojo.getPrice(), pojo.getCurrency(), pojo.getDetail());
-//
-//            log.info(str);
-//        });
-
     }
 
     private void products(ProductRepository repo) {
@@ -127,6 +74,7 @@ public class TestService {
         for (String str : set) {
             var product = Product.builder()
                     .name(str)
+                    .defaultKey("")
                     .description(new Faker().lorem().characters(50))
                     .price(new BigDecimal(new Faker().commerce().price()))
                     .currency("USD")

@@ -183,7 +183,7 @@ class WorkerProductControllerTest {
                 )
                 .andExpect(content().contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.content").isArray());
     }
 
     /** Testing fetchAll method that returns a DetailResponse. */

@@ -29,7 +29,7 @@ public class WorkerProductController {
     @GetMapping(produces = "application/json")
     public ResponseEntity<?> fetchAll(
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "15") Integer size
+            @NotNull @RequestParam(name = "size", defaultValue = "30") Integer size
     ) {
         return new ResponseEntity<>(this.workerProductService.fetchAll(page, size), HttpStatus.OK);
     }

@@ -19,7 +19,7 @@ import java.io.Serializable;
 @Data
 public class ProductDTO implements Serializable {
 
-    @JsonProperty(value = "product_id")
+    @JsonProperty(value = "id")
     @NotNull
     private Long id;
 
@@ -36,7 +36,7 @@ public class ProductDTO implements Serializable {
 
     public JsonObject toJson() {
         return Json.createObjectBuilder()
-                .add("product_id", getId())
+                .add("id", getId())
                 .add("name", getName())
                 .add("desc", getDesc())
                 .add("price", getPrice())

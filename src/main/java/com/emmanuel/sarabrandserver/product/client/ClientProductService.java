@@ -3,6 +3,7 @@ package com.emmanuel.sarabrandserver.product.client;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.response.DetailResponse;
 import com.emmanuel.sarabrandserver.product.response.ProductResponse;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -23,17 +24,16 @@ public class ClientProductService {
      * @param size is the max amount render on a page
      * @return List of ProductResponse
      * */
-    public List<ProductResponse> fetchAll(int page, int size) {
-        return this.productRepository.fetchAllProductsClient(PageRequest.of(page, Math.max(size, 30))) //
-                .stream()
+    public Page<ProductResponse> fetchAll(int page, int size) {
+        return this.productRepository
+                .fetchAllProductsClient(PageRequest.of(page, Math.max(size, 30))) //
                 .map(pojo -> new ProductResponse(
                         pojo.getName(),
                         pojo.getDesc(),
                         pojo.getPrice().doubleValue(),
                         pojo.getCurrency(),
                         pojo.getKey()
-                )) //
-                .toList();
+                ));
     }
 
     /**

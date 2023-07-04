@@ -21,7 +21,7 @@ public class DetailDTO {
     @NotNull @NotEmpty
     private String sku;
 
-    @JsonProperty(value = "visible")
+    @JsonProperty(value = "is_visible")
     @NotNull
     private Boolean visible;
 

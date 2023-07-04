@@ -38,7 +38,7 @@ import static org.springframework.http.HttpStatus.OK;
 public class AuthService {
 
     @Value(value = "${custom.cookie.frontend}")
-    private String IS_LOGGED_IN;
+    private String LOGGEDSESSION;
 
     @Value(value = "${server.servlet.session.cookie.domain}")
     private String COOKIE_DOMAIN;
@@ -157,7 +157,7 @@ public class AuthService {
 
         // Build response
         // Set custom cookie to replace using local storage to keep track of isLogged in. Look auth.service.ts
-        Cookie cookie = new Cookie(IS_LOGGED_IN, UUID.randomUUID().toString());
+        Cookie cookie = new Cookie(LOGGEDSESSION, UUID.randomUUID().toString());
         cookie.setDomain(COOKIE_DOMAIN);
         cookie.setPath(COOKIE_PATH);
         cookie.setSecure(COOKIE_SECURE);

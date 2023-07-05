@@ -2,12 +2,13 @@ package com.emmanuel.sarabrandserver.auth.controller;
 
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
-import com.emmanuel.sarabrandserver.clientz.dto.ClientRegisterDTO;
+import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.clientz.repository.ClientRoleRepo;
 import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.security.bruteforce.BruteForceService;
 import jakarta.servlet.http.Cookie;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,8 +42,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.properties")
+@Slf4j
 class WorkerAuthControllerTest {
-    @Value(value = "${custom.cookie.name}") private String COOKIE_NAME;
+    @Value(value = "${custom.cookie.name}")
+    private String COOKIE_NAME;
 
     private final int MAX_FAILED_AUTH = 3;
     private final String ADMIN_EMAIL = "SEJU@development.com";
@@ -74,7 +77,7 @@ class WorkerAuthControllerTest {
     @BeforeEach
     void setUp() {
         this.bruteForceService.setMAX(MAX_FAILED_AUTH);
-        this.authService.workerRegister(new ClientRegisterDTO(
+        this.authService.workerRegister(new RegisterDTO(
                 "SEJU",
                 "Development",
                 ADMIN_EMAIL,
@@ -104,7 +107,7 @@ class WorkerAuthControllerTest {
                 .andReturn();
 
         // Register
-        var dto = new ClientRegisterDTO(
+        var dto = new RegisterDTO(
                 "James",
                 "james@james.com",
                 "james@james.com",
@@ -135,7 +138,7 @@ class WorkerAuthControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        var dto = new ClientRegisterDTO(
+        var dto = new RegisterDTO(
                 "SEJU",
                 "Development",
                 ADMIN_EMAIL,
@@ -170,8 +173,11 @@ class WorkerAuthControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
+        Cookie cookie = login.getResponse().getCookie(COOKIE_NAME);
+
+        // Test route
         this.MOCK_MVC
-                .perform(get("/test/worker").cookie(login.getResponse().getCookie(COOKIE_NAME)))
+                .perform(get("/test/worker").cookie(cookie))
                 .andExpect(status().isOk());
     }
 

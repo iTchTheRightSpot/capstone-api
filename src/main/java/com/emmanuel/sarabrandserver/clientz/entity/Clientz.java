@@ -78,7 +78,7 @@ public class Clientz implements Serializable {
         return this
                 .clientRole
                 .stream() //
-                .map(role -> new SimpleGrantedAuthority(role.getRole().toString()))
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRole().toString()))
                 .collect(Collectors.toSet());
     }
 

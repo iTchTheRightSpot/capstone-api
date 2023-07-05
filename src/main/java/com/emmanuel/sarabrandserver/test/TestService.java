@@ -1,8 +1,12 @@
 package com.emmanuel.sarabrandserver.test;
 
+import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
+import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
+import com.emmanuel.sarabrandserver.clientz.repository.ClientRoleRepo;
+import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.collection.dto.CollectionDTO;
 import com.emmanuel.sarabrandserver.collection.repository.CollectionRepository;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
@@ -28,9 +32,22 @@ public class TestService {
             CategoryRepository repo,
             WorkerCategoryService service,
             WorkerCollectionService serv,
-            CollectionRepository collectionRepository
+            CollectionRepository collectionRepository,
+            AuthService authService,
+            ClientzRepository clientzRepository,
+            ClientRoleRepo roleRepo
     ) {
         return args -> {
+            roleRepo.deleteAll();
+            clientzRepository.deleteAll();
+            authService.workerRegister(new RegisterDTO(
+                    "SEJU",
+                    "Development",
+                    "frank",
+                    "frank",
+                    "0000000000",
+                    "password"
+            ));
             categories(service, repo);
             collection(serv, collectionRepository);
             products(prodRepo);

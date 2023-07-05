@@ -1,7 +1,7 @@
 package com.emmanuel.sarabrandserver.auth.service;
 
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
-import com.emmanuel.sarabrandserver.clientz.dto.ClientRegisterDTO;
+import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.clientz.entity.ClientRole;
 import com.emmanuel.sarabrandserver.clientz.entity.Clientz;
 import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
@@ -87,7 +87,7 @@ class AuthServiceTest {
     @Test
     void register_worker_that_doesnt_exist() {
         // Given
-        var dto = new ClientRegisterDTO(
+        var dto = new RegisterDTO(
                 worker().getFirstname(),
                 worker().getLastname(),
                 worker().getEmail(),
@@ -108,7 +108,7 @@ class AuthServiceTest {
     @Test
     void register_worker_with_already_existing_role_worker() {
         // Given
-        var dto = new ClientRegisterDTO(
+        var dto = new RegisterDTO(
                 worker().getFirstname(),
                 worker().getLastname(),
                 worker().getEmail(),
@@ -128,7 +128,7 @@ class AuthServiceTest {
     @Test
     void register_worker_with_role_only_client() {
         // Given
-        var dto = new ClientRegisterDTO(
+        var dto = new RegisterDTO(
                 client().getFirstname(),
                 client().getLastname(),
                 client().getEmail(),
@@ -150,8 +150,6 @@ class AuthServiceTest {
     void worker_login() {
         // Given
         var dto = new LoginDTO(worker().getUsername(), worker().getPassword());
-        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
         Authentication authentication = Mockito.mock(Authentication.class);
 
         // When
@@ -160,7 +158,7 @@ class AuthServiceTest {
         when(this.jwtTokenService.generateToken(any(Authentication.class))).thenReturn("token");
 
         // Then
-        assertEquals(this.authService.login(dto, request, response).getStatusCode(), OK);
+        assertEquals(this.authService.login(dto).getStatusCode(), OK);
         verify(this.authenticationManager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
     }
 
@@ -168,21 +166,19 @@ class AuthServiceTest {
     void worker_login_non_existing_credentials() {
         // Given
         var dto = new LoginDTO("client@client.com", worker().getPassword());
-        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
 
         // When
         when(this.authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(BadCredentialsException.class);
 
         // Then
-        assertThrows(BadCredentialsException.class, () -> this.authService.login(dto, request, response));
+        assertThrows(BadCredentialsException.class, () -> this.authService.login(dto));
     }
 
     @Test
     void clientRegister() {
         // Given
-        var dto = new ClientRegisterDTO(
+        var dto = new RegisterDTO(
                 client().getFirstname(),
                 client().getLastname(),
                 client().getEmail(),
@@ -203,7 +199,7 @@ class AuthServiceTest {
     @Test
     void register_client_existing_principal() {
         // Given
-        var dto = new ClientRegisterDTO(
+        var dto = new RegisterDTO(
                 client().getFirstname(),
                 client().getLastname(),
                 client().getEmail(),
@@ -233,7 +229,7 @@ class AuthServiceTest {
         when(this.jwtTokenService.generateToken(any(Authentication.class))).thenReturn("token");
 
         // Then
-        assertEquals(OK, this.authService.login(dto, request, response).getStatusCode());
+        assertEquals(OK, this.authService.login(dto).getStatusCode());
         verify(this.authenticationManager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
     }
 
@@ -249,7 +245,7 @@ class AuthServiceTest {
                 .thenThrow(BadCredentialsException.class);
 
         // Then
-        assertThrows(BadCredentialsException.class, () -> this.authService.login(dto, request, response));
+        assertThrows(BadCredentialsException.class, () -> this.authService.login(dto));
     }
 
     private Clientz client() {

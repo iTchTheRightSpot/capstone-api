@@ -19,17 +19,5 @@ services:
     volumes:
       - db-data:/var/lib/mysql
 
-  redis:
-    image: redis:alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
-    environment:
-      REDIS_HOST: localhost
-      REDIS_PASSWORD: sara
-#    volumes:
-#      - redis-data:/data
-
 volumes:
   db-data: {}
-  redis-data: {}

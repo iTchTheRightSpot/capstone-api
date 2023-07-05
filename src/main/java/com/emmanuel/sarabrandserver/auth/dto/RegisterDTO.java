@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.clientz.dto;
+package com.emmanuel.sarabrandserver.auth.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;
@@ -15,23 +15,28 @@ import javax.json.JsonObject;
 @NoArgsConstructor
 @Builder
 @Data
-public class ClientRegisterDTO {
+public class RegisterDTO {
 
     @NotNull @NotEmpty
     @JsonProperty(value = "firstname")
     private String firstname;
+
     @NotNull @NotEmpty
     @JsonProperty(value = "lastname")
     private String lastname;
+
     @NotNull @NotEmpty
     @JsonProperty(value = "email")
     private String email;
+
     @NotNull @NotEmpty
     @JsonProperty(value = "username")
     private String username;
+
     @NotNull @NotEmpty
     @JsonProperty(value = "phone_number")
     private String phone_number;
+
     @NotNull @NotEmpty
     @JsonProperty(value = "password")
     private String password;

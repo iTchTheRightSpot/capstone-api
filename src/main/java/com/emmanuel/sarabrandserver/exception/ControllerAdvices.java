@@ -1,8 +1,10 @@
 package com.emmanuel.sarabrandserver.exception;
 
+import com.nimbusds.jose.proc.BadJOSEException;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -40,7 +42,7 @@ public class ControllerAdvices {
         return new ResponseEntity<>(exceptionDetails, NOT_FOUND);
     }
 
-    @ExceptionHandler(value = {AuthenticationException.class, UsernameNotFoundException.class})
+    @ExceptionHandler(value = {AuthenticationException.class, BadJOSEException.class, UsernameNotFoundException.class})
     public ResponseEntity<?> authenticationException(Exception e) {
         var exceptionDetails = new ExceptionDetails(
                 e.getMessage(),
@@ -49,5 +51,16 @@ public class ControllerAdvices {
         );
         return new ResponseEntity<>(exceptionDetails, UNAUTHORIZED);
     }
+
+    @ExceptionHandler(value = {AccessDeniedException.class})
+    public ResponseEntity<?> accessException(Exception e) {
+        var exceptionDetails = new ExceptionDetails(
+                e.getMessage(),
+                FORBIDDEN,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+        return new ResponseEntity<>(exceptionDetails, FORBIDDEN);
+    }
+
 
 }

@@ -1,20 +1,18 @@
 package com.emmanuel.sarabrandserver.auth.service;
 
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
-import com.emmanuel.sarabrandserver.clientz.dto.ClientRegisterDTO;
+import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.clientz.entity.ClientRole;
 import com.emmanuel.sarabrandserver.clientz.entity.Clientz;
 import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.jwt.JwtTokenService;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,7 +26,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.OK;
 
 @Service @Setter
 public class AuthService {
@@ -78,7 +75,7 @@ public class AuthService {
      * @throws DuplicateException when user principal exists and has a role of worker
      * @return ResponseEntity of type String
      * */
-    public ResponseEntity<?> workerRegister(ClientRegisterDTO dto) {
+    public ResponseEntity<?> workerRegister(RegisterDTO dto) {
         if (this.clientzRepository.isAdmin(dto.getEmail().trim(), dto.getUsername().trim(), RoleEnum.WORKER) > 0) {
             throw new DuplicateException(dto.getUsername() + " exists");
         }
@@ -104,7 +101,7 @@ public class AuthService {
      * @throws DuplicateException when user principal exists
      * @return ResponseEntity of type String
      * */
-    public ResponseEntity<?> clientRegister(ClientRegisterDTO dto) {
+    public ResponseEntity<?> clientRegister(RegisterDTO dto) {
         if (this.clientzRepository.principalExists(dto.getEmail().trim(), dto.getUsername().trim()) > 0) {
             throw new DuplicateException(dto.getEmail() + " exists");
         }
@@ -118,15 +115,16 @@ public class AuthService {
     }
 
     /**
+     * Basically validate dto to what is saved in the DB using an AuthenticationManager and then send jwt token via
+     * cookie to prevent saving to local storage and custom cookie where status http only is set to false so the UI can
+     * protect pages.
      * Note Transactional annotation is used because Clientz has properties with fetch type LAZY
      * @param dto consist of principal(username or email) and password.
-     * @param req of type HttpServletRequest
-     * @param res of type HttpServletResponse
      * @throws AuthenticationException is thrown when credentials do not exist or bad credentials
-     * @return ResponseEntity of type AuthResponse and HttpStatus
+     * @return ResponseEntity of type HttpStatus
      * */
     @Transactional
-    public ResponseEntity<?> login(LoginDTO dto, HttpServletRequest req, HttpServletResponse res) {
+    public ResponseEntity<?> login(LoginDTO dto) {
         Authentication authentication = this.authManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(dto.getPrincipal(), dto.getPassword())
         );
@@ -134,32 +132,33 @@ public class AuthService {
         // Jwt Token
         String token = this.jwtTokenService.generateToken(authentication);
 
-        // Add Jwt Cookie to Header
-        Cookie jwtCookie = new Cookie(COOKIENAME, token);
-        jwtCookie.setDomain(DOMAIN);
-        jwtCookie.setPath(COOKIE_PATH);
-        jwtCookie.setSecure(COOKIE_SECURE);
-        jwtCookie.setHttpOnly(HTTPONLY);
-        jwtCookie.setMaxAge(COOKIEMAXAGE);
-
-        // Add custom cookie to response
-        res.addCookie(jwtCookie);
+        // Add jwt to cookie
+        ResponseCookie resCookie = ResponseCookie.from(COOKIENAME, token)
+                .domain(DOMAIN)
+                .maxAge(COOKIEMAXAGE)
+                .httpOnly(HTTPONLY)
+                .secure(COOKIE_SECURE)
+                .path(COOKIE_PATH)
+                .build();
 
         // Second cookie where UI can access to validate if user is logged in
-        Cookie cookie = new Cookie(LOGGEDSESSION, UUID.randomUUID().toString());
-        cookie.setDomain(DOMAIN);
-        cookie.setPath(COOKIE_PATH);
-        cookie.setSecure(COOKIE_SECURE);
-        cookie.setHttpOnly(false);
-        cookie.setMaxAge(COOKIEMAXAGE);
+        ResponseCookie resCookie1 = ResponseCookie.from(LOGGEDSESSION, UUID.randomUUID().toString())
+                .domain(DOMAIN)
+                .maxAge(COOKIEMAXAGE)
+                .httpOnly(false)
+                .secure(COOKIE_SECURE)
+                .path(COOKIE_PATH)
+                .build();
 
-        // Add custom cookie to response
-        res.addCookie(cookie);
+        // Add cookies to response header
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, resCookie.toString());
+        headers.add(HttpHeaders.SET_COOKIE, resCookie1.toString());
 
-        return new ResponseEntity<>(OK);
+        return ResponseEntity.ok().headers(headers).build();
     }
 
-    private Clientz createClient(ClientRegisterDTO dto) {
+    private Clientz createClient(RegisterDTO dto) {
         var client = Clientz.builder()
                 .firstname(dto.getFirstname().trim())
                 .lastname(dto.getLastname().trim())

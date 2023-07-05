@@ -2,7 +2,7 @@ package com.emmanuel.sarabrandserver.auth.controller;
 
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
-import com.emmanuel.sarabrandserver.clientz.dto.ClientRegisterDTO;
+import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.clientz.repository.ClientRoleRepo;
 import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
@@ -81,7 +81,7 @@ class ClientAuthControllerTest {
 
     @BeforeEach
     void setUp() {
-        this.authService.clientRegister(new ClientRegisterDTO(
+        this.authService.clientRegister(new RegisterDTO(
                 "SEJU",
                 "Development",
                 ADMIN_EMAIL,
@@ -99,7 +99,7 @@ class ClientAuthControllerTest {
 
     @Test @Order(1)
     void register() throws Exception {
-        var dto = new ClientRegisterDTO(
+        var dto = new RegisterDTO(
                 "firstname",
                 "Development",
                 "yes@yes.com",
@@ -118,7 +118,7 @@ class ClientAuthControllerTest {
 
     @Test @Order(2)
     void register_with_existing_credentials() throws Exception {
-        var dto = new ClientRegisterDTO(
+        var dto = new RegisterDTO(
                 "SEJU",
                 "Development",
                 ADMIN_EMAIL,

@@ -6,6 +6,7 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -17,6 +18,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -25,26 +27,22 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.security.web.context.SecurityContextRepository;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@Slf4j
 public class SecurityConfig {
-    @Value(value = "${custom.max.session}")
-    private int MAX_SESSION;
-
     @Value(value = "${custom.cookie.name}")
-    private String COOKIE_NAME;
+    private String COOKIENAME;
 
     @Value(value = "${custom.cookie.frontend}")
     private String LOGGEDSESSION;
-
-    private RSAKey rsaKey;
 
     private final AuthenticationEntryPoint authEntryPoint;
 
@@ -66,11 +64,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-//                .csrf(AbstractHttpConfigurer::disable)
+//                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+                .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> {
-//                    auth.anyRequest().permitAll();
                     auth.requestMatchers(publicRoutes()).permitAll();
                     auth.anyRequest().authenticated();
                 })
@@ -79,8 +76,7 @@ public class SecurityConfig {
                 .exceptionHandling((ex) -> ex.authenticationEntryPoint(this.authEntryPoint))
                 .logout(out -> out
                         .logoutUrl("/api/v1/auth/logout")
-                        .invalidateHttpSession(true) // Invalidate all sessions after logout
-                        .deleteCookies(COOKIE_NAME, LOGGEDSESSION)
+                        .deleteCookies(COOKIENAME, LOGGEDSESSION)
                         .logoutSuccessHandler((request, response, authentication) ->
                                 SecurityContextHolder.clearContext()
                         )
@@ -89,18 +85,29 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityContextRepository securityContextRepository() {
-        return new HttpSessionSecurityContextRepository();
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        var jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("role");
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+
+        var jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+        return jwtAuthenticationConverter;
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider(
-            @Qualifier(value = "clientDetailService") UserDetailsService clientDetailService,
-            @Qualifier(value = "passwordEncoder") PasswordEncoder passwordEncoder
+    public BearerTokenResolver bearerTokenResolver(JwtDecoder jwtDecoder) {
+        return new CustomBearerTokenResolver(jwtDecoder);
+    }
+
+    @Bean
+    public AuthenticationProvider provider(
+            @Qualifier(value = "clientDetailService") UserDetailsService detailsService,
+            PasswordEncoder passwordEncoder
     ) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(detailsService);
         provider.setPasswordEncoder(passwordEncoder);
-        provider.setUserDetailsService(clientDetailService);
         return provider;
     }
 
@@ -112,33 +119,6 @@ public class SecurityConfig {
         ProviderManager providerManager = new ProviderManager(provider);
         providerManager.setAuthenticationEventPublisher(publisher);
         return providerManager;
-    }
-
-    /**
-     * For each authentication that succeeds or fails, a AuthenticationSuccessEvent or AuthenticationFailureEvent,
-     * respectively, is fired.
-     * <a href="https://docs.spring.io/spring-security/reference/servlet/authentication/events.html">...</a>
-     * */
-    @Bean(name = "authenticationEventPublisher")
-    public AuthenticationEventPublisher authenticationEventPublisher(ApplicationEventPublisher publisher) {
-        return new DefaultAuthenticationEventPublisher(publisher);
-    }
-
-    @Bean
-    public JWKSource<SecurityContext> jwkSource() {
-        rsaKey = Jwks.generateRsa();
-        JWKSet jwkSet = new JWKSet(rsaKey);
-        return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
-    }
-
-    @Bean
-    public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwks) {
-        return new NimbusJwtEncoder(jwks);
-    }
-
-    @Bean
-    public JwtDecoder jwtDecoder() throws JOSEException {
-        return NimbusJwtDecoder.withPublicKey(rsaKey.toRSAPublicKey()).build();
     }
 
 }

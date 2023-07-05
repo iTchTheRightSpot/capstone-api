@@ -1,16 +1,18 @@
 # Sara Brand Server
-Server side code for Sara Brand e-commerce.
+Server side code for Sara The Brand e-commerce.
 
 ### Technologies Thus Far
 * Java 17
 * Spring Boot
-* MySQL and Redis
+* AWS RDS (MySQL)
+* AWS MemoryDB for Redis
+* AWS Lambda (Serverless)
 * Flyway Migration
 * Unit test JUnit and Mockito
 * Integration test using test containers
 
 ### Schema
-This is the most update schema for this application.
+Link for the most up-to-date schema.
 [Link](https://dbdiagram.io/d/6483c4d5722eb77494b791a1)
 
 

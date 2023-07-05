@@ -16,17 +16,14 @@ public class AwsSecretsManager {
 
     @Bean(name = "awsSecretString")
     public static String getSecret() {
-        String secretName = "test/sara/brand/mysql"; // Deleted Value .Can be injected in application-prod.properties
-        Region region = Region.of("ca-central-1"); // Can be injected in application-prod.properties
-
         // Create a Secrets Manager client
         SecretsManagerClient client = SecretsManagerClient.builder()
-                .region(region)
+                .region(Region.CA_CENTRAL_1) // Can be injected in application-prod.properties
                 .credentialsProvider(ProfileCredentialsProvider.create())
                 .build();
 
         GetSecretValueRequest getSecretValueRequest = GetSecretValueRequest.builder()
-                .secretId(secretName)
+                .secretId("test/sara/brand/mysql") // Deleted Value .Can be injected in application-prod.properties
                 .build();
 
         GetSecretValueResponse getSecretValueResponse;

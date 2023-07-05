@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.config;
+package com.emmanuel.sarabrandserver.aws;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,7 +17,7 @@ import javax.sql.DataSource;
 @Component(value = "dataSourceMapper")
 @Setter @Getter
 @Slf4j @Profile(value = {"prod"})
-public class DataSourceMapper {
+public class DataSourceConnection {
     private String username;
     private String password;
     private String engine;
@@ -27,14 +27,14 @@ public class DataSourceMapper {
     private String dbInstanceIdentifier;
     private String dataSourceUrl;
 
-    private final String awsSecrete;
+    private final String awsSecret;
 
-    public DataSourceMapper(@Qualifier(value = "awsSecretString") String awsSecrete) {
-        this.awsSecrete = awsSecrete;
+    public DataSourceConnection(@Qualifier(value = "awsSecretString") String awsSecret) {
+        this.awsSecret = awsSecret;
 
-        if (this.awsSecrete != null) {
+        if (this.awsSecret != null) {
             try {
-                JsonNode node = new ObjectMapper().readTree(this.awsSecrete);
+                JsonNode node = new ObjectMapper().readTree(this.awsSecret);
 
                 this.username = node.get("username").textValue();
                 this.password = node.get("password").textValue();

@@ -25,11 +25,13 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, SpringExtension.class})
-@ActiveProfiles("dev")
-@TestPropertySource(locations = "classpath:application-dev.properties")
+@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.properties")
 class BruteForceServiceTest {
     private final int MAX = 2;
+
     private BruteForceService bruteForceService;
+
     @Mock private BruteForceRepo bruteForceRepo;
     @Mock private ClientzRepository clientzRepository;
 

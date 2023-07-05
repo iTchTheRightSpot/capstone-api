@@ -1,13 +1,11 @@
 package com.emmanuel.sarabrandserver.auth.controller;
 
+import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
+import com.emmanuel.sarabrandserver.clientz.dto.ClientRegisterDTO;
+import com.emmanuel.sarabrandserver.clientz.repository.ClientRoleRepo;
 import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
-import com.emmanuel.sarabrandserver.clientz.repository.ClientRoleRepo;
-import com.emmanuel.sarabrandserver.clientz.dto.ClientRegisterDTO;
-import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
-import com.emmanuel.sarabrandserver.security.CustomStrategy;
-import com.redis.testcontainers.RedisContainer;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.junit.runner.RunWith;
@@ -27,7 +25,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import java.util.Objects;
 
@@ -64,11 +61,8 @@ class ClientAuthControllerTest {
 
     @Autowired private AuthService authService;
 
-    @Autowired private CustomStrategy customStrategy;
-
     @Container private static final MySQLContainer<?> container;
 
-    @Container private static final RedisContainer redis;
 
     static {
         container = new MySQLContainer<>("mysql:latest")
@@ -76,7 +70,6 @@ class ClientAuthControllerTest {
                 .withUsername("sara")
                 .withPassword("sara");
 
-        redis = new RedisContainer(DockerImageName.parse("redis:alpine")).withExposedPorts(6379);
     }
 
     @DynamicPropertySource
@@ -84,13 +77,10 @@ class ClientAuthControllerTest {
         registry.add("spring.datasource.url", container::getJdbcUrl);
         registry.add("spring.datasource.username", container::getUsername);
         registry.add("spring.datasource.password", container::getPassword);
-        registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port", redis::getFirstMappedPort);
     }
 
     @BeforeEach
     void setUp() {
-        this.customStrategy.setMAX_SESSION(1);
         this.authService.clientRegister(new ClientRegisterDTO(
                 "SEJU",
                 "Development",
@@ -157,7 +147,6 @@ class ClientAuthControllerTest {
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.principal").value(ADMIN_EMAIL))
                 .andReturn();
 
         this.MOCK_MVC
@@ -197,57 +186,7 @@ class ClientAuthControllerTest {
         Cookie cookie = login.getResponse().getCookie(COOKIE_NAME);
 
         // Logout
-        this.MOCK_MVC
-                .perform(post("/api/v1/auth/logout").cookie(cookie).with(csrf())).andExpect(status().isOk());
-
-        // Verify cookie is invalid
-        this.MOCK_MVC.perform(get("/test/client").cookie(cookie))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message")
-                        .value("Full authentication is required to access this resource")
-                )
-                .andExpect(jsonPath("$.httpStatus").value("UNAUTHORIZED"));
-    }
-
-    /** Max session is 1 */
-    @Test @Order(6)
-    void validate_max_session() throws Exception {
-        // Browser 1
-        MvcResult login_one = this.MOCK_MVC
-                .perform(post("/api/v1/client/auth/login")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
-                )
-                .andExpect(status().isOk())
-                .andReturn();
-
-        Cookie cookie_one = login_one.getResponse().getCookie(COOKIE_NAME);
-
-        // Browser 2
-        MvcResult login_two = this.MOCK_MVC
-                .perform(post("/api/v1/client/auth/login")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
-                )
-                .andExpect(status().isOk())
-                .andReturn();
-
-        Cookie cookie_two = login_two.getResponse().getCookie(COOKIE_NAME);
-
-        // Should return 401
-        this.MOCK_MVC
-                .perform(get("/test/client").cookie(cookie_one))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message")
-                        .value("Full authentication is required to access this resource")
-                )
-                .andExpect(jsonPath("$.httpStatus").value("UNAUTHORIZED"));
-
-        // Should return 200
-        this.MOCK_MVC
-                .perform(get("/test/client").cookie(cookie_two))
+        this.MOCK_MVC.perform(post("/api/v1/auth/logout").cookie(cookie).with(csrf()))
                 .andExpect(status().isOk());
     }
 

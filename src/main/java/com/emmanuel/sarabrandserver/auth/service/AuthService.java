@@ -7,24 +7,20 @@ import com.emmanuel.sarabrandserver.clientz.entity.Clientz;
 import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
+import com.emmanuel.sarabrandserver.jwt.JwtTokenService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -40,11 +36,17 @@ public class AuthService {
     @Value(value = "${custom.cookie.frontend}")
     private String LOGGEDSESSION;
 
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String COOKIENAME;
+
     @Value(value = "${server.servlet.session.cookie.domain}")
-    private String COOKIE_DOMAIN;
+    private String DOMAIN;
+
+    @Value(value = "${server.servlet.session.cookie.http-only}")
+    private boolean HTTPONLY;
 
     @Value(value = "${server.servlet.session.cookie.max-age}")
-    private int COOKIE_MAX_AGE;
+    private int COOKIEMAXAGE;
 
     @Value(value = "${server.servlet.session.cookie.path}")
     private String COOKIE_PATH;
@@ -53,30 +55,20 @@ public class AuthService {
     private boolean COOKIE_SECURE;
 
     private final ClientzRepository clientzRepository;
-
     private final PasswordEncoder passwordEncoder;
-
     private final AuthenticationManager authManager;
-
-    private final SecurityContextRepository securityContextRepository;
-
-    private final SecurityContextHolderStrategy securityContextHolderStrategy;
-
-    private final SessionAuthenticationStrategy sessionAuthenticationStrategy;
+    private final JwtTokenService jwtTokenService;
 
     public AuthService(
             ClientzRepository clientzRepository,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authManager,
-            SecurityContextRepository securityContextRepository,
-            @Qualifier(value = "customStrategy") SessionAuthenticationStrategy sessionAuthenticationStrategy
+            JwtTokenService jwtTokenService
     ) {
         this.clientzRepository = clientzRepository;
         this.passwordEncoder = passwordEncoder;
         this.authManager = authManager;
-        this.securityContextRepository = securityContextRepository;
-        this.sessionAuthenticationStrategy = sessionAuthenticationStrategy;
-        this.securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
+        this.jwtTokenService = jwtTokenService;
     }
 
     /**
@@ -126,11 +118,6 @@ public class AuthService {
     }
 
     /**
-     * Responsible for validating login request made by a user (client or worker).
-     * 1. Method validates a user via the appropriate AuthenticationManager
-     * 2. Because I am using a custom endpoint, validating max session via SessionAuthenticationStrategy
-     * 3. Update SecurityContextHolderStrategy and SecurityContextRepository in-between requests.
-     * 4. Encode user role and send as cookie to UI inorder to load the right page for based on user role.
      * Note Transactional annotation is used because Clientz has properties with fetch type LAZY
      * @param dto consist of principal(username or email) and password.
      * @param req of type HttpServletRequest
@@ -144,25 +131,27 @@ public class AuthService {
                 UsernamePasswordAuthenticationToken.unauthenticated(dto.getPrincipal(), dto.getPassword())
         );
 
-        // Validate max session
-        this.sessionAuthenticationStrategy.onAuthentication(authentication, req, res);
+        // Jwt Token
+        String token = this.jwtTokenService.generateToken(authentication);
 
-        // Create a new context
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authentication);
+        // Add Jwt Cookie to Header
+        Cookie jwtCookie = new Cookie(COOKIENAME, token);
+        jwtCookie.setDomain(DOMAIN);
+        jwtCookie.setPath(COOKIE_PATH);
+        jwtCookie.setSecure(COOKIE_SECURE);
+        jwtCookie.setHttpOnly(HTTPONLY);
+        jwtCookie.setMaxAge(COOKIEMAXAGE);
 
-        // Update SecurityContextHolder and Strategy
-        this.securityContextHolderStrategy.setContext(context);
-        this.securityContextRepository.saveContext(context, req, res);
+        // Add custom cookie to response
+        res.addCookie(jwtCookie);
 
-        // Build response
-        // Set custom cookie to replace using local storage to keep track of isLogged in. Look auth.service.ts
+        // Second cookie where UI can access to validate if user is logged in
         Cookie cookie = new Cookie(LOGGEDSESSION, UUID.randomUUID().toString());
-        cookie.setDomain(COOKIE_DOMAIN);
+        cookie.setDomain(DOMAIN);
         cookie.setPath(COOKIE_PATH);
         cookie.setSecure(COOKIE_SECURE);
         cookie.setHttpOnly(false);
-        cookie.setMaxAge(COOKIE_MAX_AGE);
+        cookie.setMaxAge(COOKIEMAXAGE);
 
         // Add custom cookie to response
         res.addCookie(cookie);

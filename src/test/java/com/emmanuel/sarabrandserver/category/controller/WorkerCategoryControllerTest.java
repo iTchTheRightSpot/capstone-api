@@ -5,7 +5,6 @@ import com.emmanuel.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.github.javafaker.Faker;
-import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +23,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -59,15 +57,11 @@ class WorkerCategoryControllerTest {
 
     @Container private static final MySQLContainer<?> container;
 
-    @Container private static final RedisContainer redis;
-
     static {
         container = new MySQLContainer<>("mysql:latest")
                 .withDatabaseName("sara_brand_db")
                 .withUsername("sara")
                 .withPassword("sara");
-
-        redis = new RedisContainer(DockerImageName.parse("redis:alpine")).withExposedPorts(6379);
     }
 
     @DynamicPropertySource
@@ -75,8 +69,6 @@ class WorkerCategoryControllerTest {
         registry.add("spring.datasource.url", container::getJdbcUrl);
         registry.add("spring.datasource.username", container::getUsername);
         registry.add("spring.datasource.password", container::getPassword);
-        registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port", redis::getFirstMappedPort);
     }
 
     @BeforeEach

@@ -26,14 +26,13 @@ public class BruteForceService {
      */
     @Transactional
     public void registerLoginFailure(Authentication auth) {
-        log.info("MAX BEFORE BEING BLOCKED {}", this.MAX);
         this.clientzRepository.findByPrincipal(auth.getName()).ifPresent(clientz -> {
             if (!clientz.isAccountNoneLocked()) {
                 return;
             }
             log.info("Client is none locked?");
 
-            // Using redis for caching and concurrency
+            // Using concurrency hashmap
             AtomicBoolean bool = new AtomicBoolean(true);
             this.bruteForceRepo.findByPrincipal(auth.getName()).ifPresent(entity -> {
                 bool.set(false);

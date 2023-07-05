@@ -1,14 +1,12 @@
 package com.emmanuel.sarabrandserver.auth.controller;
 
+import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
+import com.emmanuel.sarabrandserver.clientz.dto.ClientRegisterDTO;
+import com.emmanuel.sarabrandserver.clientz.repository.ClientRoleRepo;
 import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
-import com.emmanuel.sarabrandserver.clientz.repository.ClientRoleRepo;
-import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
-import com.emmanuel.sarabrandserver.security.CustomStrategy;
 import com.emmanuel.sarabrandserver.security.bruteforce.BruteForceService;
-import com.emmanuel.sarabrandserver.clientz.dto.ClientRegisterDTO;
-import com.redis.testcontainers.RedisContainer;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.junit.runner.RunWith;
@@ -27,11 +25,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
-import java.util.Objects;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -56,22 +50,18 @@ class WorkerAuthControllerTest {
     private final String ADMIN_PASSWORD = "123#-SEJU-Development";
 
     @Autowired private MockMvc MOCK_MVC;
-    @Autowired private CustomStrategy customStrategy;
     @Autowired private AuthService authService;
     @Autowired private ClientRoleRepo clientRoleRepo;
     @Autowired private ClientzRepository clientzRepository;
     @Autowired private BruteForceService bruteForceService;
 
     @Container private static final MySQLContainer<?> container;
-    @Container private static final RedisContainer redis;
 
     static {
         container = new MySQLContainer<>("mysql:latest")
                 .withDatabaseName("sara_brand_db")
                 .withUsername("sara")
                 .withPassword("sara");
-
-        redis = new RedisContainer(DockerImageName.parse("redis:alpine")).withExposedPorts(6379);
     }
 
     @DynamicPropertySource
@@ -79,13 +69,10 @@ class WorkerAuthControllerTest {
         registry.add("spring.datasource.url", container::getJdbcUrl);
         registry.add("spring.datasource.username", container::getUsername);
         registry.add("spring.datasource.password", container::getPassword);
-        registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port", redis::getFirstMappedPort);
     }
 
     @BeforeEach
     void setUp() {
-        this.customStrategy.setMAX_SESSION(1);
         this.bruteForceService.setMAX(MAX_FAILED_AUTH);
         this.authService.workerRegister(new ClientRegisterDTO(
                 "SEJU",
@@ -114,7 +101,6 @@ class WorkerAuthControllerTest {
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.principal").value(ADMIN_EMAIL))
                 .andReturn();
 
         // Register
@@ -147,7 +133,6 @@ class WorkerAuthControllerTest {
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.principal").value(ADMIN_EMAIL))
                 .andReturn();
 
         var dto = new ClientRegisterDTO(
@@ -183,7 +168,6 @@ class WorkerAuthControllerTest {
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.principal").value(ADMIN_EMAIL))
                 .andReturn();
 
         this.MOCK_MVC
@@ -204,6 +188,7 @@ class WorkerAuthControllerTest {
                 .andExpect(jsonPath("$.httpStatus").value("UNAUTHORIZED"));
     }
 
+    /** Validates cookie has been clear. But cookie will still be valid if it due to jwt being stateless */
     @Test @Order(5)
     void logout() throws Exception {
         // Login
@@ -222,14 +207,6 @@ class WorkerAuthControllerTest {
         // Logout
         this.MOCK_MVC.perform(post("/api/v1/auth/logout").cookie(cookie).with(csrf()))
                 .andExpect(status().isOk());
-
-        // Verify cookie is invalid
-        this.MOCK_MVC.perform(get("/test/worker").cookie(cookie))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message")
-                        .value("Full authentication is required to access this resource")
-                )
-                .andExpect(jsonPath("$.httpStatus").value("UNAUTHORIZED"));
     }
 
     // TODO Might be a JPA Bug

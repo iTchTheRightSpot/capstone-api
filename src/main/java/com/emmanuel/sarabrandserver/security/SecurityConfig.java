@@ -1,5 +1,11 @@
 package com.emmanuel.sarabrandserver.security;
 
+import com.emmanuel.sarabrandserver.jwt.Jwks;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -11,20 +17,19 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.session.Session;
-import org.springframework.session.data.redis.RedisIndexedSessionRepository;
-import org.springframework.session.security.SpringSessionBackedSessionRegistry;
-
-import static org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED;
 
 @Configuration
 @EnableWebSecurity
@@ -39,14 +44,11 @@ public class SecurityConfig {
     @Value(value = "${custom.cookie.frontend}")
     private String LOGGEDSESSION;
 
-    private final RedisIndexedSessionRepository redisIndexedSessionRepository;
+    private RSAKey rsaKey;
+
     private final AuthenticationEntryPoint authEntryPoint;
 
-    public SecurityConfig(
-            RedisIndexedSessionRepository sessionRepository,
-            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry
-    ) {
-        this.redisIndexedSessionRepository = sessionRepository;
+    public SecurityConfig(@Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry) {
         this.authEntryPoint = authEntry;
     }
 
@@ -68,36 +70,22 @@ public class SecurityConfig {
 //                .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> {
-                    auth.anyRequest().permitAll();
-//                    auth.requestMatchers(publicRoutes()).permitAll();
-//                    auth.anyRequest().authenticated();
+//                    auth.anyRequest().permitAll();
+                    auth.requestMatchers(publicRoutes()).permitAll();
+                    auth.anyRequest().authenticated();
                 })
-                .sessionManagement(sessionManagement -> sessionManagement
-                        .sessionCreationPolicy(IF_REQUIRED) //
-                        .sessionAuthenticationStrategy(new CustomStrategy(
-                                this.redisIndexedSessionRepository,
-                                sessionRegistry()
-                        ))
-                        .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::newSession) //
-                        .maximumSessions(MAX_SESSION) //
-                        .sessionRegistry(sessionRegistry())
-                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
                 .exceptionHandling((ex) -> ex.authenticationEntryPoint(this.authEntryPoint))
                 .logout(out -> out
                         .logoutUrl("/api/v1/auth/logout")
                         .invalidateHttpSession(true) // Invalidate all sessions after logout
                         .deleteCookies(COOKIE_NAME, LOGGEDSESSION)
-                        .addLogoutHandler(new CustomLogoutHandler(this.redisIndexedSessionRepository))
                         .logoutSuccessHandler((request, response, authentication) ->
                                 SecurityContextHolder.clearContext()
                         )
                 )
                 .build();
-    }
-
-    @Bean
-    public SpringSessionBackedSessionRegistry<? extends Session> sessionRegistry() {
-        return new SpringSessionBackedSessionRegistry<>(this.redisIndexedSessionRepository);
     }
 
     @Bean
@@ -134,6 +122,23 @@ public class SecurityConfig {
     @Bean(name = "authenticationEventPublisher")
     public AuthenticationEventPublisher authenticationEventPublisher(ApplicationEventPublisher publisher) {
         return new DefaultAuthenticationEventPublisher(publisher);
+    }
+
+    @Bean
+    public JWKSource<SecurityContext> jwkSource() {
+        rsaKey = Jwks.generateRsa();
+        JWKSet jwkSet = new JWKSet(rsaKey);
+        return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
+    }
+
+    @Bean
+    public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwks) {
+        return new NimbusJwtEncoder(jwks);
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder() throws JOSEException {
+        return NimbusJwtDecoder.withPublicKey(rsaKey.toRSAPublicKey()).build();
     }
 
 }

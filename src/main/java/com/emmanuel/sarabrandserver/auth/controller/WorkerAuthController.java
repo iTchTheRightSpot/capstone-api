@@ -22,7 +22,7 @@ public class WorkerAuthController {
     }
 
     @PostMapping(path = "/register", consumes = "application/json")
-    @PreAuthorize(value = "hasAnyAuthority('WORKER')")
+    @PreAuthorize(value = "hasAuthority('WORKER')")
     public ResponseEntity<?> register(@Valid @RequestBody ClientRegisterDTO dto) {
         return this.authService.workerRegister(dto);
     }

@@ -1,26 +1,25 @@
 package com.emmanuel.sarabrandserver.security.bruteforce;
 
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
 public class BruteForceRepo {
-    private final String KEY = "BRUTE-FORCE-ENTITY";
-    private final HashOperations<String, String, BruteForceEntity> hashOperations;
+    private final Map<String, Object> mapOperation;
 
-    public BruteForceRepo(RedisTemplate<String, Object> redisTemplate) {
-        this.hashOperations = redisTemplate.opsForHash();
+    public BruteForceRepo() {
+        this.mapOperation = new ConcurrentHashMap<>();
     }
 
     public void save(BruteForceEntity entity) {
-        hashOperations.put(KEY, entity.getPrincipal(), entity);
+        mapOperation.put(entity.getPrincipal(), entity);
     }
 
     public Optional<BruteForceEntity> findByPrincipal(String principal) {
-        return Optional.ofNullable(this.hashOperations.get(KEY, principal));
+        return Optional.ofNullable((BruteForceEntity) this.mapOperation.get(principal));
     }
 
     public void update(BruteForceEntity entity) {
@@ -28,7 +27,7 @@ public class BruteForceRepo {
     }
 
     public void delete(String principal) {
-        findByPrincipal(principal).ifPresent(entity -> this.hashOperations.delete(this.KEY, principal));
+        findByPrincipal(principal).ifPresent(entity -> this.mapOperation.remove(principal));
     }
 
 }

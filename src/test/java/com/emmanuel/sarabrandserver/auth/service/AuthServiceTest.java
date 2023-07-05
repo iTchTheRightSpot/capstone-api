@@ -7,6 +7,7 @@ import com.emmanuel.sarabrandserver.clientz.entity.Clientz;
 import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
+import com.emmanuel.sarabrandserver.jwt.JwtTokenService;
 import com.github.javafaker.Faker;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,8 +23,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -47,6 +46,9 @@ class AuthServiceTest {
     @Value(value = "${custom.cookie.frontend}")
     private String IS_LOGGED_IN;
 
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String COOKIENAME;
+
     @Value(value = "${server.servlet.session.cookie.domain}")
     private String COOKIE_DOMAIN;
 
@@ -64,8 +66,7 @@ class AuthServiceTest {
     @Mock private ClientzRepository clientzRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private AuthenticationManager authenticationManager;
-    @Mock private SecurityContextRepository securityContextRepository;
-    @Mock private SessionAuthenticationStrategy sessionAuthenticationStrategy;
+    @Mock private JwtTokenService jwtTokenService;
 
     @BeforeEach
     void setUp() {
@@ -73,12 +74,12 @@ class AuthServiceTest {
                 this.clientzRepository,
                 this.passwordEncoder,
                 this.authenticationManager,
-                this.securityContextRepository,
-                this.sessionAuthenticationStrategy
+                this.jwtTokenService
         );
-        this.authService.setCOOKIE_DOMAIN(COOKIE_DOMAIN);
+        this.authService.setCOOKIENAME(COOKIENAME);
+        this.authService.setDOMAIN(COOKIE_DOMAIN);
         this.authService.setCOOKIE_PATH(COOKIE_PATH);
-        this.authService.setCOOKIE_MAX_AGE(COOKIE_MAX_AGE);
+        this.authService.setCOOKIEMAXAGE(COOKIE_MAX_AGE);
         this.authService.setCOOKIE_SECURE(COOKIE_SECURE);
         this.authService.setLOGGEDSESSION(IS_LOGGED_IN);
     }
@@ -156,10 +157,10 @@ class AuthServiceTest {
         // When
         when(this.authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
+        when(this.jwtTokenService.generateToken(any(Authentication.class))).thenReturn("token");
 
         // Then
-        var login = this.authService.login(dto, request, response);
-        assertEquals(login.getStatusCode(), OK);
+        assertEquals(this.authService.login(dto, request, response).getStatusCode(), OK);
         verify(this.authenticationManager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
     }
 
@@ -229,6 +230,7 @@ class AuthServiceTest {
         // When
         when(this.authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
+        when(this.jwtTokenService.generateToken(any(Authentication.class))).thenReturn("token");
 
         // Then
         assertEquals(OK, this.authService.login(dto, request, response).getStatusCode());

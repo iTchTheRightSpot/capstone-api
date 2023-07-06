@@ -1,11 +1,7 @@
 package com.emmanuel.sarabrandserver.security;
 
-import com.emmanuel.sarabrandserver.jwt.Jwks;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.proc.SecurityContext;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,20 +20,23 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+
+import java.util.Arrays;
+import java.util.Optional;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @Slf4j
 public class SecurityConfig {
+
     @Value(value = "${custom.cookie.name}")
     private String COOKIENAME;
 
@@ -64,12 +63,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-//                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+//                .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(publicRoutes()).permitAll();
                     auth.anyRequest().authenticated();
+                    auth.anyRequest().permitAll();
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
@@ -95,6 +95,13 @@ public class SecurityConfig {
         return jwtAuthenticationConverter;
     }
 
+    /**
+     * The reason for a custom BearerTokenResolver is since by default, Resource Server looks for a bearer token in the
+     * Authorization header, and I am sending my jwt token as a cookie instead of Authorization
+     * header, I need to inform Resource Server/BearerTokenAuthenticationFilter where to look for my jwt token.
+     * Look at the link below for reference.
+     * <a href="https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/bearer-tokens.html">...</a>
+     * */
     @Bean
     public BearerTokenResolver bearerTokenResolver(JwtDecoder jwtDecoder) {
         return new CustomBearerTokenResolver(jwtDecoder);
@@ -119,6 +126,52 @@ public class SecurityConfig {
         ProviderManager providerManager = new ProviderManager(provider);
         providerManager.setAuthenticationEventPublisher(publisher);
         return providerManager;
+    }
+
+    /**
+     * For each authentication that succeeds or fails, a AuthenticationSuccessEvent or AuthenticationFailureEvent,
+     * respectively, is fired.
+     * <a href="https://docs.spring.io/spring-security/reference/servlet/authentication/events.html">...</a>
+     * */
+    @Bean(name = "authenticationEventPublisher")
+    public AuthenticationEventPublisher authenticationEventPublisher(ApplicationEventPublisher publisher) {
+        return new DefaultAuthenticationEventPublisher(publisher);
+    }
+
+    private static class CustomBearerTokenResolver implements BearerTokenResolver {
+
+        @Value(value = "${custom.cookie.name}")
+        private String COOKIENAME;
+
+        private final JwtDecoder jwtDecoder;
+
+        public CustomBearerTokenResolver(JwtDecoder jwtDecoder) {
+            this.jwtDecoder = jwtDecoder;
+        }
+
+        @Override
+        public String resolve(HttpServletRequest request) {
+            Cookie[] cookies = request.getCookies();
+
+            if (cookies != null) {
+                Optional<Cookie> cookie = Arrays.stream(cookies)
+                        .filter(name -> name.getName().equals(COOKIENAME))
+                        .findFirst();
+
+                if (cookie.isPresent()) {
+                    try { // Note this is an expensive compute
+                        String token = cookie.get().getValue();
+                        this.jwtDecoder.decode(token);
+                        return token;
+                    } catch (JwtException e) {
+                        log.error("Jwt Exception {}", e.getMessage());
+                        return null;
+                    }
+                }
+            }
+
+            return null;
+        }
     }
 
 }

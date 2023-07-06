@@ -1,5 +1,6 @@
 package com.emmanuel.sarabrandserver.product.worker;
 
+import com.emmanuel.sarabrandserver.aws.S3Service;
 import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
@@ -10,6 +11,7 @@ import com.emmanuel.sarabrandserver.product.dto.DetailDTO;
 import com.emmanuel.sarabrandserver.product.dto.ProductDTO;
 import com.emmanuel.sarabrandserver.product.entity.*;
 import com.emmanuel.sarabrandserver.product.projection.DetailPojo;
+import com.emmanuel.sarabrandserver.product.projection.Imagez;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
@@ -50,6 +52,7 @@ class WorkerProductServiceTest {
     @Mock private DateUTC dateUTC;
     @Mock private WorkerCollectionService collectionService;
     @Mock private ProductDetailRepo detailRepo;
+    @Mock private S3Service s3Service;
 
     @BeforeEach
     void setUp() {
@@ -58,7 +61,8 @@ class WorkerProductServiceTest {
                 this.detailRepo,
                 this.workerCategoryService,
                 this.dateUTC,
-                this.collectionService
+                this.collectionService,
+                this.s3Service
         );
     }
 
@@ -336,12 +340,24 @@ class WorkerProductServiceTest {
     void deleteProduct() {
         // Given
         var product = products().get(0);
+        List<Imagez> list = new ArrayList<>();
+
+        var imageKeys = product.getProductDetails().stream() //
+                .flatMap(detail -> detail.getProductImages().stream()) //
+                .map(ProductImage::getImageKey).toList();
+
+        for (String key : imageKeys) {
+            var imagez = mock(Imagez.class);
+            when(imagez.getImage()).thenReturn(key);
+            list.add(imagez);
+        }
 
         // When
-        doReturn(Optional.of(product)).when(this.productRepository).findProductByProductId(1L);
+        doReturn(Optional.of(product)).when(this.productRepository).findByProductName(anyString());
+        doReturn(list).when(this.productRepository).images(anyString());
 
         // Then
-        assertEquals(HttpStatus.NO_CONTENT, this.productService.deleteProduct(1L).getStatusCode());
+        assertEquals(HttpStatus.NO_CONTENT, this.productService.deleteProduct(product.getName()).getStatusCode());
         verify(this.productRepository, times(1)).delete(any(Product.class));
     }
 
@@ -349,7 +365,6 @@ class WorkerProductServiceTest {
     void deleteProductDetail() {
         // Given
         String sku = UUID.randomUUID().toString();
-        var product = products().get(0);
         var detail = ProductDetail.builder()
                 .productDetailId(1L)
                 .sku(sku)
@@ -363,12 +378,13 @@ class WorkerProductServiceTest {
                 .build();
 
         // When
-        doReturn(Optional.of(product)).when(productRepository).findByProductName(anyString());
         doReturn(Optional.of(detail)).when(productRepository).findDetailBySku(anyString());
 
         // Then
-        assertEquals(HttpStatus.NO_CONTENT, this.productService.deleteProductDetail(product.getName(), sku).getStatusCode());
-        verify(this.productRepository, times(1)).save(any(Product.class));
+        assertEquals(HttpStatus.NO_CONTENT, this.productService.deleteProductDetail(sku).getStatusCode());
+        verify(this.detailRepo, times(1)).delete(any(ProductDetail.class));
+        verify(this.s3Service, times(1))
+                .deleteImagesFromS3(new ArrayList<>(), "");
     }
 
     private List<Product> products() {

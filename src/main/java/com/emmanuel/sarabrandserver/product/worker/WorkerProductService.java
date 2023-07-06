@@ -1,5 +1,6 @@
 package com.emmanuel.sarabrandserver.product.worker;
 
+import com.emmanuel.sarabrandserver.aws.S3Service;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
@@ -8,7 +9,7 @@ import com.emmanuel.sarabrandserver.product.dto.CreateProductDTO;
 import com.emmanuel.sarabrandserver.product.dto.DetailDTO;
 import com.emmanuel.sarabrandserver.product.dto.ProductDTO;
 import com.emmanuel.sarabrandserver.product.entity.*;
-import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
+import com.emmanuel.sarabrandserver.product.projection.Imagez;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.response.DetailResponse;
@@ -16,11 +17,16 @@ import com.emmanuel.sarabrandserver.product.response.ProductResponse;
 import com.emmanuel.sarabrandserver.util.DateUTC;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -35,19 +41,22 @@ public class WorkerProductService {
     private final WorkerCategoryService categoryService;
     private final DateUTC dateUTC;
     private final WorkerCollectionService collectionService;
+    private final S3Service s3Service;
 
     public WorkerProductService(
             ProductRepository productRepository,
             ProductDetailRepo detailRepo,
             WorkerCategoryService categoryService,
             DateUTC dateUTC,
-            WorkerCollectionService collectionService
+            WorkerCollectionService collectionService,
+            S3Service s3Service
     ) {
         this.productRepository = productRepository;
         this.detailRepo = detailRepo;
         this.categoryService = categoryService;
         this.dateUTC = dateUTC;
         this.collectionService = collectionService;
+        this.s3Service = s3Service;
     }
 
     /**
@@ -99,7 +108,7 @@ public class WorkerProductService {
      * @return ResponseEntity of type HttpStatus
      * */
     @Transactional
-    public ResponseEntity<?> create(CreateProductDTO dto, MultipartFile[] files) {
+    public ResponseEntity<HttpStatus> create(CreateProductDTO dto, MultipartFile[] files) {
         var category = this.categoryService.findByName(dto.getCategory().trim());
         var findProduct = this.productRepository.findByProductName(dto.getName().trim());
         var date = this.dateUTC.toUTC(new Date()).isPresent() ? this.dateUTC.toUTC(new Date()).get() : new Date();
@@ -144,7 +153,15 @@ public class WorkerProductService {
         return new ResponseEntity<>(CREATED);
     }
 
-    // Build ProductDetail
+    /**
+     * Creates a ProductDetail obj.
+     * @param dto represents the details of a Product. i.e. image, colour
+     * @param files represents the array of images to upload
+     * @param createdAt time of the ProductDetail created
+     * @throws S3Exception if an exception happens when uploading to s3
+     * @throws IOException if a file does not exist
+     * @return ProductDetail
+     * */
     private ProductDetail productDetail(CreateProductDTO dto, MultipartFile[] files, Date createdAt) {
         // ProductSize
         var size = ProductSize.builder()
@@ -182,6 +199,14 @@ public class WorkerProductService {
                     .imageKey(key)
                     .imagePath(Objects.requireNonNull(file.getOriginalFilename()).trim())
                     .build();
+
+            // Upload to s3
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .bucket("") // pass as env variable
+                    .key(key)
+                    .build();
+            this.s3Service.uploadToS3(file, request);
+
             detail.addImages(image);
         }
 
@@ -224,7 +249,7 @@ public class WorkerProductService {
      * @return ResponseEntity of type HttpStatus
      * */
     @Transactional
-    public ResponseEntity<?> updateProductDetail(final DetailDTO dto) {
+    public ResponseEntity<HttpStatus> updateProductDetail(final DetailDTO dto) {
         // Find ProductDetail by it sku
         var detail = findByDetailBySku(dto.getSku().trim());
         var date = this.dateUTC.toUTC(new Date()).isPresent() ? this.dateUTC.toUTC(new Date()).get() : new Date();
@@ -243,53 +268,52 @@ public class WorkerProductService {
 
     /**
      * Method permanently deletes a Product and children from db.
-     * @param id is the product id
-     * @throws CustomNotFoundException is thrown when Product name or sku does not exist
+     * @param name is the product name
+     * @throws CustomNotFoundException is thrown when Product id does not exist
+     * @throws S3Exception is thrown when deleting from s3
      * @return ResponseEntity of type HttpStatus
      * */
     @Transactional
-    public ResponseEntity<?> deleteProduct(final long id) {
-        var product = this.productRepository.findProductByProductId(id)
-                .orElseThrow(() -> new CustomNotFoundException("Product does not exist"));
+    public ResponseEntity<?> deleteProduct(final String name) {
+        var product = this.productRepository.findByProductName(name.trim())
+                .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));;
+
+        // Get all Images
+        List<ObjectIdentifier> keys = this.productRepository.images(name.trim())
+                .stream() //
+                .map(img -> ObjectIdentifier.builder().key(img.getImage()).build()) //
+                .toList();
+
+        // Delete from S3
+        this.s3Service.deleteImagesFromS3(keys, "");
+
         this.productRepository.delete(product);
         return new ResponseEntity<>(NO_CONTENT);
     }
 
     /**
-     * Method permanently deletes a ProductDetail from Product. Since Product has a 1 to many relationship with
-     * ProductDetail, removeDetail is a custom method in Product entity class which removes ProductDetail from
-     * ProductDetails set.
-     * @param name is the Product name
+     * Method permanently deletes a ProductDetail there by deleting relationship with Product.
+     * Note ProductDetail has an EAGER fetch time with ProductImage
      * @param sku is a unique String for each ProductDetail
-     * @throws CustomNotFoundException is thrown when Product name or sku does not exist
+     * @throws CustomNotFoundException is thrown when sku does not exist
+     * @throws S3Exception is thrown when deleting from s3
      * @return ResponseEntity of type HttpStatus
      * */
     @Transactional
-    public ResponseEntity<?> deleteProductDetail(final String name, final String sku) {
-        var product = findProductByName(name);
+    public ResponseEntity<?> deleteProductDetail(final String sku) {
         var detail = findByDetailBySku(sku);
 
-        // TODO get all the image keys and remove from S3
-        deleteFromS3(detail);
+        List<ObjectIdentifier> keys = detail.getProductImages() //
+                .stream() //
+                .map(image -> ObjectIdentifier.builder().key(image.getImageKey()).build())
+                .toList();
+
+        // TODO pass bucket name as env variable
+        this.s3Service.deleteImagesFromS3(keys, "");
 
         // Remove detail from Product and Save Product
-        product.removeDetail(detail);
-        this.productRepository.save(product);
+        this.detailRepo.delete(detail);
         return new ResponseEntity<>(NO_CONTENT);
-    }
-
-    /** After a ProductDetail is deleted, images in s3 has to be deleted to save resources. */
-    private void deleteFromS3(ProductDetail detail) {
-        // Note fetch type is EAGER so ProductImage are automatically pulled
-        detail.getProductImages().forEach(image -> {
-            // TODO API to S3 to remove
-        });
-    }
-
-    // Find Product by name
-    private Product findProductByName(String name) {
-        return this.productRepository.findByProductName(name)
-                .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));
     }
 
     // Find ProductDetail by sku

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,6 +28,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -46,6 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class WorkerProductControllerTest {
     private final static String requestMapping = "/api/v1/worker/product";
     private String category = "";
+    private String productName = "";
 
     @Autowired private MockMvc MOCK_MVC;
     @Autowired private WorkerProductService workerService;
@@ -53,6 +57,8 @@ class WorkerProductControllerTest {
     @Autowired private WorkerCategoryService workerCategoryService;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private ProductDetailRepo detailRepo;
+    @Mock private S3Client s3Client;
+    @Mock private S3Object s3Object;
 
     @Container private static final MySQLContainer<?> container;
 
@@ -96,6 +102,7 @@ class WorkerProductControllerTest {
                     .size(new Faker().commerce().material())
                     .colour(new Faker().commerce().color())
                     .build();
+            this.productName = dto.getName();
 
             MockMultipartFile[] files = {
                     new MockMultipartFile(
@@ -189,59 +196,9 @@ class WorkerProductControllerTest {
                 )
                 .andExpect(content().contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$", hasSize(30)));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content", hasSize(30)));
     }
-
-//    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
-//    void create() throws Exception {
-//        // Given
-//        var dto = CreateProductDTO.builder()
-//                .category(category)
-//                .collection("")
-//                .name(new Faker().commerce().productName())
-//                .desc(new Faker().lorem().characters(255))
-//                .price(new BigDecimal(new Faker().commerce().price()).doubleValue())
-//                .currency("USD")
-//                .visible(true)
-//                .qty(new Faker().number().numberBetween(10, 30))
-//                .size(new Faker().commerce().material())
-//                .colour(new Faker().commerce().color())
-//                .build();
-//
-//        MockMultipartFile[] files = {
-//                new MockMultipartFile(
-//                        "files",
-//                        "uploads/image1.jpeg",
-//                        MediaType.IMAGE_JPEG_VALUE,
-//                        "Test image content".getBytes()
-//                ),
-//                new MockMultipartFile(
-//                        "files",
-//                        "uploads/image3.jpeg",
-//                        MediaType.IMAGE_JPEG_VALUE,
-//                        "Test image content".getBytes()
-//                ),
-//                new MockMultipartFile(
-//                        "files",
-//                        "image2.jpeg",
-//                        MediaType.IMAGE_JPEG_VALUE,
-//                        "Test image upload".getBytes()
-//                )
-//        };
-//
-//        // When, Then
-//        this.MOCK_MVC
-//                .perform(multipart(requestMapping)
-//                        .file(files[0])
-//                        .file(files[1])
-//                        .file(files[2])
-//                        .content(dto.toJson().toString())
-//                        .contentType(MediaType.MULTIPART_FORM_DATA)
-//                        .with(csrf())
-//                )
-//                .andExpect(status().isCreated());
-//    }
 
     @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
     void updateProduct() throws Exception {
@@ -266,8 +223,7 @@ class WorkerProductControllerTest {
 
     @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
     void deleteProduct() throws Exception {
-        long id = this.productRepository.findAll().get(0).getProductId();
-        this.MOCK_MVC.perform(delete(requestMapping + "/{id}", id).with(csrf()))
+        this.MOCK_MVC.perform(delete(requestMapping + "/{name}", this.productName).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 

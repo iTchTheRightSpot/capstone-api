@@ -8,6 +8,7 @@ import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.EAGER;
+import static jakarta.persistence.FetchType.LAZY;
 
 @Table(name = "product_detail")
 @Entity
@@ -49,7 +50,7 @@ public class ProductDetail {
     @JoinColumn(name = "colour_id", referencedColumnName = "colour_id", nullable = false)
     private ProductColour productColour;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "product_id", referencedColumnName = "product_id", nullable = false)
     private Product product;
 

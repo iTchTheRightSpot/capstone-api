@@ -3,6 +3,7 @@ package com.emmanuel.sarabrandserver.product.repository;
 import com.emmanuel.sarabrandserver.product.entity.Product;
 import com.emmanuel.sarabrandserver.product.entity.ProductDetail;
 import com.emmanuel.sarabrandserver.product.projection.DetailPojo;
+import com.emmanuel.sarabrandserver.product.projection.Imagez;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -120,5 +121,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     WHERE pd.isVisible = true AND inv.quantity > 0 AND pc.categoryName = :name
     """)
     List<ProductPojo> fetchByCategoryClient(String name, PageRequest page);
+
+    @Query(value = """
+    SELECT img.imageKey as image
+    FROM ProductImage img
+    INNER JOIN ProductDetail pd ON img.productDetails.productDetailId = pd.productDetailId
+    INNER JOIN Product p ON p.productId = pd.product.productId
+    WHERE p.name = :name
+    """)
+    List<Imagez> images(@Param(value = "name") String name);
 
 }

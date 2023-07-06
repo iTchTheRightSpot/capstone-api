@@ -35,8 +35,8 @@ public interface ClientzRepository extends JpaRepository<Clientz, Long> {
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE Clientz c SET c.accountNoneLocked = ?1 WHERE c.clientId = ?2")
-    void lockClientAccount(@Param(value = "bool") boolean bool, @Param(value = "id") Long id);
+    @Query(value = "UPDATE Clientz c SET c.accountNoneLocked = :bool WHERE c.clientId = :id")
+    void lockClientAccount(@Param(value = "bool") boolean bool, @Param(value = "id") long id);
 
     @Query(value = """
     SELECT COUNT(c.clientId) FROM Clientz c

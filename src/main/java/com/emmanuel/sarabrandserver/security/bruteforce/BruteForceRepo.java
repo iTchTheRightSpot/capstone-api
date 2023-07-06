@@ -1,12 +1,12 @@
 package com.emmanuel.sarabrandserver.security.bruteforce;
 
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Repository
+@Service
 public class BruteForceRepo {
     private final Map<String, Object> mapOperation;
 

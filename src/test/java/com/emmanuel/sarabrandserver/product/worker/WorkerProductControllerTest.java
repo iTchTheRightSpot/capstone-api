@@ -40,6 +40,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+// TODO MOCK S3
 @RunWith(SpringRunner.class)
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -173,7 +174,7 @@ class WorkerProductControllerTest {
     }
 
     /** Testing fetchAll method that returns a ProductResponse. */
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void fetchAll() throws Exception {
         // Then
         this.MOCK_MVC
@@ -187,7 +188,7 @@ class WorkerProductControllerTest {
     }
 
     /** Testing fetchAll method that returns a DetailResponse. */
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void fetchAllDetail() throws Exception {
         this.MOCK_MVC
                 .perform(get(requestMapping + "/{name}", "custom-product")
@@ -200,7 +201,7 @@ class WorkerProductControllerTest {
                 .andExpect(jsonPath("$.content", hasSize(30)));
     }
 
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void updateProduct() throws Exception {
         // Given
         long id = this.productRepository.findAll().get(0).getProductId();
@@ -221,7 +222,7 @@ class WorkerProductControllerTest {
                 .andExpect(status().isOk());
     }
 
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void deleteProduct() throws Exception {
         this.MOCK_MVC.perform(delete(requestMapping + "/{name}", this.productName).with(csrf()))
                 .andExpect(status().isNoContent());

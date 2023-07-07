@@ -41,8 +41,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles("dev")
-@TestPropertySource(locations = "classpath:application-dev.properties")
+@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.properties")
 class WorkerCategoryControllerTest {
 
     @Autowired private MockMvc MOCK_MVC;
@@ -89,16 +89,16 @@ class WorkerCategoryControllerTest {
         this.categoryRepository.deleteAll();
     }
 
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void fetchCategories() throws Exception {
         // Then
         this.MOCK_MVC
                 .perform(get(requestMapping).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.content").isArray());
     }
 
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void create() throws Exception {
         // Given
         var dto = new CategoryDTO(new Faker().commerce().productName(), true, "");
@@ -114,7 +114,7 @@ class WorkerCategoryControllerTest {
     }
 
     /** Simulates creating a new Category with param parent in CategoryDTO non-empty */
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void create1() throws Exception {
         // Given
         var dto = new CategoryDTO(new Faker().commerce().productName(), true, this.categoryDTO.getName());
@@ -129,7 +129,7 @@ class WorkerCategoryControllerTest {
                 .andExpect(status().isCreated());
     }
 
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void update() throws Exception {
         // Given
         long id = this.categoryRepository.findAll().get(0).getCategoryId();
@@ -145,7 +145,7 @@ class WorkerCategoryControllerTest {
                 .andExpect(status().isOk());
     }
 
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", authorities = {"WORKER"})
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void custom_delete() throws Exception {
         this.MOCK_MVC
                 .perform(delete(requestMapping + "/{name}", this.categoryDTO.getName())

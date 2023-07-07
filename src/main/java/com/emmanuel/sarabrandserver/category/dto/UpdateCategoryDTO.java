@@ -19,7 +19,7 @@ import javax.json.JsonObject;
 public class UpdateCategoryDTO {
 
     @NotNull
-    @JsonProperty(required = true, value = "product_id")
+    @JsonProperty(required = true, value = "id")
     private Long id;
 
     @NotNull @NotEmpty

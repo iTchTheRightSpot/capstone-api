@@ -101,7 +101,8 @@ public class WorkerProductService {
     }
 
     /**
-     * Method is responsible for creating and saving a Product.
+     * Method is responsible for creating and saving a Product. Note the gotcha is we are only persisting a new
+     * ProductDetail if Product exists.
      * @param files of type MultipartFile
      * @param dto of type CreateProductDTO
      * @throws CustomNotFoundException is thrown when category or collection name does not exist
@@ -110,17 +111,17 @@ public class WorkerProductService {
     @Transactional
     public ResponseEntity<HttpStatus> create(CreateProductDTO dto, MultipartFile[] files) {
         var category = this.categoryService.findByName(dto.getCategory().trim());
-        var findProduct = this.productRepository.findByProductName(dto.getName().trim());
+        var _product = this.productRepository.findByProductName(dto.getName().trim());
         var date = this.dateUTC.toUTC(new Date()).isPresent() ? this.dateUTC.toUTC(new Date()).get() : new Date();
 
         // Persist new ProductDetail if Product exist
-        if (findProduct.isPresent()) {
+        if (_product.isPresent()) {
             // Build ProductDetail
-            var productDetail = productDetail(dto, files, date);
+            var detail = productDetail(dto, files, date);
+            detail.setProduct(_product.get());
 
             // Add ProductDetail to Product, save and return response
-            findProduct.get().addDetail(productDetail);
-            this.productRepository.save(findProduct.get());
+            this.detailRepo.save(detail);
             return new ResponseEntity<>(CREATED);
         }
 

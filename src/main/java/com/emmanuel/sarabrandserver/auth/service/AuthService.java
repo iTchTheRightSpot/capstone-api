@@ -82,13 +82,12 @@ public class AuthService {
 
         Optional<Clientz> client = this.clientzRepository.workerExists(dto.getEmail().trim(), dto.getUsername().trim());
 
-        if (client.isPresent()) { // Client to ClientRole has a fetch type of EAGER
-            client.get().addRole(new ClientRole(RoleEnum.WORKER));
-        } else {
-            // Create Client and add role of worker
+        if (client.isEmpty()) {
             client = Optional.of(createClient(dto));
-            client.get().addRole(new ClientRole(RoleEnum.WORKER));
         }
+
+        // Client to ClientRole has a fetch type of EAGER
+        client.get().addRole(new ClientRole(RoleEnum.WORKER));
 
         // Save client
         this.clientzRepository.save(client.get());
@@ -99,7 +98,7 @@ public class AuthService {
      * Method is responsible for registering a new user
      * @param dto of type ClientRegisterDTO
      * @throws DuplicateException when user principal exists
-     * @return ResponseEntity of type String
+     * @return ResponseEntity of type HttpStatus
      * */
     public ResponseEntity<?> clientRegister(RegisterDTO dto) {
         if (this.clientzRepository.principalExists(dto.getEmail().trim(), dto.getUsername().trim()) > 0) {

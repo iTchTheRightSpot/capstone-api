@@ -7,11 +7,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(path = "api/v1/worker/category")
-//@PreAuthorize(value = "hasAnyAuthority('WORKER')")
+@PreAuthorize(value = "hasRole('ROLE_WORKER')")
 public class WorkerCategoryController {
     private final WorkerCategoryService workerCategoryService;
 

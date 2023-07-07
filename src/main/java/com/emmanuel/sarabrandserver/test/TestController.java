@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(path = "test")
-@Profile(value = {"test"})
+@Profile(value = {"test", "dev"})
 public class TestController {
 
     @GetMapping(path = "/client")

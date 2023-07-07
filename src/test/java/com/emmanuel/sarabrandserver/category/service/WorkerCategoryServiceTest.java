@@ -28,8 +28,8 @@ import static org.mockito.Mockito.*;
 import static org.springframework.http.HttpStatus.*;
 
 @ExtendWith({MockitoExtension.class, SpringExtension.class})
-@ActiveProfiles("dev")
-@TestPropertySource(locations = "classpath:application-dev.properties")
+@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.properties")
 class WorkerCategoryServiceTest {
 
     private WorkerCategoryService workerCategoryService;

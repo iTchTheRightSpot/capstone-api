@@ -82,7 +82,7 @@ class WorkerAuthControllerTest {
                 "Development",
                 ADMIN_EMAIL,
                 USERNAME,
-                "00-000-0000",
+                "000-000-0000",
                 ADMIN_PASSWORD
         ));
     }
@@ -173,11 +173,9 @@ class WorkerAuthControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        Cookie cookie = login.getResponse().getCookie(COOKIE_NAME);
-
         // Test route
         this.MOCK_MVC
-                .perform(get("/test/worker").cookie(cookie))
+                .perform(get("/test/worker").cookie(login.getResponse().getCookie(COOKIE_NAME)))
                 .andExpect(status().isOk());
     }
 

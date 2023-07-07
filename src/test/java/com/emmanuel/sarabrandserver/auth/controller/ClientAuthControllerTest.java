@@ -63,7 +63,6 @@ class ClientAuthControllerTest {
 
     @Container private static final MySQLContainer<?> container;
 
-
     static {
         container = new MySQLContainer<>("mysql:latest")
                 .withDatabaseName("sara_brand_db")

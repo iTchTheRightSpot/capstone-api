@@ -194,7 +194,7 @@ class WorkerProductServiceTest {
         verify(this.collectionService, times(1)).save(any(ProductCollection.class));
     }
 
-    /** Simulates creating a product with product name existing */
+    /** Simulates creating a ProductDetail when product name exists */
     @Test
     void createExist() {
         // Given
@@ -259,7 +259,7 @@ class WorkerProductServiceTest {
 
         // Then
         assertEquals(CREATED, this.productService.create(dto, arr).getStatusCode());
-        verify(this.productRepository, times(1)).save(any(Product.class));
+        verify(this.detailRepo, times(1)).save(any(ProductDetail.class));
         verify(this.workerCategoryService, times(1)).findByName(any(String.class));
     }
 

@@ -1,5 +1,6 @@
 package com.emmanuel.sarabrandserver.security;
 
+import com.emmanuel.sarabrandserver.jwt.CustomFilter;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -44,9 +46,14 @@ public class SecurityConfig {
     private String LOGGEDSESSION;
 
     private final AuthenticationEntryPoint authEntryPoint;
+    private final CustomFilter customFilter;
 
-    public SecurityConfig(@Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry) {
+    public SecurityConfig(
+            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry,
+            CustomFilter customFilter
+    ) {
         this.authEntryPoint = authEntry;
+        this.customFilter = customFilter;
     }
 
     private String[] publicRoutes() {
@@ -69,8 +76,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(publicRoutes()).permitAll();
                     auth.anyRequest().authenticated();
-                    auth.anyRequest().permitAll();
+//                    auth.anyRequest().permitAll();
                 })
+                .addFilterBefore(this.customFilter, BearerTokenAuthenticationFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
                 .exceptionHandling((ex) -> ex.authenticationEntryPoint(this.authEntryPoint))
@@ -164,7 +172,7 @@ public class SecurityConfig {
                         this.jwtDecoder.decode(token);
                         return token;
                     } catch (JwtException e) {
-                        log.error("Jwt Exception {}", e.getMessage());
+                        log.error("Jwt Exception from CustomBearerTokenResolver {}", e.getMessage());
                         return null;
                     }
                 }

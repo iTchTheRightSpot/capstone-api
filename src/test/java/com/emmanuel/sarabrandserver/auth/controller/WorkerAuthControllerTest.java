@@ -44,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(locations = "classpath:application-test.properties")
 @Slf4j
 class WorkerAuthControllerTest {
-    @Value(value = "${custom.cookie.name}")
+    @Value(value = "${server.servlet.session.cookie.name}")
     private String COOKIE_NAME;
 
     private final int MAX_FAILED_AUTH = 3;

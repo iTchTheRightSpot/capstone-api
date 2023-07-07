@@ -47,7 +47,7 @@ class AuthServiceTest {
     private String IS_LOGGED_IN;
 
     @Value(value = "${server.servlet.session.cookie.name}")
-    private String COOKIENAME;
+    private String JSESSIONID;
 
     @Value(value = "${server.servlet.session.cookie.domain}")
     private String COOKIE_DOMAIN;
@@ -76,10 +76,9 @@ class AuthServiceTest {
                 this.authenticationManager,
                 this.jwtTokenService
         );
-        this.authService.setCOOKIENAME(COOKIENAME);
+        this.authService.setJSESSIONID(JSESSIONID);
         this.authService.setDOMAIN(COOKIE_DOMAIN);
         this.authService.setCOOKIE_PATH(COOKIE_PATH);
-        this.authService.setCOOKIEMAXAGE(COOKIE_MAX_AGE);
         this.authService.setCOOKIE_SECURE(COOKIE_SECURE);
         this.authService.setLOGGEDSESSION(IS_LOGGED_IN);
     }

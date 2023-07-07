@@ -39,8 +39,8 @@ import java.util.Optional;
 @Slf4j
 public class SecurityConfig {
 
-    @Value(value = "${custom.cookie.name}")
-    private String COOKIENAME;
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
 
     @Value(value = "${custom.cookie.frontend}")
     private String LOGGEDSESSION;
@@ -84,7 +84,7 @@ public class SecurityConfig {
                 .exceptionHandling((ex) -> ex.authenticationEntryPoint(this.authEntryPoint))
                 .logout(out -> out
                         .logoutUrl("/api/v1/auth/logout")
-                        .deleteCookies(COOKIENAME, LOGGEDSESSION)
+                        .deleteCookies(JSESSIONID, LOGGEDSESSION)
                         .logoutSuccessHandler((request, response, authentication) ->
                                 SecurityContextHolder.clearContext()
                         )
@@ -148,8 +148,8 @@ public class SecurityConfig {
 
     private static class CustomBearerTokenResolver implements BearerTokenResolver {
 
-        @Value(value = "${custom.cookie.name}")
-        private String COOKIENAME;
+        @Value(value = "${server.servlet.session.cookie.name}")
+        private String JSESSIONID;
 
         private final JwtDecoder jwtDecoder;
 
@@ -163,7 +163,7 @@ public class SecurityConfig {
 
             if (cookies != null) {
                 Optional<Cookie> cookie = Arrays.stream(cookies)
-                        .filter(name -> name.getName().equals(COOKIENAME))
+                        .filter(name -> name.getName().equals(JSESSIONID))
                         .findFirst();
 
                 if (cookie.isPresent()) {

@@ -14,14 +14,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Optional;
 
 /** Objective of this class is to replace jwt cookie if it is not expired, and it is within time bound */
 @Component
 public class CustomFilter extends OncePerRequestFilter {
-    @Value(value = "${custom.cookie.name}")
-    private String COOKIENAME;
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
+
+    @Value(value = "${custom.cookie.frontend}")
+    private String LOGGEDSESSION;
 
     private final JwtTokenService tokenService;
     private final UserDetailsService userDetailsService;
@@ -34,6 +35,7 @@ public class CustomFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
+    /** Updates jwt cookie value and max age */
     @Override
     protected void doFilterInternal(
             @NotNull HttpServletRequest request,
@@ -42,27 +44,28 @@ public class CustomFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         Cookie[] cookies = request.getCookies();
 
-        if (cookies != null) {
-            Optional<Cookie> cookie = Arrays.stream(cookies)
-                    .filter(name -> name.getName().equals(COOKIENAME))
-                    .findFirst();
+        if (cookies != null && !request.getRequestURI().equals("/api/v1/auth/logout")) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals(JSESSIONID)) {
+                    var obj = this.tokenService._validateTokenExpiryDate(cookie.getValue());
 
-            if (cookie.isPresent()) {
-                // obj is a custom record JwtUserStatus.
-                var obj = this.tokenService._validateTokenExpiryDate(cookie.get().getValue());
+                    if (obj.isTokenValid()) {
+                        var userDetails = this.userDetailsService.loadUserByUsername(obj.principal());
+                        var authentication = new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+                        String token = this.tokenService.generateToken(authentication);
+                        cookie.setValue(token);
+                        cookie.setMaxAge(this.tokenService.maxAge());
+                        response.addCookie(cookie);
+                    }
+                }
 
-                if (obj.isTokenValid()) {
-                    var userDetails = this.userDetailsService.loadUserByUsername(obj.principal());
-
-                    var authentication = UsernamePasswordAuthenticationToken.authenticated(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-
-                    String token = this.tokenService.generateToken(authentication);
-                    cookie.get().setValue(token);
-                    response.addCookie(cookie.get());
+                if (cookie.getName().equals(LOGGEDSESSION)) {
+                    cookie.setMaxAge(this.tokenService.maxAge());
+                    response.addCookie(cookie);
                 }
             }
         }

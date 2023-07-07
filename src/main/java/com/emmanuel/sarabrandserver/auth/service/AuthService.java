@@ -34,16 +34,13 @@ public class AuthService {
     private String LOGGEDSESSION;
 
     @Value(value = "${server.servlet.session.cookie.name}")
-    private String COOKIENAME;
+    private String JSESSIONID;
 
     @Value(value = "${server.servlet.session.cookie.domain}")
     private String DOMAIN;
 
     @Value(value = "${server.servlet.session.cookie.http-only}")
     private boolean HTTPONLY;
-
-    @Value(value = "${server.servlet.session.cookie.max-age}")
-    private int COOKIEMAXAGE;
 
     @Value(value = "${server.servlet.session.cookie.path}")
     private String COOKIE_PATH;
@@ -132,9 +129,9 @@ public class AuthService {
         String token = this.jwtTokenService.generateToken(authentication);
 
         // Add jwt to cookie
-        ResponseCookie resCookie = ResponseCookie.from(COOKIENAME, token)
+        ResponseCookie resCookie = ResponseCookie.from(JSESSIONID, token)
                 .domain(DOMAIN)
-                .maxAge(COOKIEMAXAGE)
+                .maxAge(this.jwtTokenService.maxAge())
                 .httpOnly(HTTPONLY)
                 .secure(COOKIE_SECURE)
                 .path(COOKIE_PATH)
@@ -143,7 +140,7 @@ public class AuthService {
         // Second cookie where UI can access to validate if user is logged in
         ResponseCookie resCookie1 = ResponseCookie.from(LOGGEDSESSION, UUID.randomUUID().toString())
                 .domain(DOMAIN)
-                .maxAge(COOKIEMAXAGE)
+                .maxAge(this.jwtTokenService.maxAge())
                 .httpOnly(false)
                 .secure(COOKIE_SECURE)
                 .path(COOKIE_PATH)

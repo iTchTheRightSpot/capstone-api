@@ -1,6 +1,7 @@
 package com.emmanuel.sarabrandserver.jwt;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -11,10 +12,10 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-@Service @Setter @Slf4j
+@Service @Getter @Setter @Slf4j
 public class JwtTokenService {
-    private int expiryForToken = 30;
-    private int boundToSendRefreshToken = 10;
+    private int tokenExpiry = 30; // Minutes
+    private int boundToSendRefreshToken = 15; // Minutes
 
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
@@ -45,7 +46,7 @@ public class JwtTokenService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
-                .expiresAt(now.plus(expiryForToken, ChronoUnit.MINUTES))
+                .expiresAt(now.plus(tokenExpiry, ChronoUnit.MINUTES))
                 .subject(authentication.getName())
                 .claim("role", role)
                 .build();
@@ -56,7 +57,6 @@ public class JwtTokenService {
     /**
      * Validates if token validity is within 10 mains of expiration.
      * @param token of jwt
-     * @throws JwtException is token is invalid
      * @return JwtUserStatus custom record class
      * */
     public JwtUserStatus _validateTokenExpiryDate(@NotNull final String token) {
@@ -65,10 +65,10 @@ public class JwtTokenService {
             Instant expiresAt = jwt.getExpiresAt();
             if (expiresAt != null) {
                 Instant now = Instant.now();
-                Instant tenMinutesFromNow = now.plus(boundToSendRefreshToken, ChronoUnit.MINUTES);
+                Instant boundFromNow = now.plus(boundToSendRefreshToken, ChronoUnit.MINUTES);
                 return new JwtUserStatus(
                         jwt.getSubject(),
-                        !expiresAt.isBefore(now) && expiresAt.isBefore(tenMinutesFromNow)
+                        !expiresAt.isBefore(now) && expiresAt.isBefore(boundFromNow)
                 );
             }
         } catch (JwtException e) {
@@ -78,5 +78,9 @@ public class JwtTokenService {
         return new JwtUserStatus(token, false);
     }
 
+    // Convert getExpiryForToken to seconds
+    public int maxAge() {
+        return this.getTokenExpiry() * 60;
+    }
 
 }

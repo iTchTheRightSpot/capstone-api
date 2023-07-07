@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.properties")
 class JwtTokenServiceTest {
-    @Value(value = "${custom.cookie.name}")
+    @Value(value = "${server.servlet.session.cookie.name}")
     private String COOKIE_NAME;
 
     @Autowired private MockMvc MOCK_MVC;
@@ -65,7 +65,7 @@ class JwtTokenServiceTest {
 
     @BeforeEach
     void setUp() {
-        this.jwtTokenService.setExpiryForToken(20);
+        this.jwtTokenService.setTokenExpiry(20);
         this.jwtTokenService.setBoundToSendRefreshToken(20);
 
         this.authService.workerRegister(new RegisterDTO(

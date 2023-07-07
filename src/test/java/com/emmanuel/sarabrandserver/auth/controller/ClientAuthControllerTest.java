@@ -51,7 +51,7 @@ class ClientAuthControllerTest {
 
     private final String ADMIN_PASSWORD = "123#-SEJU-Development";
 
-    @Value(value = "${custom.cookie.name}") private String COOKIE_NAME;
+    @Value(value = "${server.servlet.session.cookie.name}") private String COOKIE_NAME;
 
     @Autowired private MockMvc MOCK_MVC;
 

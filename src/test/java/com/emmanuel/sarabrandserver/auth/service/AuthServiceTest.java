@@ -78,8 +78,8 @@ class AuthServiceTest {
         );
         this.authService.setJSESSIONID(JSESSIONID);
         this.authService.setDOMAIN(COOKIE_DOMAIN);
-        this.authService.setCOOKIE_PATH(COOKIE_PATH);
-        this.authService.setCOOKIE_SECURE(COOKIE_SECURE);
+        this.authService.setCOOKIEPATH(COOKIE_PATH);
+        this.authService.setCOOKIESECURE(COOKIE_SECURE);
         this.authService.setLOGGEDSESSION(IS_LOGGED_IN);
     }
 

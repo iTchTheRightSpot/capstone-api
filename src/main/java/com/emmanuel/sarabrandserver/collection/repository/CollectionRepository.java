@@ -21,6 +21,6 @@ public interface CollectionRepository extends JpaRepository<ProductCollection, L
     SELECT c.collection AS collection, c.createAt AS created, c.modifiedAt AS modified, c.isVisible AS visible
     FROM ProductCollection c
     """)
-    Page<CollectionPojo> getAll(Pageable pageable);
+    Page<CollectionPojo> fetchAllCollection(Pageable pageable);
 
 }

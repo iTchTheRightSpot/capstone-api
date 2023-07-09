@@ -29,7 +29,7 @@ public class WorkerCollectionService {
 
     /** Returns a list of CollectionResponse. */
     public Page<CollectionResponse> fetchAll(int page, int size) {
-        return this.collectionRepository.getAll(PageRequest.of(page, size)) //
+        return this.collectionRepository.fetchAllCollection(PageRequest.of(page, Math.min(size, 30))) //
                 .map(pojo -> CollectionResponse.builder()
                         .collection(pojo.getCollection())
                         .created(pojo.getCreated().getTime())

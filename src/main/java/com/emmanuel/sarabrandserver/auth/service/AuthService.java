@@ -43,10 +43,10 @@ public class AuthService {
     private boolean HTTPONLY;
 
     @Value(value = "${server.servlet.session.cookie.path}")
-    private String COOKIE_PATH;
+    private String COOKIEPATH;
 
     @Value(value = "${server.servlet.session.cookie.secure}")
-    private boolean COOKIE_SECURE;
+    private boolean COOKIESECURE;
 
     private final ClientzRepository clientzRepository;
     private final PasswordEncoder passwordEncoder;
@@ -133,8 +133,8 @@ public class AuthService {
                 .domain(DOMAIN)
                 .maxAge(this.jwtTokenService.maxAge())
                 .httpOnly(HTTPONLY)
-                .secure(COOKIE_SECURE)
-                .path(COOKIE_PATH)
+                .secure(COOKIESECURE)
+                .path(COOKIEPATH)
                 .build();
 
         // Second cookie where UI can access to validate if user is logged in
@@ -142,8 +142,8 @@ public class AuthService {
                 .domain(DOMAIN)
                 .maxAge(this.jwtTokenService.maxAge())
                 .httpOnly(false)
-                .secure(COOKIE_SECURE)
-                .path(COOKIE_PATH)
+                .secure(COOKIESECURE)
+                .path(COOKIEPATH)
                 .build();
 
         // Add cookies to response header

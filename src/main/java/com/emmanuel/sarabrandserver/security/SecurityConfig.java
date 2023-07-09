@@ -15,7 +15,6 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -29,9 +28,6 @@ import org.springframework.security.oauth2.server.resource.web.authentication.Be
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-
-import java.util.Arrays;
-import java.util.Optional;
 
 @Configuration
 @EnableWebSecurity
@@ -58,6 +54,7 @@ public class SecurityConfig {
 
     private String[] publicRoutes() {
         return new String[]{
+                "/api/v1/csrf/**",
                 "/api/v1/client/auth/register",
                 "/api/v1/client/auth/login",
                 "/api/v1/client/product/**",
@@ -70,13 +67,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+                .csrf(csrf -> csrf.csrfTokenRepository(new CookieCsrfTokenRepository()))
 //                .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(publicRoutes()).permitAll();
                     auth.anyRequest().authenticated();
-//                    auth.anyRequest().permitAll();
                 })
                 .addFilterBefore(this.customFilter, BearerTokenAuthenticationFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -162,18 +158,17 @@ public class SecurityConfig {
             Cookie[] cookies = request.getCookies();
 
             if (cookies != null) {
-                Optional<Cookie> cookie = Arrays.stream(cookies)
-                        .filter(name -> name.getName().equals(JSESSIONID))
-                        .findFirst();
-
-                if (cookie.isPresent()) {
-                    try { // Note this is an expensive compute
-                        String token = cookie.get().getValue();
-                        this.jwtDecoder.decode(token);
-                        return token;
-                    } catch (JwtException e) {
-                        log.error("Jwt Exception from CustomBearerTokenResolver {}", e.getMessage());
-                        return null;
+                // In case there are multiple cookies with JSESSIONID name, need to try for all of them
+                for (Cookie cookie : cookies) {
+                    if (cookie.getName().equals(JSESSIONID)) {
+                        // Try catch might be an expensive compute, but it is worth it
+                        try {
+                            String token = cookie.getValue();
+                            this.jwtDecoder.decode(token); // Will throw an exception if token is invalid
+                            return token;
+                        } catch (JwtException e) {
+                            log.error("Jwt Exception from CustomBearerTokenResolver {}", e.getMessage());
+                        }
                     }
                 }
             }

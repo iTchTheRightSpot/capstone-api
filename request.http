@@ -43,8 +43,8 @@ POST http://localhost:1997/api/v1/worker/auth/login
 Content-Type: application/json
 
 {
-  "principal":"admin@yes.com",
-  "password":"123#-SEJU-Development"
+  "principal":"frank",
+  "password":"password"
 }
 
 

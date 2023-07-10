@@ -34,3 +34,4 @@ build/
 src/main/resources/application-prod.properties
 
 config/prod.env
+.aws-sam/build

@@ -119,6 +119,7 @@ class BruteForceServiceTest {
 
     private Clientz client() {
         var client = Clientz.builder()
+                .clientId(1L)
                 .firstname(new Faker().name().firstName())
                 .lastname(new Faker().name().lastName())
                 .email(new Faker().name().fullName())

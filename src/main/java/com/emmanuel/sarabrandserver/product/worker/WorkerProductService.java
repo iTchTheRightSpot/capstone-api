@@ -9,12 +9,14 @@ import com.emmanuel.sarabrandserver.product.dto.CreateProductDTO;
 import com.emmanuel.sarabrandserver.product.dto.DetailDTO;
 import com.emmanuel.sarabrandserver.product.dto.ProductDTO;
 import com.emmanuel.sarabrandserver.product.entity.*;
-import com.emmanuel.sarabrandserver.product.projection.Imagez;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.response.DetailResponse;
 import com.emmanuel.sarabrandserver.product.response.ProductResponse;
 import com.emmanuel.sarabrandserver.util.DateUTC;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -32,8 +34,11 @@ import java.util.*;
 
 import static org.springframework.http.HttpStatus.*;
 
-@Service
+@Service @Slf4j
 public class WorkerProductService {
+    @Value(value = "${aws.bucket}")
+    private String bucketName;
+
     private String defaultKey; // Represents the default_image_key for Product property
 
     private final ProductRepository productRepository;
@@ -42,6 +47,7 @@ public class WorkerProductService {
     private final DateUTC dateUTC;
     private final WorkerCollectionService collectionService;
     private final S3Service s3Service;
+    private final Environment environment;
 
     public WorkerProductService(
             ProductRepository productRepository,
@@ -49,7 +55,8 @@ public class WorkerProductService {
             WorkerCategoryService categoryService,
             DateUTC dateUTC,
             WorkerCollectionService collectionService,
-            S3Service s3Service
+            S3Service s3Service,
+            Environment environment
     ) {
         this.productRepository = productRepository;
         this.detailRepo = detailRepo;
@@ -57,6 +64,7 @@ public class WorkerProductService {
         this.dateUTC = dateUTC;
         this.collectionService = collectionService;
         this.s3Service = s3Service;
+        this.environment = environment;
     }
 
     /**
@@ -201,12 +209,14 @@ public class WorkerProductService {
                     .imagePath(Objects.requireNonNull(file.getOriginalFilename()).trim())
                     .build();
 
-            // Upload to s3
-            PutObjectRequest request = PutObjectRequest.builder()
-                    .bucket("") // pass as env variable
-                    .key(key)
-                    .build();
-            this.s3Service.uploadToS3(file, request);
+            // Only upload to s3 in prod profile
+            if (Arrays.asList(this.environment.getActiveProfiles()).contains("prod")) {
+                PutObjectRequest request = PutObjectRequest.builder()
+                        .bucket(bucketName) // pass as env variable
+                        .key(key)
+                        .build();
+                this.s3Service.uploadToS3(file, request);
+            }
 
             detail.addImages(image);
         }
@@ -279,14 +289,17 @@ public class WorkerProductService {
         var product = this.productRepository.findByProductName(name.trim())
                 .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));;
 
-        // Get all Images
-        List<ObjectIdentifier> keys = this.productRepository.images(name.trim())
-                .stream() //
-                .map(img -> ObjectIdentifier.builder().key(img.getImage()).build()) //
-                .toList();
-
         // Delete from S3
-        this.s3Service.deleteImagesFromS3(keys, "");
+        // Only upload to s3 in prod profile
+        if (Arrays.asList(this.environment.getActiveProfiles()).contains("prod")) {
+            // Get all Images
+            List<ObjectIdentifier> keys = this.productRepository.images(name.trim())
+                    .stream() //
+                    .map(img -> ObjectIdentifier.builder().key(img.getImage()).build()) //
+                    .toList();
+
+            this.s3Service.deleteImagesFromS3(keys, bucketName);
+        }
 
         this.productRepository.delete(product);
         return new ResponseEntity<>(NO_CONTENT);
@@ -304,13 +317,14 @@ public class WorkerProductService {
     public ResponseEntity<?> deleteProductDetail(final String sku) {
         var detail = findByDetailBySku(sku);
 
-        List<ObjectIdentifier> keys = detail.getProductImages() //
-                .stream() //
-                .map(image -> ObjectIdentifier.builder().key(image.getImageKey()).build())
-                .toList();
+        if (Arrays.asList(this.environment.getActiveProfiles()).contains("prod")) {
+            List<ObjectIdentifier> keys = detail.getProductImages() //
+                    .stream() //
+                    .map(image -> ObjectIdentifier.builder().key(image.getImageKey()).build())
+                    .toList();
 
-        // TODO pass bucket name as env variable
-        this.s3Service.deleteImagesFromS3(keys, "");
+            this.s3Service.deleteImagesFromS3(keys, bucketName);
+        }
 
         // Remove detail from Product and Save Product
         this.detailRepo.delete(detail);

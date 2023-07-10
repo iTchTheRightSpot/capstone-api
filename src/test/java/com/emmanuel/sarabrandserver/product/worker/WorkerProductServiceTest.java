@@ -11,7 +11,6 @@ import com.emmanuel.sarabrandserver.product.dto.DetailDTO;
 import com.emmanuel.sarabrandserver.product.dto.ProductDTO;
 import com.emmanuel.sarabrandserver.product.entity.*;
 import com.emmanuel.sarabrandserver.product.projection.DetailPojo;
-import com.emmanuel.sarabrandserver.product.projection.Imagez;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
@@ -22,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -53,6 +53,7 @@ class WorkerProductServiceTest {
     @Mock private WorkerCollectionService collectionService;
     @Mock private ProductDetailRepo detailRepo;
     @Mock private S3Service s3Service;
+    @Mock private Environment environment;
 
     @BeforeEach
     void setUp() {
@@ -62,7 +63,8 @@ class WorkerProductServiceTest {
                 this.workerCategoryService,
                 this.dateUTC,
                 this.collectionService,
-                this.s3Service
+                this.s3Service,
+                environment
         );
     }
 
@@ -186,6 +188,7 @@ class WorkerProductServiceTest {
         doReturn(Optional.of(new Date())).when(this.dateUTC).toUTC(any(Date.class));
         doReturn(product).when(this.productRepository).save(any(Product.class));
         doReturn(collection).when(this.collectionService).findByName(dto.getCollection());
+        when(this.environment.getActiveProfiles()).thenReturn(new String[]{"test"});
 
         // Then
         assertEquals(CREATED, this.productService.create(dto, arr).getStatusCode());
@@ -253,6 +256,7 @@ class WorkerProductServiceTest {
 
 
         // When
+        when(this.environment.getActiveProfiles()).thenReturn(new String[]{"test"});
         doReturn(category).when(this.workerCategoryService).findByName(anyString());
         doReturn(Optional.of(product)).when(this.productRepository).findByProductName(anyString());
         doReturn(Optional.of(new Date())).when(this.dateUTC).toUTC(any(Date.class));
@@ -340,21 +344,10 @@ class WorkerProductServiceTest {
     void deleteProduct() {
         // Given
         var product = products().get(0);
-        List<Imagez> list = new ArrayList<>();
-
-        var imageKeys = product.getProductDetails().stream() //
-                .flatMap(detail -> detail.getProductImages().stream()) //
-                .map(ProductImage::getImageKey).toList();
-
-        for (String key : imageKeys) {
-            var imagez = mock(Imagez.class);
-            when(imagez.getImage()).thenReturn(key);
-            list.add(imagez);
-        }
 
         // When
         doReturn(Optional.of(product)).when(this.productRepository).findByProductName(anyString());
-        doReturn(list).when(this.productRepository).images(anyString());
+        doReturn(new String[]{"test"}).when(this.environment).getActiveProfiles();
 
         // Then
         assertEquals(HttpStatus.NO_CONTENT, this.productService.deleteProduct(product.getName()).getStatusCode());
@@ -379,12 +372,11 @@ class WorkerProductServiceTest {
 
         // When
         doReturn(Optional.of(detail)).when(productRepository).findDetailBySku(anyString());
+        when(this.environment.getActiveProfiles()).thenReturn(new String[]{"test"});
 
         // Then
         assertEquals(HttpStatus.NO_CONTENT, this.productService.deleteProductDetail(sku).getStatusCode());
         verify(this.detailRepo, times(1)).delete(any(ProductDetail.class));
-        verify(this.s3Service, times(1))
-                .deleteImagesFromS3(new ArrayList<>(), "");
     }
 
     private List<Product> products() {

@@ -14,8 +14,8 @@ import java.time.temporal.ChronoUnit;
 
 @Service @Getter @Setter @Slf4j
 public class JwtTokenService {
-    private int tokenExpiry = 30; // Minutes
-    private int boundToSendRefreshToken = 15; // Minutes
+    private int tokenExpiry = 30; // Set to max state of lambda function in minutes
+    private int boundToSendRefreshToken = 15; // minutes
 
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
@@ -55,7 +55,7 @@ public class JwtTokenService {
     }
 
     /**
-     * Validates if token validity is within 10 mains of expiration.
+     * Validates if token is valid, and it is within bound to refresh jwt token.
      * @param token of jwt
      * @return JwtUserStatus custom record class
      * */
@@ -78,7 +78,7 @@ public class JwtTokenService {
         return new JwtUserStatus(token, false);
     }
 
-    // Convert getExpiryForToken to seconds
+    // Convert tokenExpiry to seconds
     public int maxAge() {
         return this.getTokenExpiry() * 60;
     }

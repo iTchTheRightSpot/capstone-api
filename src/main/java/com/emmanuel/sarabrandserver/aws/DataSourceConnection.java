@@ -45,7 +45,7 @@ public class DataSourceConnection {
                 this.dbInstanceIdentifier = node.get("dbInstanceIdentifier").textValue();
                 this.dataSourceUrl = "jdbc:%s://%s:%s/%s".formatted(engine, host, port, dbname);
             } catch (JsonProcessingException e) {
-                log.error("Error parsing secrets to JsonNode");
+                log.error("Data connection error in constructor of class DataSourceConnection {}", e.getMessage());
                 throw new RuntimeException(e);
             }
         }

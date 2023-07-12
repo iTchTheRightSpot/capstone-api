@@ -143,7 +143,6 @@ public class SecurityConfig {
     }
 
     private static class CustomBearerTokenResolver implements BearerTokenResolver {
-
         @Value(value = "${server.servlet.session.cookie.name}")
         private String JSESSIONID;
 
@@ -157,24 +156,26 @@ public class SecurityConfig {
         public String resolve(HttpServletRequest request) {
             Cookie[] cookies = request.getCookies();
 
-            if (cookies != null) {
-                // In case there are multiple cookies with JSESSIONID name, need to try for all of them
-                for (Cookie cookie : cookies) {
-                    if (cookie.getName().equals(JSESSIONID)) {
-                        // Try catch might be an expensive compute, but it is worth it
-                        try {
-                            String token = cookie.getValue();
-                            this.jwtDecoder.decode(token); // Will throw an exception if token is invalid
-                            return token;
-                        } catch (JwtException e) {
-                            log.error("Jwt Exception from CustomBearerTokenResolver {}", e.getMessage());
-                        }
+            if (cookies == null) {
+                return null;
+            }
+
+            for (Cookie cookie : request.getCookies()) {
+                if (cookie.getName().equals(JSESSIONID)) {
+                    // Try catch might be an expensive compute, but it is worth it
+                    try {
+                        String token = cookie.getValue();
+                        this.jwtDecoder.decode(token); // Will throw an exception if token is invalid
+                        return token;
+                    } catch (JwtException e) {
+                        log.error("Jwt Exception from CustomBearerTokenResolver {}", e.getMessage());
                     }
                 }
             }
 
             return null;
         }
+        // End of override method
     }
 
 }

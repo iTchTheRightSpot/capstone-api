@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
-Description: Sara The Brand AWS Lambda API.
+Description: Sara The Brand AWS Lambda API
 
 Globals:
   Api:
@@ -10,27 +10,31 @@ Globals:
 
 Resources:
   SaraBrandFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Properties:
       CodeUri: .
       Handler: com.emmanuel.sarabrandserver.StreamLambdaHandler::handleRequest
       Runtime: java17
       AutoPublishAlias: production
-      SnapStart:
-        ApplyOn: PublishedVersions
       Architectures:
         - x86_64
       MemorySize: 1024
-      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+      Environment:
         Variables:
-          JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1 # More info about tiered compilation https://aws.amazon.com/blogs/compute/optimizing-aws-lambda-function-performance-for-java/
+          JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
       Policies:
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${DatabaseSecretName}
+        AWSSecretsManagerGetSecretValuePolicy:
+          SecretArn: !Sub arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:stage/sarabrand/profile/credentials
       Timeout: 30
-      Events:
-        SARATHEBRANDAPI: # Creates an API GATEWAY
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+      Events: # Events creates an API GATEWAY
+        SARATHEBRANDAPI:
+          Type: Api
           Properties:
             Path: /{proxy+}
-            Method: ANY
+            Method: any
+Outputs:
+  SaraBrandLambdaApi:
+    Description: URL for application
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod'
+    Export:
+      Name: SaraBrandLambdaApi

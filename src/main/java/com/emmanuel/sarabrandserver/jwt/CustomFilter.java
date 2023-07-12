@@ -15,7 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/** Objective of this class is to replace jwt cookie if it is not expired, and it is within time bound */
+/** Class implements refresh token logic. Where jwt cookie is replaced if cookie is about to expire based on a bound */
 @Component
 public class CustomFilter extends OncePerRequestFilter {
     @Value(value = "${server.servlet.session.cookie.name}")
@@ -35,7 +35,7 @@ public class CustomFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
-    /** Updates jwt cookie value and max age */
+    /** Updates jwt and custom cookie values and max ages */
     @Override
     protected void doFilterInternal(
             @NotNull HttpServletRequest request,
@@ -43,7 +43,6 @@ public class CustomFilter extends OncePerRequestFilter {
             @NotNull FilterChain filterChain
     ) throws ServletException, IOException {
         Cookie[] cookies = request.getCookies();
-
         if (cookies != null && !request.getRequestURI().equals("/api/v1/auth/logout")) {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals(JSESSIONID)) {
@@ -51,12 +50,13 @@ public class CustomFilter extends OncePerRequestFilter {
 
                     if (obj.isTokenValid()) {
                         var userDetails = this.userDetailsService.loadUserByUsername(obj.principal());
-                        var authentication = new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
+                        String token = this.tokenService.generateToken(
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails,
+                                        null,
+                                        userDetails.getAuthorities()
+                                )
                         );
-                        String token = this.tokenService.generateToken(authentication);
                         cookie.setValue(token);
                         cookie.setMaxAge(this.tokenService.maxAge());
                         response.addCookie(cookie);

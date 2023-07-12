@@ -44,22 +44,19 @@ import static org.springframework.http.HttpStatus.OK;
 class AuthServiceTest {
 
     @Value(value = "${custom.cookie.frontend}")
-    private String IS_LOGGED_IN;
+    private String LOGGEDSESSION;
 
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
 
     @Value(value = "${server.servlet.session.cookie.domain}")
-    private String COOKIE_DOMAIN;
-
-    @Value(value = "${server.servlet.session.cookie.max-age}")
-    private int COOKIE_MAX_AGE;
+    private String COOKIEDOMAIN;
 
     @Value(value = "${server.servlet.session.cookie.path}")
-    private String COOKIE_PATH;
+    private String COOKIEPATH;
 
     @Value(value = "${server.servlet.session.cookie.secure}")
-    private boolean COOKIE_SECURE;
+    private boolean COOKIESECURE;
 
     private AuthService authService;
 
@@ -77,10 +74,10 @@ class AuthServiceTest {
                 this.jwtTokenService
         );
         this.authService.setJSESSIONID(JSESSIONID);
-        this.authService.setDOMAIN(COOKIE_DOMAIN);
-        this.authService.setCOOKIEPATH(COOKIE_PATH);
-        this.authService.setCOOKIESECURE(COOKIE_SECURE);
-        this.authService.setLOGGEDSESSION(IS_LOGGED_IN);
+        this.authService.setDOMAIN(COOKIEDOMAIN);
+        this.authService.setCOOKIEPATH(COOKIEPATH);
+        this.authService.setCOOKIESECURE(COOKIESECURE);
+        this.authService.setLOGGEDSESSION(LOGGEDSESSION);
     }
 
     @Test

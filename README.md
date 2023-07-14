@@ -6,7 +6,7 @@ Server side code for Sara The Brand e-commerce.
 * Spring Boot
 * AWS RDS (MySQL)
 * AWS Secret manager
-* AWS Lambda (Serverless)
+* AWS EC2
 * Flyway Migration
 * Unit test JUnit and Mockito
 * Integration test using test containers

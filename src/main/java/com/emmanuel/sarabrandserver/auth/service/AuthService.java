@@ -22,7 +22,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.CREATED;
@@ -70,29 +69,24 @@ public class AuthService {
      * he/she exists else create and save new Clientz object.
      * @param dto of type WorkerRegisterDTO
      * @throws DuplicateException when user principal exists and has a role of worker
-     * @return ResponseEntity of type String
+     * @return ResponseEntity of type HttpStatus
      * */
     public ResponseEntity<?> workerRegister(RegisterDTO dto) {
         if (this.clientzRepository.isAdmin(dto.getEmail().trim(), dto.getUsername().trim(), RoleEnum.WORKER) > 0) {
             throw new DuplicateException(dto.getUsername() + " exists");
         }
 
-        Optional<Clientz> client = this.clientzRepository.workerExists(dto.getEmail().trim(), dto.getUsername().trim());
+        Clientz client = this.clientzRepository
+                .workerExists(dto.getEmail().trim(), dto.getUsername().trim())
+                .orElse(createClient(dto));
+        client.addRole(new ClientRole(RoleEnum.WORKER));
 
-        if (client.isEmpty()) {
-            client = Optional.of(createClient(dto));
-        }
-
-        // Client to ClientRole has a fetch type of EAGER
-        client.get().addRole(new ClientRole(RoleEnum.WORKER));
-
-        // Save client
-        this.clientzRepository.save(client.get());
+        this.clientzRepository.save(client);
         return new ResponseEntity<>(CREATED);
     }
 
     /**
-     * Method is responsible for registering a new user
+     * Method is responsible for registering a new user who isn't a worker
      * @param dto of type ClientRegisterDTO
      * @throws DuplicateException when user principal exists
      * @return ResponseEntity of type HttpStatus
@@ -101,22 +95,17 @@ public class AuthService {
         if (this.clientzRepository.principalExists(dto.getEmail().trim(), dto.getUsername().trim()) > 0) {
             throw new DuplicateException(dto.getEmail() + " exists");
         }
-
-        // Create clientz
-        var clientz = createClient(dto);
-
-        // Create and Save client
-        this.clientzRepository.save(clientz);
+        this.clientzRepository.save(createClient(dto));
         return new ResponseEntity<>(CREATED);
     }
 
     /**
-     * Basically validate dto to what is saved in the DB using an AuthenticationManager and then send jwt token via
-     * cookie to prevent saving to local storage and custom cookie where status http only is set to false so the UI can
-     * protect pages.
-     * Note Transactional annotation is used because Clientz has properties with fetch type LAZY
-     * @param dto consist of principal(username or email) and password.
-     * @throws AuthenticationException is thrown when credentials do not exist or bad credentials
+     * After a user has been validated via AuthenticationManager, a jwt and session cookie are sent to the UI. Jwt
+     * cookie ofc is for authorization and session cookie is needed to put a constraint on the amount of time a user has
+     * access to a page in the UI. Note Transactional annotation is used because Clientz has properties with fetch type
+     * LAZY.
+     * @param dto consist of principal and password.
+     * @throws AuthenticationException is thrown when credentials do not exist, bad credentials account is locked e.t.c.
      * @return ResponseEntity of type HttpStatus
      * */
     @Transactional

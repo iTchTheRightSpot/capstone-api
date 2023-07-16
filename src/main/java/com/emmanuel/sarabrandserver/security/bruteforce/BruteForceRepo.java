@@ -1,17 +1,18 @@
 package com.emmanuel.sarabrandserver.security.bruteforce;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class BruteForceRepo {
+
     private final Map<String, Object> mapOperation;
 
-    public BruteForceRepo() {
-        this.mapOperation = new ConcurrentHashMap<>();
+    public BruteForceRepo(@Qualifier(value = "mapOperation") Map<String, Object> mapOperation) {
+        this.mapOperation = mapOperation;
     }
 
     public void save(BruteForceEntity entity) {

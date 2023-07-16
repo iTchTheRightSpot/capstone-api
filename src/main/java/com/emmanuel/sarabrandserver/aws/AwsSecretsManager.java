@@ -1,10 +1,6 @@
 package com.emmanuel.sarabrandserver.aws;
 
-import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
-import com.emmanuel.sarabrandserver.auth.service.AuthService;
-import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -22,23 +18,6 @@ public class AwsSecretsManager {
 
     public AwsSecretsManager(Environment environment) {
         this.environment = environment;
-    }
-
-    // Inject dummy account for display purpose
-    @Bean
-    public CommandLineRunner commandLineRunner(AuthService authService, ClientzRepository repository) {
-        return args -> {
-            if (repository.principalExists("admin@admin.com", "admin123456") == 0) {
-                authService.workerRegister(new RegisterDTO(
-                        "Test Account",
-                        "Development",
-                        "admin@admin.com",
-                        "admin123456",
-                        "0000000000",
-                        "password123456"
-                ));
-            }
-        };
     }
 
     @Bean(name = "awsSecretString")

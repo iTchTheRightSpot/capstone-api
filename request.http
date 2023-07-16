@@ -53,4 +53,8 @@ DELETE http://localhost:1997/api/v1/worker/product/Aerodynamic Concrete Watch/3e
 
 
 ### Get All Products Admin
-GET http://localhost:1997/api/v1/worker/product
+GET https://3.99.168.78:80/api/v1/client/product
+
+
+### Route
+GET http://3.99.168.78:80

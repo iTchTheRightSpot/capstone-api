@@ -14,23 +14,20 @@ import java.time.temporal.ChronoUnit;
 
 @Service @Getter @Setter @Slf4j
 public class JwtTokenService {
-    private int tokenExpiry = 30; // Set to max state of lambda function in minutes
+    private int tokenExpiry = 30; // minutes. Short-lived tokens because of statelessness
     private int boundToSendRefreshToken = 15; // minutes
 
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
 
-    public JwtTokenService(
-            JwtEncoder jwtEncoder,
-            JwtDecoder jwtDecoder
-    ) {
+    public JwtTokenService(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder) {
         this.jwtEncoder = jwtEncoder;
         this.jwtDecoder = jwtDecoder;
     }
 
     /**
      * Generates a jwt token
-     * @param authentication of type UsernamePasswordAuthenticationToken
+     * @param authentication of type org.springframework.security.core
      * @return String
      * */
     public String generateToken(Authentication authentication) {
@@ -57,25 +54,25 @@ public class JwtTokenService {
     /**
      * Validates if token is valid, and it is within bound to refresh jwt token.
      * @param token of jwt
-     * @return JwtUserStatus custom record class
+     * @return UserJwtStatus
      * */
-    public JwtUserStatus _validateTokenExpiryDate(@NotNull final String token) {
+    public UserJwtStatus _validateTokenExpiryDate(@NotNull final String token) {
         try {
-            Jwt jwt = this.jwtDecoder.decode(token);
+            Jwt jwt = this.jwtDecoder.decode(token); // throws an error if jwt is not valid
             Instant expiresAt = jwt.getExpiresAt();
             if (expiresAt != null) {
                 Instant now = Instant.now();
                 Instant boundFromNow = now.plus(boundToSendRefreshToken, ChronoUnit.MINUTES);
-                return new JwtUserStatus(
+                return new UserJwtStatus(
                         jwt.getSubject(),
                         !expiresAt.isBefore(now) && expiresAt.isBefore(boundFromNow)
                 );
             }
         } catch (JwtException e) {
-            log.error("JWT exception. Token is expired: {}", e.getMessage());
+            log.error("JWT exception in JwtTokenService class. {}", e.getMessage());
         }
 
-        return new JwtUserStatus(token, false);
+        return new UserJwtStatus(token, false);
     }
 
     // Convert tokenExpiry to seconds

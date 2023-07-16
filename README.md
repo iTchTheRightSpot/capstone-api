@@ -15,6 +15,9 @@ Server side code for Sara The Brand e-commerce.
 Link for the most up-to-date schema.
 [Link](https://dbdiagram.io/d/6483c4d5722eb77494b791a1)
 
+### Demo
+email - admin@admin.com
+password - password123456
 
 ### Reference Documentation
 For further reference, please consider the following sections:

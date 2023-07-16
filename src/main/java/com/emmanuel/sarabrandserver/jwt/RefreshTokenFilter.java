@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
@@ -15,27 +15,27 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/** Class implements refresh token logic. Where jwt cookie is replaced if cookie is about to expire based on a bound */
+/** Class implements refresh token logic*/
 @Component
-public class CustomFilter extends OncePerRequestFilter {
-    @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
-
-    @Value(value = "${custom.cookie.frontend}")
-    private String LOGGEDSESSION;
-
+public class RefreshTokenFilter extends OncePerRequestFilter {
     private final JwtTokenService tokenService;
     private final UserDetailsService userDetailsService;
+    private final Environment environment;
 
-    public CustomFilter(
+    public RefreshTokenFilter(
             JwtTokenService tokenService,
-            @Qualifier(value = "clientDetailService") UserDetailsService userDetailsService
+            @Qualifier(value = "clientDetailsService") UserDetailsService userDetailsService,
+            Environment environment
     ) {
         this.tokenService = tokenService;
         this.userDetailsService = userDetailsService;
+        this.environment = environment;
     }
 
-    /** Updates jwt and custom cookie values and max ages */
+    /**
+     * The objective of this filter is to replace jwt and cookie's max age if jwt is within expiration bound(look in
+     * JwtTokenService to find out the bound).
+     * */
     @Override
     protected void doFilterInternal(
             @NotNull HttpServletRequest request,
@@ -45,16 +45,16 @@ public class CustomFilter extends OncePerRequestFilter {
         Cookie[] cookies = request.getCookies();
         if (cookies != null && !request.getRequestURI().equals("/api/v1/auth/logout")) {
             for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(JSESSIONID)) {
+                if (cookie.getName().equals(this.environment.getProperty("server.servlet.session.cookie.name"))) {
                     var obj = this.tokenService._validateTokenExpiryDate(cookie.getValue());
 
-                    if (obj.isTokenValid()) {
+                    if (obj._isTokenValid()) {
                         var userDetails = this.userDetailsService.loadUserByUsername(obj.principal());
                         String token = this.tokenService.generateToken(
                                 new UsernamePasswordAuthenticationToken(
                                         userDetails,
                                         null,
-                                        userDetails.getAuthorities()
+                                        userDetails.getAuthorities() // roles
                                 )
                         );
                         cookie.setValue(token);
@@ -63,10 +63,11 @@ public class CustomFilter extends OncePerRequestFilter {
                     }
                 }
 
-                if (cookie.getName().equals(LOGGEDSESSION)) {
+                if (cookie.getName().equals(this.environment.getProperty("custom.cookie.frontend"))) {
                     cookie.setMaxAge(this.tokenService.maxAge());
                     response.addCookie(cookie);
                 }
+
             }
         }
 

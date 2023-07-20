@@ -8,20 +8,17 @@ import software.amazon.awssdk.services.sesv2.SesV2Client;
 
 @Service
 public class EmailService {
-    private final Environment environment;
+    private final Environment _environment;
 
-    public EmailService(Environment environment) {
-        this.environment = environment;
+    public EmailService(Environment _environment) {
+        this._environment = _environment;
     }
 
-    public void sendEmail(String sender, String recipient, String message) {
-        SesV2Client sesV2Client = SesV2Client.builder()
+    public void _sendEmail(String _sender, String _recipient, String _message) {
+        SesV2Client _sesV2Client = SesV2Client.builder()
                 .region(Region.CA_CENTRAL_1)
                 .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
                 .build();
-
-
-
     }
 
     private void _emailBuilder() {}

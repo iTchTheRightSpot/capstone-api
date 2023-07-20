@@ -56,7 +56,7 @@ public class WorkerCategoryService {
      * */
     @Transactional
     public ResponseEntity<?> create(CategoryDTO dto) {
-        var date = this.dateUTC.toUTC(new Date()).isEmpty() ? new Date() : this.dateUTC.toUTC(new Date()).get();
+        var date = this.dateUTC.toUTC(new Date()).orElse(new Date());
 
         // Handle cases based on the logic explained above.
         var category = dto.getParent().isBlank() ?
@@ -113,7 +113,7 @@ public class WorkerCategoryService {
             throw new DuplicateException(dto.getName() + " cannot be created. It is a duplicate");
         }
 
-        var date = this.dateUTC.toUTC(new Date()).isEmpty() ? new Date() : this.dateUTC.toUTC(new Date()).get();
+        var date = this.dateUTC.toUTC(new Date()).orElse(new Date());
 
         this.categoryRepository.update(date, dto.getId(), dto.getName().trim());
         return new ResponseEntity<>(OK);

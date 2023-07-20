@@ -23,8 +23,13 @@ public class CorsConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        List<String> allowOrigins = List.of(
+                "http://localhost:4200/",
+                "https://admin.emmanueluluabuike.com/",
+                "https://store.emmanueluluabuike.com/"
+        );
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:4200/"));
+        configuration.setAllowedOrigins(allowOrigins);
         configuration.setAllowedMethods(List.of("GET", "PUT", "POST", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(CONTENT_TYPE,  ACCEPT, "X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);

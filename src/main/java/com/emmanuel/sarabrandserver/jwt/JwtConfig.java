@@ -14,10 +14,26 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
+import java.security.KeyPair;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.UUID;
+
 @Configuration
 public class JwtConfig {
-
     private RSAKey rsaKey;
+
+    private record Jwks() {
+        public static RSAKey generateRsa() {
+            KeyPair keyPair = KeyGeneratorUtils.generateRsaKey();
+            RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+            RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+            return new RSAKey.Builder(publicKey)
+                    .privateKey(privateKey)
+                    .keyID(UUID.randomUUID().toString())
+                    .build();
+        }
+    }
 
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
@@ -38,13 +54,13 @@ public class JwtConfig {
 
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        var jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("role");
-        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+        var authoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        authoritiesConverter.setAuthoritiesClaimName("role");
+        authoritiesConverter.setAuthorityPrefix("ROLE_");
 
-        var jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
-        return jwtAuthenticationConverter;
+        var converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+        return converter;
     }
 
 }

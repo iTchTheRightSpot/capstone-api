@@ -1,5 +1,6 @@
 package com.emmanuel.sarabrandserver.jwt;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +15,7 @@ import java.time.temporal.ChronoUnit;
 
 @Service @Getter @Setter @Slf4j
 public class JwtTokenService {
-    private int tokenExpiry = 30; // minutes. Short-lived tokens because of statelessness
+    private int tokenExpiry = 30; // minutes.
     private int boundToSendRefreshToken = 15; // minutes
 
     private final JwtEncoder jwtEncoder;
@@ -53,12 +54,12 @@ public class JwtTokenService {
 
     /**
      * Validates if token is valid, and it is within bound to refresh jwt token.
-     * @param token of jwt
+     * @param cookie of type jakarta.servlet.http.Cookie
      * @return UserJwtStatus
      * */
-    public UserJwtStatus _validateTokenExpiryDate(@NotNull final String token) {
+    public UserJwtStatus _validateTokenExpiryDate(@NotNull final Cookie cookie) {
         try {
-            Jwt jwt = this.jwtDecoder.decode(token); // throws an error if jwt is not valid
+            Jwt jwt = this.jwtDecoder.decode(cookie.getValue()); // throws an error if jwt is not valid
             Instant expiresAt = jwt.getExpiresAt();
             if (expiresAt != null) {
                 Instant now = Instant.now();
@@ -69,10 +70,11 @@ public class JwtTokenService {
                 );
             }
         } catch (JwtException e) {
+            cookie.setMaxAge(0); // Remove cookie
             log.error("JWT exception in JwtTokenService class. {}", e.getMessage());
         }
 
-        return new UserJwtStatus(token, false);
+        return new UserJwtStatus(cookie.getValue(), false);
     }
 
     // Convert tokenExpiry to seconds

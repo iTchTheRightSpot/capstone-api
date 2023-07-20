@@ -7,6 +7,7 @@ Server side code for Sara The Brand e-commerce.
 * AWS RDS (MySQL)
 * AWS Secret manager
 * AWS EC2
+* AWS SES
 * Flyway Migration
 * Unit test JUnit and Mockito
 * Integration test using test containers
@@ -18,6 +19,10 @@ Link for the most up-to-date schema.
 ### Demo
 email - admin@admin.com
 password - password123456
+
+### Development link
+[Storefront](https://store.emmanueluluabuike.com/)
+[Admin front](https://admin.emmanueluluabuike.com/)
 
 ### Reference Documentation
 For further reference, please consider the following sections:

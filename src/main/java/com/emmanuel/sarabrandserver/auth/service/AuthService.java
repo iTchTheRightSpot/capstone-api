@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.UUID;
 
+import static org.springframework.http.HttpHeaders.SET_COOKIE;
 import static org.springframework.http.HttpStatus.CREATED;
 
 @Service @Setter
@@ -43,6 +44,9 @@ public class AuthService {
 
     @Value(value = "${server.servlet.session.cookie.path}")
     private String COOKIEPATH;
+
+    @Value(value = "${server.servlet.session.cookie.same-site}")
+    private String SAMESITE;
 
     @Value(value = "${server.servlet.session.cookie.secure}")
     private boolean COOKIESECURE;
@@ -118,27 +122,29 @@ public class AuthService {
         String token = this.jwtTokenService.generateToken(authentication);
 
         // Add jwt to cookie
-        ResponseCookie resCookie = ResponseCookie.from(JSESSIONID, token)
+        ResponseCookie jwtCookie = ResponseCookie.from(JSESSIONID, token)
                 .domain(DOMAIN)
                 .maxAge(this.jwtTokenService.maxAge())
+                .sameSite(SAMESITE)
                 .httpOnly(HTTPONLY)
                 .secure(COOKIESECURE)
                 .path(COOKIEPATH)
                 .build();
 
         // Second cookie where UI can access to validate if user is logged in
-        ResponseCookie resCookie1 = ResponseCookie.from(LOGGEDSESSION, UUID.randomUUID().toString())
+        ResponseCookie stateCookie = ResponseCookie.from(LOGGEDSESSION, UUID.randomUUID().toString())
                 .domain(DOMAIN)
                 .maxAge(this.jwtTokenService.maxAge())
                 .httpOnly(false)
+                .sameSite(SAMESITE)
                 .secure(COOKIESECURE)
                 .path(COOKIEPATH)
                 .build();
 
         // Add cookies to response header
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.SET_COOKIE, resCookie.toString());
-        headers.add(HttpHeaders.SET_COOKIE, resCookie1.toString());
+        headers.add(SET_COOKIE, jwtCookie.toString());
+        headers.add(SET_COOKIE, stateCookie.toString());
 
         return ResponseEntity.ok().headers(headers).build();
     }

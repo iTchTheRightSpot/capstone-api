@@ -15,7 +15,6 @@ import com.emmanuel.sarabrandserver.product.response.DetailResponse;
 import com.emmanuel.sarabrandserver.product.response.ProductResponse;
 import com.emmanuel.sarabrandserver.util.DateUTC;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,9 +35,6 @@ import static org.springframework.http.HttpStatus.*;
 
 @Service @Slf4j
 public class WorkerProductService {
-    @Value(value = "${aws.bucket}")
-    private String bucketName;
-
     private String defaultKey; // Represents the default_image_key for Product property
 
     private final ProductRepository productRepository;
@@ -76,7 +72,7 @@ public class WorkerProductService {
      * */
     public Page<ProductResponse> fetchAll(int page, int size) {
         return this.productRepository
-                .fetchAllProductsWorker(PageRequest.of(page, Math.min(size, 30)))
+                .fetchAllProductsWorker(PageRequest.of(page, size))
                 .map(pojo -> new ProductResponse(
                         pojo.getId(),
                         pojo.getName(),
@@ -97,7 +93,7 @@ public class WorkerProductService {
      * */
     public Page<DetailResponse> fetchAll(String name, int page, int size) {
         return this.productRepository
-                .findDetailByProductNameWorker(name, PageRequest.of(page, Math.min(size, 30))) //
+                .findDetailByProductNameWorker(name, PageRequest.of(page, size)) //
                 .map(p -> new DetailResponse(
                         p.getSku(),
                         p.getVisible(),
@@ -120,7 +116,7 @@ public class WorkerProductService {
     public ResponseEntity<HttpStatus> create(CreateProductDTO dto, MultipartFile[] files) {
         var category = this.categoryService.findByName(dto.getCategory().trim());
         var _product = this.productRepository.findByProductName(dto.getName().trim());
-        var date = this.dateUTC.toUTC(new Date()).isPresent() ? this.dateUTC.toUTC(new Date()).get() : new Date();
+        var date = this.dateUTC.toUTC(new Date()).orElse(new Date());
 
         // Persist new ProductDetail if Product exist
         if (_product.isPresent()) {
@@ -144,20 +140,17 @@ public class WorkerProductService {
                 .productDetails(new HashSet<>())
                 .build();
         product.addDetail(detail);
-        var saved = this.productRepository.save(product);
 
-        // Update Collection if it is not blank
+        // Set ProductCategory to Product
+        product.setProductCategory(category);
+
+        // Set ProductCollection to Product
         if (!dto.getCollection().isBlank()) {
             var collection = this.collectionService.findByName(dto.getCollection().trim());
-            collection.setModifiedAt(date);
-            collection.addProduct(saved);
-            this.collectionService.save(collection);
+            product.setProductCollection(collection);
         }
 
-        // Update Category of new Product
-        category.addProduct(saved);
-        category.setModifiedAt(date);
-        this.categoryService.save(category);
+        this.productRepository.save(product);
 
         return new ResponseEntity<>(CREATED);
     }
@@ -212,7 +205,7 @@ public class WorkerProductService {
             // Only upload to s3 in prod profile
             if (Arrays.asList(this.environment.getActiveProfiles()).contains("prod")) {
                 PutObjectRequest request = PutObjectRequest.builder()
-                        .bucket(bucketName) // pass as env variable
+                        .bucket(this.environment.getProperty("aws.bucket")) // pass as env variable
                         .key(key)
                         .build();
                 this.s3Service.uploadToS3(file, request);
@@ -237,8 +230,10 @@ public class WorkerProductService {
                 .orElseThrow(() -> new CustomNotFoundException("Product does not exist"));
 
         // Validate if dto name does not equal ProductName and dto does not exist in DB.
-        if (!product.getName().equals(dto.getName().trim())
-                && this.productRepository.findByProductName(dto.getName().trim()).isPresent()) {
+        boolean bool = !product.getName().equals(dto.getName().trim()) && this.productRepository
+                .findByProductName(dto.getName().trim()).isPresent();
+
+        if (bool) {
             throw new  DuplicateException(dto.getName() + " exists");
         }
 
@@ -263,7 +258,7 @@ public class WorkerProductService {
     public ResponseEntity<HttpStatus> updateProductDetail(final DetailDTO dto) {
         // Find ProductDetail by it sku
         var detail = findByDetailBySku(dto.getSku().trim());
-        var date = this.dateUTC.toUTC(new Date()).isPresent() ? this.dateUTC.toUTC(new Date()).get() : new Date();
+        var date = this.dateUTC.toUTC(new Date()).orElse(new Date());
 
         // Fetch type is eager for the properties I am updating
         detail.setModifiedAt(date);
@@ -298,7 +293,7 @@ public class WorkerProductService {
                     .map(img -> ObjectIdentifier.builder().key(img.getImage()).build()) //
                     .toList();
 
-            this.s3Service.deleteImagesFromS3(keys, bucketName);
+            this.s3Service.deleteImagesFromS3(keys, this.environment.getProperty("aws.bucket"));
         }
 
         this.productRepository.delete(product);
@@ -323,7 +318,7 @@ public class WorkerProductService {
                     .map(image -> ObjectIdentifier.builder().key(image.getImageKey()).build())
                     .toList();
 
-            this.s3Service.deleteImagesFromS3(keys, bucketName);
+            this.s3Service.deleteImagesFromS3(keys, this.environment.getProperty("aws.bucket"));
         }
 
         // Remove detail from Product and Save Product

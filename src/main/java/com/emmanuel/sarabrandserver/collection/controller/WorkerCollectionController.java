@@ -23,7 +23,7 @@ public class WorkerCollectionController {
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
             @NotNull @RequestParam(name = "size", defaultValue = "30") Integer size
     ) {
-        return new ResponseEntity<>(this.collectionService.fetchAll(page, size), HttpStatus.OK);
+        return new ResponseEntity<>(this.collectionService.fetchAll(page, Math.min(size, 30)), HttpStatus.OK);
     }
 
     @PostMapping(consumes = "application/json")

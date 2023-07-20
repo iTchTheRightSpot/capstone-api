@@ -136,6 +136,7 @@ public class SecurityConfig {
                         this.decoder.decode(token); // Will throw an exception if token is invalid
                         return token;
                     } catch (JwtException e) {
+                        cookie.setMaxAge(0); // Remove cookie
                         log.error("Jwt Exception from CustomBearerTokenResolver {}", e.getMessage());
                     }
                 }

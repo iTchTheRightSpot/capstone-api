@@ -193,8 +193,6 @@ class WorkerProductServiceTest {
         // Then
         assertEquals(CREATED, this.productService.create(dto, arr).getStatusCode());
         verify(this.productRepository, times(1)).save(any(Product.class));
-        verify(this.workerCategoryService, times(1)).save(any(ProductCategory.class));
-        verify(this.collectionService, times(1)).save(any(ProductCollection.class));
     }
 
     /** Simulates creating a ProductDetail when product name exists */

@@ -46,7 +46,7 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
         if (cookies != null && !request.getRequestURI().equals("/api/v1/auth/logout")) {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals(this.environment.getProperty("server.servlet.session.cookie.name"))) {
-                    var obj = this.tokenService._validateTokenExpiryDate(cookie.getValue());
+                    var obj = this.tokenService._validateTokenExpiryDate(cookie);
 
                     if (obj._isTokenValid()) {
                         var userDetails = this.userDetailsService.loadUserByUsername(obj.principal());
@@ -66,9 +66,8 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
                 if (cookie.getName().equals(this.environment.getProperty("custom.cookie.frontend"))) {
                     cookie.setMaxAge(this.tokenService.maxAge());
                     response.addCookie(cookie);
-                }
-
-            }
+                } // End of If
+            } // End of for
         }
 
         filterChain.doFilter(request, response);

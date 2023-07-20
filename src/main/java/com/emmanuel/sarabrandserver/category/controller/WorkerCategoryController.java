@@ -25,7 +25,7 @@ public class WorkerCategoryController {
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
             @NotNull @RequestParam(name = "size", defaultValue = "30") Integer size
     ) {
-        return new ResponseEntity<>(this.workerCategoryService.fetchAll(page, size), HttpStatus.OK);
+        return new ResponseEntity<>(this.workerCategoryService.fetchAll(page, Math.min(size, 30)), HttpStatus.OK);
     }
 
     @PostMapping(consumes = "application/json")
@@ -39,8 +39,8 @@ public class WorkerCategoryController {
     }
 
     @DeleteMapping(path = "/{name}")
-    public ResponseEntity<?> delete(@PathVariable(value = "name") String id) {
-        return this.workerCategoryService.delete(id);
+    public ResponseEntity<?> delete(@PathVariable(value = "name") String name) {
+        return this.workerCategoryService.delete(name);
     }
 
 }

@@ -25,14 +25,14 @@ public class WorkerProductController {
      * Method fetches a list of ProductResponse.
      * @param page is the UI page number
      * @param size is the amount in the list
-     * @return ResponseEntity of HttpStatus and ProductResponse
+     * @return ResponseEntity
      * */
     @GetMapping(produces = "application/json")
     public ResponseEntity<?> fetchAll(
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
             @NotNull @RequestParam(name = "size", defaultValue = "30") Integer size
     ) {
-        return new ResponseEntity<>(this.workerProductService.fetchAll(page, size), HttpStatus.OK);
+        return new ResponseEntity<>(this.workerProductService.fetchAll(page, Math.min(size, 30)), HttpStatus.OK);
     }
 
     /**
@@ -40,7 +40,7 @@ public class WorkerProductController {
      * @param name is the name of the product
      * @param page is amount of size based on the page
      * @param size is the amount in the list adn
-     * @return ResponseEntity of type HttpStatus and DetailResponse
+     * @return ResponseEntity
      * */
     @GetMapping(path = "/{name}", produces = "application/json")
     public ResponseEntity<?> fetchAll(
@@ -48,7 +48,7 @@ public class WorkerProductController {
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
             @NotNull @RequestParam(name = "size", defaultValue = "15") Integer size
     ) {
-        return new ResponseEntity<>(this.workerProductService.fetchAll(name, page, size), HttpStatus.OK);
+        return new ResponseEntity<>(this.workerProductService.fetchAll(name, page, Math.min(size, 30)), HttpStatus.OK);
     }
 
     @PostMapping(consumes = "multipart/form-data")
@@ -95,9 +95,7 @@ public class WorkerProductController {
      * @return ResponseEntity of type HttpStatus
      * */
     @DeleteMapping(path = "/detail/{sku}")
-    public ResponseEntity<?> deleteProductDetail(
-       @NotNull @PathVariable(value = "sku") String sku
-    ) {
+    public ResponseEntity<?> deleteProductDetail(@NotNull @PathVariable(value = "sku") String sku) {
         return this.workerProductService.deleteProductDetail(sku);
     }
 

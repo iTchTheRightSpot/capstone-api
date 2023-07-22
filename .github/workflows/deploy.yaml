@@ -23,7 +23,7 @@ jobs:
 
       # Clean package
       - name: Clean package
-        run: ./mvn clean
+        run: ./mvnw clean
 
       # Build image
       - name: Build Image

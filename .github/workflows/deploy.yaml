@@ -21,6 +21,10 @@ jobs:
         with:
           submodules: true
 
+      # Grant execute permission to mvnw script
+      - name: Grant execute permission to mvnw
+        run: chmod +x mvnw
+
       # Build image
       - name: Build Image
         run: ./mvnw clean spring-boot:build-image

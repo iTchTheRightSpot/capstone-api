@@ -110,11 +110,7 @@ public class AuthService {
     }
 
     /**
-     * Basically logs in a user if based on credentials stored in the DB.
-     * After a user has been validated via AuthenticationManager, a jwt and session cookie are sent to the UI. Jwt
-     * cookie ofc is for authorization and session cookie is needed to put a constraint on the amount of time a user has
-     * access to a page in the UI. Note Transactional annotation is used because Clientz has properties with fetch type
-     * LAZY.
+     * Basically logs in a user based on credentials stored in the DB.
      * @param dto consist of principal and password.
      * @param request of HttpServletRequest
      * @param response of HttpServletResponse
@@ -123,7 +119,8 @@ public class AuthService {
      * */
     @Transactional
     public ResponseEntity<?> login(LoginDTO dto, HttpServletRequest request, HttpServletResponse response) {
-        if (_validateRequestContainsValidJwt(request, response)) {
+        // No need to re-authenticate if request contains valid cookies
+        if (_validateRequestContainsValidCookies(request, response)) {
             return new ResponseEntity<>(OK);
         }
 
@@ -134,32 +131,55 @@ public class AuthService {
         // Jwt Token
         String token = this.jwtTokenService.generateToken(authentication);
 
+        // Servlet cookie
+        Cookie jwtCookie = new Cookie(JSESSIONID, token);
+        jwtCookie.setDomain(DOMAIN);
+        jwtCookie.setMaxAge(this.jwtTokenService.maxAge());
+        jwtCookie.setHttpOnly(HTTPONLY);
+        jwtCookie.setPath(COOKIEPATH);
+        jwtCookie.setSecure(COOKIESECURE);
+        response.addCookie(jwtCookie);
+
+        _stateCookie(response);
+
+        return new ResponseEntity<>(OK);
+
         // Add jwt to cookie
-        ResponseCookie jwtCookie = ResponseCookie.from(JSESSIONID, token)
-                .domain(DOMAIN)
-                .maxAge(this.jwtTokenService.maxAge())
-                .sameSite(SAMESITE)
-                .httpOnly(HTTPONLY)
-                .secure(COOKIESECURE)
-                .path(COOKIEPATH)
-                .build();
+//        ResponseCookie jwtCookie = ResponseCookie.from(JSESSIONID, token)
+//                .domain(DOMAIN)
+//                .maxAge(this.jwtTokenService.maxAge())
+//                .sameSite(SAMESITE)
+//                .httpOnly(HTTPONLY)
+//                .secure(COOKIESECURE)
+//                .path(COOKIEPATH)
+//                .build();
+//
+//        // Second cookie where UI can access to validate if user is logged in
+//        ResponseCookie stateCookie = ResponseCookie.from(LOGGEDSESSION, UUID.randomUUID().toString())
+//                .domain(DOMAIN)
+//                .maxAge(this.jwtTokenService.maxAge())
+//                .httpOnly(false)
+//                .sameSite(SAMESITE)
+//                .secure(COOKIESECURE)
+//                .path(COOKIEPATH)
+//                .build();
+//
+//        // Add cookies to response header
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.add(SET_COOKIE, jwtCookie.toString());
+//        headers.add(SET_COOKIE, stateCookie.toString());
+//
+//        return ResponseEntity.ok().headers(headers).build();
+    }
 
-        // Second cookie where UI can access to validate if user is logged in
-        ResponseCookie stateCookie = ResponseCookie.from(LOGGEDSESSION, UUID.randomUUID().toString())
-                .domain(DOMAIN)
-                .maxAge(this.jwtTokenService.maxAge())
-                .httpOnly(false)
-                .sameSite(SAMESITE)
-                .secure(COOKIESECURE)
-                .path(COOKIEPATH)
-                .build();
-
-        // Add cookies to response header
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(SET_COOKIE, jwtCookie.toString());
-        headers.add(SET_COOKIE, stateCookie.toString());
-
-        return ResponseEntity.ok().headers(headers).build();
+    private void _stateCookie(HttpServletResponse response) {
+        Cookie stateCookie = new Cookie(LOGGEDSESSION, UUID.randomUUID().toString());
+        stateCookie.setDomain(DOMAIN);
+        stateCookie.setMaxAge(this.jwtTokenService.maxAge());
+        stateCookie.setHttpOnly(false);
+        stateCookie.setPath(COOKIEPATH);
+        stateCookie.setSecure(COOKIESECURE);
+        response.addCookie(stateCookie);
     }
 
     private Clientz createClient(RegisterDTO dto) {
@@ -186,7 +206,7 @@ public class AuthService {
      * @param response of HttpServletResponse
      * @return boolean
      * */
-    private boolean _validateRequestContainsValidJwt(HttpServletRequest request, HttpServletResponse response) {
+    private boolean _validateRequestContainsValidCookies(HttpServletRequest request, HttpServletResponse response) {
         Cookie[] cookies = request.getCookies();
         // Base case
         if (cookies == null)
@@ -208,23 +228,24 @@ public class AuthService {
         // validate jwt and LOGGEDSESSION are present in HttpServletRequest
         if (set.contains(JSESSIONID) && set.contains(LOGGEDSESSION)) {
             return Arrays.stream(cookies)
-                    .anyMatch(cookie -> cookie.getName().equals(JSESSIONID)
-                            && this.jwtTokenService._validateTokenExpiration(cookie.getValue())
-                    );
-        } else if (set.contains(JSESSIONID) && !set.contains(LOGGEDSESSION)) { // validate jwt is present but not LOGGEDSESSION.
-            Arrays.stream(cookies)
                     .filter(cookie -> cookie.getName().equals(JSESSIONID))
-                    .filter(cookie -> this.jwtTokenService._validateTokenExpiration(cookie.getValue()))
-                    .findFirst()
-                    .ifPresent(cookie -> {
-                        Cookie stateCookie = new Cookie(LOGGEDSESSION, UUID.randomUUID().toString());
-                        stateCookie.setDomain(DOMAIN);
-                        stateCookie.setMaxAge(this.jwtTokenService.maxAge());
-                        stateCookie.setHttpOnly(false);
-                        stateCookie.setPath(COOKIEPATH);
-                        stateCookie.setSecure(COOKIESECURE);
-                        response.addCookie(stateCookie);
-                    });
+                    .anyMatch(cookie -> this.jwtTokenService._validateTokenExpiration(cookie.getValue()));
+        } else if (set.contains(JSESSIONID) && !set.contains(LOGGEDSESSION)) { // validate jwt is present but not LOGGEDSESSION.
+            boolean status = Arrays.stream(cookies)
+                    .filter(cookie -> cookie.getName().equals(JSESSIONID))
+                    .anyMatch(cookie -> this.jwtTokenService._validateTokenExpiration(cookie.getValue()));
+
+            if (status) {
+                _stateCookie(response);
+                return true;
+            }
+        }
+
+        for (Cookie cookie : cookies) {
+            // Delete cookie
+            if (cookie.getName().equals(JSESSIONID) || cookie.getName().equals(LOGGEDSESSION)) {
+                cookie.setMaxAge(0);
+            }
         }
 
         return false;

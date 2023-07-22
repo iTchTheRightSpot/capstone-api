@@ -210,6 +210,7 @@ class AuthServiceTest {
         // Then
         assertEquals(this.authService.login(dto, request, response).getStatusCode(), OK);
         verify(response, times(0)).addCookie(any(Cookie.class));
+        verify(this.authenticationManager, times(0)).authenticate(any(Authentication.class));
     }
 
     /** Simulates only jwt cookie is present in request */
@@ -234,6 +235,7 @@ class AuthServiceTest {
         // Then
         assertEquals(this.authService.login(dto, request, response).getStatusCode(), OK);
         verify(response, times(1)).addCookie(any(Cookie.class));
+        verify(this.authenticationManager, times(0)).authenticate(any(Authentication.class));
     }
 
     @Test

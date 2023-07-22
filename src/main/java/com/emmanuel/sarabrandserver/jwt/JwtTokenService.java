@@ -53,11 +53,11 @@ public class JwtTokenService {
     }
 
     /**
-     * Validates if token is valid, and it is within bound to refresh jwt token.
+     * Validates if token is with expiration bound. Needed in RefreshTokenFilter
      * @param cookie of type jakarta.servlet.http.Cookie
      * @return UserJwtStatus
      * */
-    public UserJwtStatus _validateTokenExpiryDate(@NotNull final Cookie cookie) {
+    public UserJwtStatus _validateTokenIsWithinExpirationBound(@NotNull final Cookie cookie) {
         try {
             Jwt jwt = this.jwtDecoder.decode(cookie.getValue()); // throws an error if jwt is not valid
             Instant expiresAt = jwt.getExpiresAt();
@@ -75,6 +75,17 @@ public class JwtTokenService {
         }
 
         return new UserJwtStatus(cookie.getValue(), false);
+    }
+
+    /** Simply validates if token is expired or not */
+    public boolean _validateTokenExpiration(final String jwt) {
+        try {
+            // Based on docs, this will throw an error is token is expired or tampered with.
+            this.jwtDecoder.decode(jwt);
+            return true;
+        } catch (JwtException ex) {
+            return false;
+        }
     }
 
     // Convert tokenExpiry to seconds

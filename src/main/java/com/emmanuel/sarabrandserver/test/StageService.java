@@ -14,7 +14,7 @@ public class StageService {
     @Bean
     public CommandLineRunner commandLineRunner(AuthService authService, ClientzRepository clientzRepository) {
         return args -> {
-            if (clientzRepository.findByPrincipal("admin@admin.com").isEmpty()) {
+            if (clientzRepository.findByPrincipal("admin@admin.com").isPresent()) {
                 return;
             }
             authService.workerRegister(new RegisterDTO(

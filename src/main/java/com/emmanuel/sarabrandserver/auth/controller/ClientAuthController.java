@@ -3,6 +3,8 @@ package com.emmanuel.sarabrandserver.auth.controller;
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,8 +27,12 @@ public class ClientAuthController {
     }
 
     @PostMapping(path = "/login", consumes = "application/json")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginDTO dto) {
-        return this.authService.login(dto);
+    public ResponseEntity<?> login(
+            @Valid @RequestBody LoginDTO dto,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        return this.authService.login(dto, request, response);
     }
 
 }

@@ -8,6 +8,9 @@ import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.jwt.JwtTokenService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,11 +24,14 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.springframework.http.HttpHeaders.SET_COOKIE;
 import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.OK;
 
 @Service @Setter
 public class AuthService {
@@ -104,16 +110,23 @@ public class AuthService {
     }
 
     /**
+     * Basically logs in a user if based on credentials stored in the DB.
      * After a user has been validated via AuthenticationManager, a jwt and session cookie are sent to the UI. Jwt
      * cookie ofc is for authorization and session cookie is needed to put a constraint on the amount of time a user has
      * access to a page in the UI. Note Transactional annotation is used because Clientz has properties with fetch type
      * LAZY.
      * @param dto consist of principal and password.
+     * @param request of HttpServletRequest
+     * @param response of HttpServletResponse
      * @throws AuthenticationException is thrown when credentials do not exist, bad credentials account is locked e.t.c.
-     * @return ResponseEntity of type HttpStatus
+     * @return ResponseEntity
      * */
     @Transactional
-    public ResponseEntity<?> login(LoginDTO dto) {
+    public ResponseEntity<?> login(LoginDTO dto, HttpServletRequest request, HttpServletResponse response) {
+        if (_validateRequestContainsValidJwt(request, response)) {
+            return new ResponseEntity<>(OK);
+        }
+
         Authentication authentication = this.authManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(dto.getPrincipal(), dto.getPassword())
         );
@@ -165,6 +178,56 @@ public class AuthService {
                 .build();
         client.addRole(new ClientRole(RoleEnum.CLIENT));
         return client;
+    }
+
+    /**
+     * Method simply prevents user from login in again if the request contains a valid jwt and LOGGEDSESSION cookie.
+     * @param request of HttpServletRequest
+     * @param response of HttpServletResponse
+     * @return boolean
+     * */
+    private boolean _validateRequestContainsValidJwt(HttpServletRequest request, HttpServletResponse response) {
+        Cookie[] cookies = request.getCookies();
+        // Base case
+        if (cookies == null)
+            return false;
+
+        Set<String> set = new HashSet<>();
+        // Add all cookies names to a set
+        for (Cookie cookie : cookies) {
+            if (!set.isEmpty() && set.contains(JSESSIONID) && set.contains(LOGGEDSESSION)) {
+                break;
+            }
+            set.add(cookie.getName());
+        }
+
+        if (set.isEmpty()) {
+            return false;
+        }
+
+        // validate jwt and LOGGEDSESSION are present in HttpServletRequest
+        if (set.contains(JSESSIONID) && set.contains(LOGGEDSESSION)) {
+            return Arrays.stream(cookies)
+                    .anyMatch(cookie -> cookie.getName().equals(JSESSIONID)
+                            && this.jwtTokenService._validateTokenExpiration(cookie.getValue())
+                    );
+        } else if (set.contains(JSESSIONID) && !set.contains(LOGGEDSESSION)) { // validate jwt is present but not LOGGEDSESSION.
+            Arrays.stream(cookies)
+                    .filter(cookie -> cookie.getName().equals(JSESSIONID))
+                    .filter(cookie -> this.jwtTokenService._validateTokenExpiration(cookie.getValue()))
+                    .findFirst()
+                    .ifPresent(cookie -> {
+                        Cookie stateCookie = new Cookie(LOGGEDSESSION, UUID.randomUUID().toString());
+                        stateCookie.setDomain(DOMAIN);
+                        stateCookie.setMaxAge(this.jwtTokenService.maxAge());
+                        stateCookie.setHttpOnly(false);
+                        stateCookie.setPath(COOKIEPATH);
+                        stateCookie.setSecure(COOKIESECURE);
+                        response.addCookie(stateCookie);
+                    });
+        }
+
+        return false;
     }
 
 }

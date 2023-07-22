@@ -19,6 +19,10 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.UUID;
 
+/**
+ * For Jwt config details
+ * <a href="https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html">...</a>
+ * */
 @Configuration
 public class JwtConfig {
     private RSAKey rsaKey;

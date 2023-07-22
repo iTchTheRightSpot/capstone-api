@@ -44,9 +44,12 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         Cookie[] cookies = request.getCookies();
         if (cookies != null && !request.getRequestURI().equals("/api/v1/auth/logout")) {
+            String JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
+            String LOGGEDSESSION = this.environment.getProperty("custom.cookie.frontend");
+
             for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(this.environment.getProperty("server.servlet.session.cookie.name"))) {
-                    var obj = this.tokenService._validateTokenExpiryDate(cookie);
+                if (cookie.getName().equals(JSESSIONID)) {
+                    var obj = this.tokenService._validateTokenIsWithinExpirationBound(cookie);
 
                     if (obj._isTokenValid()) {
                         var userDetails = this.userDetailsService.loadUserByUsername(obj.principal());
@@ -63,7 +66,7 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
                     }
                 }
 
-                if (cookie.getName().equals(this.environment.getProperty("custom.cookie.frontend"))) {
+                if (cookie.getName().equals(LOGGEDSESSION)) {
                     cookie.setMaxAge(this.tokenService.maxAge());
                     response.addCookie(cookie);
                 } // End of If
@@ -72,6 +75,5 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-
 
 }

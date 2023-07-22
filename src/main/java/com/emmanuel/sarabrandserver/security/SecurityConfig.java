@@ -29,6 +29,8 @@ import org.springframework.security.oauth2.server.resource.web.authentication.Be
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.session.web.http.CookieSerializer;
+import org.springframework.session.web.http.DefaultCookieSerializer;
 
 @Configuration
 @EnableWebSecurity
@@ -71,6 +73,13 @@ public class SecurityConfig {
         ProviderManager providerManager = new ProviderManager(provider);
         providerManager.setAuthenticationEventPublisher(publisher);
         return providerManager;
+    }
+
+    @Bean
+    public CookieSerializer cookieSerializer() {
+        DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
+        cookieSerializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
+        return cookieSerializer;
     }
 
     private String[] publicRoutes() {

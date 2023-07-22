@@ -22,7 +22,7 @@ public class AuthenticationEvents {
 
     @EventListener
     public void onFailure(AbstractAuthenticationFailureEvent failures) {
-        bruteForceService.registerLoginFailure(failures.getAuthentication());
+        bruteForceService.loginFailure(failures.getAuthentication());
     }
 
 }

@@ -1,7 +1,6 @@
-package com.emmanuel.sarabrandserver.clientz.service;
+package com.emmanuel.sarabrandserver.user.service;
 
-import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
-import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
+import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 

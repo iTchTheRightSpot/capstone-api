@@ -1,6 +1,6 @@
-package com.emmanuel.sarabrandserver.clientz.service;
+package com.emmanuel.sarabrandserver.user.service;
 
-import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

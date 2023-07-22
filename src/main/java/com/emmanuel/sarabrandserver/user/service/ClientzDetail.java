@@ -1,6 +1,6 @@
-package com.emmanuel.sarabrandserver.clientz.service;
+package com.emmanuel.sarabrandserver.user.service;
 
-import com.emmanuel.sarabrandserver.clientz.entity.Clientz;
+import com.emmanuel.sarabrandserver.user.entity.Clientz;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 

@@ -2,23 +2,23 @@ package com.emmanuel.sarabrandserver.test;
 
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
-import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-@Component @Profile(value = {"stage"})
-public class StageService {
+@Component @Profile(value = {"stage", "dev"})
+public class PreProductionService {
 
     @Bean
-    public CommandLineRunner commandLineRunner(AuthService authService, ClientzRepository clientzRepository) {
+    public CommandLineRunner commandLineRunner(AuthService aSer, ClientzRepository cRepo) {
         return args -> {
-            if (clientzRepository.findByPrincipal("admin@admin.com").isPresent()) {
+            if (cRepo.findByPrincipal("admin@admin.com").isPresent()) {
                 return;
             }
-            authService.workerRegister(new RegisterDTO(
-                    "Admin Test",
+            aSer.workerRegister(new RegisterDTO(
+                    "SEJU",
                     "Development",
                     "admin@admin.com",
                     "StageAdmin",
@@ -27,4 +27,5 @@ public class StageService {
             ));
         };
     }
+
 }

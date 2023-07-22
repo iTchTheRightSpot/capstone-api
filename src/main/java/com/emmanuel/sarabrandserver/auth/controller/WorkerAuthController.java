@@ -1,8 +1,8 @@
 package com.emmanuel.sarabrandserver.auth.controller;
 
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
-import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
+import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;

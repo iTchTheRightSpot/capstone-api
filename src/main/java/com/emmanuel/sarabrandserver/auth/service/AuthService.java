@@ -2,12 +2,13 @@ package com.emmanuel.sarabrandserver.auth.service;
 
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
-import com.emmanuel.sarabrandserver.clientz.entity.ClientRole;
-import com.emmanuel.sarabrandserver.clientz.entity.Clientz;
-import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.user.entity.ClientRole;
+import com.emmanuel.sarabrandserver.user.entity.Clientz;
+import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.jwt.JwtTokenService;
+import com.emmanuel.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -61,17 +62,20 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authManager;
     private final JwtTokenService jwtTokenService;
+    private final CustomUtil customUtil;
 
     public AuthService(
             ClientzRepository clientzRepository,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authManager,
-            JwtTokenService jwtTokenService
+            JwtTokenService jwtTokenService,
+            CustomUtil customUtil
     ) {
         this.clientzRepository = clientzRepository;
         this.passwordEncoder = passwordEncoder;
         this.authManager = authManager;
         this.jwtTokenService = jwtTokenService;
+        this.customUtil = customUtil;
     }
 
     /**
@@ -132,6 +136,7 @@ public class AuthService {
         String token = this.jwtTokenService.generateToken(authentication);
 
         // Servlet cookie
+        // Add jwt to cookie
         Cookie jwtCookie = new Cookie(JSESSIONID, token);
         jwtCookie.setDomain(DOMAIN);
         jwtCookie.setMaxAge(this.jwtTokenService.maxAge());
@@ -140,37 +145,23 @@ public class AuthService {
         jwtCookie.setSecure(COOKIESECURE);
         response.addCookie(jwtCookie);
 
-        _stateCookie(response);
+        // Second cookie where UI can access to validate if user is logged in
+        ResponseCookie stateCookie = ResponseCookie.from(LOGGEDSESSION, UUID.randomUUID().toString())
+                .domain(DOMAIN)
+                .maxAge(this.jwtTokenService.maxAge())
+                .httpOnly(false)
+                .sameSite(SAMESITE)
+                .secure(COOKIESECURE)
+                .path(COOKIEPATH)
+                .build();
 
-        return new ResponseEntity<>(OK);
+        // Add cookies to response header
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(SET_COOKIE, stateCookie.toString());
 
-        // Add jwt to cookie
-//        ResponseCookie jwtCookie = ResponseCookie.from(JSESSIONID, token)
-//                .domain(DOMAIN)
-//                .maxAge(this.jwtTokenService.maxAge())
-//                .sameSite(SAMESITE)
-//                .httpOnly(HTTPONLY)
-//                .secure(COOKIESECURE)
-//                .path(COOKIEPATH)
-//                .build();
-//
-//        // Second cookie where UI can access to validate if user is logged in
-//        ResponseCookie stateCookie = ResponseCookie.from(LOGGEDSESSION, UUID.randomUUID().toString())
-//                .domain(DOMAIN)
-//                .maxAge(this.jwtTokenService.maxAge())
-//                .httpOnly(false)
-//                .sameSite(SAMESITE)
-//                .secure(COOKIESECURE)
-//                .path(COOKIEPATH)
-//                .build();
-//
-//        // Add cookies to response header
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.add(SET_COOKIE, jwtCookie.toString());
-//        headers.add(SET_COOKIE, stateCookie.toString());
-//
-//        return ResponseEntity.ok().headers(headers).build();
+        return ResponseEntity.ok().headers(headers).build();
     }
+
 
     private void _stateCookie(HttpServletResponse response) {
         Cookie stateCookie = new Cookie(LOGGEDSESSION, UUID.randomUUID().toString());
@@ -188,7 +179,7 @@ public class AuthService {
                 .lastname(dto.getLastname().trim())
                 .email(dto.getEmail().trim())
                 .username(dto.getUsername().trim())
-                .phoneNumber(dto.getPhone_number().trim())
+                .phoneNumber(dto.getPhone().trim())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .enabled(true)
                 .credentialsNonExpired(true)
@@ -242,9 +233,8 @@ public class AuthService {
         }
 
         for (Cookie cookie : cookies) {
-            // Delete cookie
             if (cookie.getName().equals(JSESSIONID) || cookie.getName().equals(LOGGEDSESSION)) {
-                cookie.setMaxAge(0);
+                this.customUtil.expireCookie(cookie);
             }
         }
 

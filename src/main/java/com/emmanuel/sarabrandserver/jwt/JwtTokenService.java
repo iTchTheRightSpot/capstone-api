@@ -1,5 +1,6 @@
 package com.emmanuel.sarabrandserver.jwt;
 
+import com.emmanuel.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -20,10 +21,12 @@ public class JwtTokenService {
 
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
+    private final CustomUtil customUtil;
 
-    public JwtTokenService(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder) {
+    public JwtTokenService(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, CustomUtil customUtil) {
         this.jwtEncoder = jwtEncoder;
         this.jwtDecoder = jwtDecoder;
+        this.customUtil = customUtil;
     }
 
     /**
@@ -70,7 +73,7 @@ public class JwtTokenService {
                 );
             }
         } catch (JwtException e) {
-            cookie.setMaxAge(0); // Remove cookie
+            this.customUtil.expireCookie(cookie);
             log.error("JWT exception in JwtTokenService class. {}", e.getMessage());
         }
 

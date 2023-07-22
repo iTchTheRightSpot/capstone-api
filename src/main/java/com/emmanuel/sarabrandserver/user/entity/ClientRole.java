@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.clientz.entity;
+package com.emmanuel.sarabrandserver.user.entity;
 
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import jakarta.persistence.*;

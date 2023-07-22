@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.clientz.entity;
+package com.emmanuel.sarabrandserver.user.entity;
 
 import com.emmanuel.sarabrandserver.cart.entity.ShoppingSession;
 import jakarta.persistence.*;

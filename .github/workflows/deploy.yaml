@@ -21,10 +21,6 @@ jobs:
         with:
           submodules: true
 
-      # Test secret value is injected
-      - name: Test secret value
-        run: echo {{ secrets.TEST_SECRET }}
-
       # Log into dockerhub
       - name: Log into DockerHub
         uses: docker/login-action@v2

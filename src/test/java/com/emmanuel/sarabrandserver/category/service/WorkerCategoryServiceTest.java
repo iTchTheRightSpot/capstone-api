@@ -6,7 +6,7 @@ import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
-import com.emmanuel.sarabrandserver.util.DateUTC;
+import com.emmanuel.sarabrandserver.util.CustomUtil;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,11 +36,11 @@ class WorkerCategoryServiceTest {
 
     @Mock private CategoryRepository categoryRepository;
 
-    @Mock private DateUTC dateUTC;
+    @Mock private CustomUtil customUtil;
 
     @BeforeEach
     void setUp() {
-        this.workerCategoryService = new WorkerCategoryService(this.categoryRepository, this.dateUTC);
+        this.workerCategoryService = new WorkerCategoryService(this.categoryRepository, this.customUtil);
     }
 
     /** Simulates creating a new ProductCategory when CategoryDTO param parent is empty */
@@ -57,7 +57,7 @@ class WorkerCategoryServiceTest {
                 .build();
 
         // When
-        when(this.dateUTC.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
+        when(this.customUtil.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
         when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.empty());
         when(this.categoryRepository.save(any(ProductCategory.class))).thenReturn(category);
 
@@ -80,7 +80,7 @@ class WorkerCategoryServiceTest {
                 .build();
 
         // When
-        when(this.dateUTC.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
+        when(this.customUtil.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
         when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.of(category));
         when(this.categoryRepository.save(any(ProductCategory.class))).thenReturn(category);
 
@@ -132,7 +132,7 @@ class WorkerCategoryServiceTest {
 
         // When
         doReturn(0).when(this.categoryRepository).duplicateCategoryForUpdate(anyString());
-        when(this.dateUTC.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
+        when(this.customUtil.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
 
         // Then
         assertEquals(OK, this.workerCategoryService.update(dto).getStatusCode());

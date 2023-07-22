@@ -13,7 +13,7 @@ import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.response.DetailResponse;
 import com.emmanuel.sarabrandserver.product.response.ProductResponse;
-import com.emmanuel.sarabrandserver.util.DateUTC;
+import com.emmanuel.sarabrandserver.util.CustomUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
@@ -40,7 +40,7 @@ public class WorkerProductService {
     private final ProductRepository productRepository;
     private final ProductDetailRepo detailRepo;
     private final WorkerCategoryService categoryService;
-    private final DateUTC dateUTC;
+    private final CustomUtil customUtil;
     private final WorkerCollectionService collectionService;
     private final S3Service s3Service;
     private final Environment environment;
@@ -49,7 +49,7 @@ public class WorkerProductService {
             ProductRepository productRepository,
             ProductDetailRepo detailRepo,
             WorkerCategoryService categoryService,
-            DateUTC dateUTC,
+            CustomUtil customUtil,
             WorkerCollectionService collectionService,
             S3Service s3Service,
             Environment environment
@@ -57,7 +57,7 @@ public class WorkerProductService {
         this.productRepository = productRepository;
         this.detailRepo = detailRepo;
         this.categoryService = categoryService;
-        this.dateUTC = dateUTC;
+        this.customUtil = customUtil;
         this.collectionService = collectionService;
         this.s3Service = s3Service;
         this.environment = environment;
@@ -116,7 +116,7 @@ public class WorkerProductService {
     public ResponseEntity<HttpStatus> create(CreateProductDTO dto, MultipartFile[] files) {
         var category = this.categoryService.findByName(dto.getCategory().trim());
         var _product = this.productRepository.findByProductName(dto.getName().trim());
-        var date = this.dateUTC.toUTC(new Date()).orElse(new Date());
+        var date = this.customUtil.toUTC(new Date()).orElse(new Date());
 
         // Persist new ProductDetail if Product exist
         if (_product.isPresent()) {
@@ -258,7 +258,7 @@ public class WorkerProductService {
     public ResponseEntity<HttpStatus> updateProductDetail(final DetailDTO dto) {
         // Find ProductDetail by it sku
         var detail = findByDetailBySku(dto.getSku().trim());
-        var date = this.dateUTC.toUTC(new Date()).orElse(new Date());
+        var date = this.customUtil.toUTC(new Date()).orElse(new Date());
 
         // Fetch type is eager for the properties I am updating
         detail.setModifiedAt(date);

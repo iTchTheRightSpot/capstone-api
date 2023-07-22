@@ -1,6 +1,6 @@
-package com.emmanuel.sarabrandserver.clientz.repository;
+package com.emmanuel.sarabrandserver.user.repository;
 
-import com.emmanuel.sarabrandserver.clientz.entity.ClientRole;
+import com.emmanuel.sarabrandserver.user.entity.ClientRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

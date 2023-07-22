@@ -1,13 +1,11 @@
 package com.emmanuel.sarabrandserver.security.bruteforce;
 
-import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service @Setter @Slf4j
 public class BruteForceService {
@@ -21,34 +19,30 @@ public class BruteForceService {
     }
 
     /**
-     * Method to register every login failure of type BadCredentials for a Clientz.
+     * Prevents against brute force attack
      * @param auth of type Spring Core Authentication
      */
     @Transactional
-    public void registerLoginFailure(Authentication auth) {
-        this.clientzRepository.findByPrincipal(auth.getName()).ifPresent(clientz -> {
-            if (!clientz.isAccountNoneLocked()) {
-                return;
-            }
-            log.info("Client is none locked?");
+    public void loginFailure(Authentication auth) {
+        var client = this.clientzRepository.findByPrincipal(auth.getName()).orElse(null);
 
-            // Using concurrency hashmap
-            AtomicBoolean bool = new AtomicBoolean(true);
-            this.bruteForceRepo.findByPrincipal(auth.getName()).ifPresent(entity -> {
-                bool.set(false);
-                if (entity.getFailedAttempt() < this.MAX) {
-                    entity.setFailedAttempt(entity.getFailedAttempt() + 1);
-                    this.bruteForceRepo.update(entity);
-                    return;
-                }
-                this.clientzRepository.lockClientAccount(false, clientz.getClientId());
-                // TODO send client email to change password
-            });
+        if (client == null) {
+            return;
+        }
 
-            if (bool.get()) {
-                this.bruteForceRepo.save(new BruteForceEntity(0, auth.getName()));
-            }
-        });
+        var bruteForceEntity = this.bruteForceRepo.findByPrincipal(auth.getName()).orElse(null);
+        if (bruteForceEntity == null) {
+            this.bruteForceRepo.save(new BruteForceEntity(0, auth.getName()));
+            return;
+        }
+
+        if (bruteForceEntity.getFailedAttempt() >= this.MAX) {
+            this.clientzRepository.lockClientAccount(false, client.getClientId());
+            return;
+        }
+
+        bruteForceEntity.setFailedAttempt(bruteForceEntity.getFailedAttempt() + 1);
+        this.bruteForceRepo.save(bruteForceEntity);
     }
 
 
@@ -57,7 +51,8 @@ public class BruteForceService {
      * @param auth of type Spring Core Authentication
      */
     public void resetBruteForceCounter(Authentication auth) {
-        this.clientzRepository.findByPrincipal(auth.getName()) //
+        this.clientzRepository
+                .findByPrincipal(auth.getName()) //
                 .flatMap(clientz -> this.bruteForceRepo.findByPrincipal(auth.getName())) //
                 .ifPresent(entity -> this.bruteForceRepo.delete(entity.getPrincipal()));
     }

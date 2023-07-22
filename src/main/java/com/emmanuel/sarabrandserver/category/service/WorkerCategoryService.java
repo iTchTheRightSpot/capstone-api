@@ -7,7 +7,7 @@ import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.category.response.CategoryResponse;
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
-import com.emmanuel.sarabrandserver.util.DateUTC;
+import com.emmanuel.sarabrandserver.util.CustomUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,11 +22,11 @@ import static org.springframework.http.HttpStatus.*;
 @Service
 public class WorkerCategoryService {
     private final CategoryRepository categoryRepository;
-    private final DateUTC dateUTC;
+    private final CustomUtil customUtil;
 
-    public WorkerCategoryService(CategoryRepository categoryRepository, DateUTC dateUTC) {
+    public WorkerCategoryService(CategoryRepository categoryRepository, CustomUtil customUtil) {
         this.categoryRepository = categoryRepository;
-        this.dateUTC = dateUTC;
+        this.customUtil = customUtil;
     }
 
     /**
@@ -56,7 +56,7 @@ public class WorkerCategoryService {
      * */
     @Transactional
     public ResponseEntity<?> create(CategoryDTO dto) {
-        var date = this.dateUTC.toUTC(new Date()).orElse(new Date());
+        var date = this.customUtil.toUTC(new Date()).orElse(new Date());
 
         // Handle cases based on the logic explained above.
         var category = dto.getParent().isBlank() ?
@@ -113,7 +113,7 @@ public class WorkerCategoryService {
             throw new DuplicateException(dto.getName() + " cannot be created. It is a duplicate");
         }
 
-        var date = this.dateUTC.toUTC(new Date()).orElse(new Date());
+        var date = this.customUtil.toUTC(new Date()).orElse(new Date());
 
         this.categoryRepository.update(date, dto.getId(), dto.getName().trim());
         return new ResponseEntity<>(OK);

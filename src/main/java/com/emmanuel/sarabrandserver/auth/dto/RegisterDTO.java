@@ -34,8 +34,8 @@ public class RegisterDTO {
     private String username;
 
     @NotNull @NotEmpty
-    @JsonProperty(value = "phone_number")
-    private String phone_number;
+    @JsonProperty(value = "phone")
+    private String phone;
 
     @NotNull @NotEmpty
     @JsonProperty(value = "password")
@@ -47,7 +47,7 @@ public class RegisterDTO {
                 .add("lastname", getLastname())
                 .add("email", getEmail())
                 .add("username", getUsername())
-                .add("phone_number", getPhone_number())
+                .add("phone", getPhone())
                 .add("password", getPassword())
                 .build();
     }

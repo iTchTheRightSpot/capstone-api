@@ -1,7 +1,7 @@
-package com.emmanuel.sarabrandserver.clientz.repository;
+package com.emmanuel.sarabrandserver.user.repository;
 
-import com.emmanuel.sarabrandserver.clientz.projection.ClientzPojo;
-import com.emmanuel.sarabrandserver.clientz.entity.Clientz;
+import com.emmanuel.sarabrandserver.user.projection.ClientzPojo;
+import com.emmanuel.sarabrandserver.user.entity.Clientz;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

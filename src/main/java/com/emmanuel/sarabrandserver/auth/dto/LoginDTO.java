@@ -21,7 +21,7 @@ public class LoginDTO {
     @NotEmpty @NotNull
    private String password;
 
-    public JsonObject convertToJSON() {
+    public JsonObject toJson() {
         return Json.createObjectBuilder()
                 .add("principal", principal)
                 .add("password", password)

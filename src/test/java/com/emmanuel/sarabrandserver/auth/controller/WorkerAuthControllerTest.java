@@ -1,10 +1,10 @@
 package com.emmanuel.sarabrandserver.auth.controller;
 
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
-import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
-import com.emmanuel.sarabrandserver.clientz.repository.ClientRoleRepo;
-import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.auth.service.AuthService;
+import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
+import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.security.bruteforce.BruteForceService;
 import jakarta.servlet.http.Cookie;
@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -27,7 +26,7 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -100,8 +99,8 @@ class WorkerAuthControllerTest {
         MvcResult login = this.MOCK_MVC
                 .perform(post("/api/v1/worker/auth/login")
                         .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
+                        .contentType(APPLICATION_JSON)
+                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).toJson().toString())
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -132,8 +131,8 @@ class WorkerAuthControllerTest {
         MvcResult login = this.MOCK_MVC
                 .perform(post("/api/v1/worker/auth/login")
                         .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
+                        .contentType(APPLICATION_JSON)
+                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).toJson().toString())
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -167,8 +166,8 @@ class WorkerAuthControllerTest {
         MvcResult login = this.MOCK_MVC
                 .perform(post("/api/v1/worker/auth/login")
                         .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
+                        .contentType(APPLICATION_JSON)
+                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).toJson().toString())
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -184,8 +183,8 @@ class WorkerAuthControllerTest {
         this.MOCK_MVC
                 .perform(post("/api/v1/worker/auth/login")
                         .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new LoginDTO(ADMIN_EMAIL, "fFeubfrom@#$%^124234").convertToJSON().toString())
+                        .contentType(APPLICATION_JSON)
+                        .content(new LoginDTO(ADMIN_EMAIL, "fFeubfrom@#$%^124234").toJson().toString())
                 )
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("Bad credentials"))
@@ -199,8 +198,8 @@ class WorkerAuthControllerTest {
         MvcResult login = this.MOCK_MVC
                 .perform(post("/api/v1/worker/auth/login")
                         .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).convertToJSON().toString())
+                        .contentType(APPLICATION_JSON)
+                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).toJson().toString())
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -209,30 +208,26 @@ class WorkerAuthControllerTest {
         Cookie cookie = login.getResponse().getCookie(COOKIE_NAME);
 
         // Logout
-        this.MOCK_MVC.perform(post("/api/v1/auth/logout").cookie(cookie).with(csrf()))
-                .andExpect(status().isOk());
+        MvcResult logout = this.MOCK_MVC.perform(post("/api/v1/auth/logout").cookie(cookie).with(csrf()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Cookie cookie1 = logout.getResponse().getCookie(COOKIE_NAME);
+        assertNotNull(cookie1);
+        assertEquals(0, cookie1.getMaxAge());
     }
 
     // TODO Might be a JPA Bug
     /** Test simulates a brute force attack. The loop simulates concurrent failed login */
 //    @Test @Order(6)
 //    void attack() throws Exception {
-//        // Login normal
-//        this.MOCK_MVC
-//                .perform(post("/api/v1/worker/auth/login")
-//                        .with(csrf())
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(new LoginDTO(USERNAME, ADMIN_PASSWORD).convertToJSON().toString())
-//                )
-//                .andExpect(status().isOk());
-//
 //        // Simulate concurrent failed login attempts
 //        for (int i = 0; i <= MAX_FAILED_AUTH + 2; i++) {
 //            this.MOCK_MVC
 //                    .perform(post("/api/v1/worker/auth/login")
 //                            .with(csrf())
-//                            .contentType(MediaType.APPLICATION_JSON)
-//                            .content(new LoginDTO(ADMIN_EMAIL, "iwei36SD902#$&*").convertToJSON().toString())
+//                            .contentType(APPLICATION_JSON)
+//                            .content(new LoginDTO(ADMIN_EMAIL, "iwei36SD902#$&*").toJson().toString())
 //                    )
 //                    .andExpect(status().isUnauthorized());
 //        }
@@ -241,8 +236,8 @@ class WorkerAuthControllerTest {
 //        this.MOCK_MVC
 //                .perform(post("/api/v1/worker/auth/login")
 //                        .with(csrf())
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(new LoginDTO(USERNAME, ADMIN_PASSWORD).convertToJSON().toString())
+//                        .contentType(APPLICATION_JSON)
+//                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).toJson().toString())
 //                )
 //                .andExpect(status().isUnauthorized());
 //    }

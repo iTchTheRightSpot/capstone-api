@@ -2,12 +2,13 @@ package com.emmanuel.sarabrandserver.auth.service;
 
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
-import com.emmanuel.sarabrandserver.clientz.entity.ClientRole;
-import com.emmanuel.sarabrandserver.clientz.entity.Clientz;
-import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.user.entity.ClientRole;
+import com.emmanuel.sarabrandserver.user.entity.Clientz;
+import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.jwt.JwtTokenService;
+import com.emmanuel.sarabrandserver.util.CustomUtil;
 import com.github.javafaker.Faker;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -69,6 +70,7 @@ class AuthServiceTest {
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private AuthenticationManager authenticationManager;
     @Mock private JwtTokenService jwtTokenService;
+    @Mock private CustomUtil customUtil;
 
     @BeforeEach
     void setUp() {
@@ -76,7 +78,8 @@ class AuthServiceTest {
                 this.clientzRepository,
                 this.passwordEncoder,
                 this.authenticationManager,
-                this.jwtTokenService
+                this.jwtTokenService,
+                this.customUtil
         );
         this.authService.setJSESSIONID(JSESSIONID);
         this.authService.setDOMAIN(COOKIEDOMAIN);

@@ -6,7 +6,7 @@ import com.emmanuel.sarabrandserver.collection.repository.CollectionRepository;
 import com.emmanuel.sarabrandserver.collection.response.CollectionResponse;
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
-import com.emmanuel.sarabrandserver.util.DateUTC;
+import com.emmanuel.sarabrandserver.util.CustomUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +20,11 @@ import static org.springframework.http.HttpStatus.CREATED;
 @Service
 public class WorkerCollectionService {
     private final CollectionRepository collectionRepository;
-    private final DateUTC dateUTC;
+    private final CustomUtil customUtil;
 
-    public WorkerCollectionService(CollectionRepository collectionRepository, DateUTC dateUTC) {
+    public WorkerCollectionService(CollectionRepository collectionRepository, CustomUtil customUtil) {
         this.collectionRepository = collectionRepository;
-        this.dateUTC = dateUTC;
+        this.customUtil = customUtil;
     }
 
     /** Returns a list of CollectionResponse. */
@@ -50,7 +50,7 @@ public class WorkerCollectionService {
             throw new DuplicateException(dto.getName() + " exists");
         }
 
-        var date = this.dateUTC.toUTC(new Date()).orElseGet(Date::new);
+        var date = this.customUtil.toUTC(new Date()).orElseGet(Date::new);
         var collection = ProductCollection.builder()
                 .collection(dto.getName().trim())
                 .createAt(date)

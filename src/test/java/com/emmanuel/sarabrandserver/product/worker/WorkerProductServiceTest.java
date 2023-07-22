@@ -14,7 +14,7 @@ import com.emmanuel.sarabrandserver.product.projection.DetailPojo;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
-import com.emmanuel.sarabrandserver.util.DateUTC;
+import com.emmanuel.sarabrandserver.util.CustomUtil;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +49,7 @@ class WorkerProductServiceTest {
 
     @Mock private ProductRepository productRepository;
     @Mock private WorkerCategoryService workerCategoryService;
-    @Mock private DateUTC dateUTC;
+    @Mock private CustomUtil customUtil;
     @Mock private WorkerCollectionService collectionService;
     @Mock private ProductDetailRepo detailRepo;
     @Mock private S3Service s3Service;
@@ -61,7 +61,7 @@ class WorkerProductServiceTest {
                 this.productRepository,
                 this.detailRepo,
                 this.workerCategoryService,
-                this.dateUTC,
+                this.customUtil,
                 this.collectionService,
                 this.s3Service,
                 environment
@@ -185,7 +185,7 @@ class WorkerProductServiceTest {
         // When
         doReturn(category).when(this.workerCategoryService).findByName(anyString());
         doReturn(Optional.empty()).when(this.productRepository).findByProductName(anyString());
-        doReturn(Optional.of(new Date())).when(this.dateUTC).toUTC(any(Date.class));
+        doReturn(Optional.of(new Date())).when(this.customUtil).toUTC(any(Date.class));
         doReturn(product).when(this.productRepository).save(any(Product.class));
         doReturn(collection).when(this.collectionService).findByName(dto.getCollection());
         when(this.environment.getActiveProfiles()).thenReturn(new String[]{"test"});
@@ -257,7 +257,7 @@ class WorkerProductServiceTest {
         when(this.environment.getActiveProfiles()).thenReturn(new String[]{"test"});
         doReturn(category).when(this.workerCategoryService).findByName(anyString());
         doReturn(Optional.of(product)).when(this.productRepository).findByProductName(anyString());
-        doReturn(Optional.of(new Date())).when(this.dateUTC).toUTC(any(Date.class));
+        doReturn(Optional.of(new Date())).when(this.customUtil).toUTC(any(Date.class));
 
         // Then
         assertEquals(CREATED, this.productService.create(dto, arr).getStatusCode());
@@ -331,7 +331,7 @@ class WorkerProductServiceTest {
 
         // When
         doReturn(Optional.of(detail)).when(this.productRepository).findDetailBySku(anyString());
-        doReturn(Optional.of(new Date())).when(this.dateUTC).toUTC(any(Date.class));
+        doReturn(Optional.of(new Date())).when(this.customUtil).toUTC(any(Date.class));
 
         // Then
         assertEquals(HttpStatus.OK, this.productService.updateProductDetail(dto).getStatusCode());

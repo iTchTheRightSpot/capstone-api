@@ -1,8 +1,8 @@
 package com.emmanuel.sarabrandserver.security.bruteforce.service;
 
-import com.emmanuel.sarabrandserver.clientz.entity.ClientRole;
-import com.emmanuel.sarabrandserver.clientz.entity.Clientz;
-import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.user.entity.ClientRole;
+import com.emmanuel.sarabrandserver.user.entity.Clientz;
+import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.security.bruteforce.BruteForceEntity;
 import com.emmanuel.sarabrandserver.security.bruteforce.BruteForceRepo;
@@ -54,7 +54,7 @@ class BruteForceServiceTest {
         when(this.bruteForceRepo.findByPrincipal(anyString())).thenReturn(Optional.of(bruteEntity));
 
         // Then
-        this.bruteForceService.registerLoginFailure(authentication);
+        this.bruteForceService.loginFailure(authentication);
         verify(this.clientzRepository, times(1)).findByPrincipal(client.getEmail());
         verify(this.bruteForceRepo, times(1)).findByPrincipal(client.getEmail());
     }
@@ -72,7 +72,7 @@ class BruteForceServiceTest {
         when(this.bruteForceRepo.findByPrincipal(anyString())).thenReturn(Optional.empty());
 
         // Then
-        this.bruteForceService.registerLoginFailure(authentication);
+        this.bruteForceService.loginFailure(authentication);
         verify(clientzRepository, times(1)).findByPrincipal(client.getEmail());
         verify(bruteForceRepo, times(1)).save(any(BruteForceEntity.class));
         verify(this.clientzRepository, times(0)).lockClientAccount(anyBoolean(), anyLong());
@@ -93,7 +93,7 @@ class BruteForceServiceTest {
         when(this.bruteForceRepo.findByPrincipal(anyString())).thenReturn(Optional.of(bruteEntity));
 
         // Then
-        this.bruteForceService.registerLoginFailure(authentication);
+        this.bruteForceService.loginFailure(authentication);
         verify(this.clientzRepository, times(1)).findByPrincipal(client.getEmail());
         verify(this.bruteForceRepo, times(1)).findByPrincipal(client.getEmail());
         verify(this.bruteForceRepo, times(0)).save(any(BruteForceEntity.class));

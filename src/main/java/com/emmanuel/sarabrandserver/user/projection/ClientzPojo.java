@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.clientz.projection;
+package com.emmanuel.sarabrandserver.user.projection;
 
 public interface ClientzPojo {
     String getName(); // Firstname

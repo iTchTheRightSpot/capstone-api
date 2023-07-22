@@ -3,8 +3,8 @@ package com.emmanuel.sarabrandserver.jwt;
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
-import com.emmanuel.sarabrandserver.clientz.repository.ClientRoleRepo;
-import com.emmanuel.sarabrandserver.clientz.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
+import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,9 +25,14 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.Objects;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** Class performs integration tests haha */
@@ -39,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(locations = "classpath:application-test.properties")
 class JwtTokenServiceTest {
     @Value(value = "${server.servlet.session.cookie.name}")
-    private String COOKIE_NAME;
+    private String JSESSIONID;
 
     @Autowired private MockMvc MOCK_MVC;
     @Autowired private JwtTokenService jwtTokenService;
@@ -66,7 +71,7 @@ class JwtTokenServiceTest {
 
     @BeforeEach
     void setUp() {
-        this.jwtTokenService.setTokenExpiry(20);
+        this.jwtTokenService.setTokenExpiry(10);
         this.jwtTokenService.setBoundToSendRefreshToken(20);
 
         this.authService.workerRegister(new RegisterDTO(
@@ -93,17 +98,26 @@ class JwtTokenServiceTest {
                 .perform(post("/api/v1/worker/auth/login")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new LoginDTO("admin@admin.com", "password").convertToJSON().toString())
+                        .content(new LoginDTO("admin@admin.com", "password").toJson().toString())
                 )
                 .andExpect(status().isOk())
+                .andDo(print())
                 .andReturn();
 
-        // Test routes
-        this.MOCK_MVC.perform(get("/test/client").cookie(login.getResponse().getCookie(COOKIE_NAME)))
-                .andExpect(status().isOk());
+        String jwt = Objects.requireNonNull(login.getResponse().getCookie(JSESSIONID)).getValue();
 
-        this.MOCK_MVC.perform(get("/test/worker").cookie(login.getResponse().getCookie(COOKIE_NAME)))
-                .andExpect(status().isOk());
+        // Test routes
+        MvcResult client = this.MOCK_MVC
+                .perform(get("/test/client")
+                        .cookie(login.getResponse().getCookie(JSESSIONID))
+                )
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andReturn();
+
+        String refreshJwt = Objects.requireNonNull(client.getResponse().getCookie(JSESSIONID)).getValue();
+
+        assertNotEquals(jwt, refreshJwt);
     }
 
 }

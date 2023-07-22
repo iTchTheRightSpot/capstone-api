@@ -21,7 +21,7 @@ jobs:
         with:
           submodules: true
 
-      # Log into DockerHub
+      # Log into dockerhub
       - name: Log into DockerHub
         uses: docker/login-action@v2
         with:

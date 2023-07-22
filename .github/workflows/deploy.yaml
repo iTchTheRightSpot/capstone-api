@@ -21,10 +21,6 @@ jobs:
         with:
           submodules: true
 
-      # Clean package
-      - name: Clean package
-        run: ./mvnw clean
-
       # Build image
       - name: Build Image
         run: ./mvnw clean spring-boot:build-image

@@ -1,3 +1,3 @@
 package com.emmanuel.sarabrandserver.jwt;
 
-public record UserJwtStatus(String principal, boolean _isTokenValid) { }
+public record UserJwtStatus(String principal, boolean _refreshTokenNeeded) { }

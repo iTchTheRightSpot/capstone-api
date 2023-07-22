@@ -5,6 +5,7 @@ import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
 import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,14 +26,11 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.Objects;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** Class performs integration tests haha */
@@ -43,6 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.properties")
 class JwtTokenServiceTest {
+
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
 
@@ -52,8 +51,7 @@ class JwtTokenServiceTest {
     @Autowired private ClientRoleRepo clientRoleRepo;
     @Autowired private ClientzRepository clientzRepository;
 
-    @Container
-    private static final MySQLContainer<?> container;
+    @Container private static final MySQLContainer<?> container;
 
     static {
         container = new MySQLContainer<>("mysql:latest")
@@ -71,17 +69,19 @@ class JwtTokenServiceTest {
 
     @BeforeEach
     void setUp() {
-        this.jwtTokenService.setTokenExpiry(10);
+        this.jwtTokenService.setTokenExpiry(20);
         this.jwtTokenService.setBoundToSendRefreshToken(20);
 
-        this.authService.workerRegister(new RegisterDTO(
-                "SEJU",
-                "Development",
-                "admin@admin.com",
-                "admin@admin.com",
-                "0000000000",
-                "password"
-        ));
+        var dto = RegisterDTO.builder()
+                .firstname("SEUY")
+                .lastname("Development")
+                .email("admin@admin.com")
+                .username("admin")
+                .phone("0000000000")
+                .password("password")
+                .build();
+
+        this.authService.workerRegister(dto);
     }
 
     @AfterEach
@@ -90,7 +90,7 @@ class JwtTokenServiceTest {
         this.clientzRepository.deleteAll();
     }
 
-    /** Method validates the logic of sending refresh token in CustomFilter class. */
+    /** Method validates refresh token. */
     @Test
     public void validateRefreshToken() throws Exception {
         // Login
@@ -101,23 +101,25 @@ class JwtTokenServiceTest {
                         .content(new LoginDTO("admin@admin.com", "password").toJson().toString())
                 )
                 .andExpect(status().isOk())
-                .andDo(print())
                 .andReturn();
 
-        String jwt = Objects.requireNonNull(login.getResponse().getCookie(JSESSIONID)).getValue();
+        final Cookie loginCookie = login.getResponse().getCookie(JSESSIONID);
+        assertNotNull(loginCookie);
+        final String token = loginCookie.getValue();
+
+        Thread.sleep(5000);
 
         // Test routes
         MvcResult client = this.MOCK_MVC
-                .perform(get("/test/client")
-                        .cookie(login.getResponse().getCookie(JSESSIONID))
-                )
+                .perform(get("/test/worker").cookie(login.getResponse().getCookie(JSESSIONID)))
                 .andExpect(status().isOk())
-                .andDo(print())
                 .andReturn();
 
-        String refreshJwt = Objects.requireNonNull(client.getResponse().getCookie(JSESSIONID)).getValue();
-
-        assertNotEquals(jwt, refreshJwt);
+        // Assert
+        final Cookie clientCookie = client.getResponse().getCookie(JSESSIONID);
+        assertNotNull(clientCookie);
+        final String refreshToken = clientCookie.getValue();
+        assertNotEquals(token, refreshToken);
     }
 
 }

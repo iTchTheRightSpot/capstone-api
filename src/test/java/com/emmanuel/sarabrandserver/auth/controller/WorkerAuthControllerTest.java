@@ -3,10 +3,10 @@ package com.emmanuel.sarabrandserver.auth.controller;
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
-import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
-import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.security.bruteforce.BruteForceService;
+import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
+import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
@@ -230,6 +230,7 @@ class WorkerAuthControllerTest {
 //                            .content(new LoginDTO(ADMIN_EMAIL, "iwei36SD902#$&*").toJson().toString())
 //                    )
 //                    .andExpect(status().isUnauthorized());
+//            Thread.sleep(2000);
 //        }
 //
 //        // locked account

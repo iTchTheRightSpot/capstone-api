@@ -18,7 +18,7 @@ Link for the most up-to-date schema.
 
 ### Demo
 email - admin@admin.com
-password - password123456
+password - password123
 
 ### Development link
 [Storefront](https://store.emmanueluluabuike.com/)

@@ -6,6 +6,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,7 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 /** Class implements refresh token logic*/
-@Component
+@Component @Slf4j
 public class RefreshTokenFilter extends OncePerRequestFilter {
     private final JwtTokenService tokenService;
     private final UserDetailsService userDetailsService;
@@ -51,7 +52,7 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
                 if (cookie.getName().equals(JSESSIONID)) {
                     var obj = this.tokenService._validateTokenIsWithinExpirationBound(cookie);
 
-                    if (obj._isTokenValid()) {
+                    if (obj._refreshTokenNeeded()) {
                         var userDetails = this.userDetailsService.loadUserByUsername(obj.principal());
                         String token = this.tokenService.generateToken(
                                 new UsernamePasswordAuthenticationToken(

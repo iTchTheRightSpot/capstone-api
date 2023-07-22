@@ -12,7 +12,8 @@ import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+
+import static java.time.temporal.ChronoUnit.MINUTES;
 
 @Service @Getter @Setter @Slf4j
 public class JwtTokenService {
@@ -47,7 +48,7 @@ public class JwtTokenService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
-                .expiresAt(now.plus(tokenExpiry, ChronoUnit.MINUTES))
+                .expiresAt(now.plus(tokenExpiry, MINUTES))
                 .subject(authentication.getName())
                 .claim("role", role)
                 .build();
@@ -66,17 +67,16 @@ public class JwtTokenService {
             Instant expiresAt = jwt.getExpiresAt();
             if (expiresAt != null) {
                 Instant now = Instant.now();
-                Instant boundFromNow = now.plus(boundToSendRefreshToken, ChronoUnit.MINUTES);
+                Instant bound = now.plus(boundToSendRefreshToken, MINUTES);
                 return new UserJwtStatus(
                         jwt.getSubject(),
-                        !expiresAt.isBefore(now) && expiresAt.isBefore(boundFromNow)
+                        expiresAt.isAfter(now) && expiresAt.isBefore(bound)
                 );
             }
         } catch (JwtException e) {
             this.customUtil.expireCookie(cookie);
             log.error("JWT exception in JwtTokenService class. {}", e.getMessage());
         }
-
         return new UserJwtStatus(cookie.getValue(), false);
     }
 

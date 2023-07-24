@@ -44,7 +44,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Slf4j
 class WorkerAuthControllerTest {
     @Value(value = "${server.servlet.session.cookie.name}")
-    private String COOKIE_NAME;
+    private String JSESSIONID;
+
+    @Value(value = "${custom.cookie.frontend}")
+    private String LOGGEDSESSION;
 
     private final int MAX_FAILED_AUTH = 3;
     private final String ADMIN_EMAIL = "SEJU@development.com";
@@ -119,7 +122,7 @@ class WorkerAuthControllerTest {
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(dto.toJson().toString())
-                        .cookie(login.getResponse().getCookie(COOKIE_NAME))
+                        .cookie(login.getResponse().getCookie(JSESSIONID))
                 )
                 .andExpect(status().isCreated());
     }
@@ -151,7 +154,7 @@ class WorkerAuthControllerTest {
                         .contentType(APPLICATION_JSON)
                         .with(csrf())
                         .content(dto.toJson().toString())
-                        .cookie(login.getResponse().getCookie(COOKIE_NAME))
+                        .cookie(login.getResponse().getCookie(JSESSIONID))
                 )
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException));
 //                .andExpect(result -> assertEquals(
@@ -174,7 +177,7 @@ class WorkerAuthControllerTest {
 
         // Test route
         this.MOCK_MVC
-                .perform(get("/test/worker").cookie(login.getResponse().getCookie(COOKIE_NAME)))
+                .perform(get("/test/worker").cookie(login.getResponse().getCookie(JSESSIONID)))
                 .andExpect(status().isOk());
     }
 
@@ -204,17 +207,26 @@ class WorkerAuthControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // Cookie
-        Cookie cookie = login.getResponse().getCookie(COOKIE_NAME);
-
+        // Jwt Cookie
+        Cookie jwtCookie = login.getResponse().getCookie(JSESSIONID);
+        Cookie customCookie = login.getResponse().getCookie(LOGGEDSESSION);
         // Logout
-        MvcResult logout = this.MOCK_MVC.perform(post("/api/v1/auth/logout").cookie(cookie).with(csrf()))
+        MvcResult logout = this.MOCK_MVC
+                .perform(post("/api/v1/auth/logout")
+                        .cookie(jwtCookie)
+                        .cookie(customCookie)
+                        .with(csrf())
+                )
                 .andExpect(status().isOk())
                 .andReturn();
 
-        Cookie cookie1 = logout.getResponse().getCookie(COOKIE_NAME);
-        assertNotNull(cookie1);
-        assertEquals(0, cookie1.getMaxAge());
+        jwtCookie = logout.getResponse().getCookie(JSESSIONID);
+        customCookie = logout.getResponse().getCookie(LOGGEDSESSION);
+
+        assertNotNull(jwtCookie);
+        assertNotNull(customCookie);
+        assertEquals(0, jwtCookie.getMaxAge());
+        assertEquals(0, customCookie.getMaxAge());
     }
 
     // TODO Might be a JPA Bug

@@ -1,5 +1,6 @@
 package com.emmanuel.sarabrandserver.jwt;
 
+import com.emmanuel.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -16,21 +17,24 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/** Class implements refresh token logic*/
+/** Class implements refresh token logic */
 @Component @Slf4j
 public class RefreshTokenFilter extends OncePerRequestFilter {
     private final JwtTokenService tokenService;
     private final UserDetailsService userDetailsService;
     private final Environment environment;
+    private final CustomUtil customUtil;
 
     public RefreshTokenFilter(
             JwtTokenService tokenService,
             @Qualifier(value = "clientDetailsService") UserDetailsService userDetailsService,
-            Environment environment
+            Environment environment,
+            CustomUtil customUtil
     ) {
         this.tokenService = tokenService;
         this.userDetailsService = userDetailsService;
         this.environment = environment;
+        this.customUtil = customUtil;
     }
 
     /**
@@ -44,7 +48,8 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
             @NotNull FilterChain filterChain
     ) throws ServletException, IOException {
         Cookie[] cookies = request.getCookies();
-        if (cookies != null && !request.getRequestURI().equals("/api/v1/auth/logout")) {
+
+        if (cookies != null && !request.getRequestURI().equals(this.customUtil.logoutURL)) {
             String JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
             String LOGGEDSESSION = this.environment.getProperty("custom.cookie.frontend");
 
@@ -67,6 +72,7 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
                     }
                 }
 
+                // TODO delete cookie if jwt is expired instead of increasing the max age
                 if (cookie.getName().equals(LOGGEDSESSION)) {
                     cookie.setMaxAge(this.tokenService.maxAge());
                     response.addCookie(cookie);

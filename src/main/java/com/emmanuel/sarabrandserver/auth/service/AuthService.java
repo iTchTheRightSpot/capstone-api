@@ -2,12 +2,12 @@ package com.emmanuel.sarabrandserver.auth.service;
 
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
-import com.emmanuel.sarabrandserver.user.entity.ClientRole;
-import com.emmanuel.sarabrandserver.user.entity.Clientz;
-import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.jwt.JwtTokenService;
+import com.emmanuel.sarabrandserver.user.entity.ClientRole;
+import com.emmanuel.sarabrandserver.user.entity.Clientz;
+import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,7 +28,6 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.springframework.http.HttpHeaders.SET_COOKIE;
 import static org.springframework.http.HttpStatus.CREATED;
@@ -78,6 +77,8 @@ public class AuthService {
         this.customUtil = customUtil;
     }
 
+    private record CustomAuthResponse(boolean status, ResponseEntity<?> response) { }
+
     /**
      * Responsible for registering a new worker. The logic is basically update Clientz to a role of worker if
      * he/she exists else create and save new Clientz object.
@@ -124,8 +125,9 @@ public class AuthService {
     @Transactional
     public ResponseEntity<?> login(LoginDTO dto, HttpServletRequest request, HttpServletResponse response) {
         // No need to re-authenticate if request contains valid cookies
-        if (_validateRequestContainsValidCookies(request, response)) {
-            return new ResponseEntity<>(OK);
+        var customAuthResponse = _validateRequestContainsValidCookies(dto, request);
+        if (customAuthResponse.status) {
+            return customAuthResponse.response;
         }
 
         Authentication authentication = this.authManager.authenticate(
@@ -135,7 +137,7 @@ public class AuthService {
         // Jwt Token
         String token = this.jwtTokenService.generateToken(authentication);
 
-        // Servlet cookie
+        // Servlet cookie because I am setting it in app properties
         // Add jwt to cookie
         Cookie jwtCookie = new Cookie(JSESSIONID, token);
         jwtCookie.setDomain(DOMAIN);
@@ -145,8 +147,9 @@ public class AuthService {
         jwtCookie.setSecure(COOKIESECURE);
         response.addCookie(jwtCookie);
 
+        // org.springframework.http ResponseCookie because I need to set same site
         // Second cookie where UI can access to validate if user is logged in
-        ResponseCookie stateCookie = ResponseCookie.from(LOGGEDSESSION, UUID.randomUUID().toString())
+        ResponseCookie stateCookie = ResponseCookie.from(LOGGEDSESSION, dto.getPrincipal())
                 .domain(DOMAIN)
                 .maxAge(this.jwtTokenService.maxAge())
                 .httpOnly(false)
@@ -160,17 +163,6 @@ public class AuthService {
         headers.add(SET_COOKIE, stateCookie.toString());
 
         return ResponseEntity.ok().headers(headers).build();
-    }
-
-
-    private void _stateCookie(HttpServletResponse response) {
-        Cookie stateCookie = new Cookie(LOGGEDSESSION, UUID.randomUUID().toString());
-        stateCookie.setDomain(DOMAIN);
-        stateCookie.setMaxAge(this.jwtTokenService.maxAge());
-        stateCookie.setHttpOnly(false);
-        stateCookie.setPath(COOKIEPATH);
-        stateCookie.setSecure(COOKIESECURE);
-        response.addCookie(stateCookie);
     }
 
     private Clientz createClient(RegisterDTO dto) {
@@ -193,18 +185,17 @@ public class AuthService {
 
     /**
      * Method simply prevents user from login in again if the request contains a valid jwt and LOGGEDSESSION cookie.
-     * @param request of HttpServletRequest
-     * @param response of HttpServletResponse
+     * @param res of HttpServletRequest
      * @return boolean
      * */
-    private boolean _validateRequestContainsValidCookies(HttpServletRequest request, HttpServletResponse response) {
-        Cookie[] cookies = request.getCookies();
+    private CustomAuthResponse _validateRequestContainsValidCookies(LoginDTO dto, HttpServletRequest res) {
+        Cookie[] cookies = res.getCookies();
         // Base case
         if (cookies == null)
-            return false;
+            return new CustomAuthResponse(false, new ResponseEntity<>(OK));
 
-        Set<String> set = new HashSet<>();
         // Add all cookies names to a set
+        Set<String> set = new HashSet<>();
         for (Cookie cookie : cookies) {
             if (!set.isEmpty() && set.contains(JSESSIONID) && set.contains(LOGGEDSESSION)) {
                 break;
@@ -213,32 +204,41 @@ public class AuthService {
         }
 
         if (set.isEmpty()) {
-            return false;
+            return new CustomAuthResponse(false, new ResponseEntity<>(OK));
         }
 
         // validate jwt and LOGGEDSESSION are present in HttpServletRequest
-        if (set.contains(JSESSIONID) && set.contains(LOGGEDSESSION)) {
-            return Arrays.stream(cookies)
-                    .filter(cookie -> cookie.getName().equals(JSESSIONID))
-                    .anyMatch(cookie -> this.jwtTokenService._validateTokenExpiration(cookie.getValue()));
-        } else if (set.contains(JSESSIONID) && !set.contains(LOGGEDSESSION)) { // validate jwt is present but not LOGGEDSESSION.
-            boolean status = Arrays.stream(cookies)
-                    .filter(cookie -> cookie.getName().equals(JSESSIONID))
-                    .anyMatch(cookie -> this.jwtTokenService._validateTokenExpiration(cookie.getValue()));
+        boolean bool = Arrays.stream(cookies)
+                .filter(cookie -> cookie.getName().equals(JSESSIONID))
+                .anyMatch(this.jwtTokenService::_isTokenNoneExpired);
 
-            if (status) {
-                _stateCookie(response);
-                return true;
-            }
+        if (set.contains(LOGGEDSESSION) && bool) {
+            return new CustomAuthResponse(true, new ResponseEntity<>(OK));
+        } else if (!set.contains(LOGGEDSESSION) && bool) {
+            HttpHeaders headers = new HttpHeaders();
+            ResponseCookie cookie = ResponseCookie.from(LOGGEDSESSION, dto.getPrincipal())
+                    .domain(DOMAIN)
+                    .maxAge(this.jwtTokenService.maxAge())
+                    .httpOnly(false)
+                    .sameSite(SAMESITE)
+                    .secure(COOKIESECURE)
+                    .path(COOKIEPATH)
+                    .build();
+
+            // Add cookies to response header
+            headers.add(SET_COOKIE, cookie.toString());
+
+            return new CustomAuthResponse(true, ResponseEntity.ok().headers(headers).build());
         }
 
+        // Delete cookie because they are expired
         for (Cookie cookie : cookies) {
             if (cookie.getName().equals(JSESSIONID) || cookie.getName().equals(LOGGEDSESSION)) {
                 this.customUtil.expireCookie(cookie);
             }
         }
 
-        return false;
+        return new CustomAuthResponse(false, new ResponseEntity<>(OK));
     }
 
 }

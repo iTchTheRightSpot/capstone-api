@@ -2,12 +2,12 @@ package com.emmanuel.sarabrandserver.auth.service;
 
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
-import com.emmanuel.sarabrandserver.user.entity.ClientRole;
-import com.emmanuel.sarabrandserver.user.entity.Clientz;
-import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.jwt.JwtTokenService;
+import com.emmanuel.sarabrandserver.user.entity.ClientRole;
+import com.emmanuel.sarabrandserver.user.entity.Clientz;
+import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
 import com.github.javafaker.Faker;
 import jakarta.servlet.http.Cookie;
@@ -208,11 +208,10 @@ class AuthServiceTest {
 
         // When
         when(request.getCookies()).thenReturn(new Cookie[] { cookie1, cookie2 });
-        when(this.jwtTokenService._validateTokenExpiration(anyString())).thenReturn(true);
+        when(this.jwtTokenService._isTokenNoneExpired(any(Cookie.class))).thenReturn(true);
 
         // Then
         assertEquals(this.authService.login(dto, request, response).getStatusCode(), OK);
-        verify(response, times(0)).addCookie(any(Cookie.class));
         verify(this.authenticationManager, times(0)).authenticate(any(Authentication.class));
     }
 
@@ -233,11 +232,10 @@ class AuthServiceTest {
 
         // When
         when(request.getCookies()).thenReturn(new Cookie[] { cookie1 });
-        when(this.jwtTokenService._validateTokenExpiration(anyString())).thenReturn(true);
+        when(this.jwtTokenService._isTokenNoneExpired(any(Cookie.class))).thenReturn(true);
 
         // Then
         assertEquals(this.authService.login(dto, request, response).getStatusCode(), OK);
-        verify(response, times(1)).addCookie(any(Cookie.class));
         verify(this.authenticationManager, times(0)).authenticate(any(Authentication.class));
     }
 

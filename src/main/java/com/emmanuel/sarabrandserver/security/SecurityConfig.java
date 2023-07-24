@@ -1,5 +1,6 @@
 package com.emmanuel.sarabrandserver.security;
 
+import com.emmanuel.sarabrandserver.jwt.JwtTokenService;
 import com.emmanuel.sarabrandserver.jwt.RefreshTokenFilter;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
@@ -18,12 +19,12 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -31,6 +32,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.session.web.http.CookieSerializer;
 import org.springframework.session.web.http.DefaultCookieSerializer;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -100,7 +103,9 @@ public class SecurityConfig {
         String LOGGEDSESSION = this.environment.getProperty("custom.cookie.frontend");
 
         return http
-                .csrf(csrf -> csrf.csrfTokenRepository(new CookieCsrfTokenRepository()))
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers(this.customUtil.logoutURL)
+                        .csrfTokenRepository(new CookieCsrfTokenRepository()))
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(publicRoutes()).permitAll();
@@ -111,17 +116,22 @@ public class SecurityConfig {
                 .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
                 .exceptionHandling((ex) -> ex.authenticationEntryPoint(this.authEntryPoint))
                 .logout(out -> out
-                        .logoutUrl("/api/v1/auth/logout")
+                        .logoutUrl(this.customUtil.logoutURL)
                         .logoutSuccessHandler((request, response, authentication) -> {
                             Cookie[] cookies = request.getCookies();
-                            if (cookies != null) {
-                                for (Cookie cookie : cookies) {
-                                    if (cookie.getName().equals(JSESSIONID) || cookie.getName().equals(LOGGEDSESSION)) {
+                            if (cookies == null) {
+                                log.info("cookie is null when logout route hit");
+                                return;
+                            }
+
+                            Arrays.stream(cookies)
+                                    .filter(cookie -> cookie.getName().equals(JSESSIONID)
+                                            || cookie.getName().equals(LOGGEDSESSION)
+                                    )
+                                    .forEach(cookie -> {
                                         this.customUtil.expireCookie(cookie);
                                         response.addCookie(cookie);
-                                    }
-                                }
-                            }
+                                    });
                             SecurityContextHolder.clearContext();
                         })
                 )
@@ -136,33 +146,30 @@ public class SecurityConfig {
      * <a href="https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/bearer-tokens.html">...</a>
      * */
     @Bean
-    public BearerTokenResolver bearerTokenResolver(JwtDecoder jwtDecoder) {
-        return new BearerResolver(this.environment, jwtDecoder, this.customUtil);
+    public BearerTokenResolver bearerTokenResolver(JwtDecoder jwtDecoder, JwtTokenService jwtTokenService) {
+        return new BearerResolver(this.environment, jwtDecoder, this.customUtil, jwtTokenService);
     }
 
-    private record BearerResolver(Environment env, JwtDecoder decoder, CustomUtil customUtil) implements BearerTokenResolver {
+    private record BearerResolver(
+            Environment env,
+            JwtDecoder jwtDecoder,
+            CustomUtil util,
+            JwtTokenService tokenService
+    ) implements BearerTokenResolver {
         @Override
         public String resolve(HttpServletRequest request) {
             Cookie[] cookies = request.getCookies();
-
             if (cookies == null) {
                 return null;
             }
 
-            for (Cookie cookie : request.getCookies()) {
-                String JSESSIONID = this.env.getProperty("server.servlet.session.cookie.name");
-                if (cookie.getName().equals(JSESSIONID)) {
-                    try {
-                        String token = cookie.getValue();
-                        this.decoder.decode(token); // Will throw an exception if token is invalid
-                        return token;
-                    } catch (JwtException e) {
-                        this.customUtil.expireCookie(cookie);
-                        log.error("Jwt Exception from CustomBearerTokenResolver {}", e.getMessage());
-                    }
-                }
-            }
-            return null;
+            String JSESSIONID = this.env.getProperty("server.servlet.session.cookie.name");
+            return Arrays.stream(cookies)
+                    .filter(cookie -> cookie.getName().equals(JSESSIONID))
+                    .filter(this.tokenService::_isTokenNoneExpired)
+                    .map(Cookie::getValue)
+                    .findFirst()
+                    .orElse(null);
         }
     }
 

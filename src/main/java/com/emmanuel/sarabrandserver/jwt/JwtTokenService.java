@@ -75,18 +75,19 @@ public class JwtTokenService {
             }
         } catch (JwtException e) {
             this.customUtil.expireCookie(cookie);
-            log.error("JWT exception in JwtTokenService class. {}", e.getMessage());
+            log.error("JWT exception in _validateTokenIsWithinExpirationBound. {}", e.getMessage());
         }
         return new UserJwtStatus(cookie.getValue(), false);
     }
 
     /** Simply validates if token is expired or not */
-    public boolean _validateTokenExpiration(final String jwt) {
+    public boolean _isTokenNoneExpired(@NotNull final Cookie cookie) {
         try {
             // Based on docs, this will throw an error is token is expired or tampered with.
-            this.jwtDecoder.decode(jwt);
+            this.jwtDecoder.decode(cookie.getValue());
             return true;
         } catch (JwtException ex) {
+            this.customUtil.expireCookie(cookie);
             return false;
         }
     }

@@ -33,6 +33,7 @@ jobs:
         run: chmod +x mvnw
 
       # Build image
+      # Skip test -DskipTests
       - name: Build Image
         run: ./mvnw clean spring-boot:build-image -DskipTests
 

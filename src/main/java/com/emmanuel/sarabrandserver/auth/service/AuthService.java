@@ -25,10 +25,12 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.management.relation.Role;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.springframework.http.HttpHeaders.SET_COOKIE;
@@ -88,8 +90,11 @@ public class AuthService {
      * @throws DuplicateException when user principal exists and has a role of worker
      * @return ResponseEntity of type HttpStatus
      * */
+    @Transactional
     public ResponseEntity<?> workerRegister(RegisterDTO dto) {
-        if (this.clientzRepository.isAdmin(dto.getEmail().trim(), dto.getUsername().trim()) > 0) {
+        boolean bool = this.clientzRepository
+                .isAdmin(dto.getEmail().trim(), dto.getUsername().trim(), RoleEnum.WORKER) > 0;
+        if (bool) {
             throw new DuplicateException(dto.getUsername() + " exists");
         }
 
@@ -108,6 +113,7 @@ public class AuthService {
      * @throws DuplicateException when user principal exists
      * @return ResponseEntity of type HttpStatus
      * */
+    @Transactional
     public ResponseEntity<?> clientRegister(RegisterDTO dto) {
         if (this.clientzRepository.principalExists(dto.getEmail().trim(), dto.getUsername().trim()) > 0) {
             throw new DuplicateException(dto.getEmail() + " exists");

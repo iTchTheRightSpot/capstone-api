@@ -1,8 +1,8 @@
 package com.emmanuel.sarabrandserver.user.repository;
 
-import com.emmanuel.sarabrandserver.user.projection.ClientzPojo;
-import com.emmanuel.sarabrandserver.user.entity.Clientz;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
+import com.emmanuel.sarabrandserver.user.entity.Clientz;
+import com.emmanuel.sarabrandserver.user.projection.ClientzPojo;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -40,13 +40,14 @@ public interface ClientzRepository extends JpaRepository<Clientz, Long> {
 
     @Query(value = """
     SELECT COUNT(c.clientId) FROM Clientz c
-    JOIN ClientRole r ON c.clientId = r.clientz.clientId
+    INNER JOIN ClientRole r ON c.clientId = r.clientz.clientId
     WHERE (c.email = :email OR c.username = :username)
     AND r.role = :role
     """)
     int isAdmin(
             @Param(value = "email") String email,
-            @Param(value = "username") String username
+            @Param(value = "username") String username,
+            @Param(value = "role") RoleEnum role
     );
 
     @Query(value = """

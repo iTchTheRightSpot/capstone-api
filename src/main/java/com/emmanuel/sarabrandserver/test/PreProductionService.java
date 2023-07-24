@@ -21,7 +21,7 @@ public class PreProductionService {
                     "SEJU",
                     "Development",
                     "admin@admin.com",
-                    "StageAdmin",
+                    "admin@admin.com",
                     "0000000000",
                     "password123"
             ));

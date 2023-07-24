@@ -25,6 +25,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -87,7 +89,7 @@ public class AuthService {
      * @return ResponseEntity of type HttpStatus
      * */
     public ResponseEntity<?> workerRegister(RegisterDTO dto) {
-        if (this.clientzRepository.isAdmin(dto.getEmail().trim(), dto.getUsername().trim(), RoleEnum.WORKER) > 0) {
+        if (this.clientzRepository.isAdmin(dto.getEmail().trim(), dto.getUsername().trim()) > 0) {
             throw new DuplicateException(dto.getUsername() + " exists");
         }
 
@@ -149,7 +151,8 @@ public class AuthService {
 
         // org.springframework.http ResponseCookie because I need to set same site
         // Second cookie where UI can access to validate if user is logged in
-        ResponseCookie stateCookie = ResponseCookie.from(LOGGEDSESSION, dto.getPrincipal())
+        ResponseCookie stateCookie = ResponseCookie
+                .from(LOGGEDSESSION, URLEncoder.encode(dto.getPrincipal(), StandardCharsets.UTF_8))
                 .domain(DOMAIN)
                 .maxAge(this.jwtTokenService.maxAge())
                 .httpOnly(false)
@@ -216,7 +219,8 @@ public class AuthService {
             return new CustomAuthResponse(true, new ResponseEntity<>(OK));
         } else if (!set.contains(LOGGEDSESSION) && bool) {
             HttpHeaders headers = new HttpHeaders();
-            ResponseCookie cookie = ResponseCookie.from(LOGGEDSESSION, dto.getPrincipal())
+            ResponseCookie cookie = ResponseCookie
+                    .from(LOGGEDSESSION, URLEncoder.encode(dto.getPrincipal(), StandardCharsets.UTF_8))
                     .domain(DOMAIN)
                     .maxAge(this.jwtTokenService.maxAge())
                     .httpOnly(false)

@@ -41,7 +41,7 @@ class ClientAuthControllerTest {
 
     private final String PASSWORD = "123#-SEJU-Development";
 
-    @Value(value = "${server.servlet.session.cookie.name}") private String COOKIE_NAME;
+    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
 
     @Autowired private MockMvc MOCK_MVC;
 
@@ -100,7 +100,7 @@ class ClientAuthControllerTest {
                 .andReturn();
 
         this.MOCK_MVC
-                .perform(get("/test/client").cookie(login.getResponse().getCookie(COOKIE_NAME)))
+                .perform(get("/test/client").cookie(login.getResponse().getCookie(JSESSIONID)))
                 .andExpect(status().isOk());
     }
 

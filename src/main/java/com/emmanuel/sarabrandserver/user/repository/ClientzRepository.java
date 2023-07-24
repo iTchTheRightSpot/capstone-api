@@ -46,8 +46,7 @@ public interface ClientzRepository extends JpaRepository<Clientz, Long> {
     """)
     int isAdmin(
             @Param(value = "email") String email,
-            @Param(value = "username") String username,
-            @Param(value = "role") RoleEnum role
+            @Param(value = "username") String username
     );
 
     @Query(value = """

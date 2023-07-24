@@ -102,7 +102,7 @@ class AuthServiceTest {
         );
 
         // When
-        when(this.clientzRepository.isAdmin(anyString(), anyString(), any(RoleEnum.class))).thenReturn(0);
+        when(this.clientzRepository.isAdmin(anyString(), anyString())).thenReturn(0);
         when(this.clientzRepository.workerExists(anyString(), anyString())).thenReturn(Optional.empty());
 
         // Then
@@ -123,7 +123,7 @@ class AuthServiceTest {
         );
 
         // When
-        doReturn(1).when(this.clientzRepository).isAdmin(anyString(), anyString(), any(RoleEnum.class));
+        doReturn(1).when(this.clientzRepository).isAdmin(anyString(), anyString());
 
         // Then
         assertThrows(DuplicateException.class, () -> this.authService.workerRegister(dto));
@@ -143,7 +143,7 @@ class AuthServiceTest {
         );
 
         // When
-        when(this.clientzRepository.isAdmin(anyString(), anyString(), any(RoleEnum.class))).thenReturn(0);
+        when(this.clientzRepository.isAdmin(anyString(), anyString())).thenReturn(0);
         doReturn(Optional.of(client())).when(this.clientzRepository).workerExists(anyString(), anyString());
 
         // Then

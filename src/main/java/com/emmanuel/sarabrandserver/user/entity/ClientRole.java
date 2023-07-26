@@ -26,7 +26,7 @@ public class ClientRole implements Serializable {
 
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false, referencedColumnName = "client_id")
-    private Clientz clientz;
+    private SaraBrandUser saraBrandUser;
 
     public ClientRole(RoleEnum roleEnum) {
         this.role = roleEnum;

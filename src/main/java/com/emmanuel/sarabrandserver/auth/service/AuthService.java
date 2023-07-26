@@ -6,9 +6,8 @@ import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.jwt.JwtTokenService;
 import com.emmanuel.sarabrandserver.user.entity.ClientRole;
-import com.emmanuel.sarabrandserver.user.entity.Clientz;
-import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
-import com.emmanuel.sarabrandserver.util.CustomUtil;
+import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
+import com.emmanuel.sarabrandserver.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,17 +19,14 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.management.relation.Role;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 import static org.springframework.http.HttpHeaders.SET_COOKIE;
@@ -61,24 +57,21 @@ public class AuthService {
     @Value(value = "${server.servlet.session.cookie.secure}")
     private boolean COOKIESECURE;
 
-    private final ClientzRepository clientzRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authManager;
     private final JwtTokenService jwtTokenService;
-    private final CustomUtil customUtil;
 
     public AuthService(
-            ClientzRepository clientzRepository,
+            UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authManager,
-            JwtTokenService jwtTokenService,
-            CustomUtil customUtil
+            JwtTokenService jwtTokenService
     ) {
-        this.clientzRepository = clientzRepository;
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authManager = authManager;
         this.jwtTokenService = jwtTokenService;
-        this.customUtil = customUtil;
     }
 
     private record CustomAuthResponse(boolean status, ResponseEntity<?> response) { }
@@ -92,18 +85,18 @@ public class AuthService {
      * */
     @Transactional
     public ResponseEntity<?> workerRegister(RegisterDTO dto) {
-        boolean bool = this.clientzRepository
+        boolean bool = this.userRepository
                 .isAdmin(dto.getEmail().trim(), dto.getUsername().trim(), RoleEnum.WORKER) > 0;
         if (bool) {
             throw new DuplicateException(dto.getUsername() + " exists");
         }
 
-        Clientz client = this.clientzRepository
+        SaraBrandUser client = this.userRepository
                 .workerExists(dto.getEmail().trim(), dto.getUsername().trim())
-                .orElse(createClient(dto));
+                .orElse(createUser(dto));
         client.addRole(new ClientRole(RoleEnum.WORKER));
 
-        this.clientzRepository.save(client);
+        this.userRepository.save(client);
         return new ResponseEntity<>(CREATED);
     }
 
@@ -115,10 +108,10 @@ public class AuthService {
      * */
     @Transactional
     public ResponseEntity<?> clientRegister(RegisterDTO dto) {
-        if (this.clientzRepository.principalExists(dto.getEmail().trim(), dto.getUsername().trim()) > 0) {
+        if (this.userRepository.principalExists(dto.getEmail().trim(), dto.getUsername().trim()) > 0) {
             throw new DuplicateException(dto.getEmail() + " exists");
         }
-        this.clientzRepository.save(createClient(dto));
+        this.userRepository.save(createUser(dto));
         return new ResponseEntity<>(CREATED);
     }
 
@@ -132,14 +125,14 @@ public class AuthService {
      * */
     @Transactional
     public ResponseEntity<?> login(LoginDTO dto, HttpServletRequest request, HttpServletResponse response) {
-        // No need to re-authenticate if request contains valid cookies
+        // No need to re-authenticate if request contains valid jwt cookie
         var customAuthResponse = _validateRequestContainsValidCookies(dto, request);
         if (customAuthResponse.status) {
             return customAuthResponse.response;
         }
 
-        Authentication authentication = this.authManager.authenticate(
-                UsernamePasswordAuthenticationToken.unauthenticated(dto.getPrincipal(), dto.getPassword())
+        var authentication = this.authManager.authenticate(UsernamePasswordAuthenticationToken
+                .unauthenticated(dto.getPrincipal(), dto.getPassword())
         );
 
         // Jwt Token
@@ -167,15 +160,16 @@ public class AuthService {
                 .path(COOKIEPATH)
                 .build();
 
-        // Add cookies to response header
+        // Add cookie to response header
         HttpHeaders headers = new HttpHeaders();
         headers.add(SET_COOKIE, stateCookie.toString());
 
         return ResponseEntity.ok().headers(headers).build();
     }
 
-    private Clientz createClient(RegisterDTO dto) {
-        var client = Clientz.builder()
+    /** Create a new Clientz object */
+    private SaraBrandUser createUser(RegisterDTO dto) {
+        var client = SaraBrandUser.builder()
                 .firstname(dto.getFirstname().trim())
                 .lastname(dto.getLastname().trim())
                 .email(dto.getEmail().trim())
@@ -193,9 +187,10 @@ public class AuthService {
     }
 
     /**
-     * Method simply prevents user from login in again if the request contains a valid jwt and LOGGEDSESSION cookie.
+     * Method simply prevents user from signing in again if the request contains a valid jwt and LOGGEDSESSION cookie.
+     * @param dto of type LoginDTO
      * @param res of HttpServletRequest
-     * @return boolean
+     * @return CustomAuthResponse
      * */
     private CustomAuthResponse _validateRequestContainsValidCookies(LoginDTO dto, HttpServletRequest res) {
         Cookie[] cookies = res.getCookies();
@@ -216,7 +211,6 @@ public class AuthService {
             return new CustomAuthResponse(false, new ResponseEntity<>(OK));
         }
 
-        // validate jwt and LOGGEDSESSION are present in HttpServletRequest
         boolean bool = Arrays.stream(cookies)
                 .filter(cookie -> cookie.getName().equals(JSESSIONID))
                 .anyMatch(this.jwtTokenService::_isTokenNoneExpired);
@@ -237,15 +231,7 @@ public class AuthService {
 
             // Add cookies to response header
             headers.add(SET_COOKIE, cookie.toString());
-
             return new CustomAuthResponse(true, ResponseEntity.ok().headers(headers).build());
-        }
-
-        // Delete cookie because they are expired
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals(JSESSIONID) || cookie.getName().equals(LOGGEDSESSION)) {
-                this.customUtil.expireCookie(cookie);
-            }
         }
 
         return new CustomAuthResponse(false, new ResponseEntity<>(OK));

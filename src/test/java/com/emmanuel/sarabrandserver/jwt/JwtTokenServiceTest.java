@@ -4,7 +4,7 @@ import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
-import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +49,7 @@ class JwtTokenServiceTest {
     @Autowired private JwtTokenService jwtTokenService;
     @Autowired private AuthService authService;
     @Autowired private ClientRoleRepo clientRoleRepo;
-    @Autowired private ClientzRepository clientzRepository;
+    @Autowired private UserRepository userRepository;
 
     @Container private static final MySQLContainer<?> container;
 
@@ -87,7 +87,7 @@ class JwtTokenServiceTest {
     @AfterEach
     void tearDown() {
         this.clientRoleRepo.deleteAll();
-        this.clientzRepository.deleteAll();
+        this.userRepository.deleteAll();
     }
 
     /** Method validates refresh token. */

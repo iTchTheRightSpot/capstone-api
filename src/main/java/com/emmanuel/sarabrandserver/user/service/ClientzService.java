@@ -1,6 +1,6 @@
 package com.emmanuel.sarabrandserver.user.service;
 
-import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.user.repository.UserRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -10,10 +10,10 @@ import static com.emmanuel.sarabrandserver.enumeration.RoleEnum.CLIENT;
 
 @Service
 public class ClientzService {
-    private final ClientzRepository clientzRepository;
+    private final UserRepository userRepository;
 
-    public ClientzService(ClientzRepository clientzRepository) {
-        this.clientzRepository = clientzRepository;
+    public ClientzService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     /**
@@ -23,7 +23,7 @@ public class ClientzService {
      * @return List of ClientzPojo
      * */
     public List<?> fetchAllClientz(int page, int size) {
-        return this.clientzRepository.fetchAll(CLIENT.toString(), PageRequest.of(page, size));
+        return this.userRepository.fetchAll(CLIENT.toString(), PageRequest.of(page, size));
     }
 
 }

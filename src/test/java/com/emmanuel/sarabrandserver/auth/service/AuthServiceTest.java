@@ -6,8 +6,8 @@ import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.jwt.JwtTokenService;
 import com.emmanuel.sarabrandserver.user.entity.ClientRole;
-import com.emmanuel.sarabrandserver.user.entity.Clientz;
-import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
+import com.emmanuel.sarabrandserver.user.repository.UserRepository;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
 import com.github.javafaker.Faker;
 import jakarta.servlet.http.Cookie;
@@ -66,7 +66,7 @@ class AuthServiceTest {
 
     private AuthService authService;
 
-    @Mock private ClientzRepository clientzRepository;
+    @Mock private UserRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private AuthenticationManager authenticationManager;
     @Mock private JwtTokenService jwtTokenService;
@@ -75,11 +75,10 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         this.authService = new AuthService(
-                this.clientzRepository,
+                this.userRepository,
                 this.passwordEncoder,
                 this.authenticationManager,
-                this.jwtTokenService,
-                this.customUtil
+                this.jwtTokenService
         );
         this.authService.setJSESSIONID(JSESSIONID);
         this.authService.setDOMAIN(COOKIEDOMAIN);
@@ -102,12 +101,12 @@ class AuthServiceTest {
         );
 
         // When
-        when(this.clientzRepository.isAdmin(anyString(), anyString(), any(RoleEnum.class))).thenReturn(0);
-        when(this.clientzRepository.workerExists(anyString(), anyString())).thenReturn(Optional.empty());
+        when(this.userRepository.isAdmin(anyString(), anyString(), any(RoleEnum.class))).thenReturn(0);
+        when(this.userRepository.workerExists(anyString(), anyString())).thenReturn(Optional.empty());
 
         // Then
         assertEquals(CREATED, this.authService.workerRegister(dto).getStatusCode());
-        verify(this.clientzRepository, times(1)).save(any(Clientz.class));
+        verify(this.userRepository, times(1)).save(any(SaraBrandUser.class));
     }
 
     @Test
@@ -123,7 +122,7 @@ class AuthServiceTest {
         );
 
         // When
-        doReturn(1).when(this.clientzRepository).isAdmin(anyString(), anyString(), any(RoleEnum.class));
+        doReturn(1).when(this.userRepository).isAdmin(anyString(), anyString(), any(RoleEnum.class));
 
         // Then
         assertThrows(DuplicateException.class, () -> this.authService.workerRegister(dto));
@@ -143,12 +142,12 @@ class AuthServiceTest {
         );
 
         // When
-        when(this.clientzRepository.isAdmin(anyString(), anyString(), any(RoleEnum.class))).thenReturn(0);
-        doReturn(Optional.of(client())).when(this.clientzRepository).workerExists(anyString(), anyString());
+        when(this.userRepository.isAdmin(anyString(), anyString(), any(RoleEnum.class))).thenReturn(0);
+        doReturn(Optional.of(client())).when(this.userRepository).workerExists(anyString(), anyString());
 
         // Then
         assertEquals(CREATED, this.authService.workerRegister(dto).getStatusCode());
-        verify(this.clientzRepository, times(1)).save(any(Clientz.class));
+        verify(this.userRepository, times(1)).save(any(SaraBrandUser.class));
     }
 
     @Test
@@ -252,12 +251,12 @@ class AuthServiceTest {
         );
 
         // When
-        when(this.clientzRepository.principalExists(anyString(), anyString())).thenReturn(0);
+        when(this.userRepository.principalExists(anyString(), anyString())).thenReturn(0);
         when(this.passwordEncoder.encode(anyString())).thenReturn(dto.getPassword());
 
         // Then
         assertEquals(CREATED, this.authService.clientRegister(dto).getStatusCode());
-        verify(this.clientzRepository, times(1)).save(any(Clientz.class));
+        verify(this.userRepository, times(1)).save(any(SaraBrandUser.class));
     }
 
     @Test
@@ -273,7 +272,7 @@ class AuthServiceTest {
         );
 
         // When
-        when(this.clientzRepository.principalExists(anyString(), anyString())).thenReturn(1);
+        when(this.userRepository.principalExists(anyString(), anyString())).thenReturn(1);
 
         // Then
         assertThrows(DuplicateException.class, () -> this.authService.clientRegister(dto));
@@ -312,8 +311,8 @@ class AuthServiceTest {
         assertThrows(BadCredentialsException.class, () -> this.authService.login(dto, request, response));
     }
 
-    private Clientz client() {
-        var client = Clientz.builder()
+    private SaraBrandUser client() {
+        var client = SaraBrandUser.builder()
                 .firstname(new Faker().name().firstName())
                 .lastname(new Faker().name().lastName())
                 .email(new Faker().name().fullName())
@@ -330,8 +329,8 @@ class AuthServiceTest {
         return client;
     }
 
-    private Clientz worker() {
-        var client = Clientz.builder()
+    private SaraBrandUser worker() {
+        var client = SaraBrandUser.builder()
                 .firstname(new Faker().name().firstName())
                 .lastname(new Faker().name().lastName())
                 .email(new Faker().name().fullName())

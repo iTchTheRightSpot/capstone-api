@@ -1,6 +1,5 @@
 package com.emmanuel.sarabrandserver.util;
 
-import jakarta.servlet.http.Cookie;
 import org.springframework.stereotype.Service;
 
 import java.util.Calendar;
@@ -10,7 +9,6 @@ import java.util.TimeZone;
 
 @Service
 public class CustomUtil {
-    public final String logoutURL = "/api/v1/auth/logout";
 
     /**
      * Converts date to UTC Date
@@ -25,13 +23,6 @@ public class CustomUtil {
         calendar.setTime(date);
         calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
         return Optional.of(calendar.getTime());
-    }
-
-    /** Deletes cookie */
-    public void expireCookie(Cookie cookie) {
-        cookie.setValue("");
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
     }
 
 }

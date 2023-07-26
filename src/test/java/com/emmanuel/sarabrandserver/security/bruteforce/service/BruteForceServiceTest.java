@@ -1,8 +1,8 @@
 package com.emmanuel.sarabrandserver.security.bruteforce.service;
 
 import com.emmanuel.sarabrandserver.user.entity.ClientRole;
-import com.emmanuel.sarabrandserver.user.entity.Clientz;
-import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
+import com.emmanuel.sarabrandserver.user.repository.UserRepository;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.security.bruteforce.BruteForceEntity;
 import com.emmanuel.sarabrandserver.security.bruteforce.BruteForceRepo;
@@ -33,11 +33,11 @@ class BruteForceServiceTest {
     private BruteForceService bruteForceService;
 
     @Mock private BruteForceRepo bruteForceRepo;
-    @Mock private ClientzRepository clientzRepository;
+    @Mock private UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
-        this.bruteForceService = new BruteForceService(this.bruteForceRepo, this.clientzRepository);
+        this.bruteForceService = new BruteForceService(this.bruteForceRepo, this.userRepository);
         this.bruteForceService.setMAX(MAX);
     }
 
@@ -50,12 +50,12 @@ class BruteForceServiceTest {
 
         // When
         when(authentication.getName()).thenReturn(client.getEmail());
-        when(this.clientzRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client));
+        when(this.userRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client));
         when(this.bruteForceRepo.findByPrincipal(anyString())).thenReturn(Optional.of(bruteEntity));
 
         // Then
         this.bruteForceService.loginFailure(authentication);
-        verify(this.clientzRepository, times(1)).findByPrincipal(client.getEmail());
+        verify(this.userRepository, times(1)).findByPrincipal(client.getEmail());
         verify(this.bruteForceRepo, times(1)).findByPrincipal(client.getEmail());
     }
 
@@ -68,14 +68,14 @@ class BruteForceServiceTest {
 
         // When
         when(authentication.getName()).thenReturn(client.getEmail());
-        when(this.clientzRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client));
+        when(this.userRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client));
         when(this.bruteForceRepo.findByPrincipal(anyString())).thenReturn(Optional.empty());
 
         // Then
         this.bruteForceService.loginFailure(authentication);
-        verify(clientzRepository, times(1)).findByPrincipal(client.getEmail());
+        verify(userRepository, times(1)).findByPrincipal(client.getEmail());
         verify(bruteForceRepo, times(1)).save(any(BruteForceEntity.class));
-        verify(this.clientzRepository, times(0)).lockClientAccount(anyBoolean(), anyLong());
+        verify(this.userRepository, times(0)).lockClientAccount(anyBoolean(), anyLong());
         verify(this.bruteForceRepo, times(0)).update(any(BruteForceEntity.class));
     }
 
@@ -89,15 +89,15 @@ class BruteForceServiceTest {
 
         // When
         when(authentication.getName()).thenReturn(client.getEmail());
-        when(this.clientzRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client));
+        when(this.userRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client));
         when(this.bruteForceRepo.findByPrincipal(anyString())).thenReturn(Optional.of(bruteEntity));
 
         // Then
         this.bruteForceService.loginFailure(authentication);
-        verify(this.clientzRepository, times(1)).findByPrincipal(client.getEmail());
+        verify(this.userRepository, times(1)).findByPrincipal(client.getEmail());
         verify(this.bruteForceRepo, times(1)).findByPrincipal(client.getEmail());
         verify(this.bruteForceRepo, times(0)).save(any(BruteForceEntity.class));
-        verify(this.clientzRepository, times(1)).lockClientAccount(false, client.getClientId());
+        verify(this.userRepository, times(1)).lockClientAccount(false, client.getClientId());
     }
 
     @Test
@@ -109,7 +109,7 @@ class BruteForceServiceTest {
 
         // When
         when(authentication.getName()).thenReturn(client.getEmail());
-        when(this.clientzRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client));
+        when(this.userRepository.findByPrincipal(anyString())).thenReturn(Optional.of(client));
         when(this.bruteForceRepo.findByPrincipal(anyString())).thenReturn(Optional.of(bruteEntity));
 
         // Then
@@ -117,8 +117,8 @@ class BruteForceServiceTest {
         verify(this.bruteForceRepo, times(1)).delete(bruteEntity.getPrincipal());
     }
 
-    private Clientz client() {
-        var client = Clientz.builder()
+    private SaraBrandUser client() {
+        var client = SaraBrandUser.builder()
                 .clientId(1L)
                 .firstname(new Faker().name().firstName())
                 .lastname(new Faker().name().lastName())

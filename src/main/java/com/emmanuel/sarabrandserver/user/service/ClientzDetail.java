@@ -1,44 +1,44 @@
 package com.emmanuel.sarabrandserver.user.service;
 
-import com.emmanuel.sarabrandserver.user.entity.Clientz;
+import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
-public record ClientzDetail(Clientz clientz) implements UserDetails {
+public record ClientzDetail(SaraBrandUser saraBrandUser) implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.clientz.getAuthorities();
+        return this.saraBrandUser.getAuthorities();
     }
 
     @Override
     public String getPassword() {
-        return this.clientz.getPassword();
+        return this.saraBrandUser.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return this.clientz.getEmail();
+        return this.saraBrandUser.getEmail();
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return this.clientz.isAccountNonExpired();
+        return this.saraBrandUser.isAccountNonExpired();
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return this.clientz.isAccountNoneLocked();
+        return this.saraBrandUser.isAccountNoneLocked();
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return this.clientz.isCredentialsNonExpired();
+        return this.saraBrandUser.isCredentialsNonExpired();
     }
 
     @Override
     public boolean isEnabled() {
-        return this.clientz.isEnabled();
+        return this.saraBrandUser.isEnabled();
     }
 }

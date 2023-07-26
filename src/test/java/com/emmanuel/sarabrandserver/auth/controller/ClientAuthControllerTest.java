@@ -4,7 +4,7 @@ import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
-import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.user.repository.UserRepository;
 import org.junit.jupiter.api.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +47,7 @@ class ClientAuthControllerTest {
 
     @Autowired private ClientRoleRepo clientRoleRepo;
 
-    @Autowired private ClientzRepository clientzRepository;
+    @Autowired private UserRepository userRepository;
 
     @Autowired private AuthService authService;
 
@@ -84,7 +84,7 @@ class ClientAuthControllerTest {
     @AfterEach
     void tearDown() {
         this.clientRoleRepo.deleteAll();
-        this.clientzRepository.deleteAll();
+        this.userRepository.deleteAll();
     }
 
     /* Simulates login with username instead of email */

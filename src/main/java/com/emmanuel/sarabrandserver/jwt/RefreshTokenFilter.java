@@ -1,6 +1,5 @@
 package com.emmanuel.sarabrandserver.jwt;
 
-import com.emmanuel.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -12,10 +11,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Class implements refresh token logic */
 @Component @Slf4j
@@ -23,23 +25,26 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
     private final JwtTokenService tokenService;
     private final UserDetailsService userDetailsService;
     private final Environment environment;
-    private final CustomUtil customUtil;
+    private final JwtDecoder jwtDecoder;
 
     public RefreshTokenFilter(
             JwtTokenService tokenService,
             @Qualifier(value = "clientDetailsService") UserDetailsService userDetailsService,
             Environment environment,
-            CustomUtil customUtil
+            JwtDecoder jwtDecoder
     ) {
         this.tokenService = tokenService;
         this.userDetailsService = userDetailsService;
         this.environment = environment;
-        this.customUtil = customUtil;
+        this.jwtDecoder = jwtDecoder;
     }
 
     /**
-     * The objective of this filter is to replace jwt and cookie's max age if jwt is within expiration bound(look in
-     * JwtTokenService to find out the bound).
+     * The objective of this filter is implement refresh token logic.
+     * 1. Replace the first jwt token that needs to be refreshed.
+     * 2. Update LOGGEDSESSION max age if refresh token is implemented.
+     * <br/>
+     * Note: For each request, there can only be one valid jwt as logic to validate this is done in AuthService class.
      * */
     @Override
     protected void doFilterInternal(
@@ -48,39 +53,55 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
             @NotNull FilterChain filterChain
     ) throws ServletException, IOException {
         Cookie[] cookies = request.getCookies();
+        String uri = request.getRequestURI();
+        boolean isLogout = uri.length() > 6 && uri.endsWith("logout");
 
-        if (cookies != null && !request.getRequestURI().equals(this.customUtil.logoutURL)) {
-            String JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
-            String LOGGEDSESSION = this.environment.getProperty("custom.cookie.frontend");
+        // Base case
+        if (cookies == null || isLogout) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(JSESSIONID)) {
-                    var obj = this.tokenService._validateTokenIsWithinExpirationBound(cookie);
+        String JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
+        AtomicBoolean updateLOGGEDSESSION = new AtomicBoolean(false);
 
-                    if (obj._refreshTokenNeeded()) {
-                        var userDetails = this.userDetailsService.loadUserByUsername(obj.principal());
-                        String token = this.tokenService.generateToken(
-                                new UsernamePasswordAuthenticationToken(
-                                        userDetails,
-                                        null,
-                                        userDetails.getAuthorities() // roles
-                                )
-                        );
-                        cookie.setValue(token);
+        // validate refresh token is needed
+        Arrays.stream(cookies)
+                .filter(cookie -> cookie.getName().equals(JSESSIONID))
+                .filter(this.tokenService::_refreshTokenNeeded)
+                .findFirst()
+                .ifPresent(cookie -> {
+                    var principal = extractSubject(cookie);
+                    var userDetails = this.userDetailsService.loadUserByUsername(principal);
+                    String token = this.tokenService.generateToken(
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities() // roles
+                            )
+                    );
+                    cookie.setValue(token);
+                    cookie.setMaxAge(this.tokenService.maxAge());
+                    updateLOGGEDSESSION.set(true);
+                    response.addCookie(cookie);
+                });
+
+        String LOGGEDSESSION = this.environment.getProperty("custom.cookie.frontend");
+        if (updateLOGGEDSESSION.get()) {
+            Arrays.stream(cookies)
+                    .filter(cookie -> cookie.getName().equals(LOGGEDSESSION))
+                    .findFirst()
+                    .ifPresent(cookie -> {
                         cookie.setMaxAge(this.tokenService.maxAge());
                         response.addCookie(cookie);
-                    }
-                }
-
-                // TODO delete cookie if jwt is expired instead of increasing the max age
-                if (cookie.getName().equals(LOGGEDSESSION)) {
-                    cookie.setMaxAge(this.tokenService.maxAge());
-                    response.addCookie(cookie);
-                } // End of If
-            } // End of for
+                    });
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String extractSubject(final Cookie cookie) {
+        return this.jwtDecoder.decode(cookie.getValue()).getSubject();
     }
 
 }

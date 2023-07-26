@@ -23,6 +23,6 @@ public class ClientPasswordResetToken implements Serializable {
     private String token;
 
     @OneToOne(mappedBy = "token")
-    private Clientz clientz;
+    private SaraBrandUser saraBrandUser;
 
 }

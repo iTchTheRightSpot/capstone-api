@@ -6,7 +6,7 @@ import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.security.bruteforce.BruteForceService;
 import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
-import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
@@ -49,15 +49,15 @@ class WorkerAuthControllerTest {
     @Value(value = "${custom.cookie.frontend}")
     private String LOGGEDSESSION;
 
-    private final int MAX_FAILED_AUTH = 3;
     private final String ADMIN_EMAIL = "SEJU@development.com";
     private final String USERNAME = "SEJU Development";
     private final String ADMIN_PASSWORD = "123#-SEJU-Development";
+    private final String requestMapping = "/api/v1/worker/auth/";
 
     @Autowired private MockMvc MOCK_MVC;
     @Autowired private AuthService authService;
     @Autowired private ClientRoleRepo clientRoleRepo;
-    @Autowired private ClientzRepository clientzRepository;
+    @Autowired private UserRepository userRepository;
     @Autowired private BruteForceService bruteForceService;
 
     @Container private static final MySQLContainer<?> container;
@@ -78,6 +78,7 @@ class WorkerAuthControllerTest {
 
     @BeforeEach
     void setUp() {
+        int MAX_FAILED_AUTH = 3;
         this.bruteForceService.setMAX(MAX_FAILED_AUTH);
         this.authService.workerRegister(new RegisterDTO(
                 "SEJU",
@@ -92,7 +93,7 @@ class WorkerAuthControllerTest {
     @AfterEach
     void tearDown() {
         this.clientRoleRepo.deleteAll();
-        this.clientzRepository.deleteAll();
+        this.userRepository.deleteAll();
     }
 
     /** Method does two things in one. Login and Register. To register, worker has to have a role WORKER */
@@ -100,7 +101,7 @@ class WorkerAuthControllerTest {
     void register() throws Exception {
         // Login
         MvcResult login = this.MOCK_MVC
-                .perform(post("/api/v1/worker/auth/login")
+                .perform(post(requestMapping + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).toJson().toString())
@@ -118,7 +119,7 @@ class WorkerAuthControllerTest {
                 "A;D@#$13245eifdkj"
         );
         this.MOCK_MVC
-                .perform(post("/api/v1/worker/auth/register")
+                .perform(post(requestMapping + "register")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(dto.toJson().toString())
@@ -132,7 +133,7 @@ class WorkerAuthControllerTest {
     void register_with_existing_credentials() throws Exception {
         // Login
         MvcResult login = this.MOCK_MVC
-                .perform(post("/api/v1/worker/auth/login")
+                .perform(post(requestMapping + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).toJson().toString())
@@ -150,24 +151,20 @@ class WorkerAuthControllerTest {
         );
 
         this.MOCK_MVC
-                .perform(post("/api/v1/worker/auth/register")
+                .perform(post(requestMapping + "register")
                         .contentType(APPLICATION_JSON)
                         .with(csrf())
                         .content(dto.toJson().toString())
                         .cookie(login.getResponse().getCookie(JSESSIONID))
                 )
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException));
-//                .andExpect(result -> assertEquals(
-//                        dto.getEmail() + " exists",
-//                        Objects.requireNonNull(result.getResolvedException()).getMessage()
-//                ));
     }
 
     @Test
     @Order(3)
     void login() throws Exception {
         MvcResult login = this.MOCK_MVC
-                .perform(post("/api/v1/worker/auth/login")
+                .perform(post(requestMapping + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).toJson().toString())
@@ -184,7 +181,7 @@ class WorkerAuthControllerTest {
     @Test @Order(4)
     void login_wrong_password() throws Exception {
         this.MOCK_MVC
-                .perform(post("/api/v1/worker/auth/login")
+                .perform(post(requestMapping + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, "fFeubfrom@#$%^124234").toJson().toString())
@@ -199,7 +196,7 @@ class WorkerAuthControllerTest {
     void logout() throws Exception {
         // Login
         MvcResult login = this.MOCK_MVC
-                .perform(post("/api/v1/worker/auth/login")
+                .perform(post(requestMapping + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).toJson().toString())
@@ -212,7 +209,7 @@ class WorkerAuthControllerTest {
         Cookie customCookie = login.getResponse().getCookie(LOGGEDSESSION);
         // Logout
         MvcResult logout = this.MOCK_MVC
-                .perform(post("/api/v1/auth/logout")
+                .perform(post("/api/v1/logout")
                         .cookie(jwtCookie)
                         .cookie(customCookie)
                         .with(csrf())
@@ -228,31 +225,5 @@ class WorkerAuthControllerTest {
         assertEquals(0, jwtCookie.getMaxAge());
         assertEquals(0, customCookie.getMaxAge());
     }
-
-    // TODO Might be a JPA Bug
-    /** Test simulates a brute force attack. The loop simulates concurrent failed login */
-//    @Test @Order(6)
-//    void attack() throws Exception {
-//        // Simulate concurrent failed login attempts
-//        for (int i = 0; i <= MAX_FAILED_AUTH + 2; i++) {
-//            this.MOCK_MVC
-//                    .perform(post("/api/v1/worker/auth/login")
-//                            .with(csrf())
-//                            .contentType(APPLICATION_JSON)
-//                            .content(new LoginDTO(ADMIN_EMAIL, "iwei36SD902#$&*").toJson().toString())
-//                    )
-//                    .andExpect(status().isUnauthorized());
-//            Thread.sleep(2000);
-//        }
-//
-//        // locked account
-//        this.MOCK_MVC
-//                .perform(post("/api/v1/worker/auth/login")
-//                        .with(csrf())
-//                        .contentType(APPLICATION_JSON)
-//                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).toJson().toString())
-//                )
-//                .andExpect(status().isUnauthorized());
-//    }
 
 }

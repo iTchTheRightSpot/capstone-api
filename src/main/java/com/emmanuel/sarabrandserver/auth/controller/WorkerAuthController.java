@@ -23,8 +23,7 @@ public class WorkerAuthController {
 
     @PostMapping(path = "/register", consumes = "application/json")
     @PreAuthorize(value = "hasRole('ROLE_WORKER')")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterDTO dto) throws InterruptedException {
-        Thread.sleep(5000);
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterDTO dto) {
         return this.authService.workerRegister(dto);
     }
 

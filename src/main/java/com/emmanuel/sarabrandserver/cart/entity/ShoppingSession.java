@@ -1,6 +1,6 @@
 package com.emmanuel.sarabrandserver.cart.entity;
 
-import com.emmanuel.sarabrandserver.user.entity.Clientz;
+import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
 import com.emmanuel.sarabrandserver.product.entity.Product;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
@@ -41,13 +41,13 @@ public class ShoppingSession {
 
     @OneToOne(cascade = ALL)
     @JoinColumn(name = "client_id", referencedColumnName = "client_id")
-    private Clientz clientz;
+    private SaraBrandUser saraBrandUser;
 
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "shoppingSession")
     private Set<Product> products;
 
-    public void setClientz(Clientz client) {
-        this.clientz = client;
+    public void setSaraBrandUser(SaraBrandUser client) {
+        this.saraBrandUser = client;
         client.setShoppingSession(this);
     }
 

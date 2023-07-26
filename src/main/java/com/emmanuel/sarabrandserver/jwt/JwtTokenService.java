@@ -40,9 +40,7 @@ public class JwtTokenService {
 
          String[] role = authentication.getAuthorities() //
                  .stream() //
-                 .map(grantedAuthority -> StringUtils
-                         .substringAfter(grantedAuthority.getAuthority(), "ROLE_")
-                 ) //
+                 .map(grantedAuthority -> StringUtils.substringAfter(grantedAuthority.getAuthority(), "ROLE_"))
                  .toArray(String[]::new);
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
@@ -56,38 +54,30 @@ public class JwtTokenService {
         return this.jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
-    /**
-     * Validates if token is with expiration bound. Needed in RefreshTokenFilter
-     * @param cookie of type jakarta.servlet.http.Cookie
-     * @return UserJwtStatus
-     * */
-    public UserJwtStatus _validateTokenIsWithinExpirationBound(@NotNull final Cookie cookie) {
-        try {
-            Jwt jwt = this.jwtDecoder.decode(cookie.getValue()); // throws an error if jwt is not valid
-            Instant expiresAt = jwt.getExpiresAt();
-            if (expiresAt != null) {
-                Instant now = Instant.now();
-                Instant bound = now.plus(boundToSendRefreshToken, MINUTES);
-                return new UserJwtStatus(
-                        jwt.getSubject(),
-                        expiresAt.isAfter(now) && expiresAt.isBefore(bound)
-                );
-            }
-        } catch (JwtException e) {
-            this.customUtil.expireCookie(cookie);
-            log.error("JWT exception in _validateTokenIsWithinExpirationBound. {}", e.getMessage());
-        }
-        return new UserJwtStatus(cookie.getValue(), false);
-    }
-
     /** Simply validates if token is expired or not */
     public boolean _isTokenNoneExpired(@NotNull final Cookie cookie) {
         try {
-            // Based on docs, this will throw an error is token is expired or tampered with.
             this.jwtDecoder.decode(cookie.getValue());
             return true;
         } catch (JwtException ex) {
-            this.customUtil.expireCookie(cookie);
+            return false;
+        }
+    }
+
+    /**
+     * Returns true if token is within expiration bound
+     * @param cookie of type jakarta.servlet.http.Cookie
+     * @return boolean
+     * */
+    public boolean _refreshTokenNeeded(@NotNull final Cookie cookie) {
+        try {
+            Jwt jwt = this.jwtDecoder.decode(cookie.getValue()); // throws an error if jwt is not valid
+            var expiresAt = jwt.getExpiresAt();
+            var now = Instant.now();
+            var bound = now.plus(boundToSendRefreshToken, MINUTES);
+            return expiresAt.isAfter(now) && expiresAt.isBefore(bound);
+        } catch (JwtException | NullPointerException e) {
+            log.error("JWT exception {}, {}", e.getMessage(), RefreshTokenFilter.class);
             return false;
         }
     }

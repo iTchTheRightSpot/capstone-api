@@ -1,6 +1,6 @@
 package com.emmanuel.sarabrandserver.security.bruteforce;
 
-import com.emmanuel.sarabrandserver.user.repository.ClientzRepository;
+import com.emmanuel.sarabrandserver.user.repository.UserRepository;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -11,11 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class BruteForceService {
     private int MAX = 5;
     private final BruteForceRepo bruteForceRepo;
-    private final ClientzRepository clientzRepository;
+    private final UserRepository userRepository;
 
-    public BruteForceService(BruteForceRepo bruteForceRepo, ClientzRepository clientzRepository) {
+    public BruteForceService(BruteForceRepo bruteForceRepo, UserRepository userRepository) {
         this.bruteForceRepo = bruteForceRepo;
-        this.clientzRepository = clientzRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -24,7 +24,7 @@ public class BruteForceService {
      */
     @Transactional
     public void loginFailure(Authentication auth) {
-        var client = this.clientzRepository.findByPrincipal(auth.getName()).orElse(null);
+        var client = this.userRepository.findByPrincipal(auth.getName()).orElse(null);
 
         if (client == null) {
             return;
@@ -37,7 +37,7 @@ public class BruteForceService {
         }
 
         if (bruteForceEntity.getFailedAttempt() >= this.MAX) {
-            this.clientzRepository.lockClientAccount(false, client.getClientId());
+            this.userRepository.lockClientAccount(false, client.getClientId());
             return;
         }
 
@@ -51,7 +51,7 @@ public class BruteForceService {
      * @param auth of type Spring Core Authentication
      */
     public void resetBruteForceCounter(Authentication auth) {
-        this.clientzRepository
+        this.userRepository
                 .findByPrincipal(auth.getName()) //
                 .flatMap(clientz -> this.bruteForceRepo.findByPrincipal(auth.getName())) //
                 .ifPresent(entity -> this.bruteForceRepo.delete(entity.getPrincipal()));

@@ -1,6 +1,5 @@
 package com.emmanuel.sarabrandserver.exception;
 
-import com.nimbusds.jose.proc.BadJOSEException;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +41,7 @@ public class ControllerAdvices {
         return new ResponseEntity<>(exceptionDetails, NOT_FOUND);
     }
 
-    @ExceptionHandler(value = {AuthenticationException.class, BadJOSEException.class, UsernameNotFoundException.class})
+    @ExceptionHandler(value = {AuthenticationException.class, UsernameNotFoundException.class})
     public ResponseEntity<?> authenticationException(Exception e) {
         var exceptionDetails = new ExceptionDetails(
                 e.getMessage(),

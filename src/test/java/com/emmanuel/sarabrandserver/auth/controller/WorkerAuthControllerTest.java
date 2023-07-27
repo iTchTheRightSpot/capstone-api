@@ -8,7 +8,6 @@ import com.emmanuel.sarabrandserver.security.bruteforce.BruteForceService;
 import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +25,8 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -41,13 +41,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.properties")
-@Slf4j
 class WorkerAuthControllerTest {
+
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
-
-    @Value(value = "${custom.cookie.frontend}")
-    private String LOGGEDSESSION;
 
     private final String ADMIN_EMAIL = "SEJU@development.com";
     private final String USERNAME = "SEJU Development";
@@ -160,25 +157,7 @@ class WorkerAuthControllerTest {
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException));
     }
 
-    @Test
-    @Order(3)
-    void login() throws Exception {
-        MvcResult login = this.MOCK_MVC
-                .perform(post(requestMapping + "login")
-                        .with(csrf())
-                        .contentType(APPLICATION_JSON)
-                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).toJson().toString())
-                )
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // Test route
-        this.MOCK_MVC
-                .perform(get("/test/worker").cookie(login.getResponse().getCookie(JSESSIONID)))
-                .andExpect(status().isOk());
-    }
-
-    @Test @Order(4)
+    @Test @Order(3)
     void login_wrong_password() throws Exception {
         this.MOCK_MVC
                 .perform(post(requestMapping + "login")
@@ -192,7 +171,7 @@ class WorkerAuthControllerTest {
     }
 
     /** Validates cookie has been clear. But cookie will still be valid if it due to jwt being stateless */
-    @Test @Order(5)
+    @Test @Order(4)
     void logout() throws Exception {
         // Login
         MvcResult login = this.MOCK_MVC
@@ -205,25 +184,23 @@ class WorkerAuthControllerTest {
                 .andReturn();
 
         // Jwt Cookie
-        Cookie jwtCookie = login.getResponse().getCookie(JSESSIONID);
-        Cookie customCookie = login.getResponse().getCookie(LOGGEDSESSION);
+        Cookie cookie = login.getResponse().getCookie(JSESSIONID);
+        assertNotNull(cookie);
+
         // Logout
-        MvcResult logout = this.MOCK_MVC
-                .perform(post("/api/v1/logout")
-                        .cookie(jwtCookie)
-                        .cookie(customCookie)
-                        .with(csrf())
+        this.MOCK_MVC
+                .perform(post("/api/v1/logout").cookie(cookie).with(csrf()))
+                .andExpect(status().isOk());
+
+
+        // Access protected route with invalid cookie
+        this.MOCK_MVC
+                .perform(get("/test/worker").cookie(cookie))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message")
+                        .value("Full authentication is required to access this resource")
                 )
-                .andExpect(status().isOk())
-                .andReturn();
-
-        jwtCookie = logout.getResponse().getCookie(JSESSIONID);
-        customCookie = logout.getResponse().getCookie(LOGGEDSESSION);
-
-        assertNotNull(jwtCookie);
-        assertNotNull(customCookie);
-        assertEquals(0, jwtCookie.getMaxAge());
-        assertEquals(0, customCookie.getMaxAge());
+                .andExpect(jsonPath("$.httpStatus").value("UNAUTHORIZED"));
     }
 
 }

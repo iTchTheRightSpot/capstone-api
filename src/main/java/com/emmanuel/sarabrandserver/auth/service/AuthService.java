@@ -4,15 +4,14 @@ import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
-import com.emmanuel.sarabrandserver.jwt.JwtTokenService;
 import com.emmanuel.sarabrandserver.user.entity.ClientRole;
 import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -20,18 +19,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Service;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Set;
 
 import static org.springframework.http.HttpHeaders.SET_COOKIE;
 import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.OK;
 
 @Service @Setter
 public class AuthService {
@@ -39,42 +40,43 @@ public class AuthService {
     @Value(value = "${custom.cookie.frontend}")
     private String LOGGEDSESSION;
 
-    @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
-
     @Value(value = "${server.servlet.session.cookie.domain}")
     private String DOMAIN;
 
-    @Value(value = "${server.servlet.session.cookie.http-only}")
-    private boolean HTTPONLY;
+    @Value(value = "${server.servlet.session.cookie.max-age}")
+    private int MAXAGE;
 
     @Value(value = "${server.servlet.session.cookie.path}")
-    private String COOKIEPATH;
+    private String PATH;
 
     @Value(value = "${server.servlet.session.cookie.same-site}")
     private String SAMESITE;
 
     @Value(value = "${server.servlet.session.cookie.secure}")
-    private boolean COOKIESECURE;
+    private boolean SECURE;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authManager;
-    private final JwtTokenService jwtTokenService;
+    private final SecurityContextRepository securityContextRepository;
+    private final SecurityContextHolderStrategy securityContextHolderStrategy;
+    private final SessionAuthenticationStrategy strategy;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authManager,
-            JwtTokenService jwtTokenService
+            SecurityContextRepository securityContextRepository,
+            @Qualifier(value = "strategy") SessionAuthenticationStrategy strategy
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authManager = authManager;
-        this.jwtTokenService = jwtTokenService;
+        this.securityContextRepository = securityContextRepository;
+        this.strategy = strategy;
+        // Info about securitycontextholder https://stackoverflow.com/questions/74458719/isnt-securitycontextholder-a-bean
+        this.securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
     }
-
-    private record CustomAuthResponse(boolean status, ResponseEntity<?> response) { }
 
     /**
      * Responsible for registering a new worker. The logic is basically update Clientz to a role of worker if
@@ -116,7 +118,8 @@ public class AuthService {
     }
 
     /**
-     * Basically logs in a user based on credentials stored in the DB.
+     * Basically logs in a user based on credentials stored in the DB. The only gotcha is we are sending a custom cookie
+     * which the ui needs to protect pages.
      * @param dto consist of principal and password.
      * @param request of HttpServletRequest
      * @param response of HttpServletResponse
@@ -125,44 +128,33 @@ public class AuthService {
      * */
     @Transactional
     public ResponseEntity<?> login(LoginDTO dto, HttpServletRequest request, HttpServletResponse response) {
-        // No need to re-authenticate if request contains valid jwt cookie
-        var customAuthResponse = _validateRequestContainsValidCookies(dto, request);
-        if (customAuthResponse.status) {
-            return customAuthResponse.response;
-        }
+        var authenticated = this.authManager
+                .authenticate(UsernamePasswordAuthenticationToken.unauthenticated(dto.getPrincipal(), dto.getPassword()));
 
-        var authentication = this.authManager.authenticate(UsernamePasswordAuthenticationToken
-                .unauthenticated(dto.getPrincipal(), dto.getPassword())
-        );
+        // Create a new context
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authenticated);
 
-        // Jwt Token
-        String token = this.jwtTokenService.generateToken(authentication);
+        // Strategy
+        this.strategy.onAuthentication(authenticated, request, response);
 
-        // Servlet cookie because I am setting it in app properties
-        // Add jwt to cookie
-        Cookie jwtCookie = new Cookie(JSESSIONID, token);
-        jwtCookie.setDomain(DOMAIN);
-        jwtCookie.setMaxAge(this.jwtTokenService.maxAge());
-        jwtCookie.setHttpOnly(HTTPONLY);
-        jwtCookie.setPath(COOKIEPATH);
-        jwtCookie.setSecure(COOKIESECURE);
-        response.addCookie(jwtCookie);
+        // Update SecurityContextHolder and Strategy
+        this.securityContextHolderStrategy.setContext(context);
+        this.securityContextRepository.saveContext(context, request, response);
 
-        // org.springframework.http ResponseCookie because I need to set same site
-        // Second cookie where UI can access to validate if user is logged in
-        ResponseCookie stateCookie = ResponseCookie
+        // Custom cookie
+        ResponseCookie cookie = ResponseCookie
                 .from(LOGGEDSESSION, URLEncoder.encode(dto.getPrincipal(), StandardCharsets.UTF_8))
                 .domain(DOMAIN)
-                .maxAge(this.jwtTokenService.maxAge())
                 .httpOnly(false)
+                .secure(SECURE)
+                .path(PATH)
+                .maxAge(MAXAGE)
                 .sameSite(SAMESITE)
-                .secure(COOKIESECURE)
-                .path(COOKIEPATH)
                 .build();
 
-        // Add cookie to response header
         HttpHeaders headers = new HttpHeaders();
-        headers.add(SET_COOKIE, stateCookie.toString());
+        headers.add(SET_COOKIE, cookie.toString());
 
         return ResponseEntity.ok().headers(headers).build();
     }
@@ -184,57 +176,6 @@ public class AuthService {
                 .build();
         client.addRole(new ClientRole(RoleEnum.CLIENT));
         return client;
-    }
-
-    /**
-     * Method simply prevents user from signing in again if the request contains a valid jwt and LOGGEDSESSION cookie.
-     * @param dto of type LoginDTO
-     * @param res of HttpServletRequest
-     * @return CustomAuthResponse
-     * */
-    private CustomAuthResponse _validateRequestContainsValidCookies(LoginDTO dto, HttpServletRequest res) {
-        Cookie[] cookies = res.getCookies();
-        // Base case
-        if (cookies == null)
-            return new CustomAuthResponse(false, new ResponseEntity<>(OK));
-
-        // Add all cookies names to a set
-        Set<String> set = new HashSet<>();
-        for (Cookie cookie : cookies) {
-            if (!set.isEmpty() && set.contains(JSESSIONID) && set.contains(LOGGEDSESSION)) {
-                break;
-            }
-            set.add(cookie.getName());
-        }
-
-        if (set.isEmpty()) {
-            return new CustomAuthResponse(false, new ResponseEntity<>(OK));
-        }
-
-        boolean bool = Arrays.stream(cookies)
-                .filter(cookie -> cookie.getName().equals(JSESSIONID))
-                .anyMatch(this.jwtTokenService::_isTokenNoneExpired);
-
-        if (set.contains(LOGGEDSESSION) && bool) {
-            return new CustomAuthResponse(true, new ResponseEntity<>(OK));
-        } else if (!set.contains(LOGGEDSESSION) && bool) {
-            HttpHeaders headers = new HttpHeaders();
-            ResponseCookie cookie = ResponseCookie
-                    .from(LOGGEDSESSION, URLEncoder.encode(dto.getPrincipal(), StandardCharsets.UTF_8))
-                    .domain(DOMAIN)
-                    .maxAge(this.jwtTokenService.maxAge())
-                    .httpOnly(false)
-                    .sameSite(SAMESITE)
-                    .secure(COOKIESECURE)
-                    .path(COOKIEPATH)
-                    .build();
-
-            // Add cookies to response header
-            headers.add(SET_COOKIE, cookie.toString());
-            return new CustomAuthResponse(true, ResponseEntity.ok().headers(headers).build());
-        }
-
-        return new CustomAuthResponse(false, new ResponseEntity<>(OK));
     }
 
 }

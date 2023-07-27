@@ -5,13 +5,13 @@ import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
+import com.emmanuel.sarabrandserver.util.CustomUtil;
 import org.junit.jupiter.api.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -23,6 +23,8 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -36,20 +38,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.properties")
 class ClientAuthControllerTest {
-
     private final String USERNAME = "SEJU Development";
-
     private final String PASSWORD = "123#-SEJU-Development";
 
-    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
+
+    @Value(value = "${custom.cookie.frontend}")
+    private String LOGGEDSESSION;
 
     @Autowired private MockMvc MOCK_MVC;
-
     @Autowired private ClientRoleRepo clientRoleRepo;
-
     @Autowired private UserRepository userRepository;
-
     @Autowired private AuthService authService;
+    @Autowired private CustomUtil customUtil;
 
     @Container private static final MySQLContainer<?> container;
 
@@ -58,7 +60,6 @@ class ClientAuthControllerTest {
                 .withDatabaseName("sara_brand_db")
                 .withUsername("sara")
                 .withPassword("sara");
-
     }
 
     @DynamicPropertySource
@@ -70,6 +71,7 @@ class ClientAuthControllerTest {
 
     @BeforeEach
     void setUp() {
+        this.customUtil.setMaxSession(1);
         var dto = RegisterDTO.builder()
                 .firstname("SEUY")
                 .lastname("Development")
@@ -93,14 +95,57 @@ class ClientAuthControllerTest {
         MvcResult login = this.MOCK_MVC
                 .perform(post("/api/v1/client/auth/login")
                         .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(new LoginDTO(USERNAME, PASSWORD).toJson().toString())
                 )
                 .andExpect(status().isOk())
                 .andReturn();
 
+        var cookie = login.getResponse().getCookie(JSESSIONID);
+
+        assertNotNull(cookie);
+        assertNotNull(login.getResponse().getCookie(LOGGEDSESSION));
+
         this.MOCK_MVC
-                .perform(get("/test/client").cookie(login.getResponse().getCookie(JSESSIONID)))
+                .perform(get("/test/client").cookie(cookie))
+                .andExpect(status().isOk());
+    }
+
+    /** Max session is 1 */
+    @Test @Order(2)
+    void validateMaxSession() throws Exception {
+        // Browser 1
+        MvcResult login1 = this.MOCK_MVC
+                .perform(post("/api/v1/client/auth/login")
+                        .with(csrf())
+                        .contentType(APPLICATION_JSON)
+                        .content(new LoginDTO(USERNAME, PASSWORD).toJson().toString())
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Browser 2
+        MvcResult login2 = this.MOCK_MVC
+                .perform(post("/api/v1/client/auth/login")
+                        .with(csrf())
+                        .contentType(APPLICATION_JSON)
+                        .content(new LoginDTO(USERNAME, PASSWORD).toJson().toString())
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Should return 401
+        var cookie = login1.getResponse().getCookie(JSESSIONID);
+        assertNotNull(cookie);
+        this.MOCK_MVC
+                .perform(get("/test/client").cookie(cookie))
+                .andExpect(status().isUnauthorized());
+
+        // Should return 200
+        cookie = login2.getResponse().getCookie(JSESSIONID);
+        assertNotNull(cookie);
+        this.MOCK_MVC
+                .perform(get("/test/client").cookie(cookie))
                 .andExpect(status().isOk());
     }
 

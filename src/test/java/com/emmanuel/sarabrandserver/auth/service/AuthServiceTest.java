@@ -4,13 +4,10 @@ import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
-import com.emmanuel.sarabrandserver.jwt.JwtTokenService;
 import com.emmanuel.sarabrandserver.user.entity.ClientRole;
 import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
-import com.emmanuel.sarabrandserver.util.CustomUtil;
 import com.github.javafaker.Faker;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,13 +22,14 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.HashSet;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -48,9 +46,6 @@ class AuthServiceTest {
 
     @Value(value = "${custom.cookie.frontend}")
     private String LOGGEDSESSION;
-
-    @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
 
     @Value(value = "${server.servlet.session.cookie.domain}")
     private String COOKIEDOMAIN;
@@ -69,8 +64,8 @@ class AuthServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private AuthenticationManager authenticationManager;
-    @Mock private JwtTokenService jwtTokenService;
-    @Mock private CustomUtil customUtil;
+    @Mock private SecurityContextRepository securityContextRepository;
+    @Mock private SessionAuthenticationStrategy strategy;
 
     @BeforeEach
     void setUp() {
@@ -78,12 +73,12 @@ class AuthServiceTest {
                 this.userRepository,
                 this.passwordEncoder,
                 this.authenticationManager,
-                this.jwtTokenService
+                this.securityContextRepository,
+                this.strategy
         );
-        this.authService.setJSESSIONID(JSESSIONID);
         this.authService.setDOMAIN(COOKIEDOMAIN);
-        this.authService.setCOOKIEPATH(COOKIEPATH);
-        this.authService.setCOOKIESECURE(COOKIESECURE);
+        this.authService.setPATH(COOKIEPATH);
+        this.authService.setSECURE(COOKIESECURE);
         this.authService.setSAMESITE(SAMESITE);
         this.authService.setLOGGEDSESSION(LOGGEDSESSION);
     }
@@ -161,7 +156,6 @@ class AuthServiceTest {
         // When
         when(this.authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
-        when(this.jwtTokenService.generateToken(any(Authentication.class))).thenReturn("token");
 
         // Then
         assertEquals(this.authService.login(dto, request, response).getStatusCode(), OK);
@@ -181,61 +175,6 @@ class AuthServiceTest {
 
         // Then
         assertThrows(BadCredentialsException.class, () -> this.authService.login(dto, request, response));
-    }
-
-    /** Simulates jwt and LOGGEDSESSION cookies are present in the request */
-    @Test
-    void validateLoginRequestWithExistingJwtAndLoggedSessionCookie() {
-        // Given
-        var dto = new LoginDTO(worker().getUsername(), worker().getPassword());
-        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
-
-        Cookie cookie1 = new Cookie(JSESSIONID, UUID.randomUUID().toString());
-        cookie1.setDomain(COOKIEDOMAIN);
-        cookie1.setMaxAge(1800);
-        cookie1.setHttpOnly(false);
-        cookie1.setPath(COOKIEPATH);
-        cookie1.setSecure(COOKIESECURE);
-
-        Cookie cookie2 = new Cookie(LOGGEDSESSION, UUID.randomUUID().toString());
-        cookie2.setDomain(COOKIEDOMAIN);
-        cookie2.setMaxAge(1800);
-        cookie2.setHttpOnly(false);
-        cookie2.setPath(COOKIEPATH);
-        cookie2.setSecure(COOKIESECURE);
-
-        // When
-        when(request.getCookies()).thenReturn(new Cookie[] { cookie1, cookie2 });
-        when(this.jwtTokenService._isTokenNoneExpired(any(Cookie.class))).thenReturn(true);
-
-        // Then
-        assertEquals(this.authService.login(dto, request, response).getStatusCode(), OK);
-        verify(this.authenticationManager, times(0)).authenticate(any(Authentication.class));
-    }
-
-    /** Simulates only jwt cookie is present in request */
-    @Test
-    void validateLoginRequestWithJwtCookieOnly() {
-        // Given
-        var dto = new LoginDTO(worker().getUsername(), worker().getPassword());
-        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
-
-        Cookie cookie1 = new Cookie(JSESSIONID, UUID.randomUUID().toString());
-        cookie1.setDomain(COOKIEDOMAIN);
-        cookie1.setMaxAge(1800);
-        cookie1.setHttpOnly(false);
-        cookie1.setPath(COOKIEPATH);
-        cookie1.setSecure(COOKIESECURE);
-
-        // When
-        when(request.getCookies()).thenReturn(new Cookie[] { cookie1 });
-        when(this.jwtTokenService._isTokenNoneExpired(any(Cookie.class))).thenReturn(true);
-
-        // Then
-        assertEquals(this.authService.login(dto, request, response).getStatusCode(), OK);
-        verify(this.authenticationManager, times(0)).authenticate(any(Authentication.class));
     }
 
     @Test
@@ -289,7 +228,6 @@ class AuthServiceTest {
         // When
         when(this.authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
-        when(this.jwtTokenService.generateToken(any(Authentication.class))).thenReturn("token");
 
         // Then
         assertEquals(OK, this.authService.login(dto, request, response).getStatusCode());

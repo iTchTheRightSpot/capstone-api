@@ -24,9 +24,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.session.web.http.CookieSerializer;
 import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.cors.CorsConfiguration;
@@ -78,6 +78,7 @@ public class SecurityConfig {
     public CookieSerializer cookieSerializer() {
         DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
         cookieSerializer.setCookieName("JSESSIONID");
+        cookieSerializer.setCookieMaxAge(1800);
         cookieSerializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
         return cookieSerializer;
     }
@@ -123,8 +124,8 @@ public class SecurityConfig {
 
         return http
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/v1/logout")
-                        .csrfTokenRepository(new CookieCsrfTokenRepository())
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                 )
                 .cors(cors -> cors.configurationSource(source))
                 .authorizeHttpRequests(auth -> {
@@ -139,6 +140,7 @@ public class SecurityConfig {
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })
+                .addFilterAfter(new CookieCsrfFilter(), BasicAuthenticationFilter.class)
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(IF_REQUIRED) //
                         .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::newSession) //
@@ -158,12 +160,6 @@ public class SecurityConfig {
                         )
                 )
                 .build();
-    }
-
-    /** A SecurityContextRepository implementation which stores the security context in the HttpSession between requests. */
-    @Bean(name = "contextRepository")
-    public SecurityContextRepository securityContextRepository() {
-        return new HttpSessionSecurityContextRepository();
     }
 
 }

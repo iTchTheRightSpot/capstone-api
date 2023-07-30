@@ -49,8 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.springframework.http.HttpHeaders.ACCEPT;
-import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.HttpHeaders.*;
 import static org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED;
 
 /** API docs using session <a href="https://docs.spring.io/spring-session/reference/api.html">...</a> */
@@ -137,7 +136,8 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowOrigins);
         configuration.setAllowedMethods(List.of("GET", "PUT", "POST", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of(CONTENT_TYPE,  ACCEPT, "X-XSRF-TOKEN"));
+        configuration.setAllowedHeaders(List.of(CONTENT_TYPE, ACCEPT, "X-XSRF-TOKEN"));
+        configuration.setExposedHeaders(List.of(LOCATION, "X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

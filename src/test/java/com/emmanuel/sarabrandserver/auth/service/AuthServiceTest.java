@@ -16,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -44,21 +43,6 @@ import static org.springframework.http.HttpStatus.OK;
 @TestPropertySource(locations = "classpath:application-test.properties")
 class AuthServiceTest {
 
-    @Value(value = "${custom.cookie.frontend}")
-    private String LOGGEDSESSION;
-
-    @Value(value = "${server.servlet.session.cookie.domain}")
-    private String COOKIEDOMAIN;
-
-    @Value(value = "${server.servlet.session.cookie.path}")
-    private String COOKIEPATH;
-
-    @Value(value = "${server.servlet.session.cookie.same-site}")
-    private String SAMESITE;
-
-    @Value(value = "${server.servlet.session.cookie.secure}")
-    private boolean COOKIESECURE;
-
     private AuthService authService;
 
     @Mock private UserRepository userRepository;
@@ -76,11 +60,6 @@ class AuthServiceTest {
                 this.securityContextRepository,
                 this.strategy
         );
-        this.authService.setDOMAIN(COOKIEDOMAIN);
-        this.authService.setPATH(COOKIEPATH);
-        this.authService.setSECURE(COOKIESECURE);
-        this.authService.setSAMESITE(SAMESITE);
-        this.authService.setLOGGEDSESSION(LOGGEDSESSION);
     }
 
     @Test

@@ -9,7 +9,8 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.session.SessionAuthenticationException;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
-import org.springframework.session.jdbc.JdbcIndexedSessionRepository;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.Session;
 import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
@@ -18,16 +19,16 @@ import java.util.Comparator;
 @Component(value = "strategy")
 public class CustomAuthStrategy implements SessionAuthenticationStrategy {
     private final CustomUtil customUtil;
-    private final JdbcIndexedSessionRepository indexNameSessionRepository;
+    private final FindByIndexNameSessionRepository<? extends Session> indexedRepo;
     private final SessionRegistry sessionRegistry;
 
     public CustomAuthStrategy(
             CustomUtil customUtil,
-            JdbcIndexedSessionRepository indexedRepo,
+            FindByIndexNameSessionRepository<? extends Session> indexedRepo,
             SessionRegistry sessionRegistry
     ) {
         this.customUtil = customUtil;
-        this.indexNameSessionRepository = indexedRepo;
+        this.indexedRepo = indexedRepo;
         this.sessionRegistry = sessionRegistry;
     }
 
@@ -40,10 +41,9 @@ public class CustomAuthStrategy implements SessionAuthenticationStrategy {
         var principal = (UserDetails) authentication.getPrincipal();
         var sessions = this.sessionRegistry.getAllSessions(principal, false); // List of SessionInfo
         if (sessions.size() >= this.customUtil.getMaxSession()) {
-            sessions
-                    .stream()
+            sessions.stream()
                     .min(Comparator.comparing(SessionInformation::getLastRequest)) // Gets the oldest session
-                    .ifPresent(sessionInfo -> this.indexNameSessionRepository.deleteById(sessionInfo.getSessionId()));
+                    .ifPresent(sessionInfo -> this.indexedRepo.deleteById(sessionInfo.getSessionId()));
         }
     }
 }

@@ -192,7 +192,6 @@ class WorkerAuthControllerTest {
                 .perform(post("/api/v1/logout").cookie(cookie).with(csrf()))
                 .andExpect(status().isOk());
 
-
         // Access protected route with invalid cookie
         this.MOCK_MVC
                 .perform(get("/test/worker").cookie(cookie))

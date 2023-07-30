@@ -1,11 +1,11 @@
-package com.emmanuel.sarabrandserver.aws;
+package com.emmanuel.sarabrandserver.aws.prodstage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
-import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
@@ -25,7 +25,7 @@ public class AwsSecretsManager {
     public String getSecret() {
         SecretsManagerClient client = SecretsManagerClient.builder()
                 .region(Region.CA_CENTRAL_1)
-                .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+                .credentialsProvider(InstanceProfileCredentialsProvider.builder().build())
                 .httpClient(UrlConnectionHttpClient.builder().build())
                 .build();
 
@@ -34,6 +34,7 @@ public class AwsSecretsManager {
                 .build();
 
         try {
+            log.info("Successfully retrieved secrets");
             return client.getSecretValue(getSecretValueRequest).secretString();
         } catch (Exception e) {
             log.error("Error retrieving secrets from AWS Secret Manager {}", e.getMessage());

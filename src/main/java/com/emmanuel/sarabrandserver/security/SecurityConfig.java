@@ -1,10 +1,16 @@
 package com.emmanuel.sarabrandserver.security;
 
 import com.emmanuel.sarabrandserver.util.CustomUtil;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -13,26 +19,34 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
-import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.Session;
+import org.springframework.session.security.SpringSessionBackedSessionRegistry;
 import org.springframework.session.web.http.CookieSerializer;
 import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -41,19 +55,28 @@ import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED;
 
+/** API docs using session <a href="https://docs.spring.io/spring-session/reference/api.html">...</a> */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
     private final Environment environment;
+    private final FindByIndexNameSessionRepository<? extends Session> indexedRepository;
+    private final LogoutHandler logoutHandler;
 
-    public SecurityConfig(Environment environment) {
+    public SecurityConfig(
+            Environment environment,
+            FindByIndexNameSessionRepository<? extends Session> repo,
+            @Qualifier(value = "customLogoutHandler") LogoutHandler logoutHandler
+    ) {
         this.environment = environment;
+        this.indexedRepository = repo;
+        this.logoutHandler = logoutHandler;
     }
 
     @Bean
     public AuthenticationProvider provider(
-            @Qualifier(value = "clientDetailsService") UserDetailsService detailsService,
+            @Qualifier(value = "userDetailService") UserDetailsService detailsService,
             PasswordEncoder passwordEncoder
     ) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -114,23 +137,20 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             CustomUtil customUtil,
-            @Qualifier(value = "corsConfig") CorsConfigurationSource source,
-            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry,
-            @Qualifier(value = "strategy") SessionAuthenticationStrategy strategy,
-            @Qualifier(value = "sessionRegistry") SessionRegistry sessionRegistry
+            CorsConfigurationSource corsConfig,
+            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry
     ) throws Exception {
         String JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
-        String LOGGEDSESSION = this.environment.getProperty("custom.cookie.frontend");
 
         return http
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                 )
-                .cors(cors -> cors.configurationSource(source))
+                .cors(cors -> cors.configurationSource(corsConfig))
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
-                            "/api/v1/csrf/**",
+                            "/api/v1/auth/csrf",
                             "/api/v1/client/auth/register",
                             "/api/v1/client/auth/login",
                             "/api/v1/client/product/**",
@@ -140,26 +160,41 @@ public class SecurityConfig {
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })
-                .addFilterAfter(new CookieCsrfFilter(), BasicAuthenticationFilter.class)
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(IF_REQUIRED) //
                         .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::newSession) //
-                        .sessionAuthenticationStrategy(strategy)
                         .maximumSessions(customUtil.getMaxSession())
-                        .sessionRegistry(sessionRegistry)
                 )
                 .exceptionHandling((ex) -> ex.authenticationEntryPoint(authEntry))
                 // https://docs.spring.io/spring-security/reference/servlet/authentication/logout.html
-                .logout(logout -> logout
+                .logout((logoutConfig) -> logoutConfig
                         .logoutUrl("/api/v1/logout")
                         .invalidateHttpSession(true)
-                        .addLogoutHandler(new CookieClearingLogoutHandler(JSESSIONID, LOGGEDSESSION))
-                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
-                        .logoutSuccessHandler((request, response, authentication) ->
-                                SecurityContextHolder.clearContext()
-                        )
+                        .deleteCookies(JSESSIONID)
+                        .addLogoutHandler(this.logoutHandler)
+                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK))
                 )
                 .build();
+    }
+
+    /**
+     * Maintains a registry of Session information instances. For better understanding visit
+     * <a href="https://github.com/spring-projects/spring-session/blob/main/spring-session-docs/modules/ROOT/examples/java/docs/security/SecurityConfiguration.java">...</a>
+     * **/
+    @Bean(name = "sessionRegistry")
+    public SpringSessionBackedSessionRegistry<? extends Session> sessionRegistry() {
+        return new SpringSessionBackedSessionRegistry<>(indexedRepository);
+    }
+
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
+    }
+
+    /** A SecurityContextRepository implementation which stores the security context in the HttpSession between requests. */
+    @Bean(name = "contextRepository")
+    public SecurityContextRepository securityContextRepository() {
+        return new HttpSessionSecurityContextRepository();
     }
 
 }

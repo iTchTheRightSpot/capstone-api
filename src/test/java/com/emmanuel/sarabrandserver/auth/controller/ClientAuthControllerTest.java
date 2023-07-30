@@ -44,9 +44,6 @@ class ClientAuthControllerTest {
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
 
-    @Value(value = "${custom.cookie.frontend}")
-    private String LOGGEDSESSION;
-
     @Autowired private MockMvc MOCK_MVC;
     @Autowired private ClientRoleRepo clientRoleRepo;
     @Autowired private UserRepository userRepository;
@@ -104,7 +101,6 @@ class ClientAuthControllerTest {
         var cookie = login.getResponse().getCookie(JSESSIONID);
 
         assertNotNull(cookie);
-        assertNotNull(login.getResponse().getCookie(LOGGEDSESSION));
 
         this.MOCK_MVC
                 .perform(get("/test/client").cookie(cookie))

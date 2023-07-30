@@ -1,20 +1,22 @@
-package com.emmanuel.sarabrandserver.aws;
+package com.emmanuel.sarabrandserver.aws.prodstage;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
+import org.springframework.context.annotation.Profile;
+import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
-public class S3Config {
+@Profile(value = {"prod, stage"})
+public class S3ConfigProd {
 
     @Bean
     public static S3Client s3Client() {
         return S3Client.builder()
                 .region(Region.CA_CENTRAL_1)
-                .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+                .credentialsProvider(InstanceProfileCredentialsProvider.builder().build())
                 .httpClient(UrlConnectionHttpClient.builder().build())
                 .build();
     }

@@ -12,9 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,33 +24,13 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Service;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 
-import static org.springframework.http.HttpHeaders.SET_COOKIE;
 import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.OK;
 
 @Service @Setter
 public class AuthService {
-
-    @Value(value = "${custom.cookie.frontend}")
-    private String LOGGEDSESSION;
-
-    @Value(value = "${server.servlet.session.cookie.domain}")
-    private String DOMAIN;
-
-    @Value(value = "${server.servlet.session.cookie.max-age}")
-    private int MAXAGE;
-
-    @Value(value = "${server.servlet.session.cookie.path}")
-    private String PATH;
-
-    @Value(value = "${server.servlet.session.cookie.same-site}")
-    private String SAMESITE;
-
-    @Value(value = "${server.servlet.session.cookie.secure}")
-    private boolean SECURE;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -93,7 +70,7 @@ public class AuthService {
             throw new DuplicateException(dto.getUsername() + " exists");
         }
 
-        SaraBrandUser client = this.userRepository
+        var client = this.userRepository
                 .workerExists(dto.getEmail().trim(), dto.getUsername().trim())
                 .orElse(createUser(dto));
         client.addRole(new ClientRole(RoleEnum.WORKER));
@@ -118,8 +95,7 @@ public class AuthService {
     }
 
     /**
-     * Basically logs in a user based on credentials stored in the DB. The only gotcha is we are sending a custom cookie
-     * which the ui needs to protect pages.
+     * Basically logs in a user based on credentials stored in the DB.
      * @param dto consist of principal and password.
      * @param request of HttpServletRequest
      * @param response of HttpServletResponse
@@ -142,21 +118,7 @@ public class AuthService {
         this.securityContextHolderStrategy.setContext(context);
         this.securityContextRepository.saveContext(context, request, response);
 
-        // Custom cookie
-        ResponseCookie cookie = ResponseCookie
-                .from(LOGGEDSESSION, URLEncoder.encode(dto.getPrincipal(), StandardCharsets.UTF_8))
-                .domain(DOMAIN)
-                .httpOnly(false)
-                .secure(SECURE)
-                .path(PATH)
-                .maxAge(MAXAGE)
-                .sameSite(SAMESITE)
-                .build();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(SET_COOKIE, cookie.toString());
-
-        return ResponseEntity.ok().headers(headers).build();
+        return new ResponseEntity<>(OK);
     }
 
     /** Create a new Clientz object */

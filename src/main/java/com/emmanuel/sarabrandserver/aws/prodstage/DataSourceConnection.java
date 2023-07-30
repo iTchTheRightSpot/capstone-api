@@ -1,7 +1,6 @@
-package com.emmanuel.sarabrandserver.aws;
+package com.emmanuel.sarabrandserver.aws.prodstage;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +13,8 @@ import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 
-@Component(value = "dataSourceMapper")
+/** Production only */
+@Component
 @Setter @Getter
 @Slf4j @Profile(value = {"prod"})
 public class DataSourceConnection {
@@ -34,7 +34,7 @@ public class DataSourceConnection {
 
         if (this.awsSecret != null) {
             try {
-                JsonNode node = new ObjectMapper().readTree(this.awsSecret);
+                var node = new ObjectMapper().readTree(this.awsSecret);
 
                 this.username = node.get("username").textValue();
                 this.password = node.get("password").textValue();
@@ -51,7 +51,7 @@ public class DataSourceConnection {
         }
     }
 
-    @Bean(name = "customDataSource")
+    @Bean
     public DataSource dataSource() {
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
         dataSourceBuilder.driverClassName("com.mysql.cj.jdbc.Driver");

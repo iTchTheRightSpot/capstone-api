@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -96,6 +97,8 @@ public class SecurityConfig {
     /** <a href="https://docs.spring.io/spring-session/reference/guides/java-custom-cookie.html">...</a> */
     @Bean
     public CookieSerializer cookieSerializer() {
+        var domain = this.environment.getProperty("${server.servlet.session.cookie.domain}");
+
         DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
         cookieSerializer.setCookieName("JSESSIONID");
         cookieSerializer.setUseHttpOnlyCookie(true);
@@ -103,8 +106,7 @@ public class SecurityConfig {
         cookieSerializer.setCookiePath("/");
         cookieSerializer.setSameSite("lax");
         cookieSerializer.setCookieMaxAge(3600);
-        cookieSerializer.setDomainName("emmanueluluabuike.com");
-//        cookieSerializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
+        cookieSerializer.setDomainName(domain);
 
         var property = Optional.ofNullable(this.environment.getProperty("spring.profiles.active"));
         if (property.isPresent() && (property.get().equals("dev") || property.get().equals("test"))) {
@@ -147,6 +149,7 @@ public class SecurityConfig {
      * As per Spring Security docs
      * <a href="https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html#servlet-opt-in-defer-loading-csrf-token">...</a>
      * */
+    @Slf4j
     private static final class CsrfCookieFilter extends OncePerRequestFilter {
         @Override
         protected void doFilterInternal(
@@ -168,7 +171,6 @@ public class SecurityConfig {
             @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry
     ) throws Exception {
         String JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
-
         return http
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())

@@ -14,6 +14,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -95,7 +96,8 @@ public class SecurityConfig {
         cookieSerializer.setCookiePath("/");
         cookieSerializer.setSameSite("lax");
         cookieSerializer.setCookieMaxAge(3600);
-        cookieSerializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
+        cookieSerializer.setDomainName("emmanueluluabuike.com");
+//        cookieSerializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
 
         var property = Optional.ofNullable(this.environment.getProperty("spring.profiles.active"));
         if (property.isPresent() && (property.get().equals("dev") || property.get().equals("test"))) {
@@ -144,10 +146,11 @@ public class SecurityConfig {
         String JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
 
         return http
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                )
+//                .csrf(csrf -> csrf
+//                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+//                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+//                )
+                .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfig))
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(

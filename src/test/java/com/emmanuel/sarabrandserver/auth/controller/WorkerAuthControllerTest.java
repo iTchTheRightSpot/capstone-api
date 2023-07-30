@@ -115,6 +115,8 @@ class WorkerAuthControllerTest {
                 "0000000000",
                 "A;D@#$13245eifdkj"
         );
+
+
         this.MOCK_MVC
                 .perform(post(requestMapping + "register")
                         .with(csrf())

@@ -12,7 +12,7 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 
 @Configuration
-@Profile(value = "prod")
+@Profile(value = {"prod", "stage"})
 @Slf4j
 public class AwsSecretsManager {
     private final Environment environment;
@@ -34,8 +34,9 @@ public class AwsSecretsManager {
                 .build();
 
         try {
+            String secretString = client.getSecretValue(getSecretValueRequest).secretString();
             log.info("Successfully retrieved secrets");
-            return client.getSecretValue(getSecretValueRequest).secretString();
+            return secretString;
         } catch (Exception e) {
             log.error("Error retrieving secrets from AWS Secret Manager {}", e.getMessage());
             throw e;

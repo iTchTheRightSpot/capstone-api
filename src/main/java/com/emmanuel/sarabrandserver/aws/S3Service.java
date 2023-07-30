@@ -21,7 +21,7 @@ public class S3Service {
         this.s3Client = s3Client;
     }
 
-    /** Upload images to s3*/
+    /** Upload image to s3 */
     public void uploadToS3(MultipartFile multipartFile, PutObjectRequest req) {
         File file = new File(Objects.requireNonNull(multipartFile.getOriginalFilename()));
 
@@ -34,7 +34,7 @@ public class S3Service {
         }
     }
 
-    /** Deletes images from s3 */
+    /** Delete images from s3 */
     public void deleteImagesFromS3(List<ObjectIdentifier> keys, String bucketName) {
         Delete del = Delete.builder()
                 .objects(keys)

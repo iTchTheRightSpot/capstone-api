@@ -203,7 +203,8 @@ public class WorkerProductService {
                     .build();
 
             // Only upload to s3 in prod profile
-            if (Arrays.asList(this.environment.getActiveProfiles()).contains("prod")) {
+            var property = Optional.ofNullable(this.environment.getProperty("spring.profiles.active"));
+            if (property.isPresent() && (property.get().equals("prod") || property.get().equals("stage"))) {
                 PutObjectRequest request = PutObjectRequest.builder()
                         .bucket(this.environment.getProperty("aws.bucket")) // pass as env variable
                         .key(key)
@@ -286,7 +287,8 @@ public class WorkerProductService {
 
         // Delete from S3
         // Only upload to s3 in prod profile
-        if (Arrays.asList(this.environment.getActiveProfiles()).contains("prod")) {
+        var property = Optional.ofNullable(this.environment.getProperty("spring.profiles.active"));
+        if (property.isPresent() && (property.get().equals("prod") || property.get().equals("stage"))) {
             // Get all Images
             List<ObjectIdentifier> keys = this.productRepository.images(name.trim())
                     .stream() //
@@ -312,7 +314,8 @@ public class WorkerProductService {
     public ResponseEntity<?> deleteProductDetail(final String sku) {
         var detail = findByDetailBySku(sku);
 
-        if (Arrays.asList(this.environment.getActiveProfiles()).contains("prod")) {
+        var property = Optional.ofNullable(this.environment.getProperty("spring.profiles.active"));
+        if (property.isPresent() && (property.get().equals("prod") || property.get().equals("stage"))) {
             List<ObjectIdentifier> keys = detail.getProductImages() //
                     .stream() //
                     .map(image -> ObjectIdentifier.builder().key(image.getImageKey()).build())

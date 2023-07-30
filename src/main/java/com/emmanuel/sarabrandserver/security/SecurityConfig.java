@@ -103,8 +103,8 @@ public class SecurityConfig {
         cookieSerializer.setCookiePath("/");
         cookieSerializer.setSameSite("lax");
         cookieSerializer.setCookieMaxAge(3600);
-//        cookieSerializer.setDomainName("emmanueluluabuike.com");
-        cookieSerializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
+        cookieSerializer.setDomainName("emmanueluluabuike.com");
+//        cookieSerializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
 
         var property = Optional.ofNullable(this.environment.getProperty("spring.profiles.active"));
         if (property.isPresent() && (property.get().equals("dev") || property.get().equals("test"))) {

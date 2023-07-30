@@ -90,7 +90,6 @@ public class SecurityConfig {
     public CookieSerializer cookieSerializer() {
         DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
         cookieSerializer.setCookieName("JSESSIONID");
-        cookieSerializer.setDomainName("emmanueluluabuike.com");
         cookieSerializer.setUseHttpOnlyCookie(true);
         cookieSerializer.setUseSecureCookie(true);
         cookieSerializer.setCookiePath("/");
@@ -102,7 +101,6 @@ public class SecurityConfig {
         if (property.isPresent() && (property.get().equals("dev") || property.get().equals("test"))) {
             cookieSerializer.setUseHttpOnlyCookie(false);
             cookieSerializer.setUseSecureCookie(false);
-            cookieSerializer.setDomainName("localhost");
             cookieSerializer.setCookieMaxAge(1800);
         }
 

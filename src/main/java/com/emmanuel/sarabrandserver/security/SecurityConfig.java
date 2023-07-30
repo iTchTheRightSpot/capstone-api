@@ -1,6 +1,10 @@
 package com.emmanuel.sarabrandserver.security;
 
 import com.emmanuel.sarabrandserver.util.CustomUtil;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +18,6 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -23,9 +26,11 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.session.FindByIndexNameSessionRepository;
@@ -36,7 +41,9 @@ import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -96,8 +103,8 @@ public class SecurityConfig {
         cookieSerializer.setCookiePath("/");
         cookieSerializer.setSameSite("lax");
         cookieSerializer.setCookieMaxAge(3600);
-        cookieSerializer.setDomainName("emmanueluluabuike.com");
-//        cookieSerializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
+//        cookieSerializer.setDomainName("emmanueluluabuike.com");
+        cookieSerializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
 
         var property = Optional.ofNullable(this.environment.getProperty("spring.profiles.active"));
         if (property.isPresent() && (property.get().equals("dev") || property.get().equals("test"))) {
@@ -122,7 +129,7 @@ public class SecurityConfig {
 
         var property = Optional.ofNullable(this.environment.getProperty("spring.profiles.active"));
         if (property.isPresent() && (property.get().equals("dev") || property.get().equals("test"))) {
-            allowOrigins.add("http://localhost:4200");
+            allowOrigins.add("http://localhost:4200/");
         }
 
         CorsConfiguration configuration = new CorsConfiguration();
@@ -134,6 +141,23 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    /**
+     * As per Spring Security docs
+     * <a href="https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html#servlet-opt-in-defer-loading-csrf-token">...</a>
+     * */
+    private static final class CsrfCookieFilter extends OncePerRequestFilter {
+        @Override
+        protected void doFilterInternal(
+                HttpServletRequest request,
+                HttpServletResponse response,
+                FilterChain filterChain
+        ) throws ServletException, IOException {
+            CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+            response.setHeader(csrfToken.getHeaderName(), csrfToken.getToken());
+            filterChain.doFilter(request, response);
+        }
     }
 
     @Bean
@@ -150,7 +174,6 @@ public class SecurityConfig {
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                 )
-//                .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfig))
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
@@ -164,6 +187,7 @@ public class SecurityConfig {
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })
+                .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(IF_REQUIRED) //
                         .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::newSession) //

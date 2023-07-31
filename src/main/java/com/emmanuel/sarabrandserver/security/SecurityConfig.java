@@ -153,7 +153,6 @@ public class SecurityConfig {
     ) throws Exception {
         String JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
         String DOMAIN = this.environment.getProperty("server.servlet.session.cookie.domain");
-        boolean SECURE = this.environment.getRequiredProperty("server.servlet.session.cookie.secure", Boolean.class);
 
         Consumer<ResponseCookie.ResponseCookieBuilder> csrfCookieCustomizer = cookie -> cookie
                 .domain(DOMAIN)

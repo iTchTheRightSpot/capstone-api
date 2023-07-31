@@ -1,6 +1,10 @@
 package com.emmanuel.sarabrandserver.security;
 
 import com.emmanuel.sarabrandserver.util.CustomUtil;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -24,9 +28,11 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.session.FindByIndexNameSessionRepository;
@@ -37,7 +43,9 @@ import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -122,8 +130,8 @@ public class SecurityConfig {
         allowOrigins.add("https://admin.emmanueluluabuike.com/");
         allowOrigins.add("https://store.emmanueluluabuike.com/");
 
-        var property = Optional.ofNullable(this.environment.getProperty("spring.profiles.active"));
-        if (property.isPresent() && (property.get().equals("dev") || property.get().equals("test"))) {
+        String profile = Optional.ofNullable(this.environment.getProperty("spring.profiles.active")).orElse("");
+        if (profile.equals("dev") || profile.equals("test")) {
             allowOrigins.add("http://localhost:4200/");
         }
 
@@ -140,6 +148,24 @@ public class SecurityConfig {
     }
 
     /**
+     * As per Spring Security docs
+     * <a href="https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html#servlet-opt-in-defer-loading-csrf-token">...</a>
+     * */
+    @Slf4j
+    private static final class CsrfCookieFilter extends OncePerRequestFilter {
+        @Override
+        protected void doFilterInternal(
+                HttpServletRequest request,
+                HttpServletResponse response,
+                FilterChain filterChain
+        ) throws ServletException, IOException {
+            CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+            response.setHeader(csrfToken.getHeaderName(), csrfToken.getToken());
+            filterChain.doFilter(request, response);
+        }
+    }
+
+    /**
      * Security filter chain responsible for upholding app security
      * Reason for Consumer<ResponseCookie.ResponseCookieBuilder> as per docs secure, domain name and path are deprecated
      * <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">...</a>
@@ -153,15 +179,8 @@ public class SecurityConfig {
     ) throws Exception {
         String JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
         String DOMAIN = this.environment.getProperty("server.servlet.session.cookie.domain");
-
-        Consumer<ResponseCookie.ResponseCookieBuilder> csrfCookieCustomizer = cookie -> cookie
-                .domain(DOMAIN)
-                .httpOnly(false)
-                .secure(false)
-                .path("/")
-                .maxAge(-1);
-        CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
-        csrfTokenRepository.setCookieCustomizer(csrfCookieCustomizer);
+        String profile = Optional.ofNullable(this.environment.getProperty("spring.profiles.active")).orElse("");
+        CookieCsrfTokenRepository csrfTokenRepository = getCookieCsrfTokenRepository(profile, DOMAIN);
 
         return http
                 .csrf(csrf -> csrf
@@ -181,6 +200,7 @@ public class SecurityConfig {
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })
+                .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(IF_REQUIRED) //
                         .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::newSession) //
@@ -196,6 +216,20 @@ public class SecurityConfig {
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK))
                 )
                 .build();
+    }
+
+    private static CookieCsrfTokenRepository getCookieCsrfTokenRepository(String profile, String DOMAIN) {
+        boolean SECURE = profile.equals("prod") || profile.equals("stage");
+        CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        Consumer<ResponseCookie.ResponseCookieBuilder> csrfCookieCustomizer = cookie -> cookie
+                .domain(DOMAIN)
+                .httpOnly(false)
+                .secure(SECURE)
+                .path("/")
+                .sameSite("lax")
+                .maxAge(-1);
+        csrfTokenRepository.setCookieCustomizer(csrfCookieCustomizer);
+        return csrfTokenRepository;
     }
 
     /**

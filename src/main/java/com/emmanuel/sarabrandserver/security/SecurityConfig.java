@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -40,6 +41,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -150,11 +152,14 @@ public class SecurityConfig {
             @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry
     ) throws Exception {
         var JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
+        var domain = this.environment.getProperty("server.servlet.session.cookie.domain");
+        String profile = Optional.ofNullable(this.environment.getProperty("spring.profiles.active")).orElse("");
+        var csrfTokenRepository = getCookieCsrfTokenRepository(domain, profile);
+
         return http
                 .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRepository(csrfTokenRepository)
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                        .ignoringRequestMatchers("/api/v1/client/auth/register", "/api/v1/worker/auth/login")
                 )
                 .cors(cors -> cors.configurationSource(corsConfig))
                 .authorizeHttpRequests(auth -> {
@@ -184,6 +189,20 @@ public class SecurityConfig {
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK))
                 )
                 .build();
+    }
+
+    private static CookieCsrfTokenRepository getCookieCsrfTokenRepository(String domain, String profile) {
+        boolean secure = profile.equals("prod") || profile.equals("stage");
+        CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        Consumer<ResponseCookie.ResponseCookieBuilder> csrfCookieCustomizer = (cookie) -> cookie
+                .domain(domain)
+                .httpOnly(false)
+                .secure(secure)
+                .path("/")
+                .sameSite("lax")
+                .maxAge(-1);
+        csrfTokenRepository.setCookieCustomizer(csrfCookieCustomizer);
+        return csrfTokenRepository;
     }
 
     /**

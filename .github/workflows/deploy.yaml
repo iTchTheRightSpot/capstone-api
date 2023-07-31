@@ -35,7 +35,7 @@ jobs:
       # Build image
       # Skip test -DskipTests
       - name: Build Image
-        run: ./mvnw clean spring-boot:build-image -DskipTests
+        run: ./mvnw clean spring-boot:build-image
 
       - name: Set up Docker Build
         uses: docker/setup-buildx-action@v2

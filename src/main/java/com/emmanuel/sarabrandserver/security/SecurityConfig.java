@@ -158,7 +158,7 @@ public class SecurityConfig {
         Consumer<ResponseCookie.ResponseCookieBuilder> csrfCookieCustomizer = cookie -> cookie
                 .domain(DOMAIN)
                 .httpOnly(false)
-                .secure(SECURE)
+                .secure(false)
                 .path("/")
                 .maxAge(-1);
         CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();

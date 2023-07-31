@@ -1,16 +1,13 @@
 package com.emmanuel.sarabrandserver.security;
 
 import com.emmanuel.sarabrandserver.util.CustomUtil;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -27,11 +24,9 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.session.FindByIndexNameSessionRepository;
@@ -42,20 +37,21 @@ import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
-import static org.springframework.http.HttpHeaders.*;
+import static org.springframework.http.HttpHeaders.ACCEPT;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED;
 
 /** API docs using session <a href="https://docs.spring.io/spring-session/reference/api.html">...</a> */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@Slf4j
 public class SecurityConfig {
     private final Environment environment;
     private final FindByIndexNameSessionRepository<? extends Session> indexedRepository;
@@ -97,7 +93,6 @@ public class SecurityConfig {
     @Bean
     public CookieSerializer cookieSerializer() {
         var domain = this.environment.getProperty("${server.servlet.session.cookie.domain}");
-
         DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
         cookieSerializer.setCookieName("JSESSIONID");
         cookieSerializer.setUseHttpOnlyCookie(true);
@@ -113,7 +108,6 @@ public class SecurityConfig {
             cookieSerializer.setUseSecureCookie(false);
             cookieSerializer.setCookieMaxAge(1800);
         }
-
         return cookieSerializer;
     }
 
@@ -137,7 +131,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(allowOrigins);
         configuration.setAllowedMethods(List.of("GET", "PUT", "POST", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(CONTENT_TYPE, ACCEPT, "X-XSRF-TOKEN"));
-        configuration.setExposedHeaders(List.of(LOCATION, "X-XSRF-TOKEN"));
+        configuration.setExposedHeaders(List.of("X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -146,23 +140,10 @@ public class SecurityConfig {
     }
 
     /**
-     * As per Spring Security docs
-     * <a href="https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html#servlet-opt-in-defer-loading-csrf-token">...</a>
+     * Security filter chain responsible for upholding app security
+     * Reason for Consumer<ResponseCookie.ResponseCookieBuilder> as per docs secure, domain name and path are deprecated
+     * <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">...</a>
      * */
-    @Slf4j
-    private static final class CsrfCookieFilter extends OncePerRequestFilter {
-        @Override
-        protected void doFilterInternal(
-                HttpServletRequest request,
-                HttpServletResponse response,
-                FilterChain filterChain
-        ) throws ServletException, IOException {
-            CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-            response.setHeader(csrfToken.getHeaderName(), csrfToken.getToken());
-            filterChain.doFilter(request, response);
-        }
-    }
-
     @Bean
     public SecurityFilterChain filterChain(
             HttpSecurity http,
@@ -171,9 +152,21 @@ public class SecurityConfig {
             @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry
     ) throws Exception {
         String JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
+        String DOMAIN = this.environment.getProperty("server.servlet.session.cookie.domain");
+        boolean SECURE = this.environment.getRequiredProperty("server.servlet.session.cookie.secure", Boolean.class);
+
+        Consumer<ResponseCookie.ResponseCookieBuilder> csrfCookieCustomizer = cookie -> cookie
+                .domain(DOMAIN)
+                .httpOnly(false)
+                .secure(SECURE)
+                .path("/")
+                .maxAge(-1);
+        CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        csrfTokenRepository.setCookieCustomizer(csrfCookieCustomizer);
+
         return http
                 .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRepository(csrfTokenRepository)
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                 )
                 .cors(cors -> cors.configurationSource(corsConfig))
@@ -189,7 +182,6 @@ public class SecurityConfig {
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })
-                .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(IF_REQUIRED) //
                         .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::newSession) //

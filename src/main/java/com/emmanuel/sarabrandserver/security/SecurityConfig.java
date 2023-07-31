@@ -92,7 +92,6 @@ public class SecurityConfig {
     /** <a href="https://docs.spring.io/spring-session/reference/guides/java-custom-cookie.html">...</a> */
     @Bean
     public CookieSerializer cookieSerializer() {
-        var domain = this.environment.getProperty("${server.servlet.session.cookie.domain}");
         DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
         cookieSerializer.setCookieName("JSESSIONID");
         cookieSerializer.setUseHttpOnlyCookie(true);
@@ -100,7 +99,7 @@ public class SecurityConfig {
         cookieSerializer.setCookiePath("/");
         cookieSerializer.setSameSite("lax");
         cookieSerializer.setCookieMaxAge(3600);
-        cookieSerializer.setDomainName(domain);
+        cookieSerializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
 
         var property = Optional.ofNullable(this.environment.getProperty("spring.profiles.active"));
         if (property.isPresent() && (property.get().equals("dev") || property.get().equals("test"))) {

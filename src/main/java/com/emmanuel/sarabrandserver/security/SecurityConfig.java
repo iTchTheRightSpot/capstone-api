@@ -151,7 +151,6 @@ public class SecurityConfig {
      * As per Spring Security docs
      * <a href="https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html#servlet-opt-in-defer-loading-csrf-token">...</a>
      * */
-    @Slf4j
     private static final class CsrfCookieFilter extends OncePerRequestFilter {
         @Override
         protected void doFilterInternal(
@@ -222,7 +221,7 @@ public class SecurityConfig {
         boolean SECURE = profile.equals("prod") || profile.equals("stage");
         CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
         Consumer<ResponseCookie.ResponseCookieBuilder> csrfCookieCustomizer = cookie -> cookie
-                .domain(DOMAIN)
+//                .domain(DOMAIN)
                 .httpOnly(false)
                 .secure(SECURE)
                 .path("/")

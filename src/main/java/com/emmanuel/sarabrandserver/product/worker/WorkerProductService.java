@@ -71,16 +71,23 @@ public class WorkerProductService {
      * @return List of type ProductResponse
      * */
     public Page<ProductResponse> fetchAll(int page, int size) {
+        var profile = this.environment.getProperty("spring.profiles.active", "");
+        boolean bool = profile.equals("prod") || profile.equals("stage");
+        var bucket = this.environment.getProperty("aws.bucket", "");
+
         return this.productRepository
                 .fetchAllProductsWorker(PageRequest.of(page, size))
-                .map(pojo -> new ProductResponse(
-                        pojo.getId(),
-                        pojo.getName(),
-                        pojo.getDesc(),
-                        pojo.getPrice().doubleValue(),
-                        pojo.getCurrency(),
-                        pojo.getKey()
-                ));
+                .map(pojo -> {
+                    var url = this.s3Service.getPreSignedUrl(bool, bucket, pojo.getKey());
+                    return ProductResponse.builder()
+                            .id(pojo.getId())
+                            .name(pojo.getName())
+                            .desc(pojo.getDesc())
+                            .price(pojo.getPrice())
+                            .currency(pojo.getCurrency())
+                            .imageUrl(url)
+                            .build();
+                });
     }
 
     /**
@@ -92,16 +99,26 @@ public class WorkerProductService {
      * @return List of DetailResponse
      * */
     public Page<DetailResponse> fetchAll(String name, int page, int size) {
+        var profile = this.environment.getProperty("spring.profiles.active", "");
+        boolean bool = profile.equals("prod") || profile.equals("stage");
+        var bucket = this.environment.getProperty("aws.bucket", "");
+
         return this.productRepository
                 .findDetailByProductNameWorker(name, PageRequest.of(page, size)) //
-                .map(p -> new DetailResponse(
-                        p.getSku(),
-                        p.getVisible(),
-                        p.getSize(),
-                        p.getQty(),
-                        p.getColour(),
-                        p.getKey()
-                ));
+                .map(pojo -> {
+                    var urls = Arrays.stream(pojo.getKey().split(","))
+                            .map(key -> this.s3Service.getPreSignedUrl(bool, bucket, key))
+                            .toList();
+
+                    return DetailResponse.builder()
+                            .sku(pojo.getSku())
+                            .isVisible(pojo.getVisible())
+                            .size(pojo.getSize())
+                            .qty(pojo.getQty())
+                            .colour(pojo.getColour())
+                            .url(urls)
+                            .build();
+                });
     }
 
     /**

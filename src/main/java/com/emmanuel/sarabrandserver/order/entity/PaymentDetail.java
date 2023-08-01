@@ -1,6 +1,6 @@
 package com.emmanuel.sarabrandserver.order.entity;
 
-import com.emmanuel.sarabrandserver.enumeration.PaymentStatus;
+import com.emmanuel.sarabrandserver.enumeration.GlobalStatus;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -36,7 +36,7 @@ public class PaymentDetail implements Serializable {
 
     @Column(name = "payment_status", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    private PaymentStatus paymentStatus;
+    private GlobalStatus globalStatus;
 
     @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)

@@ -101,8 +101,8 @@ public class SecurityConfig {
         cookieSerializer.setCookieMaxAge(3600);
         cookieSerializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
 
-        var property = Optional.ofNullable(this.environment.getProperty("spring.profiles.active"));
-        if (property.isPresent() && (property.get().equals("dev") || property.get().equals("test"))) {
+        var profile = this.environment.getProperty("spring.profiles.active", "");
+        if (profile.equals("dev") || profile.equals("test")) {
             cookieSerializer.setUseHttpOnlyCookie(false);
             cookieSerializer.setUseSecureCookie(false);
             cookieSerializer.setCookieMaxAge(1800);
@@ -121,7 +121,7 @@ public class SecurityConfig {
         allowOrigins.add("https://admin.emmanueluluabuike.com/");
         allowOrigins.add("https://store.emmanueluluabuike.com/");
 
-        String profile = Optional.ofNullable(this.environment.getProperty("spring.profiles.active")).orElse("");
+        var profile = this.environment.getProperty("spring.profiles.active", "");
         if (profile.equals("dev") || profile.equals("test")) {
             allowOrigins.add("http://localhost:4200/");
         }
@@ -152,7 +152,7 @@ public class SecurityConfig {
     ) throws Exception {
         var JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
         var domain = this.environment.getProperty("server.servlet.session.cookie.domain");
-        String profile = Optional.ofNullable(this.environment.getProperty("spring.profiles.active")).orElse("");
+        var profile = this.environment.getProperty("spring.profiles.active", "");
         var csrfTokenRepository = getCookieCsrfTokenRepository(domain, profile);
 
         return http
@@ -163,6 +163,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfig))
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
+                            "/api/v1/home/**",
                             "/api/v1/auth/csrf",
                             "/api/v1/client/auth/register",
                             "/api/v1/client/auth/login",
@@ -190,6 +191,10 @@ public class SecurityConfig {
                 .build();
     }
 
+    /**
+     * As per docs
+     * <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">...</a>
+     * */
     private static CookieCsrfTokenRepository getCookieCsrfTokenRepository(String domain, String profile) {
         boolean secure = profile.equals("prod") || profile.equals("stage");
         CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();

@@ -12,7 +12,7 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 
 @Configuration
-@Profile(value = {"prod", "stage"})
+@Profile(value = {"prod"})
 @Slf4j
 public class AwsSecretsManager {
     private final Environment environment;

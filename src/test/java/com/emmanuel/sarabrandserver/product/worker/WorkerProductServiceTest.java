@@ -89,6 +89,7 @@ class WorkerProductServiceTest {
 
         // When
         when(this.productRepository.fetchAllProductsWorker(any(PageRequest.class))).thenReturn(list);
+        when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
 
         // Then
         assertEquals(30, this.productService.fetchAll(0, 40).getSize());
@@ -120,6 +121,7 @@ class WorkerProductServiceTest {
         // When
         when(this.productRepository.findDetailByProductNameWorker(anyString(), any(PageRequest.class)))
                 .thenReturn(page);
+        when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
 
         // Then
         assertEquals(30, this.productService.fetchAll("products", 0, 40).getSize());

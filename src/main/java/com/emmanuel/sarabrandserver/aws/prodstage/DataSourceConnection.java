@@ -15,8 +15,10 @@ import javax.sql.DataSource;
 
 /** Production only */
 @Component
-@Setter @Getter
-@Slf4j @Profile(value = {"prod"})
+@Setter
+@Getter
+@Profile(value = {"prod"})
+@Slf4j
 public class DataSourceConnection {
     private String username;
     private String password;
@@ -44,6 +46,7 @@ public class DataSourceConnection {
                 this.dbname = node.get("dbname").textValue();
                 this.dbInstanceIdentifier = node.get("dbInstanceIdentifier").textValue();
                 this.dataSourceUrl = "jdbc:%s://%s:%s/%s".formatted(engine, host, port, dbname);
+                log.info("Successfully retrieved datasource credentials");
             } catch (JsonProcessingException e) {
                 log.error("Data connection error in constructor of class DataSourceConnection {}", e.getMessage());
                 throw new RuntimeException(e);

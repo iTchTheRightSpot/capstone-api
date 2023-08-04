@@ -220,8 +220,8 @@ public class WorkerProductService {
                     .build();
 
             // Only upload to s3 in prod profile
-            var property = Optional.ofNullable(this.environment.getProperty("spring.profiles.active"));
-            if (property.isPresent() && (property.get().equals("prod") || property.get().equals("stage"))) {
+            var profile = this.environment.getProperty("spring.profiles.active", "");
+            if (profile.equals("prod") || profile.equals("stage")) {
                 PutObjectRequest request = PutObjectRequest.builder()
                         .bucket(this.environment.getProperty("aws.bucket")) // pass as env variable
                         .key(key)
@@ -304,8 +304,8 @@ public class WorkerProductService {
 
         // Delete from S3
         // Only upload to s3 in prod profile
-        var property = Optional.ofNullable(this.environment.getProperty("spring.profiles.active"));
-        if (property.isPresent() && (property.get().equals("prod") || property.get().equals("stage"))) {
+        var profile = this.environment.getProperty("spring.profiles.active", "");
+        if (profile.equals("prod") || profile.equals("stage"))  {
             // Get all Images
             List<ObjectIdentifier> keys = this.productRepository.images(name.trim())
                     .stream() //
@@ -331,8 +331,8 @@ public class WorkerProductService {
     public ResponseEntity<?> deleteProductDetail(final String sku) {
         var detail = findByDetailBySku(sku);
 
-        var property = Optional.ofNullable(this.environment.getProperty("spring.profiles.active"));
-        if (property.isPresent() && (property.get().equals("prod") || property.get().equals("stage"))) {
+        var profile = this.environment.getProperty("spring.profiles.active", "");
+        if (profile.equals("prod") || profile.equals("stage"))  {
             List<ObjectIdentifier> keys = detail.getProductImages() //
                     .stream() //
                     .map(image -> ObjectIdentifier.builder().key(image.getImageKey()).build())

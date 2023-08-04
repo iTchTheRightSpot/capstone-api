@@ -17,21 +17,22 @@ public class HomeService {
         this.environment = environment;
     }
 
-    /** Returns pre-signed url which is a background video. */
+    /** Returns pre-signed url which is a background pictures. */
     public ResponseEntity<?> fetchHomeBackground() {
         var profile = this.environment.getProperty("spring.profiles.active", "");
-//        boolean bool = profile.equals("prod") || profile.equals("stage") || profile.equals("dev");
         boolean bool = profile.equals("prod") || profile.equals("stage");
         var bucket = this.environment.getProperty("aws.bucket", "");
 
         // TODO store key in table
-        String url = this.s3Service.getPreSignedUrl(bool, bucket, "sara-brand-home-display.mp4");
+        var arr = new HomeResponse[3];
 
-        if (url.isEmpty()) {
-            return new ResponseEntity<>(new HomeResponse(""), HttpStatus.NOT_FOUND);
+        for (int i = 0; i < arr.length; i++) {
+            int index = i + 1;
+            var url = this.s3Service.getPreSignedUrl(bool, bucket, "sarre" + index +".jpg");
+            arr[i] = new HomeResponse(url);
         }
 
-        return new ResponseEntity<>(new HomeResponse(url), HttpStatus.OK);
+        return new ResponseEntity<>(arr, HttpStatus.OK);
     }
 
 }

@@ -190,7 +190,7 @@ class WorkerProductServiceTest {
         doReturn(Optional.of(new Date())).when(this.customUtil).toUTC(any(Date.class));
         doReturn(product).when(this.productRepository).save(any(Product.class));
         doReturn(collection).when(this.collectionService).findByName(dto.getCollection());
-        when(this.environment.getProperty("spring.profiles.active")).thenReturn("test");
+        when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
 
         // Then
         assertEquals(CREATED, this.productService.create(dto, arr).getStatusCode());
@@ -256,7 +256,7 @@ class WorkerProductServiceTest {
 
 
         // When
-        when(this.environment.getProperty("spring.profiles.active")).thenReturn("test");
+        when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
         doReturn(category).when(this.workerCategoryService).findByName(anyString());
         doReturn(Optional.of(product)).when(this.productRepository).findByProductName(anyString());
         doReturn(Optional.of(new Date())).when(this.customUtil).toUTC(any(Date.class));
@@ -347,7 +347,7 @@ class WorkerProductServiceTest {
 
         // When
         doReturn(Optional.of(product)).when(this.productRepository).findByProductName(anyString());
-        when(this.environment.getProperty("spring.profiles.active")).thenReturn("test");
+        when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
 
         // Then
         assertEquals(HttpStatus.NO_CONTENT, this.productService.deleteProduct(product.getName()).getStatusCode());
@@ -372,7 +372,7 @@ class WorkerProductServiceTest {
 
         // When
         doReturn(Optional.of(detail)).when(productRepository).findDetailBySku(anyString());
-        when(this.environment.getProperty("spring.profiles.active")).thenReturn("test");
+        when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
 
         // Then
         assertEquals(HttpStatus.NO_CONTENT, this.productService.deleteProductDetail(sku).getStatusCode());

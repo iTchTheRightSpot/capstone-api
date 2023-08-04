@@ -312,7 +312,7 @@ public class WorkerProductService {
                     .map(img -> ObjectIdentifier.builder().key(img.getImage()).build()) //
                     .toList();
 
-            this.s3Service.deleteImagesFromS3(keys, this.environment.getProperty("aws.bucket"));
+            this.s3Service.deleteFromS3(keys, this.environment.getProperty("aws.bucket"));
         }
 
         this.productRepository.delete(product);
@@ -338,7 +338,7 @@ public class WorkerProductService {
                     .map(image -> ObjectIdentifier.builder().key(image.getImageKey()).build())
                     .toList();
 
-            this.s3Service.deleteImagesFromS3(keys, this.environment.getProperty("aws.bucket"));
+            this.s3Service.deleteFromS3(keys, this.environment.getProperty("aws.bucket"));
         }
 
         // Remove detail from Product and Save Product

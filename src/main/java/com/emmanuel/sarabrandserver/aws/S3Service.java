@@ -42,7 +42,7 @@ public class S3Service {
     }
 
     /** Delete images from s3 */
-    public void deleteImagesFromS3(List<ObjectIdentifier> keys, String bucketName) {
+    public void deleteFromS3(List<ObjectIdentifier> keys, String bucketName) {
         Delete del = Delete.builder()
                 .objects(keys)
                 .build();

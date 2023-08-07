@@ -1,10 +1,10 @@
 package com.emmanuel.sarabrandserver.user.service;
 
+import com.emmanuel.sarabrandserver.user.projection.ClientzPojo;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 import static com.emmanuel.sarabrandserver.enumeration.RoleEnum.CLIENT;
 
@@ -17,12 +17,12 @@ public class ClientzService {
     }
 
     /**
-     *
+     * Fetches all users with role client
      * @param page number in the UI
      * @param size max amount of json pulled at one
-     * @return List of ClientzPojo
+     * @return Page of ClientzPojo
      * */
-    public List<?> fetchAllClientz(int page, int size) {
+    public Page<ClientzPojo> allUsers(int page, int size) {
         return this.userRepository.fetchAll(CLIENT.toString(), PageRequest.of(page, size));
     }
 

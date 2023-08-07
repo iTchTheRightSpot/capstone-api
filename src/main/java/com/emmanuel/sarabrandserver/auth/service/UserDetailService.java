@@ -1,5 +1,6 @@
-package com.emmanuel.sarabrandserver.user.service;
+package com.emmanuel.sarabrandserver.auth.service;
 
+import com.emmanuel.sarabrandserver.user.entity.ClientzDetail;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

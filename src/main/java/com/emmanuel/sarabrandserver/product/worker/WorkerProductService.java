@@ -68,7 +68,7 @@ public class WorkerProductService {
      * ProductPojo using spring jpa projection. It only returns a Product not Including its details.
      * @param page is the UI page number
      * @param size is the max amount to be displayed on a page
-     * @return List of type ProductResponse
+     * @return Page of ProductResponse
      * */
     public Page<ProductResponse> fetchAll(int page, int size) {
         var profile = this.environment.getProperty("spring.profiles.active", "");
@@ -96,7 +96,7 @@ public class WorkerProductService {
      * @param name is the name of the product
      * @param page is amount of size based on the page
      * @param size is the amount of items list. Note the max is set to 30 as to not overload Heap memory
-     * @return List of DetailResponse
+     * @return Page of DetailResponse
      * */
     public Page<DetailResponse> fetchAll(String name, int page, int size) {
         var profile = this.environment.getProperty("spring.profiles.active", "");

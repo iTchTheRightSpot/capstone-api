@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.user.service;
+package com.emmanuel.sarabrandserver.user.entity;
 
 import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
 import org.springframework.security.core.GrantedAuthority;

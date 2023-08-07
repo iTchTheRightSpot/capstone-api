@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -70,7 +71,7 @@ public class ControllerAdvices {
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<?> handleMaxFileSizeExceeded(Exception ex) {
+    public ResponseEntity<?> handleMaxFileSizeExceeded() {
         var maxSize = this.environment.getProperty("spring.servlet.multipart.max-file-size", "");
         var exceptionDetails = new ExceptionDetails(
                 "File size exceeds the limit of %s bytes".formatted(maxSize),
@@ -78,6 +79,16 @@ public class ControllerAdvices {
                 ZonedDateTime.now(ZoneId.of("UTC"))
         );
         return new ResponseEntity<>(exceptionDetails, PAYLOAD_TOO_LARGE);
+    }
+
+    @ExceptionHandler({S3Exception.class, CustomAwsException.class})
+    public ResponseEntity<?> awsException(Exception ex) {
+        var details = new ExceptionDetails(
+                ex.getMessage(),
+                INTERNAL_SERVER_ERROR,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+        return new ResponseEntity<>(details, INTERNAL_SERVER_ERROR);
     }
 
 }

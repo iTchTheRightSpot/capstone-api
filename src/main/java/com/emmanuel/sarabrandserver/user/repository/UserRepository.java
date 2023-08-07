@@ -3,6 +3,7 @@ package com.emmanuel.sarabrandserver.user.repository;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
 import com.emmanuel.sarabrandserver.user.projection.ClientzPojo;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -11,7 +12,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -54,10 +54,6 @@ public interface UserRepository extends JpaRepository<SaraBrandUser, Long> {
     SELECT c.firstname AS name FROM SaraBrandUser c
     INNER JOIN ClientRole r ON c.clientId = r.saraBrandUser.clientId
     WHERE r.role = :role
-    AND c.accountNoneLocked = TRUE
-    AND c.enabled = TRUE
-    AND c.accountNonExpired = TRUE
-    AND c.credentialsNonExpired = TRUE
     """)
-    List<ClientzPojo> fetchAll(@Param(value = "role") String role, Pageable request);
+    Page<ClientzPojo> fetchAll(@Param(value = "role") String role, Pageable page);
 }

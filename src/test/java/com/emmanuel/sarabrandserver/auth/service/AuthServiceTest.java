@@ -75,7 +75,6 @@ class AuthServiceTest {
         );
 
         // When
-        when(this.userRepository.isAdmin(anyString(), anyString(), any(RoleEnum.class))).thenReturn(0);
         when(this.userRepository.workerExists(anyString(), anyString())).thenReturn(Optional.empty());
 
         // Then
@@ -86,17 +85,18 @@ class AuthServiceTest {
     @Test
     void register_worker_with_already_existing_role_worker() {
         // Given
+        var worker = worker();
         var dto = new RegisterDTO(
-                worker().getFirstname(),
-                worker().getLastname(),
-                worker().getEmail(),
-                worker().getUsername(),
-                worker().getPhoneNumber(),
-                worker().getPassword()
+                worker.getFirstname(),
+                worker.getLastname(),
+                worker.getEmail(),
+                worker.getUsername(),
+                worker.getPhoneNumber(),
+                worker.getPassword()
         );
 
         // When
-        doReturn(1).when(this.userRepository).isAdmin(anyString(), anyString(), any(RoleEnum.class));
+        when(this.userRepository.workerExists(anyString(), anyString())).thenReturn(Optional.of(worker));
 
         // Then
         assertThrows(DuplicateException.class, () -> this.authService.workerRegister(dto));
@@ -106,18 +106,18 @@ class AuthServiceTest {
     @Test
     void register_worker_with_role_only_client() {
         // Given
+        var client = client();
         var dto = new RegisterDTO(
-                client().getFirstname(),
-                client().getLastname(),
-                client().getEmail(),
-                client().getUsername(),
-                client().getPhoneNumber(),
-                client().getPassword()
+                client.getFirstname(),
+                client.getLastname(),
+                client.getEmail(),
+                client.getUsername(),
+                client.getPhoneNumber(),
+                client.getPassword()
         );
 
         // When
-        when(this.userRepository.isAdmin(anyString(), anyString(), any(RoleEnum.class))).thenReturn(0);
-        doReturn(Optional.of(client())).when(this.userRepository).workerExists(anyString(), anyString());
+        when(this.userRepository.workerExists(anyString(), anyString())).thenReturn(Optional.of(client));
 
         // Then
         assertEquals(CREATED, this.authService.workerRegister(dto).getStatusCode());

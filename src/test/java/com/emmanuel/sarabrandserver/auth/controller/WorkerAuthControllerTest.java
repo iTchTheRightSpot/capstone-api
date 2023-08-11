@@ -4,7 +4,7 @@ import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
-import com.emmanuel.sarabrandserver.security.bruteforce.BruteForceService;
+import com.emmanuel.sarabrandserver.auth.bruteforce.BruteForceService;
 import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;

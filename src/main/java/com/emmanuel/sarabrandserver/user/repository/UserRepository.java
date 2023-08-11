@@ -1,6 +1,5 @@
 package com.emmanuel.sarabrandserver.user.repository;
 
-import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
 import com.emmanuel.sarabrandserver.user.projection.ClientzPojo;
 import org.springframework.data.domain.Page;
@@ -37,18 +36,6 @@ public interface UserRepository extends JpaRepository<SaraBrandUser, Long> {
     @Transactional
     @Query(value = "UPDATE SaraBrandUser c SET c.accountNoneLocked = :bool WHERE c.clientId = :id")
     void lockClientAccount(@Param(value = "bool") boolean bool, @Param(value = "id") long id);
-
-    @Query(value = """
-    SELECT COUNT(c.clientId) FROM SaraBrandUser c
-    INNER JOIN ClientRole r ON c.clientId = r.saraBrandUser.clientId
-    WHERE (c.email = :email OR c.username = :username)
-    AND r.role = :role
-    """)
-    int isAdmin(
-            @Param(value = "email") String email,
-            @Param(value = "username") String username,
-            @Param(value = "role") RoleEnum role
-    );
 
     @Query(value = """
     SELECT c.firstname AS name FROM SaraBrandUser c

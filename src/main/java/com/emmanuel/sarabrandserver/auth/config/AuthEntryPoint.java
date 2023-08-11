@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.security;
+package com.emmanuel.sarabrandserver.auth.config;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

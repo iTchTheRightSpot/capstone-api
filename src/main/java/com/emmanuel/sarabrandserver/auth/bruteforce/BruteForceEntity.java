@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.security.bruteforce;
+package com.emmanuel.sarabrandserver.auth.bruteforce;
 
 import lombok.Getter;
 import lombok.Setter;

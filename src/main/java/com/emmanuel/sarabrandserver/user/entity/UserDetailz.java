@@ -1,12 +1,11 @@
 package com.emmanuel.sarabrandserver.user.entity;
 
-import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
-public record ClientzDetail(SaraBrandUser saraBrandUser) implements UserDetails {
+public record UserDetailz(SaraBrandUser saraBrandUser) implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return this.saraBrandUser.getAuthorities();

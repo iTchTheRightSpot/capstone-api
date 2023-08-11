@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -44,7 +43,7 @@ public class AuthService {
             PasswordEncoder passwordEncoder,
             AuthenticationManager authManager,
             SecurityContextRepository securityContextRepository,
-            @Qualifier(value = "strategy") SessionAuthenticationStrategy strategy
+            SessionAuthenticationStrategy strategy
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -56,23 +55,25 @@ public class AuthService {
     }
 
     /**
-     * Responsible for registering a new worker. The logic is basically update Clientz to a role of worker if
-     * he/she exists else create and save new Clientz object.
+     * Responsible for registering a new worker. Logic is throw an error if client has a role of Worker or else add
+     * ROLE worker to client.
      * @param dto of type WorkerRegisterDTO
      * @throws DuplicateException when user principal exists and has a role of worker
      * @return ResponseEntity of type HttpStatus
      * */
     @Transactional
     public ResponseEntity<?> workerRegister(RegisterDTO dto) {
-        boolean bool = this.userRepository
-                .isAdmin(dto.getEmail().trim(), dto.getUsername().trim(), RoleEnum.WORKER) > 0;
-        if (bool) {
-            throw new DuplicateException(dto.getUsername() + " exists");
-        }
-
         var client = this.userRepository
                 .workerExists(dto.getEmail().trim(), dto.getUsername().trim())
                 .orElse(createUser(dto));
+
+        // Note User and Role tables have a relationship fetch type EAGER
+        boolean isAdmin = client.getClientRole().stream().anyMatch(role -> role.getRole().equals(RoleEnum.WORKER));
+
+        if (isAdmin) {
+            throw new DuplicateException(dto.getUsername() + " exists");
+        }
+
         client.addRole(new ClientRole(RoleEnum.WORKER));
 
         this.userRepository.save(client);
@@ -111,12 +112,12 @@ public class AuthService {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authenticated);
 
-        // Strategy
-        this.strategy.onAuthentication(authenticated, request, response);
-
         // Update SecurityContextHolder and Strategy
         this.securityContextHolderStrategy.setContext(context);
         this.securityContextRepository.saveContext(context, request, response);
+
+        // Needed to put a constraint on user session
+        this.strategy.onAuthentication(authenticated, request, response);
 
         return new ResponseEntity<>(OK);
     }

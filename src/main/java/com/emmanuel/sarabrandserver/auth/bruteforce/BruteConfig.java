@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.security.bruteforce;
+package com.emmanuel.sarabrandserver.auth.bruteforce;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;

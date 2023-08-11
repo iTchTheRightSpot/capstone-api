@@ -1,6 +1,6 @@
-package com.emmanuel.sarabrandserver.security;
+package com.emmanuel.sarabrandserver.auth.config;
 
-import com.emmanuel.sarabrandserver.security.bruteforce.BruteForceService;
+import com.emmanuel.sarabrandserver.auth.bruteforce.BruteForceService;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;

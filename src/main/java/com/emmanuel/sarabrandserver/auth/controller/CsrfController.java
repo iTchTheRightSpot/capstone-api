@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.security;
+package com.emmanuel.sarabrandserver.auth.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

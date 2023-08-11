@@ -21,6 +21,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.session.ConcurrentSessionControlAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.test.context.ActiveProfiles;
@@ -49,7 +50,7 @@ class AuthServiceTest {
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private AuthenticationManager authenticationManager;
     @Mock private SecurityContextRepository securityContextRepository;
-    @Mock private SessionAuthenticationStrategy strategy;
+    @Mock private ConcurrentSessionControlAuthenticationStrategy strategy;
 
     @BeforeEach
     void setUp() {

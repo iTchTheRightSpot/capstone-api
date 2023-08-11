@@ -6,6 +6,7 @@ import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,9 @@ class ClientAuthControllerTest {
 
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
+
+    @Value(value = "${custom.session}")
+    private int MAXSESSION;
 
     @Autowired private MockMvc MOCK_MVC;
     @Autowired private ClientRoleRepo clientRoleRepo;
@@ -107,21 +111,31 @@ class ClientAuthControllerTest {
                 .andExpect(status().isOk());
     }
 
-    /** Max session is 1 */
+    /** Max session is in application.properties in test */
     @Test @Order(2)
     void validateMaxSession() throws Exception {
-        // Browser 1
-        MvcResult login1 = this.MOCK_MVC
-                .perform(post("/api/v1/client/auth/login")
-                        .with(csrf())
-                        .contentType(APPLICATION_JSON)
-                        .content(new LoginDTO(USERNAME, PASSWORD).toJson().toString())
-                )
-                .andExpect(status().isOk())
-                .andReturn();
+        Cookie cookie = null;
+
+        // Login based on max session
+        for (int i = 0; i < MAXSESSION; i++) {
+            MvcResult login = this.MOCK_MVC
+                    .perform(post("/api/v1/client/auth/login")
+                            .with(csrf())
+                            .contentType(APPLICATION_JSON)
+                            .content(new LoginDTO(USERNAME, PASSWORD).toJson().toString())
+                    )
+                    .andExpect(status().isOk())
+                    .andReturn();
+            // Get the first cookie post login
+            if (i == 0) {
+                cookie = login.getResponse().getCookie(JSESSIONID);
+            }
+        }
+
+        assertNotNull(cookie);
 
         // Browser 2
-        MvcResult login2 = this.MOCK_MVC
+        MvcResult login = this.MOCK_MVC
                 .perform(post("/api/v1/client/auth/login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
@@ -131,14 +145,12 @@ class ClientAuthControllerTest {
                 .andReturn();
 
         // Should return 401
-        var cookie = login1.getResponse().getCookie(JSESSIONID);
-        assertNotNull(cookie);
         this.MOCK_MVC
                 .perform(get("/test/client").cookie(cookie))
                 .andExpect(status().isUnauthorized());
 
         // Should return 200
-        cookie = login2.getResponse().getCookie(JSESSIONID);
+        cookie = login.getResponse().getCookie(JSESSIONID);
         assertNotNull(cookie);
         this.MOCK_MVC
                 .perform(get("/test/client").cookie(cookie))

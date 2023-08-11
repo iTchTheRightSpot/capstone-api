@@ -18,6 +18,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
@@ -33,6 +34,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
+import org.springframework.session.security.SpringSessionBackedSessionRegistry;
 import org.springframework.session.web.http.CookieSerializer;
 import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.cors.CorsConfiguration;
@@ -56,16 +58,16 @@ import static org.springframework.security.config.http.SessionCreationPolicy.IF_
 public class SecurityConfig {
     private final Environment environment;
     private final LogoutHandler logoutHandler;
-    private final CustomUtil customUtil;
+    private final SpringSessionBackedSessionRegistry<? extends Session> sessionRegistry;
 
     public SecurityConfig(
             Environment environment,
             @Qualifier(value = "customLogoutHandler") LogoutHandler logoutHandler,
-            CustomUtil customUtil
+            SpringSessionBackedSessionRegistry<? extends Session> sessionRegistry
     ) {
         this.environment = environment;
         this.logoutHandler = logoutHandler;
-        this.customUtil = customUtil;
+        this.sessionRegistry = sessionRegistry;
     }
 
     @Bean
@@ -144,13 +146,13 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             CorsConfigurationSource corsConfig,
-            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry,
-            SessionAuthenticationStrategy strategy
+            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry
     ) throws Exception {
         var JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
         var domain = this.environment.getProperty("server.servlet.session.cookie.domain");
         var profile = this.environment.getProperty("spring.profiles.active", "");
         var csrfTokenRepository = getCookieCsrfTokenRepository(domain, profile);
+        int MAXSESSION = this.environment.getProperty("custom.session", Integer.class, -1);
 
         return http
                 .csrf(csrf -> csrf
@@ -172,8 +174,12 @@ public class SecurityConfig {
                     auth.anyRequest().authenticated();
                 })
                 .sessionManagement(sessionManagement -> sessionManagement
-                        .sessionAuthenticationStrategy(strategy)
                         .sessionCreationPolicy(IF_REQUIRED) //
+                        .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::changeSessionId)
+                        .sessionConcurrency((concurrency) -> concurrency
+                                .maximumSessions(MAXSESSION)
+                                .sessionRegistry(this.sessionRegistry)
+                        )
                 )
                 .exceptionHandling((ex) -> ex.authenticationEntryPoint(authEntry))
                 // https://docs.spring.io/spring-security/reference/servlet/authentication/logout.html
@@ -207,40 +213,34 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SessionAuthenticationStrategy sessionAuthenticationStrategy(
-            SessionRegistry sessionRegistry,
+    public ConcurrentSessionControlAuthenticationStrategy sessionAuthenticationStrategy(
             FindByIndexNameSessionRepository<? extends Session> sessionRepository
     ) {
-        SessionAuthenticationStrategy mitigate = new ChangeSessionIdAuthenticationStrategy();
-
-        ConcurrentSessionControlAuthenticationStrategy check =
-                new CustomConcurrentSession(sessionRepository, sessionRegistry, customUtil);
-        check.setMaximumSessions(this.customUtil.getMaxSession());
-
-        RegisterSessionAuthenticationStrategy register =
-                new RegisterSessionAuthenticationStrategy(sessionRegistry);
-
-        return new CompositeSessionAuthenticationStrategy(List.of(check, mitigate, register, check));
+        int MAXSESSION = this.environment.getProperty("custom.session", Integer.class, -1);
+        var check = new CustomConcurrentSession(sessionRepository, this.sessionRegistry, this.environment);
+        check.setMaximumSessions(MAXSESSION);
+        check.setExceptionIfMaximumExceeded(false);
+        return check;
     }
 
     /**
      * Used to put a constraint on number of active sessions a user has. FindByIndexNameSessionRepository is needed to
-     * manually delete users session as inbuilt config SessionInformation.expireNow is not does not expire user session.
+     * manually delete users session as inbuilt config SessionInformation.expireNow does not expire user session.
      * */
     private static class CustomConcurrentSession extends ConcurrentSessionControlAuthenticationStrategy {
         private final FindByIndexNameSessionRepository<? extends Session> sessionRepository;
         private final SessionRegistry sessionRegistry;
-        private final CustomUtil customUtil;
+        private final Environment environment;
 
         public CustomConcurrentSession(
                 FindByIndexNameSessionRepository<? extends Session> sessionRepository,
                 SessionRegistry sessionRegistry,
-                CustomUtil customUtil
+                Environment environment
         ) {
             super(sessionRegistry);
             this.sessionRepository = sessionRepository;
             this.sessionRegistry = sessionRegistry;
-            this.customUtil = customUtil;
+            this.environment = environment;
         }
 
         @Override
@@ -249,19 +249,19 @@ public class SecurityConfig {
                 HttpServletRequest request,
                 HttpServletResponse response
         ) {
+            int MAXSESSION = this.environment.getProperty("custom.session", Integer.class, -1);
             int allowedSession = getMaximumSessionsForThisUser(authentication);
 
-            if (allowedSession == -1 || allowedSession < customUtil.getMaxSession()) {
+            if (allowedSession == -1 || allowedSession < MAXSESSION) {
                 return;
             }
 
-            sessionRegistry
+            this.sessionRegistry
                     .getAllSessions(authentication.getPrincipal(), false)
                     .stream() //
                     .min(Comparator.comparing(SessionInformation::getLastRequest)) // Gets the oldest session
-                    .ifPresent(sessionInfo -> sessionRepository.deleteById(sessionInfo.getSessionId()));
+                    .ifPresent(sessionInfo -> this.sessionRepository.deleteById(sessionInfo.getSessionId()));
         }
-
     }
 
 }

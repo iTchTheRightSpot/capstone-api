@@ -19,7 +19,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.web.authentication.session.ConcurrentSessionControlAuthenticationStrategy;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Service;
 
@@ -36,14 +36,14 @@ public class AuthService {
     private final AuthenticationManager authManager;
     private final SecurityContextRepository securityContextRepository;
     private final SecurityContextHolderStrategy securityContextHolderStrategy;
-    private final SessionAuthenticationStrategy strategy;
+    private final ConcurrentSessionControlAuthenticationStrategy strategy;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authManager,
             SecurityContextRepository securityContextRepository,
-            SessionAuthenticationStrategy strategy
+            ConcurrentSessionControlAuthenticationStrategy strategy
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;

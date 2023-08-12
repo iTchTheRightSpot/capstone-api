@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -89,6 +91,27 @@ public class ControllerAdvices {
                 ZonedDateTime.now(ZoneId.of("UTC"))
         );
         return new ResponseEntity<>(details, INTERNAL_SERVER_ERROR);
+    }
+
+    /** Displays custom exception */
+    @ExceptionHandler({MethodArgumentNotValidException.class})
+    public ResponseEntity<?> validationException(MethodArgumentNotValidException ex) {
+        StringBuilder sb = new StringBuilder();
+        String lineSeparator = System.getProperty("line.separator");
+
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errMessage = error.getDefaultMessage();
+            sb.append(fieldName).append(": ").append(errMessage).append(lineSeparator);
+        });
+
+        var details = new ExceptionDetails(
+                sb.toString(),
+                BAD_REQUEST,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+
+        return new ResponseEntity<>(details, BAD_REQUEST);
     }
 
 }

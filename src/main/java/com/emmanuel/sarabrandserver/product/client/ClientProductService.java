@@ -2,8 +2,8 @@ package com.emmanuel.sarabrandserver.product.client;
 
 import com.emmanuel.sarabrandserver.aws.S3Service;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
-import com.emmanuel.sarabrandserver.product.response.DetailResponse;
-import com.emmanuel.sarabrandserver.product.response.ProductResponse;
+import com.emmanuel.sarabrandserver.product.util.DetailResponse;
+import com.emmanuel.sarabrandserver.product.util.ProductResponse;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ClientProductService {
@@ -35,7 +34,7 @@ public class ClientProductService {
     public Page<ProductResponse> fetchAll(int page, int size) {
         var profile = this.environment.getProperty("spring.profiles.active", "");
         boolean bool = profile.equals("prod") || profile.equals("stage");
-        var bucket = Optional.ofNullable(this.environment.getProperty("aws.bucket")).orElse("");
+        var bucket = this.environment.getProperty("aws.bucket", "");
 
         return this.productRepository
                 .fetchAllProductsClient(PageRequest.of(page, Math.max(size, 30))) //
@@ -87,13 +86,13 @@ public class ClientProductService {
      * @param size is the max amount render on a page
      * @return List of ProductResponse
      * */
-    public List<ProductResponse> fetchAll(String name, int page, int size) {
+    public Page<ProductResponse> fetchAll(String name, int page, int size) {
         var profile = this.environment.getProperty("spring.profiles.active", "");
         boolean bool = profile.equals("prod") || profile.equals("stage");
         var bucket = this.environment.getProperty("aws.bucket", "");
 
-        return this.productRepository.fetchByCategoryClient(name, PageRequest.of(page, Math.max(size, 30))) //
-                .stream() //
+        return this.productRepository
+                .fetchByCategoryClient(name, PageRequest.of(page, Math.max(size, 30))) //
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, bucket, pojo.getKey());
                     return ProductResponse.builder()
@@ -103,8 +102,7 @@ public class ClientProductService {
                             .currency(pojo.getCurrency())
                             .imageUrl(url)
                             .build();
-                }) //
-                .toList();
+                });
     }
 
 }

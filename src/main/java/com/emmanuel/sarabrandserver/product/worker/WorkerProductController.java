@@ -1,8 +1,8 @@
 package com.emmanuel.sarabrandserver.product.worker;
 
-import com.emmanuel.sarabrandserver.product.dto.CreateProductDTO;
-import com.emmanuel.sarabrandserver.product.dto.DetailDTO;
-import com.emmanuel.sarabrandserver.product.dto.ProductDTO;
+import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
+import com.emmanuel.sarabrandserver.product.util.DetailDTO;
+import com.emmanuel.sarabrandserver.product.util.ProductDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;

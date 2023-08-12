@@ -3,16 +3,13 @@ package com.emmanuel.sarabrandserver.product.worker;
 import com.emmanuel.sarabrandserver.aws.S3Service;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
+import com.emmanuel.sarabrandserver.exception.CustomAwsException;
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
-import com.emmanuel.sarabrandserver.product.dto.CreateProductDTO;
-import com.emmanuel.sarabrandserver.product.dto.DetailDTO;
-import com.emmanuel.sarabrandserver.product.dto.ProductDTO;
 import com.emmanuel.sarabrandserver.product.entity.*;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
-import com.emmanuel.sarabrandserver.product.response.DetailResponse;
-import com.emmanuel.sarabrandserver.product.response.ProductResponse;
+import com.emmanuel.sarabrandserver.product.util.*;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
@@ -22,16 +19,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
 import java.util.*;
 
-import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.OK;
 
 @Service @Slf4j
 public class WorkerProductService {
@@ -72,7 +73,7 @@ public class WorkerProductService {
      * */
     public Page<ProductResponse> fetchAll(int page, int size) {
         var profile = this.environment.getProperty("spring.profiles.active", "");
-        boolean bool = profile.equals("prod") || profile.equals("stage");
+        boolean bool = profile.equals("prod") || profile.equals("stage") || profile.equals("dev");
         var bucket = this.environment.getProperty("aws.bucket", "");
 
         return this.productRepository
@@ -100,7 +101,7 @@ public class WorkerProductService {
      * */
     public Page<DetailResponse> fetchAll(String name, int page, int size) {
         var profile = this.environment.getProperty("spring.profiles.active", "");
-        boolean bool = profile.equals("prod") || profile.equals("stage");
+        boolean bool = profile.equals("prod") || profile.equals("stage") || profile.equals("dev");
         var bucket = this.environment.getProperty("aws.bucket", "");
 
         return this.productRepository
@@ -127,6 +128,7 @@ public class WorkerProductService {
      * @param files of type MultipartFile
      * @param dto of type CreateProductDTO
      * @throws CustomNotFoundException is thrown when category or collection name does not exist
+     * @throws CustomAwsException is thrown if File is not an image
      * @return ResponseEntity of type HttpStatus
      * */
     @Transactional
@@ -135,10 +137,13 @@ public class WorkerProductService {
         var _product = this.productRepository.findByProductName(dto.getName().trim());
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
 
+        // Validate MultipartFile[] are all images
+        List<CustomMultiPart> list = validateMultiPartFile(files);
+
         // Persist new ProductDetail if Product exist
         if (_product.isPresent()) {
             // Build ProductDetail
-            var detail = productDetail(dto, files, date);
+            var detail = productDetail(dto, list, date);
             detail.setProduct(_product.get());
 
             // Add ProductDetail to Product, save and return response
@@ -147,12 +152,12 @@ public class WorkerProductService {
         }
 
         // Build/Save ProductDetail and Product
-        var detail = productDetail(dto, files, date);
+        var detail = productDetail(dto, list, date);
         var product = Product.builder()
                 .name(dto.getName().trim())
                 .description(dto.getDesc().trim())
                 .defaultKey(this.defaultKey)
-                .price(BigDecimal.valueOf(dto.getPrice()))
+                .price(dto.getPrice())
                 .currency(dto.getCurrency()) // default is USD
                 .productDetails(new HashSet<>())
                 .build();
@@ -175,13 +180,15 @@ public class WorkerProductService {
     /**
      * Creates a ProductDetail obj.
      * @param dto represents the details of a Product. i.e. image, colour
-     * @param files represents the array of images to upload
+     * @param files represents a list of CustomMultiPart
      * @param createdAt time of the ProductDetail created
      * @throws S3Exception if an exception happens when uploading to s3
-     * @throws IOException if a file does not exist
      * @return ProductDetail
      * */
-    private ProductDetail productDetail(CreateProductDTO dto, MultipartFile[] files, Date createdAt) {
+    private ProductDetail productDetail(CreateProductDTO dto, List<CustomMultiPart> files, Date createdAt) {
+        var bucket = this.environment.getProperty("aws.bucket", "");
+        var profile = this.environment.getProperty("spring.profiles.active", "");
+
         // ProductSize
         var size = ProductSize.builder()
                 .size(dto.getSize())
@@ -211,22 +218,16 @@ public class WorkerProductService {
         detail.setProductColour(colour);
 
         // Add ProductImage to ProductDetail as ProductDetail has a one-to-many relationship with ProductImage
-        for (MultipartFile file : files) {
-            String key = UUID.randomUUID().toString();
-            setDefaultKey(key); // Set default key
+        for (CustomMultiPart obj : files) {
+            setDefaultKey(obj.key()); // Set default key
             var image = ProductImage.builder()
-                    .imageKey(key)
-                    .imagePath(Objects.requireNonNull(file.getOriginalFilename()).trim())
+                    .imageKey(obj.key())
+                    .imagePath(obj.file().getAbsolutePath())
                     .build();
 
             // Only upload to s3 in prod profile
-            var profile = this.environment.getProperty("spring.profiles.active", "");
-            if (profile.equals("prod") || profile.equals("stage")) {
-                PutObjectRequest request = PutObjectRequest.builder()
-                        .bucket(this.environment.getProperty("aws.bucket")) // pass as env variable
-                        .key(key)
-                        .build();
-                this.s3Service.uploadToS3(file, request);
+            if (profile.equals("prod") || profile.equals("stage") || profile.equals("dev")) {
+                this.s3Service.uploadToS3(obj.file(), obj.meta(), bucket, obj.key());
             }
 
             detail.addImages(image);
@@ -303,20 +304,21 @@ public class WorkerProductService {
                 .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));;
 
         // Delete from S3
-        // Only upload to s3 in prod profile
         var profile = this.environment.getProperty("spring.profiles.active", "");
-        if (profile.equals("prod") || profile.equals("stage"))  {
+        if (profile.equals("prod") || profile.equals("stage") || profile.equals("dev"))  {
             // Get all Images
             List<ObjectIdentifier> keys = this.productRepository.images(name.trim())
                     .stream() //
                     .map(img -> ObjectIdentifier.builder().key(img.getImage()).build()) //
                     .toList();
 
-            this.s3Service.deleteFromS3(keys, this.environment.getProperty("aws.bucket"));
+            if (!keys.isEmpty()) {
+                this.s3Service.deleteFromS3(keys, this.environment.getProperty("aws.bucket"));
+            }
         }
 
         this.productRepository.delete(product);
-        return new ResponseEntity<>(NO_CONTENT);
+        return new ResponseEntity<>(OK);
     }
 
     /**
@@ -332,18 +334,20 @@ public class WorkerProductService {
         var detail = findByDetailBySku(sku);
 
         var profile = this.environment.getProperty("spring.profiles.active", "");
-        if (profile.equals("prod") || profile.equals("stage"))  {
+        if (profile.equals("prod") || profile.equals("stage") || profile.equals("dev"))  {
             List<ObjectIdentifier> keys = detail.getProductImages() //
                     .stream() //
                     .map(image -> ObjectIdentifier.builder().key(image.getImageKey()).build())
                     .toList();
 
-            this.s3Service.deleteFromS3(keys, this.environment.getProperty("aws.bucket"));
+            if (!keys.isEmpty()) {
+                this.s3Service.deleteFromS3(keys, this.environment.getProperty("aws.bucket"));
+            }
         }
 
         // Remove detail from Product and Save Product
         this.detailRepo.delete(detail);
-        return new ResponseEntity<>(NO_CONTENT);
+        return new ResponseEntity<>(OK);
     }
 
     // Find ProductDetail by sku
@@ -355,6 +359,41 @@ public class WorkerProductService {
     // Set Default Image Key
     private void setDefaultKey(String str) {
         this.defaultKey = str;
+    }
+
+    // Validates if contents in MultipartFile[] are all images
+    private List<CustomMultiPart> validateMultiPartFile(MultipartFile[] multipartFiles) {
+        List<CustomMultiPart> list = new ArrayList<>();
+
+        for (MultipartFile multipartFile : multipartFiles) {
+            String path = Objects.requireNonNull(multipartFile.getOriginalFilename());
+            File file = new File(path);
+
+            try (FileOutputStream outputStream = new FileOutputStream(file)) {
+                // File MultipartFile to file
+                outputStream.write(multipartFile.getBytes());
+
+                // Validate file is an image
+                String contentType = Files.probeContentType(file.toPath());
+                if (!contentType.startsWith("image/")) {
+                    log.error("File is not an image");
+                    throw new CustomAwsException("Please verify file is an image");
+                }
+
+                // Create image metadata for storing in AWS
+                Map<String, String> metadata = new HashMap<>();
+                metadata.put("Content-Type", contentType);
+                metadata.put("Title", multipartFile.getName());
+                metadata.put("Type", StringUtils.getFilenameExtension(path));
+
+                list.add(new CustomMultiPart(file, metadata, UUID.randomUUID().toString()));
+            } catch (IOException e) {
+                log.error("Error either writing multipart to file or getting file type. {}", e.getMessage());
+                throw new CustomAwsException("Please verify file is an image");
+            }
+        }
+
+        return list;
     }
 
 }

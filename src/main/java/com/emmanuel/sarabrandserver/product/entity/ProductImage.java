@@ -12,7 +12,6 @@ import java.io.Serializable;
 @Builder
 @Getter
 @Setter
-@EqualsAndHashCode
 public class ProductImage implements Serializable {
 
     @Id

@@ -13,7 +13,6 @@ import java.util.Set;
 @Builder
 @Getter
 @Setter
-@EqualsAndHashCode
 public class ProductColour implements Serializable {
 
     @Id

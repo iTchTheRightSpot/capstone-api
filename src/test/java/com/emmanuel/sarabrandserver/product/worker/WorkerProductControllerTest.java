@@ -3,8 +3,8 @@ package com.emmanuel.sarabrandserver.product.worker;
 import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
-import com.emmanuel.sarabrandserver.product.dto.CreateProductDTO;
-import com.emmanuel.sarabrandserver.product.dto.ProductDTO;
+import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
+import com.emmanuel.sarabrandserver.product.util.ProductDTO;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.github.javafaker.Faker;
@@ -96,7 +96,7 @@ class WorkerProductControllerTest {
                     .collection("")
                     .name(new Faker().commerce().productName())
                     .desc(new Faker().lorem().characters(255))
-                    .price(new BigDecimal(new Faker().commerce().price()).doubleValue())
+                    .price(new BigDecimal(new Faker().commerce().price()))
                     .currency("USD")
                     .visible(true)
                     .qty(new Faker().number().numberBetween(10, 30))
@@ -135,7 +135,7 @@ class WorkerProductControllerTest {
                     .collection("")
                     .name("custom-product")
                     .desc(new Faker().lorem().characters(255))
-                    .price(new BigDecimal(new Faker().commerce().price()).doubleValue())
+                    .price(new BigDecimal(new Faker().commerce().price()))
                     .currency("USD")
                     .visible(true)
                     .qty(new Faker().number().numberBetween(10, 30))

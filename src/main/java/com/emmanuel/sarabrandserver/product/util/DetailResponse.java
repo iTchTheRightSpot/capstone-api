@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.product.response;
+package com.emmanuel.sarabrandserver.product.util;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

@@ -4,7 +4,6 @@ import com.emmanuel.sarabrandserver.exception.CustomAwsException;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -13,11 +12,9 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 
 @Service @Slf4j
 public class S3Service {
@@ -29,23 +26,30 @@ public class S3Service {
         this.s3Presigner = s3Presigner;
     }
 
-    /** Upload image to s3 */
-    public void uploadToS3(MultipartFile multipartFile, PutObjectRequest req) {
-        File file = new File(Objects.requireNonNull(multipartFile.getOriginalFilename()));
+    /**
+     * Upload image to s3. As per docs
+     * <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/PutObject.java">...</a>
+     * */
+    public void uploadToS3(File file, Map<String, String> metadata, String bucket, String key) {
+        try {
+            // Create put request
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .bucket(bucket) // pass as env variable
+                    .key(key)
+                    .metadata(metadata)
+                    .build();
 
-        try (FileOutputStream outputStream = new FileOutputStream(file)) {
-            outputStream.write(multipartFile.getBytes());
-            this.s3Client.putObject(req, RequestBody.fromFile(file));
+            this.s3Client.putObject(request, RequestBody.fromFile(file));
         } catch (S3Exception e) {
             log.error("Error uploading image to s3 {}", e.getMessage());
             throw new CustomAwsException("Error uploading image. Please try again or call developer");
-        } catch (IOException e) {
-            log.error("Error uploading image. Image might not be a file {}", e.getMessage());
-            throw new CustomAwsException("Please verify file is an image");
         }
     }
 
-    /** Delete images from s3 */
+    /**
+     * Delete image(s) from s3. As per docs
+     * <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/DeleteObjects.java">...</a>
+     * */
     public void deleteFromS3(List<ObjectIdentifier> keys, String bucketName) {
         Delete del = Delete.builder()
                 .objects(keys)
@@ -77,7 +81,8 @@ public class S3Service {
     }
 
     /**
-     * Logic to return a pre-signed url from s3
+     * Retrieves image pre-assigned url. As per docs
+     * <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/GetObjectPresignedUrl.java">...</a>
      * @param bucket is the bucket name
      * @param key is the object key
      * @return String

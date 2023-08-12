@@ -6,7 +6,6 @@ import com.emmanuel.sarabrandserver.product.projection.DetailPojo;
 import com.emmanuel.sarabrandserver.product.projection.Imagez;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -120,7 +119,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
     WHERE pd.isVisible = true AND inv.quantity > 0 AND pc.categoryName = :name
     """)
-    List<ProductPojo> fetchByCategoryClient(String name, PageRequest page);
+    Page<ProductPojo> fetchByCategoryClient(String name, Pageable page);
 
     @Query(value = """
     SELECT img.imageKey as image

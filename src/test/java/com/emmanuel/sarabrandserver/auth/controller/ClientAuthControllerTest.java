@@ -5,7 +5,6 @@ import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
-import com.emmanuel.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.junit.runner.RunWith;
@@ -52,7 +51,6 @@ class ClientAuthControllerTest {
     @Autowired private ClientRoleRepo clientRoleRepo;
     @Autowired private UserRepository userRepository;
     @Autowired private AuthService authService;
-    @Autowired private CustomUtil customUtil;
 
     @Container private static final MySQLContainer<?> container;
 
@@ -72,7 +70,6 @@ class ClientAuthControllerTest {
 
     @BeforeEach
     void setUp() {
-        this.customUtil.setMaxSession(1);
         var dto = RegisterDTO.builder()
                 .firstname("SEUY")
                 .lastname("Development")

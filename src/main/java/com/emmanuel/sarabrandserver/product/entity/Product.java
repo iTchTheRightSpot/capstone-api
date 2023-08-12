@@ -67,9 +67,4 @@ public class Product implements Serializable {
         detail.setProduct(this);
     }
 
-    public void removeDetail(ProductDetail detail) {
-        this.productDetails.remove(detail);
-        detail.setProduct(this);
-    }
-
 }

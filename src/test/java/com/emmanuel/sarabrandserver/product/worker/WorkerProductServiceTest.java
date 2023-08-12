@@ -6,9 +6,9 @@ import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
-import com.emmanuel.sarabrandserver.product.dto.CreateProductDTO;
-import com.emmanuel.sarabrandserver.product.dto.DetailDTO;
-import com.emmanuel.sarabrandserver.product.dto.ProductDTO;
+import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
+import com.emmanuel.sarabrandserver.product.util.DetailDTO;
+import com.emmanuel.sarabrandserver.product.util.ProductDTO;
 import com.emmanuel.sarabrandserver.product.entity.*;
 import com.emmanuel.sarabrandserver.product.projection.DetailPojo;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
@@ -158,7 +158,7 @@ class WorkerProductServiceTest {
                 .collection("Example Collection")
                 .name(product.getName())
                 .desc(product.getDescription())
-                .price(product.getPrice().doubleValue())
+                .price(product.getPrice())
                 .currency(product.getCurrency())
                 .visible(true)
                 .qty(50)
@@ -228,7 +228,7 @@ class WorkerProductServiceTest {
                 .collection("Example Collection")
                 .name(product.getName())
                 .desc(product.getDescription())
-                .price(product.getPrice().doubleValue())
+                .price(product.getPrice())
                 .currency(product.getCurrency())
                 .visible(true)
                 .qty(50)

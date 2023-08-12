@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.product.dto;
+package com.emmanuel.sarabrandserver.product.util;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;

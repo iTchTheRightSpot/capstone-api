@@ -31,8 +31,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.util.*;
 
-import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.*;
 
 @Service @Slf4j
 public class WorkerProductService {
@@ -318,7 +317,7 @@ public class WorkerProductService {
         }
 
         this.productRepository.delete(product);
-        return new ResponseEntity<>(OK);
+        return new ResponseEntity<>(NO_CONTENT);
     }
 
     /**
@@ -347,7 +346,7 @@ public class WorkerProductService {
 
         // Remove detail from Product and Save Product
         this.detailRepo.delete(detail);
-        return new ResponseEntity<>(OK);
+        return new ResponseEntity<>(NO_CONTENT);
     }
 
     // Find ProductDetail by sku
@@ -362,7 +361,7 @@ public class WorkerProductService {
     }
 
     // Validates if contents in MultipartFile[] are all images
-    private List<CustomMultiPart> validateMultiPartFile(MultipartFile[] multipartFiles) {
+    public List<CustomMultiPart> validateMultiPartFile(MultipartFile[] multipartFiles) {
         List<CustomMultiPart> list = new ArrayList<>();
 
         for (MultipartFile multipartFile : multipartFiles) {

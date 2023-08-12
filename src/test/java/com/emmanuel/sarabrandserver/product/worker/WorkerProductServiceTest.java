@@ -6,14 +6,14 @@ import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
-import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
-import com.emmanuel.sarabrandserver.product.util.DetailDTO;
-import com.emmanuel.sarabrandserver.product.util.ProductDTO;
 import com.emmanuel.sarabrandserver.product.entity.*;
 import com.emmanuel.sarabrandserver.product.projection.DetailPojo;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
+import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
+import com.emmanuel.sarabrandserver.product.util.DetailDTO;
+import com.emmanuel.sarabrandserver.product.util.ProductDTO;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
@@ -140,13 +140,13 @@ class WorkerProductServiceTest {
                 ),
                 new MockMultipartFile(
                         "file",
-                        "uploads/image3.jpeg",
+                        "uploads/image2.jpeg",
                         "image/jpeg",
                         "Test image content".getBytes()
                 ),
                 new MockMultipartFile(
                         "file",
-                        "uploads/image2.jpeg",
+                        "uploads/image3.jpeg",
                         "image/jpeg",
                         "Test image content".getBytes()
                 ),

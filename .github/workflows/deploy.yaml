@@ -28,14 +28,24 @@ jobs:
           username: emmanuelu17
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Grant execute permission to mvnw script
-      - name: Grant execute permission to mvnw
-        run: chmod +x mvnw
-
       # Build image
       # Skip test -DskipTests
       - name: Build Image
-        run: ./mvnw clean spring-boot:build-image
+        run: |
+          #!/usr/bin/env bash
+          # chmod grants permission to run mvnw
+          chmod +x mvnw
+          ./mvnw clean spring-boot:build-image
+          
+          # Delete generated dummy files after test
+          folder_path="./uploads"
+          if [ -d "$folder_path" ]; then
+            rm -r "$folder_path"/*
+            echo "All contents deleted from $folder_path"
+          else
+            echo "Folder not found: $folder_path"
+          fi
+        shell: bash
 
       - name: Set up Docker Build
         uses: docker/setup-buildx-action@v2

@@ -376,7 +376,7 @@ public class WorkerProductService {
                 String contentType = Files.probeContentType(file.toPath());
                 if (!contentType.startsWith("image/")) {
                     log.error("File is not an image");
-                    throw new CustomAwsException("Please verify file is an image");
+                    throw new CustomAwsException("File is not an image");
                 }
 
                 // Create image metadata for storing in AWS

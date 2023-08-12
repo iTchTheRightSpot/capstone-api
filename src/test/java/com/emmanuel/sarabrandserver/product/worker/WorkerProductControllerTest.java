@@ -3,16 +3,14 @@ package com.emmanuel.sarabrandserver.product.worker;
 import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
+import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
 import com.emmanuel.sarabrandserver.product.util.ProductDTO;
-import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
-import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,8 +26,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -40,7 +36,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-// TODO MOCK S3
 @RunWith(SpringRunner.class)
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -57,9 +52,6 @@ class WorkerProductControllerTest {
     @Autowired private ProductRepository productRepository;
     @Autowired private WorkerCategoryService workerCategoryService;
     @Autowired private CategoryRepository categoryRepository;
-    @Autowired private ProductDetailRepo detailRepo;
-    @Mock private S3Client s3Client;
-    @Mock private S3Object s3Object;
 
     @Container private static final MySQLContainer<?> container;
 
@@ -108,21 +100,21 @@ class WorkerProductControllerTest {
             MockMultipartFile[] files = {
                     new MockMultipartFile(
                             "file",
-                            new Faker().file().fileName(),
-                            new Faker().file().extension(),
-                            new Faker().file().fileName().getBytes()
+                            "uploads/image1.jpeg",
+                            "image/jpeg",
+                            "Test image content".getBytes()
                     ),
                     new MockMultipartFile(
                             "file",
-                            new Faker().file().fileName(),
-                            new Faker().file().extension(),
-                            new Faker().file().fileName().getBytes()
+                            "uploads/image2.jpeg",
+                            "image/jpeg",
+                            "Test image content".getBytes()
                     ),
                     new MockMultipartFile(
                             "file",
-                            new Faker().file().fileName(),
-                            new Faker().file().extension(),
-                            new Faker().file().fileName().getBytes()
+                            "uploads/image3.jpeg",
+                            "image/jpeg",
+                            "Test image content".getBytes()
                     ),
             };
             this.workerService.create(dto, files);
@@ -146,21 +138,21 @@ class WorkerProductControllerTest {
             MockMultipartFile[] files1 = {
                     new MockMultipartFile(
                             "file",
-                            new Faker().file().fileName(),
-                            new Faker().file().extension(),
-                            new Faker().file().fileName().getBytes()
+                            "uploads/image1.jpeg",
+                            "image/jpeg",
+                            "Test image content".getBytes()
                     ),
                     new MockMultipartFile(
                             "file",
-                            new Faker().file().fileName(),
-                            new Faker().file().extension(),
-                            new Faker().file().fileName().getBytes()
+                            "uploads/image2.jpeg",
+                            "image/jpeg",
+                            "Test image content".getBytes()
                     ),
                     new MockMultipartFile(
                             "file",
-                            new Faker().file().fileName(),
-                            new Faker().file().extension(),
-                            new Faker().file().fileName().getBytes()
+                            "uploads/image3.jpeg",
+                            "image/jpeg",
+                            "Test image content".getBytes()
                     ),
             };
             this.workerService.create(dto1, files1);

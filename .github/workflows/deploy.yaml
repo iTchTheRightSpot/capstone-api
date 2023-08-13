@@ -32,6 +32,11 @@ jobs:
       - name: Build Image
         run: |
           #!/usr/bin/env bash
+          
+          # chmod grants permission to run mvnw
+          chmod +x mvnw
+          ./mvnw clean spring-boot:build-image
+          
           # Delete generated dummy files after test
           folder_path="./uploads"
           if [ -d "$folder_path" ]; then
@@ -40,10 +45,6 @@ jobs:
           else
             echo "Folder not found: $folder_path"
           fi
-          
-          # chmod grants permission to run mvnw
-          chmod +x mvnw
-          ./mvnw clean spring-boot:build-image
         shell: bash
 
       - name: Set up Docker Build

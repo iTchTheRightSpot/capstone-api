@@ -101,14 +101,14 @@ class WorkerCategoryControllerTest {
     @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void create() throws Exception {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().productName(), true, "");
+        var dto = new CategoryDTO(new Faker().commerce().productName(), true, "").toJson().toString();
 
         // Then
         this.MOCK_MVC
                 .perform(post(requestMapping)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(dto.toJson().toString())
+                        .content(dto)
                 )
                 .andExpect(status().isCreated());
     }
@@ -132,7 +132,7 @@ class WorkerCategoryControllerTest {
     @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void update() throws Exception {
         // Given
-        long id = this.categoryRepository.findAll().get(0).getCategoryId();
+        String id = this.categoryRepository.findAll().get(0).getUuid();
         var dto = new UpdateCategoryDTO(id, "Updated category name");
 
         // Then

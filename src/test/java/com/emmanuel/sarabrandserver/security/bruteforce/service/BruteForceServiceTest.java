@@ -123,7 +123,6 @@ class BruteForceServiceTest {
                 .firstname(new Faker().name().firstName())
                 .lastname(new Faker().name().lastName())
                 .email(new Faker().name().fullName())
-                .username(new Faker().name().username())
                 .phoneNumber(new Faker().phoneNumber().phoneNumber())
                 .password(new Faker().phoneNumber().phoneNumber())
                 .enabled(true)

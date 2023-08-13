@@ -70,13 +70,13 @@ class AuthServiceTest {
                 worker().getFirstname(),
                 worker().getLastname(),
                 worker().getEmail(),
-                worker().getUsername(),
+                "",
                 worker().getPhoneNumber(),
                 worker().getPassword()
         );
 
         // When
-        when(this.userRepository.workerExists(anyString(), anyString())).thenReturn(Optional.empty());
+        when(this.userRepository.workerExists(anyString())).thenReturn(Optional.empty());
 
         // Then
         assertEquals(CREATED, this.authService.workerRegister(dto).getStatusCode());
@@ -91,13 +91,13 @@ class AuthServiceTest {
                 worker.getFirstname(),
                 worker.getLastname(),
                 worker.getEmail(),
-                worker.getUsername(),
+                "",
                 worker.getPhoneNumber(),
                 worker.getPassword()
         );
 
         // When
-        when(this.userRepository.workerExists(anyString(), anyString())).thenReturn(Optional.of(worker));
+        when(this.userRepository.workerExists(anyString())).thenReturn(Optional.of(worker));
 
         // Then
         assertThrows(DuplicateException.class, () -> this.authService.workerRegister(dto));
@@ -112,13 +112,13 @@ class AuthServiceTest {
                 client.getFirstname(),
                 client.getLastname(),
                 client.getEmail(),
-                client.getUsername(),
+                "",
                 client.getPhoneNumber(),
                 client.getPassword()
         );
 
         // When
-        when(this.userRepository.workerExists(anyString(), anyString())).thenReturn(Optional.of(client));
+        when(this.userRepository.workerExists(anyString())).thenReturn(Optional.of(client));
 
         // Then
         assertEquals(CREATED, this.authService.workerRegister(dto).getStatusCode());
@@ -128,7 +128,7 @@ class AuthServiceTest {
     @Test
     void worker_login() {
         // Given
-        var dto = new LoginDTO(worker().getUsername(), worker().getPassword());
+        var dto = new LoginDTO("", worker().getPassword());
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
         Authentication authentication = Mockito.mock(Authentication.class);
@@ -164,13 +164,13 @@ class AuthServiceTest {
                 client().getFirstname(),
                 client().getLastname(),
                 client().getEmail(),
-                client().getUsername(),
+                "",
                 client().getPhoneNumber(),
                 client().getPassword()
         );
 
         // When
-        when(this.userRepository.principalExists(anyString(), anyString())).thenReturn(0);
+        when(this.userRepository.principalExists(anyString())).thenReturn(0);
         when(this.passwordEncoder.encode(anyString())).thenReturn(dto.getPassword());
 
         // Then
@@ -185,13 +185,13 @@ class AuthServiceTest {
                 client().getFirstname(),
                 client().getLastname(),
                 client().getEmail(),
-                client().getUsername(),
+                "",
                 client().getPhoneNumber(),
                 client().getPassword()
         );
 
         // When
-        when(this.userRepository.principalExists(anyString(), anyString())).thenReturn(1);
+        when(this.userRepository.principalExists(anyString())).thenReturn(1);
 
         // Then
         assertThrows(DuplicateException.class, () -> this.authService.clientRegister(dto));
@@ -234,7 +234,6 @@ class AuthServiceTest {
                 .firstname(new Faker().name().firstName())
                 .lastname(new Faker().name().lastName())
                 .email(new Faker().name().fullName())
-                .username(new Faker().name().username())
                 .phoneNumber(new Faker().phoneNumber().phoneNumber())
                 .password(new Faker().phoneNumber().phoneNumber())
                 .enabled(true)
@@ -252,7 +251,6 @@ class AuthServiceTest {
                 .firstname(new Faker().name().firstName())
                 .lastname(new Faker().name().lastName())
                 .email(new Faker().name().fullName())
-                .username(new Faker().name().username())
                 .phoneNumber(new Faker().phoneNumber().phoneNumber())
                 .password(new Faker().phoneNumber().phoneNumber())
                 .enabled(true)

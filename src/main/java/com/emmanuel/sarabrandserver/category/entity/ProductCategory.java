@@ -26,6 +26,9 @@ public class ProductCategory implements Serializable {
     @Column(name = "category_id", nullable = false, unique = true)
     private Long categoryId;
 
+    @Column(name = "uuid", length = 36, nullable = false, unique = true, updatable = false)
+    private String uuid;
+
     @Column(name = "category_name", nullable = false, unique = true, length = 50)
     private String categoryName;
 

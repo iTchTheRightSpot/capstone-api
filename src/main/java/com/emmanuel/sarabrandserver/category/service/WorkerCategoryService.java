@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -37,7 +38,7 @@ public class WorkerCategoryService {
         return this.categoryRepository
                 .fetchCategoriesWorker(PageRequest.of(page, size))
                 .map(pojo -> CategoryResponse.builder()
-                        .id(pojo.getId())
+                        .id(pojo.getUuid())
                         .category(pojo.getCategory())
                         .created(pojo.getCreated().getTime())
                         .modified(pojo.getModified() == null ? 0L : pojo.getModified().getTime())
@@ -72,6 +73,7 @@ public class WorkerCategoryService {
         }
 
         return ProductCategory.builder()
+                .uuid(UUID.randomUUID().toString())
                 .categoryName(dto.getName().trim())
                 .isVisible(dto.getVisible())
                 .createAt(date)
@@ -86,6 +88,7 @@ public class WorkerCategoryService {
         parentCategory.setModifiedAt(date);
 
         var childCategory = ProductCategory.builder()
+                .uuid(UUID.randomUUID().toString())
                 .categoryName(dto.getName().trim())
                 .isVisible(dto.getVisible())
                 .createAt(date)
@@ -115,7 +118,7 @@ public class WorkerCategoryService {
 
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
 
-        this.categoryRepository.update(date, dto.getId(), dto.getName().trim());
+        this.categoryRepository.update(date, dto.getName().trim(), dto.getId());
         return new ResponseEntity<>(OK);
     }
 

@@ -28,6 +28,9 @@ public class Product implements Serializable {
     @Column(name = "product_id", nullable = false, unique = true)
     private Long productId;
 
+    @Column(name = "uuid", length = 36, nullable = false, unique = true, updatable = false)
+    private String uuid;
+
     @Column(name = "name", length = 50, unique = true, nullable = false)
     private String name;
 

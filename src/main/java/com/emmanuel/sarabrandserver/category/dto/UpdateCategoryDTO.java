@@ -18,11 +18,12 @@ import javax.json.JsonObject;
 @Data
 public class UpdateCategoryDTO {
 
-    @NotNull
-    @JsonProperty(required = true, value = "id")
-    private Long id;
+    @NotNull(message = "cannot be empty")
+    @JsonProperty(required = true)
+    private String id;
 
-    @NotNull @NotEmpty
+    @NotNull(message = "cannot be empty")
+    @NotEmpty(message = "cannot be empty")
     @Size(max = 50, message = "category name cannot exceed length of 50")
     private String name;
 

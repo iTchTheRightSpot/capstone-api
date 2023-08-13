@@ -27,7 +27,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query(value = """
     SELECT
-    p.productId AS id,
+    p.uuid AS uuid,
     p.name AS name,
     p.description AS desc,
     p.price AS price,
@@ -70,18 +70,15 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query(value = "SELECT det FROM ProductDetail det WHERE det.sku = :sku")
     Optional<ProductDetail> findDetailBySku(@Param(value = "sku") String sku);
 
-    @Query(value = "SELECT p FROM Product p WHERE p.productId = :id")
-    Optional<Product> findProductByProductId(@Param(value = "id") long id);
-
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = """
     UPDATE Product p
     SET p.name = :name, p.description = :desc, p.price = :price
-    WHERE p.productId = :id
+    WHERE p.uuid = :uuid
     """)
     void updateProduct(
-            @Param(value = "id") long id,
+            @Param(value = "uuid") String uuid,
             @Param(value = "name") String name,
             @Param(value = "desc") String desc,
             @Param(value = "price") BigDecimal price

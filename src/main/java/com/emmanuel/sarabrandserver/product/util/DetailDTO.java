@@ -17,27 +17,28 @@ import javax.json.JsonObject;
 @Data
 public class DetailDTO {
 
-    @JsonProperty(value = "sku")
-    @NotNull @NotEmpty
+    @JsonProperty(required = true)
+    @NotNull(message = "cannot be empty")
+    @NotEmpty(message = "cannot be empty")
     private String sku;
 
-    @JsonProperty(value = "is_visible")
-    @NotNull
-    private Boolean visible;
+    @JsonProperty(value = "is_visible", required = true)
+    @NotNull(message = "cannot be empty")
+    private Boolean isVisible;
 
-    // Properties of many-to-1 and 1-to-many
-    @JsonProperty(required = true, value = "qty")
-    @NotNull @NotEmpty
+    @JsonProperty(required = true)
+    @NotNull(message = "cannot be empty")
     private Integer qty;
 
-    @JsonProperty(required = true, value = "size")
-    @NotNull @NotEmpty
+    @JsonProperty(required = true)
+    @NotNull(message = "cannot be empty")
+    @NotEmpty(message = "cannot be empty")
     private String size;
 
     public JsonObject toJson() {
         return Json.createObjectBuilder()
                 .add("sku", getSku())
-                .add("visible", getVisible())
+                .add("is_visible", getIsVisible())
                 .add("qty", getQty())
                 .add("size", getSize())
                 .build();

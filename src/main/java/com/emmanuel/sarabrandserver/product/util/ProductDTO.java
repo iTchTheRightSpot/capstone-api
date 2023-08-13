@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import javax.json.Json;
 import javax.json.JsonObject;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,23 +21,25 @@ import java.io.Serializable;
 public class ProductDTO implements Serializable {
 
     @JsonProperty(value = "id")
-    @NotNull
-    private Long id;
+    @NotNull(message = "cannot be empty")
+    private String uuid;
 
     @JsonProperty(value = "name")
-    @NotNull @NotEmpty
+    @NotNull(message = "cannot be empty")
+    @NotEmpty(message = "cannot be empty")
     private String name;
 
     @Size(max = 400, message = "Max of 255")
-    @NotNull @NotEmpty
+    @NotNull(message = "cannot be empty")
+    @NotEmpty(message = "cannot be empty")
     private String desc;
 
-    @NotNull
-    private Double price;
+    @NotNull(message = "cannot be empty")
+    private BigDecimal price;
 
     public JsonObject toJson() {
         return Json.createObjectBuilder()
-                .add("id", getId())
+                .add("id", getUuid())
                 .add("name", getName())
                 .add("desc", getDesc())
                 .add("price", getPrice())

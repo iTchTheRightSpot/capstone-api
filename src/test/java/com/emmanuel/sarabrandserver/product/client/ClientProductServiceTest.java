@@ -44,6 +44,7 @@ class ClientProductServiceTest {
 
         for (int i = 0; i < 3; i++) {
             var product = Product.builder()
+                    .uuid(UUID.randomUUID().toString())
                     .name(new Faker().commerce().productName())
                     .description(new Faker().lorem().characters(50))
                     .price(new BigDecimal(new Faker().commerce().price()))

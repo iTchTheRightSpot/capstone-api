@@ -1,9 +1,7 @@
 package com.emmanuel.sarabrandserver.auth.config;
 
-import com.emmanuel.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,7 +27,8 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
-import org.springframework.security.web.authentication.session.*;
+import org.springframework.security.web.authentication.session.ConcurrentSessionControlAuthenticationStrategy;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.session.FindByIndexNameSessionRepository;
@@ -54,7 +53,6 @@ import static org.springframework.security.config.http.SessionCreationPolicy.IF_
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@Slf4j
 public class SecurityConfig {
     private final Environment environment;
     private final LogoutHandler logoutHandler;
@@ -146,7 +144,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             CorsConfigurationSource corsConfig,
-            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry
+            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry,
+            SecurityContextRepository contextRepository
     ) throws Exception {
         var JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
         var domain = this.environment.getProperty("server.servlet.session.cookie.domain");
@@ -173,6 +172,7 @@ public class SecurityConfig {
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })
+                .securityContext((context) -> context.securityContextRepository(contextRepository))
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(IF_REQUIRED) //
                         .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::changeSessionId)

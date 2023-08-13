@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.properties")
 class ClientAuthControllerTest {
-    private final String USERNAME = "SEJU Development";
+    private final String PRINCIPAL = "SEJU@development.com";
     private final String PASSWORD = "123#-SEJU-Development";
 
     @Value(value = "${server.servlet.session.cookie.name}")
@@ -73,8 +73,8 @@ class ClientAuthControllerTest {
         var dto = RegisterDTO.builder()
                 .firstname("SEUY")
                 .lastname("Development")
-                .email("SEJU@development.com")
-                .username(USERNAME)
+                .email(PRINCIPAL)
+                .username("")
                 .phone("0000000000")
                 .password(PASSWORD)
                 .build();
@@ -94,7 +94,7 @@ class ClientAuthControllerTest {
                 .perform(post("/api/v1/client/auth/login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(new LoginDTO(USERNAME, PASSWORD).toJson().toString())
+                        .content(new LoginDTO(PRINCIPAL, PASSWORD).toJson().toString())
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -119,7 +119,7 @@ class ClientAuthControllerTest {
                     .perform(post("/api/v1/client/auth/login")
                             .with(csrf())
                             .contentType(APPLICATION_JSON)
-                            .content(new LoginDTO(USERNAME, PASSWORD).toJson().toString())
+                            .content(new LoginDTO(PRINCIPAL, PASSWORD).toJson().toString())
                     )
                     .andExpect(status().isOk())
                     .andReturn();
@@ -136,7 +136,7 @@ class ClientAuthControllerTest {
                 .perform(post("/api/v1/client/auth/login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(new LoginDTO(USERNAME, PASSWORD).toJson().toString())
+                        .content(new LoginDTO(PRINCIPAL, PASSWORD).toJson().toString())
                 )
                 .andExpect(status().isOk())
                 .andReturn();

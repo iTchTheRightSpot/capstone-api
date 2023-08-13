@@ -5,7 +5,6 @@ import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
-import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.product.entity.*;
 import com.emmanuel.sarabrandserver.product.projection.DetailPojo;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
@@ -17,6 +16,7 @@ import com.emmanuel.sarabrandserver.product.util.ProductDTO;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -35,7 +35,6 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -76,7 +75,7 @@ class WorkerProductServiceTest {
 
         for (int i = 0; i < 30; i++) {
             var pojo = mock(ProductPojo.class);
-            when(pojo.getId()).thenReturn((long) i);
+            when(pojo.getUuid()).thenReturn("custom uuid");
             when(pojo.getName()).thenReturn(new Faker().commerce().productName());
             when(pojo.getDesc()).thenReturn(new Faker().lorem().characters(0, 400));
             when(pojo.getPrice()).thenReturn(BigDecimal.valueOf(Double.parseDouble(new Faker().commerce().price(5, 300))));
@@ -268,76 +267,58 @@ class WorkerProductServiceTest {
     }
 
     @Test
-    void updateProduct() {
+    @DisplayName(value = "update all product name only")
+    void updateProductName() {
         // Given
-        var dto = ProductDTO.builder()
-                .id(1L)
-                .name(new Faker().commerce().productName())
-                .desc(new Faker().lorem().characters(0, 400))
-                .price(Double.parseDouble(new Faker().commerce().price(5, 300)))
-                .build();
-
         var product = products().get(0);
-
-        // When
-        when(this.productRepository.findProductByProductId(anyLong())).thenReturn(Optional.of(product));
-        when(this.productRepository.findByProductName(anyString())).thenReturn(Optional.empty());
+        var dto = ProductDTO.builder()
+                .uuid(product.getUuid())
+                .name(new Faker().commerce().productName())
+                .desc(product.getDescription())
+                .price(product.getPrice())
+                .build();
 
         // Then
         assertEquals(HttpStatus.OK, this.productService.updateProduct(dto).getStatusCode());
         verify(this.productRepository, times(1))
-                .updateProduct(any(Long.class), any(String.class), any(String.class), any(BigDecimal.class));
+                .updateProduct(any(String.class), any(String.class), any(String.class), any(BigDecimal.class));
     }
 
     @Test
-    void updateProductException() {
+    @DisplayName(value = "update all updatable variable")
+    void updateAll() {
         // Given
+        var product = products().get(1);
         var dto = ProductDTO.builder()
-                .id(1L)
+                .uuid(product.getUuid())
                 .name(new Faker().commerce().productName())
-                .desc(new Faker().lorem().characters(0, 400))
-                .price(Double.parseDouble(new Faker().commerce().price(5, 300)))
+                .desc(new Faker().lorem().characters(5, 200))
+                .price(new BigDecimal(new Faker().commerce().price()))
                 .build();
-        var product = products().get(0);
-
-        // When
-        when(this.productRepository.findProductByProductId(anyLong())).thenReturn(Optional.of(product));
-        when(this.productRepository.findByProductName(anyString())).thenReturn(Optional.of(product));
 
         // Then
-        assertThrows(DuplicateException.class, () -> this.productService.updateProduct(dto));
+        assertEquals(HttpStatus.OK, this.productService.updateProduct(dto).getStatusCode());
+        verify(this.productRepository, times(1))
+                .updateProduct(any(String.class), any(String.class), any(String.class), any(BigDecimal.class));
     }
 
     @Test
     void updateProductDetail() {
         // Given
-        String sku = UUID.randomUUID().toString();
         var dto = DetailDTO.builder()
-                .sku(sku)
-                .visible(true)
+                .sku(UUID.randomUUID().toString())
+                .isVisible(true)
                 .qty(new Faker().number().numberBetween(1, 29))
                 .size(new Faker().commerce().material())
                 .build();
 
-        var detail = ProductDetail.builder()
-                .productDetailId(1L)
-                .sku(sku)
-                .isVisible(true)
-                .createAt(new Date())
-                .productSize(new ProductSize("Medium"))
-                .productInventory(new ProductInventory(new Faker().number().numberBetween(30, 50)))
-                .productColour(new ProductColour("Brown"))
-                .product(products().get(0))
-                .productImages(new HashSet<>())
-                .build();
-
         // When
-        doReturn(Optional.of(detail)).when(this.productRepository).findDetailBySku(anyString());
         doReturn(Optional.of(new Date())).when(this.customUtil).toUTC(any(Date.class));
 
         // Then
         assertEquals(HttpStatus.OK, this.productService.updateProductDetail(dto).getStatusCode());
-        verify(this.detailRepo, times(1)).save(any(ProductDetail.class));
+        verify(this.detailRepo, times(1))
+                .updateProductDetail(anyString(), any(Date.class), anyBoolean(), anyInt(), anyString());
     }
 
     @Test
@@ -390,6 +371,7 @@ class WorkerProductServiceTest {
         for (String str : set) {
             var product = Product.builder()
                     .name(str)
+                    .uuid(UUID.randomUUID().toString())
                     .description(new Faker().lorem().characters(50))
                     .price(new BigDecimal(new Faker().commerce().price()))
                     .currency(new Faker().currency().name())

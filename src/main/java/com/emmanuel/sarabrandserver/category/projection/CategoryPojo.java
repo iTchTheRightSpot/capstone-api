@@ -5,7 +5,7 @@ import java.util.Date;
 // Using spring data projection
 // Also using none primitives in-case of null
 public interface CategoryPojo {
-    Long getId();
+    String getUuid();
     String getCategory();
     String getSub();
     Date getCreated();

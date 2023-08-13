@@ -14,8 +14,8 @@ public class SessionConfig {
 
     private final FindByIndexNameSessionRepository<? extends Session> indexedRepository;
 
-    public SessionConfig(FindByIndexNameSessionRepository<? extends Session> indexedRepository) {
-        this.indexedRepository = indexedRepository;
+    public SessionConfig(FindByIndexNameSessionRepository<? extends Session> sessionRepository) {
+        this.indexedRepository = sessionRepository;
     }
 
     /**

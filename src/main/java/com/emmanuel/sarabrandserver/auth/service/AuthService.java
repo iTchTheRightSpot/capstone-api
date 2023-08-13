@@ -64,11 +64,13 @@ public class AuthService {
     @Transactional
     public ResponseEntity<?> workerRegister(RegisterDTO dto) {
         var client = this.userRepository
-                .workerExists(dto.getEmail().trim(), dto.getUsername().trim())
+                .workerExists(dto.getEmail().trim())
                 .orElse(createUser(dto));
 
         // Note User and Role tables have a relationship fetch type EAGER
-        boolean isAdmin = client.getClientRole().stream().anyMatch(role -> role.getRole().equals(RoleEnum.WORKER));
+        boolean isAdmin = client.getClientRole()
+                .stream()
+                .anyMatch(role -> role.getRole().equals(RoleEnum.WORKER));
 
         if (isAdmin) {
             throw new DuplicateException(dto.getUsername() + " exists");
@@ -88,7 +90,7 @@ public class AuthService {
      * */
     @Transactional
     public ResponseEntity<?> clientRegister(RegisterDTO dto) {
-        if (this.userRepository.principalExists(dto.getEmail().trim(), dto.getUsername().trim()) > 0) {
+        if (this.userRepository.principalExists(dto.getEmail().trim()) > 0) {
             throw new DuplicateException(dto.getEmail() + " exists");
         }
         this.userRepository.save(createUser(dto));
@@ -96,7 +98,8 @@ public class AuthService {
     }
 
     /**
-     * Basically logs in a user based on credentials stored in the DB.
+     * Manually login a user. As per docs
+     * <a href="https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html">...</a>
      * @param dto consist of principal and password.
      * @param request of HttpServletRequest
      * @param response of HttpServletResponse
@@ -105,8 +108,10 @@ public class AuthService {
      * */
     @Transactional
     public ResponseEntity<?> login(LoginDTO dto, HttpServletRequest request, HttpServletResponse response) {
-        var authenticated = this.authManager
-                .authenticate(UsernamePasswordAuthenticationToken.unauthenticated(dto.getPrincipal(), dto.getPassword()));
+        var unauthenticated = UsernamePasswordAuthenticationToken
+                .unauthenticated(dto.getPrincipal().trim(), dto.getPassword());
+
+        var authenticated = this.authManager.authenticate(unauthenticated);
 
         // Create a new context
         SecurityContext context = SecurityContextHolder.createEmptyContext();
@@ -128,7 +133,6 @@ public class AuthService {
                 .firstname(dto.getFirstname().trim())
                 .lastname(dto.getLastname().trim())
                 .email(dto.getEmail().trim())
-                .username(dto.getUsername().trim())
                 .phoneNumber(dto.getPhone().trim())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .enabled(true)

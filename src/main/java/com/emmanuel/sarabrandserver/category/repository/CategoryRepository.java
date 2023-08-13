@@ -19,7 +19,7 @@ import java.util.Optional;
 public interface CategoryRepository extends JpaRepository<ProductCategory, Long> {
     @Query(value = """
     SELECT
-    c.categoryId AS id,
+    c.uuid AS uuid,
     c.categoryName AS category,
     c.createAt AS created,
     c.modifiedAt AS modified,
@@ -51,24 +51,21 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
 
     @Query(value = """
     SELECT COUNT(pc.categoryName) FROM ProductCategory pc
-    WHERE pc.categoryName = :newName
+    WHERE pc.categoryName = :name
     """)
-    int duplicateCategoryForUpdate(@Param(value = "newName") String newName);
+    int duplicateCategoryForUpdate(@Param(value = "name") String newName);
 
     @Modifying(clearAutomatically = true)
     @Transactional
     @Query("""
         UPDATE ProductCategory pc
         SET pc.modifiedAt = :date, pc.categoryName = :name
-        WHERE pc.categoryId = :id
+        WHERE pc.uuid = :uuid
     """)
     void update(
             @Param(value = "date") Date date,
-            @Param(value = "id") long id,
-            @Param(value = "name") String name
+            @Param(value = "name") String name,
+            @Param(value = "uuid") String id
     );
-
-    @Query(value = "SELECT pc FROM ProductCategory pc WHERE pc.categoryId = :id")
-    Optional<ProductCategory> findCategoryById(@Param(value = "id") long id);
 
 }

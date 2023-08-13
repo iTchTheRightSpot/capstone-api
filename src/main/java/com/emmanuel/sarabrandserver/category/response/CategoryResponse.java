@@ -19,7 +19,7 @@ public class CategoryResponse {
     @JsonProperty(value = "modified_at")
     private long modified;
 
-    private long id;
+    private String id;
     private String category;
     private boolean visible;
     private List<String> child;

@@ -17,27 +17,31 @@ import javax.json.JsonObject;
 @Data
 public class RegisterDTO {
 
-    @NotNull @NotEmpty
+    @NotNull(message = "cannot be empty")
+    @NotEmpty(message = "cannot be empty")
     @JsonProperty(value = "firstname")
     private String firstname;
 
-    @NotNull @NotEmpty
+    @NotNull(message = "cannot be empty")
+    @NotEmpty(message = "cannot be empty")
     @JsonProperty(value = "lastname")
     private String lastname;
 
-    @NotNull @NotEmpty
+    @NotNull(message = "cannot be empty")
+    @NotEmpty(message = "cannot be empty")
     @JsonProperty(value = "email")
     private String email;
 
-    @NotNull @NotEmpty
     @JsonProperty(value = "username")
     private String username;
 
-    @NotNull @NotEmpty
+    @NotNull(message = "cannot be empty")
+    @NotEmpty(message = "cannot be empty")
     @JsonProperty(value = "phone")
     private String phone;
 
-    @NotNull @NotEmpty
+    @NotNull(message = "cannot be empty")
+    @NotEmpty(message = "cannot be empty")
     @JsonProperty(value = "password")
     private String password;
 

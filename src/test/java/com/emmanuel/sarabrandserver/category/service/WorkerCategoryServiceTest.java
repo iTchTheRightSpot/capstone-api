@@ -20,6 +20,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -27,7 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.HttpStatus.*;
 
-@ExtendWith({MockitoExtension.class, SpringExtension.class})
+@ExtendWith({ MockitoExtension.class, SpringExtension.class })
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.properties")
 class WorkerCategoryServiceTest {
@@ -126,7 +127,7 @@ class WorkerCategoryServiceTest {
     void update() {
         // Given
         var dto = UpdateCategoryDTO.builder()
-                .id(1L)
+                .id(UUID.randomUUID().toString())
                 .name("Updated category name")
                 .build();
 
@@ -137,14 +138,14 @@ class WorkerCategoryServiceTest {
         // Then
         assertEquals(OK, this.workerCategoryService.update(dto).getStatusCode());
         verify(this.categoryRepository, times(1))
-                .update(any(Date.class), anyLong(), anyString());
+                .update(any(Date.class), anyString(), anyString());
     }
 
     @Test
     void update_category_name_to_existing_name() {
         // Given
         var dto = UpdateCategoryDTO.builder()
-                .id(1L)
+                .id(UUID.randomUUID().toString())
                 .name("Updated category name")
                 .build();
 

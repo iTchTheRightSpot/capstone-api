@@ -17,11 +17,11 @@ public class UserDetailService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return this.userRepository
-                .findByPrincipal(username)
+                .findByPrincipal(email)
                 .map(UserDetailz::new)
-                .orElseThrow(() -> new UsernameNotFoundException(username + " not found"));
+                .orElseThrow(() -> new UsernameNotFoundException(email + " not found"));
     }
 
 }

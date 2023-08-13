@@ -3,18 +3,20 @@ package com.emmanuel.sarabrandserver.product.worker;
 import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
+import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
+import com.emmanuel.sarabrandserver.product.util.DetailDTO;
 import com.emmanuel.sarabrandserver.product.util.ProductDTO;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -32,6 +34,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -43,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.properties")
 class WorkerProductControllerTest {
+
     private final static String requestMapping = "/api/v1/worker/product";
     private String category = "";
     private String productName = "";
@@ -52,6 +56,7 @@ class WorkerProductControllerTest {
     @Autowired private ProductRepository productRepository;
     @Autowired private WorkerCategoryService workerCategoryService;
     @Autowired private CategoryRepository categoryRepository;
+    @Autowired private ProductDetailRepo productDetailRepo;
 
     @Container private static final MySQLContainer<?> container;
 
@@ -78,7 +83,9 @@ class WorkerProductControllerTest {
         }
 
         for (String str : set) {
-            category = str;
+            if (this.category.isEmpty()) {
+                this.category = str;
+            }
             this.workerCategoryService.create(new CategoryDTO(str, true, ""));
         }
 
@@ -95,7 +102,10 @@ class WorkerProductControllerTest {
                     .size(new Faker().commerce().material())
                     .colour(new Faker().commerce().color())
                     .build();
-            this.productName = dto.getName();
+
+            if (this.productName.isEmpty()) {
+                this.productName = dto.getName();
+            }
 
             MockMultipartFile[] files = {
                     new MockMultipartFile(
@@ -166,7 +176,7 @@ class WorkerProductControllerTest {
     }
 
     /** Testing fetchAll method that returns a ProductResponse. */
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
     void fetchAll() throws Exception {
         // Then
         this.MOCK_MVC
@@ -180,7 +190,7 @@ class WorkerProductControllerTest {
     }
 
     /** Testing fetchAll method that returns a DetailResponse. */
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
     void fetchAllDetail() throws Exception {
         this.MOCK_MVC
                 .perform(get(requestMapping + "/{name}", "custom-product")
@@ -193,28 +203,70 @@ class WorkerProductControllerTest {
                 .andExpect(jsonPath("$.content", hasSize(30)));
     }
 
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @Test
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
+    @DisplayName(value = "update all updatable variable")
     void updateProduct() throws Exception {
         // Given
-        long id = this.productRepository.findAll().get(0).getProductId();
+        String id = this.productRepository.findAll().get(0).getUuid();
         var dto = ProductDTO.builder()
-                .id(id)
+                .uuid(id)
                 .name("SEJU Development")
-                .desc("Lorem 29")
-                .price(Double.parseDouble(new Faker().commerce().price()))
+                .desc(new Faker().lorem().characters(5, 200))
+                .price(new BigDecimal(new Faker().commerce().price()))
                 .build();
 
         // Then
         this.MOCK_MVC
                 .perform(put(requestMapping)
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(dto.toJson().toString())
                         .with(csrf())
                 )
                 .andExpect(status().isOk());
     }
 
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @Test
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
+    @DisplayName(value = "update all updatable variable apart from product name")
+    void update() throws Exception {
+        // Given
+        var product = this.productRepository.findAll().get(1);
+        var dto = ProductDTO.builder()
+                .uuid(product.getUuid())
+                .name(product.getName())
+                .desc(new Faker().lorem().characters(5, 200))
+                .price(new BigDecimal(new Faker().commerce().price()))
+                .build();
+
+        // Then
+        this.MOCK_MVC
+                .perform(put(requestMapping)
+                        .contentType(APPLICATION_JSON)
+                        .content(dto.toJson().toString())
+                        .with(csrf())
+                )
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
+    @DisplayName(value = "update ProductDetail")
+    void updateDetail() throws Exception {
+        var detail = this.productDetailRepo.findAll().get(0);
+        String dto = new DetailDTO(detail.getSku(), true, 50, "large").toJson().toString();
+
+        // Then
+        this.MOCK_MVC
+                .perform(put(requestMapping + "/detail")
+                        .contentType(APPLICATION_JSON)
+                        .content(dto)
+                        .with(csrf())
+                )
+                .andExpect(status().isOk());
+    }
+
+    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
     void deleteProduct() throws Exception {
         this.MOCK_MVC.perform(delete(requestMapping + "/{name}", this.productName).with(csrf()))
                 .andExpect(status().isNoContent());

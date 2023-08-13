@@ -15,22 +15,22 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<SaraBrandUser, Long> {
-    @Query(value = "SELECT c FROM SaraBrandUser c WHERE c.email = :principal OR c.username = :principal")
+    @Query(value = "SELECT c FROM SaraBrandUser c WHERE c.email = :principal")
     Optional<SaraBrandUser> findByPrincipal(@Param(value = "principal") String principal);
 
     @Query(value = """
     SELECT COUNT (c.clientId)
     FROM SaraBrandUser c
-    WHERE c.email = :email OR c.username = :username
+    WHERE c.email = :email
     """)
-    int principalExists(@Param(value = "email") String email, @Param(value = "username") String username);
+    int principalExists(@Param(value = "email") String email);
 
     @Query(value = """
     SELECT c
     FROM SaraBrandUser c
-    WHERE c.email = :email OR c.username = :username
+    WHERE c.email = :email
     """)
-    Optional<SaraBrandUser> workerExists(@Param(value = "email") String email, @Param(value = "username") String username);
+    Optional<SaraBrandUser> workerExists(@Param(value = "email") String email);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Transactional

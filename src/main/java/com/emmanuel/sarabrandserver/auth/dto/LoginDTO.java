@@ -15,11 +15,13 @@ import javax.json.JsonObject;
 @Builder
 @Data
 public class LoginDTO {
-    @NotEmpty @NotNull
+    @NotEmpty(message = "cannot be empty")
+    @NotNull(message = "cannot be empty")
     private String principal;
 
-    @NotEmpty @NotNull
-   private String password;
+    @NotEmpty(message = "cannot be empty")
+    @NotNull(message = "cannot be empty")
+    private String password;
 
     public JsonObject toJson() {
         return Json.createObjectBuilder()

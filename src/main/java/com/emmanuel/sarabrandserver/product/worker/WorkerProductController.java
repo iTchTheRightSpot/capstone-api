@@ -75,7 +75,7 @@ public class WorkerProductController {
      * @return ResponseEntity of type HttpStatus
      * */
     @PutMapping(path = "/detail", consumes = "application/json")
-    public ResponseEntity<HttpStatus> updateProductDetail(@Valid @RequestBody DetailDTO dto) {
+    public ResponseEntity<?> updateProductDetail(@Valid @RequestBody DetailDTO dto) {
         return this.workerProductService.updateProductDetail(dto);
     }
 

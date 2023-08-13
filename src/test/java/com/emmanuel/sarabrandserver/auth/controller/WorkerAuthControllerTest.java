@@ -46,9 +46,8 @@ class WorkerAuthControllerTest {
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
 
-    private final String ADMIN_EMAIL = "SEJU@development.com";
-    private final String USERNAME = "SEJU Development";
-    private final String ADMIN_PASSWORD = "123#-SEJU-Development";
+    private final String PRINCIPAL = "SEJU@development.com";
+    private final String PASSWORD = "123#-SEJU-Development";
     private final String requestMapping = "/api/v1/worker/auth/";
 
     @Autowired private MockMvc MOCK_MVC;
@@ -80,10 +79,10 @@ class WorkerAuthControllerTest {
         this.authService.workerRegister(new RegisterDTO(
                 "SEJU",
                 "Development",
-                ADMIN_EMAIL,
-                USERNAME,
+                PRINCIPAL,
+                "",
                 "000-000-0000",
-                ADMIN_PASSWORD
+                PASSWORD
         ));
     }
 
@@ -101,7 +100,7 @@ class WorkerAuthControllerTest {
                 .perform(post(requestMapping + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).toJson().toString())
+                        .content(new LoginDTO(PRINCIPAL, PASSWORD).toJson().toString())
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -114,14 +113,13 @@ class WorkerAuthControllerTest {
                 "james development",
                 "0000000000",
                 "A;D@#$13245eifdkj"
-        );
-
+        ).toJson().toString();
 
         this.MOCK_MVC
                 .perform(post(requestMapping + "register")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(dto.toJson().toString())
+                        .content(dto)
                         .cookie(login.getResponse().getCookie(JSESSIONID))
                 )
                 .andExpect(status().isCreated());
@@ -135,7 +133,7 @@ class WorkerAuthControllerTest {
                 .perform(post(requestMapping + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).toJson().toString())
+                        .content(new LoginDTO(PRINCIPAL, PASSWORD).toJson().toString())
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -143,17 +141,17 @@ class WorkerAuthControllerTest {
         var dto = new RegisterDTO(
                 "SEJU",
                 "Development",
-                ADMIN_EMAIL,
-                USERNAME,
+                PRINCIPAL,
+                "",
                 "00-000-0000",
-                ADMIN_PASSWORD
-        );
+                PASSWORD
+        ).toJson().toString();
 
         this.MOCK_MVC
                 .perform(post(requestMapping + "register")
                         .contentType(APPLICATION_JSON)
                         .with(csrf())
-                        .content(dto.toJson().toString())
+                        .content(dto)
                         .cookie(login.getResponse().getCookie(JSESSIONID))
                 )
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException));
@@ -165,7 +163,7 @@ class WorkerAuthControllerTest {
                 .perform(post(requestMapping + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(new LoginDTO(ADMIN_EMAIL, "fFeubfrom@#$%^124234").toJson().toString())
+                        .content(new LoginDTO(PRINCIPAL, "fFeubfrom@#$%^124234").toJson().toString())
                 )
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("Bad credentials"))
@@ -180,7 +178,7 @@ class WorkerAuthControllerTest {
                 .perform(post(requestMapping + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(new LoginDTO(ADMIN_EMAIL, ADMIN_PASSWORD).toJson().toString())
+                        .content(new LoginDTO(PRINCIPAL, PASSWORD).toJson().toString())
                 )
                 .andExpect(status().isOk())
                 .andReturn();

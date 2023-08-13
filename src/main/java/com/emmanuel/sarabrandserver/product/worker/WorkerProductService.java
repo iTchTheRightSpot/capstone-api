@@ -27,7 +27,6 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.util.*;
 
@@ -80,7 +79,7 @@ public class WorkerProductService {
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, bucket, pojo.getKey());
                     return ProductResponse.builder()
-                            .id(pojo.getId())
+                            .id(pojo.getUuid())
                             .name(pojo.getName())
                             .desc(pojo.getDesc())
                             .price(pojo.getPrice())
@@ -153,6 +152,8 @@ public class WorkerProductService {
         // Build/Save ProductDetail and Product
         var detail = productDetail(dto, list, date);
         var product = Product.builder()
+                .productCategory(category)
+                .uuid(UUID.randomUUID().toString())
                 .name(dto.getName().trim())
                 .description(dto.getDesc().trim())
                 .defaultKey(this.defaultKey)
@@ -161,9 +162,6 @@ public class WorkerProductService {
                 .productDetails(new HashSet<>())
                 .build();
         product.addDetail(detail);
-
-        // Set ProductCategory to Product
-        product.setProductCategory(category);
 
         // Set ProductCollection to Product
         if (!dto.getCollection().isBlank()) {
@@ -236,7 +234,7 @@ public class WorkerProductService {
     }
 
     /**
-     * Method updates just a Product only if the id exists. Not ProductDetail is not updated.
+     * Method updates a Product obj based on its UUID. Note only a product is updated not a product detail.
      * @param dto of type UpdateProductDTO
      * @throws CustomNotFoundException when dto product_id does not exist
      * @throws DuplicateException when dto name exist
@@ -244,48 +242,31 @@ public class WorkerProductService {
      * */
     @Transactional
     public ResponseEntity<?> updateProduct(final ProductDTO dto) {
-        var product = this.productRepository.findProductByProductId(dto.getId())
-                .orElseThrow(() -> new CustomNotFoundException("Product does not exist"));
-
-        // Validate if dto name does not equal ProductName and dto does not exist in DB.
-        boolean bool = !product.getName().equals(dto.getName().trim()) && this.productRepository
-                .findByProductName(dto.getName().trim()).isPresent();
-
-        if (bool) {
-            throw new  DuplicateException(dto.getName() + " exists");
-        }
-
         this.productRepository.updateProduct(
-                dto.getId(),
+                dto.getUuid(),
                 dto.getName().trim(),
                 dto.getDesc().trim(),
-                BigDecimal.valueOf(dto.getPrice())
+                dto.getPrice()
         );
 
         return new ResponseEntity<>(OK);
     }
 
     /**
-     * Method updates just a ProductDetail. We are not updating the colour because image will have to be updated if
-     * it is a different colour.
+     * Updates a ProductDetail and its relationship with other tables except ProductImage
      * @param dto of type DetailDTO
-     * @throws CustomNotFoundException is thrown when Product name or sku does not exist
      * @return ResponseEntity of type HttpStatus
      * */
     @Transactional
     public ResponseEntity<HttpStatus> updateProductDetail(final DetailDTO dto) {
-        // Find ProductDetail by it sku
-        var detail = findByDetailBySku(dto.getSku().trim());
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
-
-        // Fetch type is eager for the properties I am updating
-        detail.setModifiedAt(date);
-        detail.setVisible(dto.getVisible());
-        detail.getProductInventory().setQuantity(dto.getQty());
-        detail.getProductSize().setSize(dto.getSize());
-
-        // Save detail
-        this.detailRepo.save(detail);
+        this.detailRepo.updateProductDetail(
+                dto.getSku(),
+                date,
+                dto.getIsVisible(),
+                dto.getQty(),
+                dto.getSize()
+        );
 
         return new ResponseEntity<>(OK);
     }
@@ -304,6 +285,8 @@ public class WorkerProductService {
 
         // Delete from S3
         var profile = this.environment.getProperty("spring.profiles.active", "");
+        var bucket = this.environment.getProperty("aws.bucket", "");
+
         if (profile.equals("prod") || profile.equals("stage") || profile.equals("dev"))  {
             // Get all Images
             List<ObjectIdentifier> keys = this.productRepository.images(name.trim())
@@ -312,7 +295,7 @@ public class WorkerProductService {
                     .toList();
 
             if (!keys.isEmpty()) {
-                this.s3Service.deleteFromS3(keys, this.environment.getProperty("aws.bucket"));
+                this.s3Service.deleteFromS3(keys, bucket);
             }
         }
 
@@ -333,6 +316,8 @@ public class WorkerProductService {
         var detail = findByDetailBySku(sku);
 
         var profile = this.environment.getProperty("spring.profiles.active", "");
+        var bucket = this.environment.getProperty("aws.bucket", "");
+
         if (profile.equals("prod") || profile.equals("stage") || profile.equals("dev"))  {
             List<ObjectIdentifier> keys = detail.getProductImages() //
                     .stream() //
@@ -340,7 +325,7 @@ public class WorkerProductService {
                     .toList();
 
             if (!keys.isEmpty()) {
-                this.s3Service.deleteFromS3(keys, this.environment.getProperty("aws.bucket"));
+                this.s3Service.deleteFromS3(keys, bucket);
             }
         }
 
@@ -361,7 +346,7 @@ public class WorkerProductService {
     }
 
     // Validates if contents in MultipartFile[] are all images
-    public List<CustomMultiPart> validateMultiPartFile(MultipartFile[] multipartFiles) {
+    private List<CustomMultiPart> validateMultiPartFile(MultipartFile[] multipartFiles) {
         List<CustomMultiPart> list = new ArrayList<>();
 
         for (MultipartFile multipartFile : multipartFiles) {
@@ -369,7 +354,7 @@ public class WorkerProductService {
             File file = new File(path);
 
             try (FileOutputStream outputStream = new FileOutputStream(file)) {
-                // File MultipartFile to file
+                // write MultipartFile to file
                 outputStream.write(multipartFile.getBytes());
 
                 // Validate file is an image
@@ -385,6 +370,7 @@ public class WorkerProductService {
                 metadata.put("Title", multipartFile.getName());
                 metadata.put("Type", StringUtils.getFilenameExtension(path));
 
+                // Add to list
                 list.add(new CustomMultiPart(file, metadata, UUID.randomUUID().toString()));
             } catch (IOException e) {
                 log.error("Error either writing multipart to file or getting file type. {}", e.getMessage());

@@ -34,8 +34,6 @@ import static org.springframework.http.HttpStatus.*;
 
 @Service @Slf4j
 public class WorkerProductService {
-    private String defaultKey; // Represents the default_image_key for Product property
-
     private final ProductRepository productRepository;
     private final ProductDetailRepo detailRepo;
     private final WorkerCategoryService categoryService;
@@ -136,12 +134,12 @@ public class WorkerProductService {
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
 
         // Validate MultipartFile[] are all images
-        List<CustomMultiPart> list = validateMultiPartFile(files);
-
+        CustomMultiPart[] list = validateMultiPartFile(files);
+        String defaultImageKey = "";
         // Persist new ProductDetail if Product exist
         if (_product.isPresent()) {
             // Build ProductDetail
-            var detail = productDetail(dto, list, date);
+            var detail = productDetail(dto, defaultImageKey, list, date);
             detail.setProduct(_product.get());
 
             // Add ProductDetail to Product, save and return response
@@ -150,13 +148,13 @@ public class WorkerProductService {
         }
 
         // Build/Save ProductDetail and Product
-        var detail = productDetail(dto, list, date);
+        var detail = productDetail(dto, defaultImageKey, list, date);
         var product = Product.builder()
                 .productCategory(category)
                 .uuid(UUID.randomUUID().toString())
                 .name(dto.getName().trim())
                 .description(dto.getDesc().trim())
-                .defaultKey(this.defaultKey)
+                .defaultKey(defaultImageKey)
                 .price(dto.getPrice())
                 .currency(dto.getCurrency()) // default is USD
                 .productDetails(new HashSet<>())
@@ -177,12 +175,13 @@ public class WorkerProductService {
     /**
      * Creates a ProductDetail obj.
      * @param dto represents the details of a Product. i.e. image, colour
+     * @param defaultKey is the default image key for a product
      * @param files represents a list of CustomMultiPart
      * @param createdAt time of the ProductDetail created
      * @throws S3Exception if an exception happens when uploading to s3
      * @return ProductDetail
      * */
-    private ProductDetail productDetail(CreateProductDTO dto, List<CustomMultiPart> files, Date createdAt) {
+    private ProductDetail productDetail(CreateProductDTO dto, String defaultKey, CustomMultiPart[] files, Date createdAt) {
         var bucket = this.environment.getProperty("aws.bucket", "");
         var profile = this.environment.getProperty("spring.profiles.active", "");
 
@@ -216,7 +215,10 @@ public class WorkerProductService {
 
         // Add ProductImage to ProductDetail as ProductDetail has a one-to-many relationship with ProductImage
         for (CustomMultiPart obj : files) {
-            setDefaultKey(obj.key()); // Set default key
+            // Set default key
+            if (defaultKey.isEmpty()) {
+                defaultKey = obj.key();
+            }
             var image = ProductImage.builder()
                     .imageKey(obj.key())
                     .imagePath(obj.file().getAbsolutePath())
@@ -224,7 +226,7 @@ public class WorkerProductService {
 
             // Only upload to s3 in prod profile
             if (profile.equals("prod") || profile.equals("stage") || profile.equals("dev")) {
-                this.s3Service.uploadToS3(obj.file(), obj.meta(), bucket, obj.key());
+                this.s3Service.uploadToS3(obj.file(), obj.metadata(), bucket, obj.key());
             }
 
             detail.addImages(image);
@@ -340,22 +342,23 @@ public class WorkerProductService {
                 .orElseThrow(() -> new CustomNotFoundException("SKU does not exist"));
     }
 
-    // Set Default Image Key
-    private void setDefaultKey(String str) {
-        this.defaultKey = str;
-    }
+    /**
+     * Validates if items in MultipartFile array are all images, else an error is thrown.
+     * Note I am returning an array as it is a bit more efficient than arraylist in terms of memory
+     * @param multipartFiles is an array of MultipartFile
+     * @return CustomMultiPart array
+     * */
+    private CustomMultiPart[] validateMultiPartFile(MultipartFile[] multipartFiles) {
+        CustomMultiPart[] arr = new CustomMultiPart[multipartFiles.length];
 
-    // Validates if contents in MultipartFile[] are all images
-    private List<CustomMultiPart> validateMultiPartFile(MultipartFile[] multipartFiles) {
-        List<CustomMultiPart> list = new ArrayList<>();
-
-        for (MultipartFile multipartFile : multipartFiles) {
-            String path = Objects.requireNonNull(multipartFile.getOriginalFilename());
-            File file = new File(path);
+        for (int i = 0; i < multipartFiles.length; i++) {
+            String originalFileName = Objects
+                    .requireNonNull(multipartFiles[0].getOriginalFilename()); // Possibly throws a NullPointerException
+            File file = new File(originalFileName);
 
             try (FileOutputStream outputStream = new FileOutputStream(file)) {
                 // write MultipartFile to file
-                outputStream.write(multipartFile.getBytes());
+                outputStream.write(multipartFiles[0].getBytes());
 
                 // Validate file is an image
                 String contentType = Files.probeContentType(file.toPath());
@@ -367,18 +370,17 @@ public class WorkerProductService {
                 // Create image metadata for storing in AWS
                 Map<String, String> metadata = new HashMap<>();
                 metadata.put("Content-Type", contentType);
-                metadata.put("Title", multipartFile.getName());
-                metadata.put("Type", StringUtils.getFilenameExtension(path));
+                metadata.put("Title", multipartFiles[0].getName());
+                metadata.put("Type", StringUtils.getFilenameExtension(originalFileName));
 
-                // Add to list
-                list.add(new CustomMultiPart(file, metadata, UUID.randomUUID().toString()));
-            } catch (IOException e) {
-                log.error("Error either writing multipart to file or getting file type. {}", e.getMessage());
+                // Copy into array
+                arr[i] = new CustomMultiPart(file, metadata, UUID.randomUUID().toString());
+            } catch (IOException ex) {
+                log.error("Error either writing multipart to file or getting file type. {}", ex.getMessage());
                 throw new CustomAwsException("Please verify file is an image");
             }
         }
-
-        return list;
+        return arr;
     }
 
 }

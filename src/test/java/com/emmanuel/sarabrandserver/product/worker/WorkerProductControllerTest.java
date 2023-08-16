@@ -175,8 +175,9 @@ class WorkerProductControllerTest {
         this.categoryRepository.deleteAll();
     }
 
-    /** Testing fetchAll method that returns a ProductResponse. */
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
+    @Test
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
+    @DisplayName(value = "Fetch all Products")
     void fetchAll() throws Exception {
         // Then
         this.MOCK_MVC
@@ -189,8 +190,9 @@ class WorkerProductControllerTest {
                 .andExpect(jsonPath("$.content").isArray());
     }
 
-    /** Testing fetchAll method that returns a DetailResponse. */
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
+    @Test
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
+    @DisplayName(value = "Fetch all ProductDetail")
     void fetchAllDetail() throws Exception {
         this.MOCK_MVC
                 .perform(get(requestMapping + "/{name}", "custom-product")

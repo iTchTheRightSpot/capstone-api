@@ -3,9 +3,9 @@ package com.emmanuel.sarabrandserver.test;
 import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.product.entity.*;
+import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.github.javafaker.Faker;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
@@ -19,15 +19,14 @@ import java.util.UUID;
 
 @Component
 @Profile(value = {"dev"})
-@Slf4j
 public class DummyDataDev {
 
     @Bean
-    public CommandLineRunner runner(CategoryRepository categoryRepo, ProductRepository productRepo) {
+    public CommandLineRunner runner(CategoryRepository categoryRepo, ProductRepository productRepo, ProductDetailRepo detailRepo) {
         return args -> {
-            log.info("Args0 from command line runner {}", args[0]);
-            log.info("Args1 from command line runner {}", args[1]);
-            log.info("Args2 from command line runner {}", args[2]);
+            categoryRepo.deleteAll();
+            detailRepo.deleteAll();
+            productRepo.deleteAll();
 
             Set<String> set = new HashSet<>();
             for (int i = 0; i < 10; i++) {
@@ -57,6 +56,7 @@ public class DummyDataDev {
                             .productCategory(category)
                             .uuid(UUID.randomUUID().toString())
                             .name(prodName)
+                            .defaultKey("default key")
                             .description(new Faker().lorem().characters(50))
                             .price(new BigDecimal(new Faker().commerce().price()))
                             .currency(new Faker().currency().name())

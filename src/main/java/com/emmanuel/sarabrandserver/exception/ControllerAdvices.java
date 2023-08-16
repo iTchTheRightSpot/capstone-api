@@ -31,7 +31,6 @@ public class ControllerAdvices {
 
     private record ExceptionDetails(String message, HttpStatus httpStatus, ZonedDateTime timestamp) { }
 
-
     @ExceptionHandler(value = {DuplicateException.class})
     public ResponseEntity<?> duplicateException(Exception ex) {
         var exceptionDetails = new ExceptionDetails(

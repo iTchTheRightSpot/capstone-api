@@ -59,7 +59,7 @@ public class DummyDataDev {
                             .defaultKey("default key")
                             .description(new Faker().lorem().characters(50))
                             .price(new BigDecimal(new Faker().commerce().price()))
-                            .currency(new Faker().currency().name())
+                            .currency("$")
                             .productDetails(new HashSet<>())
                             .build();
 

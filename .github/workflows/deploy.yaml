@@ -38,13 +38,13 @@ jobs:
           ./mvnw clean spring-boot:build-image
           
           # Delete generated dummy files after test
-          folder_path="./uploads"
-          if [ -d "$folder_path" ]; then
-            rm -r "$folder_path"/*
-            echo "All contents deleted from $folder_path"
-          else
-            echo "Folder not found: $folder_path"
-          fi
+#          folder_path="./uploads"
+#          if [ -d "$folder_path" ]; then
+#            rm -r "$folder_path"/*
+#            echo "All contents deleted from $folder_path"
+#          else
+#            echo "Folder not found: $folder_path"
+#          fi
         shell: bash
 
       - name: Set up Docker Build

@@ -18,4 +18,8 @@ public class CollectionResponse {
 
     private String collection;
     private boolean visible;
+
+    public CollectionResponse(String collection) {
+        this.collection = collection;
+    }
 }

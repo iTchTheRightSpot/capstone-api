@@ -87,12 +87,40 @@ public class ClientProductService {
      * @return List of ProductResponse
      * */
     public Page<ProductResponse> fetchAll(String name, int page, int size) {
+        // If name is empty, means UI page was just opened or refreshed.
+        if (name.isEmpty()) {
+            return fetchAll(page, size);
+        }
+
         var profile = this.environment.getProperty("spring.profiles.active", "");
         boolean bool = profile.equals("prod") || profile.equals("stage");
         var bucket = this.environment.getProperty("aws.bucket", "");
 
         return this.productRepository
-                .fetchByCategoryClient(name, PageRequest.of(page, Math.max(size, 30))) //
+                .fetchByCategoryClient(name, PageRequest.of(page, Math.min(size, 30))) //
+                .map(pojo -> {
+                    var url = this.s3Service.getPreSignedUrl(bool, bucket, pojo.getKey());
+                    return ProductResponse.builder()
+                            .name(pojo.getName())
+                            .desc(pojo.getDesc())
+                            .price(pojo.getPrice())
+                            .currency(pojo.getCurrency())
+                            .imageUrl(url)
+                            .build();
+                });
+    }
+
+    public Page<ProductResponse> fetchProductOnCollection(String name, int page, int size) {
+        if (name.isEmpty()) {
+            return fetchAll(page, size);
+        }
+
+        var profile = this.environment.getProperty("spring.profiles.active", "");
+        boolean bool = profile.equals("prod") || profile.equals("stage");
+        var bucket = this.environment.getProperty("aws.bucket", "");
+
+        return this.productRepository
+                .fetchByCollectionClient(name, PageRequest.of(page, Math.min(size, 30)))
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, bucket, pojo.getKey());
                     return ProductResponse.builder()

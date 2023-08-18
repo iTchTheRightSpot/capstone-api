@@ -35,14 +35,18 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
      * where parent.parent_category_id is null
      * group by parent.category_name, parent.created_at
      * order by parent.created_at
+     * JPA
+     * SELECT parent.categoryName AS category, GROUP_CONCAT(child.categoryName) AS sub
+     * FROM ProductCategory parent
+     * LEFT JOIN ProductCategory child ON parent.categoryId = child.productCategory.categoryId
+     * WHERE parent.productCategory.categoryId IS NULL AND parent.isVisible = true
+     * GROUP BY parent.categoryName
+     * ORDER BY parent.createAt
      * */
     @Query(value = """
-    SELECT parent.categoryName AS category, GROUP_CONCAT(child.categoryName) AS sub
+    SELECT parent.categoryName AS category
     FROM ProductCategory parent
-    LEFT JOIN ProductCategory child ON parent.categoryId = child.productCategory.categoryId
-    WHERE parent.productCategory.categoryId IS NULL AND parent.isVisible = true
-    GROUP BY parent.categoryName
-    ORDER BY parent.createAt
+    WHERE parent.isVisible = true
     """)
     List<CategoryPojo> fetchCategoriesClient();
 

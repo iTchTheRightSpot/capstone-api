@@ -19,8 +19,9 @@ public class ClientCategoryService {
      * @return List of CategoryResponse
      * */
     public List<CategoryResponse> fetchAll() {
-        return this.categoryRepository.fetchCategoriesClient().stream() //
-                .map(pojo -> new CategoryResponse(pojo.getCategory(), pojo.getSub())) //
+        return this.categoryRepository.fetchCategoriesClient()
+                .stream() //
+                .map(pojo -> new CategoryResponse(pojo.getCategory())) //
                 .toList();
     }
 

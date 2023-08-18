@@ -119,6 +119,21 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<ProductPojo> fetchByCategoryClient(String name, Pageable page);
 
     @Query(value = """
+    SELECT
+    p.name AS name,
+    p.description AS desc,
+    p.price AS price,
+    p.currency AS currency,
+    p.defaultKey AS key
+    FROM Product p
+    INNER JOIN ProductCollection pc ON p.productCollection.collectionId = pc.collectionId
+    INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
+    INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
+    WHERE pd.isVisible = true AND inv.quantity > 0 AND pc.collection = :name
+    """)
+    Page<ProductPojo> fetchByCollectionClient(String name, Pageable page);
+
+    @Query(value = """
     SELECT img.imageKey as image
     FROM ProductImage img
     INNER JOIN ProductDetail pd ON img.productDetails.productDetailId = pd.productDetailId

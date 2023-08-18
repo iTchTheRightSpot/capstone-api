@@ -30,4 +30,7 @@ public class CategoryResponse {
         this.child = Arrays.stream(child.split(",")).toList();
     }
 
+    public CategoryResponse(String category) {
+        this.category = category;
+    }
 }

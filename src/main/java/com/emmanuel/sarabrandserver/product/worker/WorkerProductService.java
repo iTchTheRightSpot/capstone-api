@@ -60,6 +60,8 @@ public class WorkerProductService {
         this.environment = environment;
     }
 
+    private record CustomProductDetail(ProductDetail detail, String imageDefaultKey) { }
+
     /**
      * Method fetches a list of ProductResponse. Note fetchAllProductsWorker query method returns a list of
      * ProductPojo using spring jpa projection. It only returns a Product not Including its details.
@@ -75,6 +77,7 @@ public class WorkerProductService {
         return this.productRepository
                 .fetchAllProductsWorker(PageRequest.of(page, size))
                 .map(pojo -> {
+
                     var url = this.s3Service.getPreSignedUrl(bool, bucket, pojo.getKey());
                     return ProductResponse.builder()
                             .id(pojo.getUuid())
@@ -135,11 +138,12 @@ public class WorkerProductService {
 
         // Validate MultipartFile[] are all images
         CustomMultiPart[] list = validateMultiPartFile(files);
-        String defaultImageKey = "";
+        StringBuilder defaultImageKey = new StringBuilder();
+
         // Persist new ProductDetail if Product exist
         if (_product.isPresent()) {
             // Build ProductDetail
-            var detail = productDetail(dto, defaultImageKey, list, date);
+            var detail = productDetail(dto, defaultImageKey, list, date).detail();
             detail.setProduct(_product.get());
 
             // Add ProductDetail to Product, save and return response
@@ -148,18 +152,18 @@ public class WorkerProductService {
         }
 
         // Build/Save ProductDetail and Product
-        var detail = productDetail(dto, defaultImageKey, list, date);
+        var customProductDetail = productDetail(dto, defaultImageKey, list, date);
         var product = Product.builder()
                 .productCategory(category)
                 .uuid(UUID.randomUUID().toString())
                 .name(dto.getName().trim())
                 .description(dto.getDesc().trim())
-                .defaultKey(defaultImageKey)
+                .defaultKey(customProductDetail.imageDefaultKey())
                 .price(dto.getPrice())
                 .currency(dto.getCurrency()) // default is USD
                 .productDetails(new HashSet<>())
                 .build();
-        product.addDetail(detail);
+        product.addDetail(customProductDetail.detail());
 
         // Set ProductCollection to Product
         if (!dto.getCollection().isBlank()) {
@@ -181,7 +185,12 @@ public class WorkerProductService {
      * @throws S3Exception if an exception happens when uploading to s3
      * @return ProductDetail
      * */
-    private ProductDetail productDetail(CreateProductDTO dto, String defaultKey, CustomMultiPart[] files, Date createdAt) {
+    private CustomProductDetail productDetail(
+            CreateProductDTO dto,
+            StringBuilder defaultKey,
+            CustomMultiPart[] files,
+            Date createdAt
+    ) {
         var bucket = this.environment.getProperty("aws.bucket", "");
         var profile = this.environment.getProperty("spring.profiles.active", "");
 
@@ -217,7 +226,7 @@ public class WorkerProductService {
         for (CustomMultiPart obj : files) {
             // Set default key
             if (defaultKey.isEmpty()) {
-                defaultKey = obj.key();
+                defaultKey.append(obj.key());
             }
             var image = ProductImage.builder()
                     .imageKey(obj.key())
@@ -232,7 +241,7 @@ public class WorkerProductService {
             detail.addImages(image);
         }
 
-        return detail;
+        return new CustomProductDetail(detail, defaultKey.toString());
     }
 
     /**

@@ -37,10 +37,13 @@ public class ClientProductService {
         var bucket = this.environment.getProperty("aws.bucket", "");
 
         return this.productRepository
-                .fetchAllProductsClient(PageRequest.of(page, Math.min(size, 30))) //
+                .fetchAllProductsClient(PageRequest.of(page, Math.min(size, 40))) //
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, bucket, pojo.getKey());
                     return ProductResponse.builder()
+                            .category(pojo.getCategory())
+                            .collection(pojo.getCollection())
+                            .id(pojo.getUuid())
                             .name(pojo.getName())
                             .desc(pojo.getDesc())
                             .price(pojo.getPrice())
@@ -97,10 +100,12 @@ public class ClientProductService {
         var bucket = this.environment.getProperty("aws.bucket", "");
 
         return this.productRepository
-                .fetchByCategoryClient(name, PageRequest.of(page, Math.min(size, 30))) //
+                .fetchProductByCategoryClient(name, PageRequest.of(page, Math.min(size, 30))) //
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, bucket, pojo.getKey());
                     return ProductResponse.builder()
+                            .category(pojo.getCategory())
+                            .id(pojo.getUuid())
                             .name(pojo.getName())
                             .desc(pojo.getDesc())
                             .price(pojo.getPrice())
@@ -120,10 +125,12 @@ public class ClientProductService {
         var bucket = this.environment.getProperty("aws.bucket", "");
 
         return this.productRepository
-                .fetchByCollectionClient(name, PageRequest.of(page, Math.min(size, 30)))
+                .fetchByProductByCollectionClient(name, PageRequest.of(page, Math.min(size, 30)))
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, bucket, pojo.getKey());
                     return ProductResponse.builder()
+                            .collection(pojo.getCollection())
+                            .id(pojo.getUuid())
                             .name(pojo.getName())
                             .desc(pojo.getDesc())
                             .price(pojo.getPrice())

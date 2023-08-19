@@ -20,4 +20,6 @@ public class ProductResponse {
     private String currency;
     @JsonProperty(value = "image")
     private String imageUrl;
+    private String category;
+    private String collection;
 }

@@ -2,13 +2,18 @@ package com.emmanuel.sarabrandserver.test;
 
 import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
+import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
+import com.emmanuel.sarabrandserver.collection.repository.CollectionRepository;
 import com.emmanuel.sarabrandserver.product.entity.*;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.github.javafaker.Faker;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -19,10 +24,16 @@ import java.util.UUID;
 
 @Component
 @Profile(value = {"dev"})
+@Slf4j
 public class DummyDataDev {
 
     @Bean
-    public CommandLineRunner runner(CategoryRepository categoryRepo, ProductRepository productRepo, ProductDetailRepo detailRepo) {
+    public CommandLineRunner runner(
+            CategoryRepository categoryRepo,
+            CollectionRepository collRepo,
+            ProductRepository productRepo,
+            ProductDetailRepo detailRepo
+    ) {
         return args -> {
             categoryRepo.deleteAll();
             detailRepo.deleteAll();
@@ -104,6 +115,29 @@ public class DummyDataDev {
                     set.add(prodName);
                 }
             });
+
+            set.clear();
+            for (int i = 0; i < 20; i++) {
+                set.add(new Faker().commerce().department());
+            }
+
+            for (String s : set) {
+                var col = ProductCollection.builder()
+                        .collection(s)
+                        .createAt(new Date())
+                        .isVisible(true)
+                        .products(new HashSet<>())
+                        .build();
+                collRepo.save(col);
+            }
+
+            collRepo.findAll()
+                    .forEach(collection -> productRepo.findById(collection.getCollectionId())
+                            .ifPresent(product -> {
+                                product.setProductCollection(collection);
+                                productRepo.save(product);
+                            })
+                    );
         };
     }
 

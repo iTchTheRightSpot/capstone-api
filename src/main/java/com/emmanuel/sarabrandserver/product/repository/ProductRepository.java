@@ -39,20 +39,27 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query(value = """
     SELECT
+    p.uuid AS uuid,
     p.name AS name,
     p.description AS desc,
     p.price AS price,
     p.currency AS currency,
-    p.defaultKey AS key
+    p.defaultKey AS key,
+    col.collection AS collection,
+    cat.categoryName AS category
     FROM Product p
-    INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
-    INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
+    INNER JOIN ProductCollection col ON col.collectionId = p.productCollection.collectionId
+    INNER JOIN ProductCategory cat ON cat.categoryId = p.productCategory.categoryId
+    INNER JOIN ProductDetail pd ON pd.product.productId = p.productId
+    INNER JOIN ProductInventory inv ON inv.productInventoryId = pd.productInventory.productInventoryId
     WHERE pd.isVisible = true AND inv.quantity > 0
+    GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
     """)
     Page<ProductPojo> fetchAllProductsClient(Pageable pageable);
 
     @Query(value = """
     SELECT
+    pd.sku AS sku,
     ps.size AS size,
     pc.colour AS colour,
     GROUP_CONCAT(DISTINCT (img.imageKey)) AS image
@@ -105,33 +112,39 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query(value = """
     SELECT
+    p.uuid AS uuid,
     p.name AS name,
     p.description AS desc,
     p.price AS price,
     p.currency AS currency,
-    p.defaultKey AS key
+    p.defaultKey AS key,
+    pc.categoryName AS category
     FROM Product p
     INNER JOIN ProductCategory pc ON p.productCategory.categoryId = pc.categoryId
     INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
     INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
     WHERE pd.isVisible = true AND inv.quantity > 0 AND pc.categoryName = :name
+    GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
     """)
-    Page<ProductPojo> fetchByCategoryClient(String name, Pageable page);
+    Page<ProductPojo> fetchProductByCategoryClient(String name, Pageable page);
 
     @Query(value = """
     SELECT
+    p.uuid AS uuid,
     p.name AS name,
     p.description AS desc,
     p.price AS price,
     p.currency AS currency,
-    p.defaultKey AS key
+    p.defaultKey AS key,
+    pc.collection AS collection
     FROM Product p
     INNER JOIN ProductCollection pc ON p.productCollection.collectionId = pc.collectionId
     INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
     INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
     WHERE pd.isVisible = true AND inv.quantity > 0 AND pc.collection = :name
+    GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
     """)
-    Page<ProductPojo> fetchByCollectionClient(String name, Pageable page);
+    Page<ProductPojo> fetchByProductByCollectionClient(String name, Pageable page);
 
     @Query(value = """
     SELECT img.imageKey as image

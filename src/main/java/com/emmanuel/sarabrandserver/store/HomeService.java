@@ -20,7 +20,7 @@ public class HomeService {
     /** Returns pre-signed url which is a background pictures. */
     public ResponseEntity<?> fetchHomeBackground() {
         var profile = this.environment.getProperty("spring.profiles.active", "");
-        boolean bool = profile.equals("prod") || profile.equals("stage");
+        boolean bool = profile.equals("prod") || profile.equals("stage") || profile.equals("dev");
         var bucket = this.environment.getProperty("aws.bucket", "");
 
         // TODO store key in table

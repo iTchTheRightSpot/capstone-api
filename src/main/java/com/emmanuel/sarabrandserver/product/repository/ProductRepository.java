@@ -57,23 +57,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     """)
     Page<ProductPojo> fetchAllProductsClient(Pageable pageable);
 
-    @Query(value = """
-    SELECT
-    pd.sku AS sku,
-    ps.size AS size,
-    pc.colour AS colour,
-    GROUP_CONCAT(DISTINCT (img.imageKey)) AS image
-    FROM Product p
-    INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
-    INNER JOIN ProductSize ps ON pd.productSize.productSizeId = ps.productSizeId
-    INNER JOIN ProductImage img ON pd.productDetailId = img.productDetails.productDetailId
-    INNER JOIN ProductColour pc ON pd.productColour.productColourId = pc.productColourId
-    INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
-    WHERE pd.isVisible = true AND inv.quantity > 0 AND p.name = :name
-    GROUP BY ps.size, pc.colour
-    """)
-    List<DetailPojo> fetchDetailClient(@Param(value = "name") String name);
-
     @Query(value = "SELECT det FROM ProductDetail det WHERE det.sku = :sku")
     Optional<ProductDetail> findDetailBySku(@Param(value = "sku") String sku);
 

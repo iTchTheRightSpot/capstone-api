@@ -26,9 +26,9 @@ public class ClientProductController {
     }
 
     /** Returns a list of DetailResponse objects */
-    @GetMapping(path = "/{name}", produces = "application/json")
-    public ResponseEntity<?> fetchProductDetails(@NotNull @PathVariable(value = "name") String name) {
-        return new ResponseEntity<>(this.clientProductService.fetchAll(name), OK);
+    @GetMapping(path = "/detail", produces = "application/json")
+    public ResponseEntity<?> fetchProductDetails(@NotNull @RequestParam(value = "id") String uuid) {
+        return new ResponseEntity<>(this.clientProductService.fetchAll(uuid), OK);
     }
 
 }

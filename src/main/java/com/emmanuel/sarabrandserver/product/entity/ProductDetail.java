@@ -10,7 +10,7 @@ import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 
-@Table(name = "product_detail")
+@Table(name = "product_detail", indexes = @Index(name = "ind_product_detail_sku", columnList = "sku"))
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor

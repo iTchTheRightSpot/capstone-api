@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 @Profile(value = {"dev"})
@@ -38,105 +39,139 @@ public class DummyDataDev {
             detailRepo.deleteAll();
             productRepo.deleteAll();
 
-//            Set<String> set = new HashSet<>();
-//            for (int i = 0; i < 10; i++) {
-//                set.add(new Faker().commerce().department());
-//            }
-//
-//            for (String s : set) {
-//                var category = ProductCategory.builder()
-//                        .categoryName(s)
-//                        .createAt(new Date())
-//                        .isVisible(true)
-//                        .productCategories(new HashSet<>())
-//                        .build();
-//                categoryRepo.save(category);
-//            }
-//
-//            set.clear();
-//
-//            categoryRepo.findAll().forEach(category -> {
-//                for (int i = 0; i < 5; i++) {
-//                    String prodName = new Faker().commerce().productName();
-//                    if (set.contains(prodName)) {
-//                        continue;
-//                    }
-//
-//                    var product = Product.builder()
-//                            .productCategory(category)
-//                            .uuid(UUID.randomUUID().toString())
-//                            .name(prodName)
-//                            .defaultKey("default key")
-//                            .description(new Faker().lorem().characters(50))
-//                            .price(new BigDecimal(new Faker().commerce().price()))
-//                            .currency("$")
-//                            .productDetails(new HashSet<>())
-//                            .build();
-//
-//                    for (int j = 0; j < 3; j++) {
-//                        // ProductSize
-//                        var size = ProductSize.builder()
-//                                .size(new Faker().numerify(String.valueOf(j)))
-//                                .productDetails(new HashSet<>())
-//                                .build();
-//                        // ProductInventory
-//                        var inventory = ProductInventory.builder()
-//                                .quantity(new Faker().number().numberBetween(10, 40))
-//                                .productDetails(new HashSet<>())
-//                                .build();
-//                        // ProductImage
-//                        var image = ProductImage.builder()
-//                                .imageKey(UUID.randomUUID().toString())
-//                                .imagePath(new Faker().file().fileName())
-//                                .build();
-//                        // ProductColour
-//                        var colour = ProductColour.builder()
-//                                .colour(new Faker().color().name())
-//                                .productDetails(new HashSet<>())
-//                                .build();
-//                        // ProductDetail
-//                        var detail = ProductDetail.builder()
-//                                .sku(UUID.randomUUID().toString())
-//                                .isVisible(true)
-//                                .createAt(new Date())
-//                                .modifiedAt(null)
-//                                .productImages(new HashSet<>())
-//                                .build();
-//                        detail.addImages(image);
-//                        detail.setProductSize(size);
-//                        detail.setProductInventory(inventory);
-//                        detail.setProductColour(colour);
-//                        // Add detail to product
-//                        product.addDetail(detail);
-//                    }
-//
-//                    productRepo.save(product);
-//                    set.add(prodName);
-//                }
-//            });
-//
-//            set.clear();
-//            for (int i = 0; i < 20; i++) {
-//                set.add(new Faker().commerce().department());
-//            }
-//
-//            for (String s : set) {
-//                var col = ProductCollection.builder()
-//                        .collection(s)
-//                        .createAt(new Date())
-//                        .isVisible(true)
-//                        .products(new HashSet<>())
-//                        .build();
-//                collRepo.save(col);
-//            }
-//
-//            collRepo.findAll()
-//                    .forEach(collection -> productRepo.findById(collection.getCollectionId())
-//                            .ifPresent(product -> {
-//                                product.setProductCollection(collection);
-//                                productRepo.save(product);
-//                            })
-//                    );
+            Set<String> set = new HashSet<>();
+            for (int i = 0; i < 50; i++) {
+                set.add(new Faker().commerce().department());
+            }
+
+            for (String s : set) {
+                var category = ProductCategory.builder()
+                        .categoryName(s)
+                        .createAt(new Date())
+                        .isVisible(true)
+                        .productCategories(new HashSet<>())
+                        .build();
+                categoryRepo.save(category);
+            }
+
+            AtomicInteger g = new AtomicInteger(0);
+
+            categoryRepo.findAll().forEach(category -> {
+                var collection = ProductCollection.builder()
+                        .collection(category.getCategoryName() + (g.intValue() + 1))
+                        .createAt(new Date())
+                        .isVisible(true)
+                        .products(new HashSet<>())
+                        .build();
+
+                var saved = collRepo.save(collection);
+
+                String prodName = new Faker().commerce().productName() + (g.intValue() + 1);
+
+                var product = Product.builder()
+                        .productCategory(category)
+                        .productCollection(saved)
+                        .uuid(UUID.randomUUID().toString())
+                        .name(prodName)
+                        .defaultKey("default key")
+                        .description(new Faker().lorem().characters(50))
+                        .price(new BigDecimal(new Faker().commerce().price()))
+                        .currency("$")
+                        .productDetails(new HashSet<>())
+                        .build();
+
+                // ProductDetail
+                var detail = ProductDetail.builder()
+                        .sku(UUID.randomUUID().toString())
+                        .isVisible(true)
+                        .createAt(new Date())
+                        .modifiedAt(null)
+                        .productImages(new HashSet<>())
+                        .build();
+
+                // ProductSize
+                var size = ProductSize.builder()
+                        .size(String.valueOf(new Faker().number().randomDigitNotZero()))
+                        .productDetails(new HashSet<>())
+                        .build();
+                // ProductInventory
+                var inventory = ProductInventory.builder()
+                        .quantity(new Faker().number().numberBetween(10, 40))
+                        .productDetails(new HashSet<>())
+                        .build();
+
+                // ProductColour
+                var colour = ProductColour.builder()
+                        .colour(new Faker().color().name())
+                        .productDetails(new HashSet<>())
+                        .build();
+
+                detail.setProductSize(size);
+                detail.setProductInventory(inventory);
+                detail.setProductColour(colour);
+
+                for (int j = 0; j < 3; j++) {
+                    // ProductImage
+                    var image = ProductImage.builder()
+                            .imageKey(UUID.randomUUID().toString())
+                            .imagePath(new Faker().file().fileName())
+                            .build();
+                    detail.addImages(image);
+                }
+
+                // Add detail to product
+                product.addDetail(detail);
+
+                productRepo.save(product);
+            });
+
+            productRepo.findAll().forEach(product -> {
+                // ProductDetail
+                var detail = ProductDetail.builder()
+                        .sku(UUID.randomUUID().toString())
+                        .isVisible(true)
+                        .createAt(new Date())
+                        .modifiedAt(null)
+                        .product(product)
+                        .productImages(new HashSet<>())
+                        .build();
+
+                // ProductSize
+                var size = ProductSize.builder()
+                        .size(String.valueOf(new Faker().number().randomDigitNotZero()))
+                        .productDetails(new HashSet<>())
+                        .build();
+                // ProductInventory
+                var inventory = ProductInventory.builder()
+                        .quantity(new Faker().number().numberBetween(10, 40))
+                        .productDetails(new HashSet<>())
+                        .build();
+
+                // ProductColour
+                var colour = ProductColour.builder()
+                        .colour(new Faker().color().name())
+                        .productDetails(new HashSet<>())
+                        .build();
+
+                detail.setProductSize(size);
+                detail.setProductInventory(inventory);
+                detail.setProductColour(colour);
+
+                for (int j = 0; j < 3; j++) {
+                    // ProductImage
+                    var image = ProductImage.builder()
+                            .imageKey(UUID.randomUUID().toString())
+                            .imagePath(new Faker().file().fileName())
+                            .build();
+                    detail.addImages(image);
+                }
+
+                // Add detail to product
+//                product.addDetail(detail);
+
+                detailRepo.save(detail);
+            });
+
         };
     }
 

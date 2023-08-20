@@ -1,6 +1,7 @@
 package com.emmanuel.sarabrandserver.product.client;
 
 import com.emmanuel.sarabrandserver.aws.S3Service;
+import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.util.DetailResponse;
 import com.emmanuel.sarabrandserver.product.util.ProductResponse;
@@ -15,11 +16,18 @@ import java.util.List;
 @Service
 public class ClientProductService {
     private final ProductRepository productRepository;
+    private final ProductDetailRepo productDetailRepo;
     private final S3Service s3Service;
     private final Environment environment;
 
-    public ClientProductService(ProductRepository productRepository, S3Service s3Service, Environment environment) {
+    public ClientProductService(
+            ProductRepository productRepository,
+            ProductDetailRepo productDetailRepo,
+            S3Service s3Service,
+            Environment environment
+    ) {
         this.productRepository = productRepository;
+        this.productDetailRepo = productDetailRepo;
         this.s3Service = s3Service;
         this.environment = environment;
     }
@@ -54,17 +62,17 @@ public class ClientProductService {
     }
 
     /**
-     * Method list all ProductDetails bases on a Product name. A validation is made to make sure product visibility is
+     * Method list all ProductDetails bases on a Product uuid. A validation is made to make sure product visibility is
      * true and inventory count is greater than zero.
-     * @param name is the name of the product
+     * @param uuid is the uuid of the product
      * @return List of DetailResponse
      * */
-    public List<DetailResponse> fetchAll(String name) {
+    public List<DetailResponse> fetchAll(String uuid) {
         var profile = this.environment.getProperty("spring.profiles.active", "");
         boolean bool = profile.equals("prod") || profile.equals("stage");
         var bucket = this.environment.getProperty("aws.bucket", "");
 
-        return this.productRepository.fetchDetailClient(name) //
+        return this.productDetailRepo.fetchProductDetailByUUIDClient(uuid) //
                 .stream() //
                 .map(pojo -> {
                     var urls = Arrays.stream(pojo.getKey().split(","))

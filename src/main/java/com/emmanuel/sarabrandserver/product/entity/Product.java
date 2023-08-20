@@ -14,7 +14,7 @@ import java.util.Set;
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.LAZY;
 
-@Table(name = "product")
+@Table(name = "product", indexes = @Index(name = "ind_product_uuid", columnList = "uuid"))
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,7 +28,7 @@ public class Product implements Serializable {
     @Column(name = "product_id", nullable = false, unique = true)
     private Long productId;
 
-    @Column(name = "uuid", length = 36, nullable = false, unique = true, updatable = false)
+    @Column(name = "uuid", length = 36, nullable = false, unique = true)
     private String uuid;
 
     @Column(name = "name", length = 50, unique = true, nullable = false)

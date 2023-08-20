@@ -1,6 +1,7 @@
 package com.emmanuel.sarabrandserver.product.repository;
 
 import com.emmanuel.sarabrandserver.product.entity.ProductDetail;
+import com.emmanuel.sarabrandserver.product.projection.DetailPojo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.List;
 
 @Repository
 public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
@@ -33,5 +35,22 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
             @Param(value = "qty") int qty,
             @Param(value = "s") String size
     );
+
+    @Query(value = """
+    SELECT
+    pd.sku AS sku,
+    ps.size AS size,
+    pc.colour AS colour,
+    GROUP_CONCAT(DISTINCT (img.imageKey)) AS key
+    FROM Product p
+    INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
+    INNER JOIN ProductSize ps ON pd.productSize.productSizeId = ps.productSizeId
+    INNER JOIN ProductImage img ON pd.productDetailId = img.productDetails.productDetailId
+    INNER JOIN ProductColour pc ON pd.productColour.productColourId = pc.productColourId
+    INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
+    WHERE pd.isVisible = true AND inv.quantity > 0 AND p.uuid = :uuid
+    GROUP BY pd.sku
+    """)
+    List<DetailPojo> fetchProductDetailByUUIDClient(@Param(value = "uuid") String uuid);
 
 }

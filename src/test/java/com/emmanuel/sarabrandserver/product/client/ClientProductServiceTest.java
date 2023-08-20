@@ -2,6 +2,7 @@ package com.emmanuel.sarabrandserver.product.client;
 
 import com.emmanuel.sarabrandserver.aws.S3Service;
 import com.emmanuel.sarabrandserver.product.entity.*;
+import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,12 +25,13 @@ class ClientProductServiceTest {
     private ClientProductService clientService;
 
     @Mock private ProductRepository productRepository;
+    @Mock private ProductDetailRepo productDetailRepo;
     @Mock private S3Service s3Service;
     @Mock private Environment environment;
 
     @BeforeEach
     void setUp() {
-        this.clientService = new ClientProductService(this.productRepository, s3Service, environment);
+        this.clientService = new ClientProductService(this.productRepository, productDetailRepo, s3Service, environment);
     }
 
     @Test

@@ -71,7 +71,7 @@ public class WorkerProductService {
      * */
     public Page<ProductResponse> fetchAll(int page, int size) {
         var profile = this.environment.getProperty("spring.profiles.active", "");
-        boolean bool = profile.equals("prod") || profile.equals("stage") || profile.equals("dev");
+        boolean bool = profile.equals("prod") || profile.equals("stage");
         var bucket = this.environment.getProperty("aws.bucket", "");
 
         return this.productRepository
@@ -100,7 +100,7 @@ public class WorkerProductService {
      * */
     public Page<DetailResponse> fetchAll(String name, int page, int size) {
         var profile = this.environment.getProperty("spring.profiles.active", "");
-        boolean bool = profile.equals("prod") || profile.equals("stage") || profile.equals("dev");
+        boolean bool = profile.equals("prod") || profile.equals("stage");
         var bucket = this.environment.getProperty("aws.bucket", "");
 
         return this.productRepository
@@ -234,7 +234,7 @@ public class WorkerProductService {
                     .build();
 
             // Only upload to s3 in prod profile
-            if (profile.equals("prod") || profile.equals("stage") || profile.equals("dev")) {
+            if (profile.equals("prod") || profile.equals("stage")) {
                 this.s3Service.uploadToS3(obj.file(), obj.metadata(), bucket, obj.key());
             }
 
@@ -259,7 +259,6 @@ public class WorkerProductService {
                 dto.getDesc().trim(),
                 dto.getPrice()
         );
-
         return new ResponseEntity<>(OK);
     }
 
@@ -278,7 +277,6 @@ public class WorkerProductService {
                 dto.getQty(),
                 dto.getSize()
         );
-
         return new ResponseEntity<>(OK);
     }
 
@@ -298,7 +296,7 @@ public class WorkerProductService {
         var profile = this.environment.getProperty("spring.profiles.active", "");
         var bucket = this.environment.getProperty("aws.bucket", "");
 
-        if (profile.equals("prod") || profile.equals("stage") || profile.equals("dev"))  {
+        if (profile.equals("prod") || profile.equals("stage"))  {
             // Get all Images
             List<ObjectIdentifier> keys = this.productRepository.images(name.trim())
                     .stream() //
@@ -329,7 +327,7 @@ public class WorkerProductService {
         var profile = this.environment.getProperty("spring.profiles.active", "");
         var bucket = this.environment.getProperty("aws.bucket", "");
 
-        if (profile.equals("prod") || profile.equals("stage") || profile.equals("dev"))  {
+        if (profile.equals("prod") || profile.equals("stage"))  {
             List<ObjectIdentifier> keys = detail.getProductImages() //
                     .stream() //
                     .map(image -> ObjectIdentifier.builder().key(image.getImageKey()).build())
@@ -362,12 +360,12 @@ public class WorkerProductService {
 
         for (int i = 0; i < multipartFiles.length; i++) {
             String originalFileName = Objects
-                    .requireNonNull(multipartFiles[0].getOriginalFilename()); // Possibly throws a NullPointerException
+                    .requireNonNull(multipartFiles[i].getOriginalFilename()); // Possibly throws a NullPointerException
             File file = new File(originalFileName);
 
             try (FileOutputStream outputStream = new FileOutputStream(file)) {
                 // write MultipartFile to file
-                outputStream.write(multipartFiles[0].getBytes());
+                outputStream.write(multipartFiles[i].getBytes());
 
                 // Validate file is an image
                 String contentType = Files.probeContentType(file.toPath());
@@ -379,7 +377,7 @@ public class WorkerProductService {
                 // Create image metadata for storing in AWS
                 Map<String, String> metadata = new HashMap<>();
                 metadata.put("Content-Type", contentType);
-                metadata.put("Title", multipartFiles[0].getName());
+                metadata.put("Title", originalFileName);
                 metadata.put("Type", StringUtils.getFilenameExtension(originalFileName));
 
                 // Copy into array

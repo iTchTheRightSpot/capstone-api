@@ -5,6 +5,7 @@ import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.util.DetailResponse;
 import com.emmanuel.sarabrandserver.product.util.ProductResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
 
-@Service
+@Service @Slf4j
 public class ClientProductService {
     private final ProductRepository productRepository;
     private final ProductDetailRepo productDetailRepo;
@@ -75,7 +76,8 @@ public class ClientProductService {
         return this.productDetailRepo.fetchProductDetailByUUIDClient(uuid) //
                 .stream() //
                 .map(pojo -> {
-                    var urls = Arrays.stream(pojo.getKey().split(","))
+                    var urls = Arrays
+                            .stream(pojo.getKey().split(","))
                             .map(key -> this.s3Service.getPreSignedUrl(bool, bucket, key))
                             .toList();
 

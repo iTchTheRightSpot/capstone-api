@@ -47,8 +47,7 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     INNER JOIN ProductSize ps ON pd.productSize.productSizeId = ps.productSizeId
     INNER JOIN ProductImage img ON pd.productDetailId = img.productDetails.productDetailId
     INNER JOIN ProductColour pc ON pd.productColour.productColourId = pc.productColourId
-    INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
-    WHERE pd.isVisible = true AND inv.quantity > 0 AND p.uuid = :uuid
+    WHERE p.uuid = :uuid
     GROUP BY pd.sku
     """)
     List<DetailPojo> fetchProductDetailByUUIDClient(@Param(value = "uuid") String uuid);

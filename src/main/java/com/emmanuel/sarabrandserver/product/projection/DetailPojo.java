@@ -7,5 +7,5 @@ public interface DetailPojo {
     String getSize();
     Integer getQty();
     String getColour();
-    String getKey();
+    String getKey(); // image keys
 }

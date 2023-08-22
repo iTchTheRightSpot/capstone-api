@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -47,6 +48,7 @@ import java.util.function.Consumer;
 
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED;
 
 /** API docs using session <a href="https://docs.spring.io/spring-session/reference/api.html">...</a> */
@@ -116,15 +118,16 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder(15);
     }
 
-    @Bean(name = "corsConfig")
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        List<String> allowOrigins = new ArrayList<>(3);
+        List<String> allowOrigins = new ArrayList<>(4);
         allowOrigins.add("https://admin.emmanueluluabuike.com/");
         allowOrigins.add("https://store.emmanueluluabuike.com/");
 
         var profile = this.environment.getProperty("spring.profiles.active", "");
         if (profile.equals("dev") || profile.equals("test")) {
             allowOrigins.add("http://localhost:4200/");
+            allowOrigins.add("http://localhost:4401/");
         }
 
         CorsConfiguration configuration = new CorsConfiguration();
@@ -143,12 +146,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(
             HttpSecurity http,
-            CorsConfigurationSource corsConfig,
             @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry,
             SecurityContextRepository contextRepository
     ) throws Exception {
-        var JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
-        var domain = this.environment.getProperty("server.servlet.session.cookie.domain");
+        var JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name", "");
+        var domain = this.environment.getProperty("server.servlet.session.cookie.domain", "");
         var profile = this.environment.getProperty("spring.profiles.active", "");
         var csrfTokenRepository = getCookieCsrfTokenRepository(domain, profile);
         int MAXSESSION = this.environment.getProperty("custom.session", Integer.class, -1);
@@ -158,7 +160,7 @@ public class SecurityConfig {
                         .csrfTokenRepository(csrfTokenRepository)
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                 )
-                .cors(cors -> cors.configurationSource(corsConfig))
+                .cors(withDefaults())
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
                             "/api/v1/home/**",

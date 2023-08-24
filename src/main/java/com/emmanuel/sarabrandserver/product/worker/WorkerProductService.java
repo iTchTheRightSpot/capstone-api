@@ -154,7 +154,7 @@ public class WorkerProductService {
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
         var bucket = this.environment.getProperty("aws.bucket", "");
         var profile = this.environment.getProperty("spring.profiles.active", "");
-        boolean bool = profile.equals("prod") || profile.equals("stage") || profile.equals("dev");
+        boolean bool = profile.equals("prod") || profile.equals("stage");
 
         StringBuilder defaultImageKey = new StringBuilder();
         // Validate MultipartFile[] are all images

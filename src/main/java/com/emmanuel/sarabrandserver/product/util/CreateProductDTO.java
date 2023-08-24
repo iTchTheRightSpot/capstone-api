@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -53,12 +54,17 @@ public class CreateProductDTO implements Serializable {
     private Boolean visible;
 
     @JsonProperty(required = true, value = "sizeInventory")
-    @NotNull(message = "Size and Inventory cannot be empty")
-    private String[] sizeInventory;
+    @NotNull(message = "Size or Inventory cannot be empty")
+    private SizeInventoryDTO[] sizeInventory;
 
     @JsonProperty(required = true, value = "colour")
     @NotNull(message = "Please enter or choose product colour")
     @NotEmpty(message = "Please enter or choose product colour")
     private String colour;
+
+    @JsonProperty(required = true, value = "files")
+    @NotNull(message = "Please enter or choose product image")
+    @NotEmpty(message = "Please enter or choose product image")
+    private MultipartFile[] files;
 
 }

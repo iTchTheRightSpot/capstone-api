@@ -3,28 +3,22 @@ package com.emmanuel.sarabrandserver.product.worker;
 import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
 import com.emmanuel.sarabrandserver.product.util.DetailDTO;
 import com.emmanuel.sarabrandserver.product.util.ProductDTO;
-import com.emmanuel.sarabrandserver.product.util.SizeInventoryDTO;
-import com.emmanuel.sarabrandserver.util.CustomUtil;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("api/v1/worker/product")
 @PreAuthorize(value = "hasRole('ROLE_WORKER')")
-@Slf4j
 public class WorkerProductController {
     private final WorkerProductService workerProductService;
-    private final CustomUtil customUtil;
 
-    public WorkerProductController(WorkerProductService workerProductService, CustomUtil customUtil) {
+    public WorkerProductController(WorkerProductService workerProductService) {
         this.workerProductService = workerProductService;
-        this.customUtil = customUtil;
     }
 
     /**
@@ -59,13 +53,9 @@ public class WorkerProductController {
         return new ResponseEntity<>(this.workerProductService.fetchAll(name, page, Math.min(size, 30)), HttpStatus.OK);
     }
 
-    @PostMapping(consumes = "multipart/form-data")
-    public ResponseEntity<?> create(
-            @Valid @ModelAttribute CreateProductDTO dto,
-            @RequestParam(name = "files") MultipartFile[] files
-    ) {
-        SizeInventoryDTO[] converter = this.customUtil.converter(dto.getSizeInventory());
-        return workerProductService.create(dto, converter, files);
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> create(@Valid @ModelAttribute CreateProductDTO dto) {
+        return workerProductService.create(dto, dto.getSizeInventory(), dto.getFiles());
     }
 
     /**

@@ -28,6 +28,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -56,14 +57,21 @@ class WorkerProductControllerTest {
     private final StringBuilder colour = new StringBuilder();
     private final StringBuilder productName = new StringBuilder();
 
-    @Autowired private MockMvc MOCK_MVC;
-    @Autowired private WorkerProductService workerService;
-    @Autowired private ProductRepository productRepository;
-    @Autowired private WorkerCategoryService workerCategoryService;
-    @Autowired private CategoryRepository categoryRepository;
-    @Autowired private ProductDetailRepo productDetailRepo;
+    @Autowired
+    private MockMvc MOCK_MVC;
+    @Autowired
+    private WorkerProductService workerService;
+    @Autowired
+    private ProductRepository productRepository;
+    @Autowired
+    private WorkerCategoryService workerCategoryService;
+    @Autowired
+    private CategoryRepository categoryRepository;
+    @Autowired
+    private ProductDetailRepo productDetailRepo;
 
-    @Container private static final MySQLContainer<?> container;
+    @Container
+    private static final MySQLContainer<?> container;
 
     static {
         container = new MySQLContainer<>("mysql:latest")
@@ -161,7 +169,7 @@ class WorkerProductControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Fetch all Products")
     void fetchAll() throws Exception {
         // Then
@@ -176,7 +184,7 @@ class WorkerProductControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Create a product")
     void create() throws Exception {
         // Given
@@ -218,13 +226,11 @@ class WorkerProductControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
-    @DisplayName(
-            value = """
-                    Validates duplicate exception is thrown on creation of a new product.
-                    Exception is cause from duplicate product colour
-                    """
-    )
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @DisplayName(value = """
+            Validates duplicate exception is thrown on creation of a new product.
+            Exception is cause from duplicate product colour
+            """)
     void ex() throws Exception {
         // Given
         String[] sizeInventoryDTO = {
@@ -265,7 +271,81 @@ class WorkerProductControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @DisplayName(value = "Validates bad request because sizeInventory JsonProperty is not present")
+    void exThrown() throws Exception {
+        // Then
+        this.MOCK_MVC
+                .perform(multipart(requestMapping)
+                        .file(new MockMultipartFile(
+                                "files",
+                                "uploads/image1.jpeg",
+                                "image/jpeg",
+                                "Test image content".getBytes()
+                        ))
+                        .file(new MockMultipartFile(
+                                "files",
+                                "uploads/image2.jpeg",
+                                "image/jpeg",
+                                "Test image content".getBytes()
+                        ))
+                        .param("category", this.category.toString())
+                        .param("collection", "")
+                        .param("name", new Faker().commerce().productName())
+                        .param("desc", new Faker().lorem().characters(255))
+                        .param("price", new BigDecimal(new Faker().commerce().price()).toString())
+                        .param("currency", "USD")
+                        .param("visible", "true")
+                        .param("colour", new Faker().commerce().color())
+                        .with(csrf())
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @DisplayName(value = "Validates Bad request due to sizeInventory[i] being null")
+    void variableThrown() throws Exception {
+        // Given
+        String[] sizeInventoryDTO = {
+                SizeInventoryDTO.builder().size("small").qty(10).build().toJson().toString(),
+                null,
+                SizeInventoryDTO.builder().size("large").qty(15).build().toJson().toString(),
+        };
+
+        // Then
+        this.MOCK_MVC
+                .perform(multipart(requestMapping)
+                        .file(new MockMultipartFile(
+                                "files",
+                                "uploads/image1.jpeg",
+                                "image/jpeg",
+                                "Test image content".getBytes()
+                        ))
+                        .file(new MockMultipartFile(
+                                "files",
+                                "uploads/image2.jpeg",
+                                "image/jpeg",
+                                "Test image content".getBytes()
+                        ))
+                        .param("category", this.category.toString())
+                        .param("collection", "")
+                        .param("sizeInventory", sizeInventoryDTO[0])
+                        .param("sizeInventory", sizeInventoryDTO[1])
+                        .param("sizeInventory", sizeInventoryDTO[2])
+                        .param("name", new Faker().commerce().productName())
+                        .param("desc", new Faker().lorem().characters(255))
+                        .param("price", new BigDecimal(new Faker().commerce().price()).toString())
+                        .param("currency", "USD")
+                        .param("visible", "true")
+                        .param("colour", new Faker().commerce().color())
+                        .with(csrf())
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Fetch ProductDetails")
     void fetchAllDetail() throws Exception {
         this.MOCK_MVC
@@ -279,7 +359,7 @@ class WorkerProductControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Testing update a Product.")
     void updateProduct() throws Exception {
         // Given
@@ -302,7 +382,7 @@ class WorkerProductControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Testing update a Product. Only difference is Product name is still the same")
     void update() throws Exception {
         // Given
@@ -325,7 +405,7 @@ class WorkerProductControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Testing updating ProductDetail. Note ProductImage aren't updated")
     void updateDetail() throws Exception {
         var detail = this.productDetailRepo.findAll().get(0);
@@ -350,7 +430,8 @@ class WorkerProductControllerTest {
         assertEquals(dto.getSize(), findDetail.get().getSizeInventory().getSize());
     }
 
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = { "WORKER" })
+    @Test
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void deleteProduct() throws Exception {
         this.MOCK_MVC.perform(delete(requestMapping + "/{name}", this.productName).with(csrf()))
                 .andExpect(status().isNoContent());

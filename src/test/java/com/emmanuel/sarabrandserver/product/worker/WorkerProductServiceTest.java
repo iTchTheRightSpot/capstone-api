@@ -1,16 +1,17 @@
 package com.emmanuel.sarabrandserver.product.worker;
 
 import com.emmanuel.sarabrandserver.aws.S3Service;
-import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
-import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
-import com.emmanuel.sarabrandserver.product.entity.*;
+import com.emmanuel.sarabrandserver.product.entity.Product;
+import com.emmanuel.sarabrandserver.product.entity.ProductDetail;
+import com.emmanuel.sarabrandserver.product.entity.ProductImage;
+import com.emmanuel.sarabrandserver.product.entity.ProductSizeInventory;
 import com.emmanuel.sarabrandserver.product.projection.DetailPojo;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
-import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
+import com.emmanuel.sarabrandserver.product.repository.ProductSizeInventoryRepository;
 import com.emmanuel.sarabrandserver.product.util.DetailDTO;
 import com.emmanuel.sarabrandserver.product.util.ProductDTO;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
@@ -26,7 +27,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -38,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.springframework.http.HttpStatus.CREATED;
 
 @ExtendWith({MockitoExtension.class, SpringExtension.class})
 @ActiveProfiles("test")
@@ -47,6 +46,7 @@ class WorkerProductServiceTest {
     private WorkerProductService productService;
 
     @Mock private ProductRepository productRepository;
+    @Mock private ProductSizeInventoryRepository sizeInventoryRepository;
     @Mock private WorkerCategoryService workerCategoryService;
     @Mock private CustomUtil customUtil;
     @Mock private WorkerCollectionService collectionService;
@@ -59,11 +59,12 @@ class WorkerProductServiceTest {
         this.productService = new WorkerProductService(
                 this.productRepository,
                 this.detailRepo,
+                this.sizeInventoryRepository,
                 this.workerCategoryService,
                 this.customUtil,
                 this.collectionService,
                 this.s3Service,
-                environment
+                this.environment
         );
     }
 
@@ -124,146 +125,6 @@ class WorkerProductServiceTest {
 
         // Then
         assertEquals(30, this.productService.fetchAll("products", 0, 40).getSize());
-    }
-
-    /** Simulates creating a product with name not existing */
-    @Test
-    void create() {
-        // Given
-        MockMultipartFile[] arr = {
-                new MockMultipartFile(
-                        "file",
-                        "uploads/image1.jpeg",
-                        "image/jpeg",
-                        "Test image content".getBytes()
-                ),
-                new MockMultipartFile(
-                        "file",
-                        "uploads/image2.jpeg",
-                        "image/jpeg",
-                        "Test image content".getBytes()
-                ),
-                new MockMultipartFile(
-                        "file",
-                        "uploads/image3.jpeg",
-                        "image/jpeg",
-                        "Test image content".getBytes()
-                ),
-        };
-
-        var product = products().get(0);
-        var dto = CreateProductDTO.builder()
-                .category("Example Category")
-                .collection("Example Collection")
-                .name(product.getName())
-                .desc(product.getDescription())
-                .price(product.getPrice())
-                .currency(product.getCurrency())
-                .visible(true)
-                .qty(50)
-                .size("medium")
-                .colour("red")
-                .build();
-        var category = ProductCategory.builder()
-                .categoryName("Example Category")
-                .createAt(new Date())
-                .modifiedAt(null)
-                .isVisible(true)
-                .productCategories(new HashSet<>())
-                .product(new HashSet<>())
-                .build();
-        category.addProduct(product);
-
-        var collection = ProductCollection.builder()
-                .collection("Example Collection")
-                .products(new HashSet<>())
-                .createAt(new Date())
-                .modifiedAt(null)
-                .isVisible(true)
-                .build();
-        collection.addProduct(product);
-
-        // When
-        doReturn(category).when(this.workerCategoryService).findByName(anyString());
-        doReturn(Optional.empty()).when(this.productRepository).findByProductName(anyString());
-        doReturn(Optional.of(new Date())).when(this.customUtil).toUTC(any(Date.class));
-        doReturn(product).when(this.productRepository).save(any(Product.class));
-        doReturn(collection).when(this.collectionService).findByName(dto.getCollection());
-        when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
-
-        // Then
-        assertEquals(CREATED, this.productService.create(dto, arr).getStatusCode());
-        verify(this.productRepository, times(1)).save(any(Product.class));
-    }
-
-    /** Simulates creating a ProductDetail when product name exists */
-    @Test
-    void createExist() {
-        // Given
-        MockMultipartFile[] arr = {
-                new MockMultipartFile(
-                        "file",
-                        "uploads/image1.jpeg",
-                        "image/jpeg",
-                        "Test image content".getBytes()
-                ),
-                new MockMultipartFile(
-                        "file",
-                        "uploads/image3.jpeg",
-                        "image/jpeg",
-                        "Test image content".getBytes()
-                ),
-                new MockMultipartFile(
-                        "file",
-                        "uploads/image2.jpeg",
-                        "image/jpeg",
-                        "Test image content".getBytes()
-                ),
-        };
-
-        var product = products().get(0);
-        var dto = CreateProductDTO.builder()
-                .category("Example Category")
-                .collection("Example Collection")
-                .name(product.getName())
-                .desc(product.getDescription())
-                .price(product.getPrice())
-                .currency(product.getCurrency())
-                .visible(true)
-                .qty(50)
-                .size("medium")
-                .colour("red")
-                .build();
-        var category = ProductCategory.builder()
-                .categoryName("Example Category")
-                .createAt(new Date())
-                .modifiedAt(null)
-                .isVisible(true)
-                .productCategories(new HashSet<>())
-                .product(new HashSet<>())
-                .build();
-        category.addProduct(product);
-
-        var collection = ProductCollection.builder()
-                .collection("Example Collection")
-                .products(new HashSet<>())
-                .createAt(new Date())
-                .modifiedAt(null)
-                .isVisible(true)
-                .build();
-        collection.addProduct(product);
-
-
-        // When
-        when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
-        doReturn(category).when(this.workerCategoryService).findByName(anyString());
-        doReturn(Optional.of(product)).when(this.productRepository).findByProductName(anyString());
-        doReturn(Optional.of(new Date())).when(this.customUtil).toUTC(any(Date.class));
-
-        // Then
-        assertEquals(CREATED, this.productService.create(dto, arr).getStatusCode());
-        verify(this.detailRepo, times(1)).save(any(ProductDetail.class));
-        verify(this.workerCategoryService, times(1)).findByName(any(String.class));
     }
 
     @Test
@@ -344,9 +205,7 @@ class WorkerProductServiceTest {
                 .sku(sku)
                 .isVisible(true)
                 .createAt(new Date())
-                .productSize(new ProductSize("Medium"))
-                .productInventory(new ProductInventory(new Faker().number().numberBetween(30, 50)))
-                .productColour(new ProductColour("Brown"))
+                .sizeInventory(new ProductSizeInventory("medium", 20))
                 .product(products().get(0))
                 .productImages(new HashSet<>())
                 .build();
@@ -379,25 +238,10 @@ class WorkerProductServiceTest {
                     .build();
 
             for (int j = 0; j < 3; j++) {
-                // ProductSize
-                var size = ProductSize.builder()
-                        .size(new Faker().numerify(String.valueOf(j)))
-                        .productDetails(new HashSet<>())
-                        .build();
-                // ProductInventory
-                var inventory = ProductInventory.builder()
-                        .quantity(new Faker().number().numberBetween(10, 40))
-                        .productDetails(new HashSet<>())
-                        .build();
                 // ProductImage
                 var image = ProductImage.builder()
                         .imageKey(UUID.randomUUID().toString())
                         .imagePath(new Faker().file().fileName())
-                        .build();
-                // ProductColour
-                var colour = ProductColour.builder()
-                        .colour(new Faker().color().name())
-                        .productDetails(new HashSet<>())
                         .build();
                 // ProductDetail
                 var detail = ProductDetail.builder()
@@ -408,11 +252,8 @@ class WorkerProductServiceTest {
                         .productImages(new HashSet<>())
                         .build();
                 detail.addImages(image);
-                detail.setProductSize(size);
-                detail.setProductInventory(inventory);
-                detail.setProductColour(colour);
                 // Add detail to product
-                product.addDetail(detail);
+//                product.addDetail(detail);
             }
             list.add(product);
         }

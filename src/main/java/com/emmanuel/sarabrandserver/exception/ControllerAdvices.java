@@ -14,9 +14,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-
 import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
 import static org.springframework.http.HttpStatus.*;
 
@@ -29,66 +26,42 @@ public class ControllerAdvices {
         this.environment = environment;
     }
 
-    private record ExceptionDetails(String message, HttpStatus httpStatus, ZonedDateTime timestamp) { }
+    private record ExceptionDetails(String message, HttpStatus httpStatus) { }
 
     @ExceptionHandler(value = {DuplicateException.class})
     public ResponseEntity<?> duplicateException(Exception ex) {
-        var exceptionDetails = new ExceptionDetails(
-                ex.getMessage(),
-                CONFLICT,
-                ZonedDateTime.now(ZoneId.of("UTC"))
-        );
+        var exceptionDetails = new ExceptionDetails(ex.getMessage(), CONFLICT);
         return new ResponseEntity<>(exceptionDetails, CONFLICT);
     }
 
     @ExceptionHandler(value = {CustomNotFoundException.class})
     public ResponseEntity<?> customNotFoundException(Exception ex) {
-        var exceptionDetails = new ExceptionDetails(
-                ex.getMessage(),
-                NOT_FOUND,
-                ZonedDateTime.now(ZoneId.of("UTC"))
-        );
+        var exceptionDetails = new ExceptionDetails(ex.getMessage(), NOT_FOUND);
         return new ResponseEntity<>(exceptionDetails, NOT_FOUND);
     }
 
     @ExceptionHandler(value = {AuthenticationException.class, UsernameNotFoundException.class})
     public ResponseEntity<?> authenticationException(Exception e) {
-        var exceptionDetails = new ExceptionDetails(
-                e.getMessage(),
-                UNAUTHORIZED,
-                ZonedDateTime.now(ZoneId.of("UTC"))
-        );
+        var exceptionDetails = new ExceptionDetails(e.getMessage(), UNAUTHORIZED);
         return new ResponseEntity<>(exceptionDetails, UNAUTHORIZED);
     }
 
     @ExceptionHandler(value = {AccessDeniedException.class})
     public ResponseEntity<?> accessException(Exception e) {
-        var exceptionDetails = new ExceptionDetails(
-                e.getMessage(),
-                FORBIDDEN,
-                ZonedDateTime.now(ZoneId.of("UTC"))
-        );
+        var exceptionDetails = new ExceptionDetails(e.getMessage(), FORBIDDEN);
         return new ResponseEntity<>(exceptionDetails, FORBIDDEN);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<?> handleMaxFileSizeExceeded() {
         var maxSize = this.environment.getProperty("spring.servlet.multipart.max-file-size", "");
-        var exceptionDetails = new ExceptionDetails(
-                "File size exceeds the limit of %s bytes".formatted(maxSize),
-                PAYLOAD_TOO_LARGE,
-                ZonedDateTime.now(ZoneId.of("UTC"))
-        );
+        var exceptionDetails = new ExceptionDetails("File size exceeds the limit of %s bytes".formatted(maxSize), PAYLOAD_TOO_LARGE);
         return new ResponseEntity<>(exceptionDetails, PAYLOAD_TOO_LARGE);
     }
 
     @ExceptionHandler({S3Exception.class, CustomAwsException.class})
     public ResponseEntity<?> awsException(Exception ex) {
-        var details = new ExceptionDetails(
-                ex.getMessage(),
-                INTERNAL_SERVER_ERROR,
-                ZonedDateTime.now(ZoneId.of("UTC"))
-        );
+        var details = new ExceptionDetails(ex.getMessage(), INTERNAL_SERVER_ERROR);
         return new ResponseEntity<>(details, INTERNAL_SERVER_ERROR);
     }
 
@@ -104,12 +77,14 @@ public class ControllerAdvices {
             sb.append(fieldName).append(": ").append(errMessage).append(lineSeparator);
         });
 
-        var details = new ExceptionDetails(
-                sb.toString(),
-                BAD_REQUEST,
-                ZonedDateTime.now(ZoneId.of("UTC"))
-        );
+        var details = new ExceptionDetails(sb.toString(), BAD_REQUEST);
 
+        return new ResponseEntity<>(details, BAD_REQUEST);
+    }
+
+    @ExceptionHandler({InvalidFormat.class})
+    public ResponseEntity<?> formatException(Exception ex) {
+        var details = new ExceptionDetails(ex.getMessage(), BAD_REQUEST);
         return new ResponseEntity<>(details, BAD_REQUEST);
     }
 

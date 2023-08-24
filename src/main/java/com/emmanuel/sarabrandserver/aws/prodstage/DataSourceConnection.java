@@ -30,13 +30,15 @@ public class DataSourceConnection {
     private String dataSourceUrl;
 
     private final String awsSecret;
+    private final ObjectMapper objectMapper;
 
-    public DataSourceConnection(@Qualifier(value = "awsSecretString") String awsSecret) {
+    public DataSourceConnection(@Qualifier(value = "awsSecretString") String awsSecret, ObjectMapper objectMapper) {
         this.awsSecret = awsSecret;
+        this.objectMapper = objectMapper;
 
         if (this.awsSecret != null) {
             try {
-                var node = new ObjectMapper().readTree(this.awsSecret);
+                var node = this.objectMapper.readTree(this.awsSecret);
 
                 this.username = node.get("username").textValue();
                 this.password = node.get("password").textValue();

@@ -27,6 +27,9 @@ public class ProductDetail {
     @Column(name = "sku", nullable = false, unique = true, length = 100)
     private String sku;
 
+    @Column(name = "colour", nullable = false, length = 100)
+    private String colour;
+
     @Column(name = "is_visible")
     private boolean isVisible;
 
@@ -39,16 +42,8 @@ public class ProductDetail {
     private Date modifiedAt;
 
     @ManyToOne(fetch = EAGER, cascade = ALL)
-    @JoinColumn(name = "size_id", referencedColumnName = "size_id", nullable = false)
-    private ProductSize productSize;
-
-    @ManyToOne(fetch = EAGER, cascade = ALL)
-    @JoinColumn(name = "inventory_id", referencedColumnName = "inventory_id", nullable = false)
-    private ProductInventory productInventory;
-
-    @ManyToOne(fetch = EAGER, cascade = ALL)
-    @JoinColumn(name = "colour_id", referencedColumnName = "colour_id", nullable = false)
-    private ProductColour productColour;
+    @JoinColumn(name = "size_inventory_id", referencedColumnName = "size_inventory_id", nullable = false)
+    private ProductSizeInventory sizeInventory;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "product_id", referencedColumnName = "product_id", nullable = false)
@@ -57,24 +52,16 @@ public class ProductDetail {
     @OneToMany(fetch = EAGER, cascade = ALL, mappedBy = "productDetails", orphanRemoval = true)
     private Set<ProductImage> productImages;
 
-    public void setProductSize(ProductSize productSize) {
-        this.productSize = productSize;
-        this.productSize.getProductDetails().add(this);
-    }
-
-    public void setProductInventory(ProductInventory productInventory) {
-        this.productInventory = productInventory;
-        this.productInventory.getProductDetails().add(this);
-    }
-
     public void addImages(ProductImage productImage) {
         this.productImages.add(productImage);
         productImage.setProductDetails(this);
     }
 
-    public void setProductColour(ProductColour productColour) {
-        this.productColour = productColour;
-        this.productColour.getProductDetails().add(this);
+    public void copyImageArray(ProductImage[] images) {
+        for (ProductImage image : images) {
+            this.productImages.add(image);
+            image.setProductDetails(this);
+        }
     }
 
 }

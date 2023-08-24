@@ -65,9 +65,4 @@ public class Product implements Serializable {
     @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "product", orphanRemoval = true)
     private Set<ProductDetail> productDetails;
 
-    public void addDetail(ProductDetail detail) {
-        this.productDetails.add(detail);
-        detail.setProduct(this);
-    }
-
 }

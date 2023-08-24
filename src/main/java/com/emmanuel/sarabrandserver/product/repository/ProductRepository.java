@@ -18,7 +18,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-/** All methods ending with worker are for admin dashboard. Client is the opposite */
+/**
+ * All methods ending with worker are for admin dashboard. Client is the opposite
+ */
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
@@ -26,35 +28,35 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findByProductName(@Param(value = "name") String name);
 
     @Query(value = """
-    SELECT
-    p.uuid AS uuid,
-    p.name AS name,
-    p.description AS desc,
-    p.price AS price,
-    p.currency AS currency,
-    p.defaultKey AS key
-    FROM Product p
-    """)
+            SELECT
+            p.uuid AS uuid,
+            p.name AS name,
+            p.description AS desc,
+            p.price AS price,
+            p.currency AS currency,
+            p.defaultKey AS key
+            FROM Product p
+            """)
     Page<ProductPojo> fetchAllProductsWorker(Pageable pageable);
 
     @Query(value = """
-    SELECT
-    p.uuid AS uuid,
-    p.name AS name,
-    p.description AS desc,
-    p.price AS price,
-    p.currency AS currency,
-    p.defaultKey AS key,
-    col.collection AS collection,
-    cat.categoryName AS category
-    FROM Product p
-    INNER JOIN ProductCollection col ON col.collectionId = p.productCollection.collectionId
-    INNER JOIN ProductCategory cat ON cat.categoryId = p.productCategory.categoryId
-    INNER JOIN ProductDetail pd ON pd.product.productId = p.productId
-    INNER JOIN ProductInventory inv ON inv.productInventoryId = pd.productInventory.productInventoryId
-    WHERE pd.isVisible = true AND inv.quantity > 0
-    GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
-    """)
+            SELECT
+            p.uuid AS uuid,
+            p.name AS name,
+            p.description AS desc,
+            p.price AS price,
+            p.currency AS currency,
+            p.defaultKey AS key,
+            col.collection AS collection,
+            cat.categoryName AS category
+            FROM Product p
+            INNER JOIN ProductCollection col ON col.collectionId = p.productCollection.collectionId
+            INNER JOIN ProductCategory cat ON cat.categoryId = p.productCategory.categoryId
+            INNER JOIN ProductDetail pd ON pd.product.productId = p.productId
+            INNER JOIN ProductSizeInventory inv ON inv.pairId = pd.sizeInventory.pairId
+            WHERE pd.isVisible = true AND inv.inventory > 0
+            GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
+            """)
     Page<ProductPojo> fetchAllProductsClient(Pageable pageable);
 
     @Query(value = "SELECT det FROM ProductDetail det WHERE det.sku = :sku")
@@ -63,10 +65,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = """
-    UPDATE Product p
-    SET p.name = :name, p.description = :desc, p.price = :price
-    WHERE p.uuid = :uuid
-    """)
+            UPDATE Product p
+            SET p.name = :name, p.description = :desc, p.price = :price
+            WHERE p.uuid = :uuid
+            """)
     void updateProduct(
             @Param(value = "uuid") String uuid,
             @Param(value = "name") String name,
@@ -75,67 +77,65 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     );
 
     @Query(value = """
-    SELECT
-    pd.sku AS sku,
-    pd.isVisible AS visible,
-    ps.size AS size,
-    inv.quantity AS qty,
-    pc.colour AS colour,
-    GROUP_CONCAT(DISTINCT (img.imageKey)) AS key
-    FROM ProductDetail pd
-    INNER JOIN Product p ON pd.product.productId = p.productId
-    INNER JOIN ProductSize ps ON pd.productSize.productSizeId = ps.productSizeId
-    INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
-    INNER JOIN ProductImage img ON pd.productDetailId = img.productDetails.productDetailId
-    INNER JOIN ProductColour pc ON pd.productColour.productColourId = pc.productColourId
-    WHERE p.name = :name
-    GROUP BY pd.sku, ps.size, pc.colour
-    """)
+            SELECT
+            pd.sku AS sku,
+            pd.isVisible AS visible,
+            ps.size AS size,
+            ps.inventory AS qty,
+            pd.colour AS colour,
+            GROUP_CONCAT(DISTINCT (img.imageKey)) AS key
+            FROM ProductDetail pd
+            INNER JOIN Product p ON pd.product.productId = p.productId
+            INNER JOIN ProductSizeInventory ps ON pd.sizeInventory.pairId = ps.pairId
+            INNER JOIN ProductImage img ON pd.productDetailId = img.productDetails.productDetailId
+            WHERE p.name = :name
+            GROUP BY pd.sku, ps.size, pd.colour
+            """)
     Page<DetailPojo> findDetailByProductNameWorker(@Param(value = "name") String name, Pageable page);
 
     @Query(value = """
-    SELECT
-    p.uuid AS uuid,
-    p.name AS name,
-    p.description AS desc,
-    p.price AS price,
-    p.currency AS currency,
-    p.defaultKey AS key,
-    pc.categoryName AS category
-    FROM Product p
-    INNER JOIN ProductCategory pc ON p.productCategory.categoryId = pc.categoryId
-    INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
-    INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
-    WHERE pd.isVisible = true AND inv.quantity > 0 AND pc.categoryName = :name
-    GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
-    """)
+            SELECT
+            p.uuid AS uuid,
+            p.name AS name,
+            p.description AS desc,
+            p.price AS price,
+            p.currency AS currency,
+            p.defaultKey AS key,
+            pc.categoryName AS category
+            FROM Product p
+            INNER JOIN ProductCategory pc ON p.productCategory.categoryId = pc.categoryId
+            INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
+            INNER JOIN ProductSizeInventory ps ON pd.sizeInventory.pairId = ps.pairId
+            WHERE pd.isVisible = true AND ps.inventory > 0 AND pc.categoryName = :name
+            GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
+            """)
     Page<ProductPojo> fetchProductByCategoryClient(String name, Pageable page);
 
     @Query(value = """
-    SELECT
-    p.uuid AS uuid,
-    p.name AS name,
-    p.description AS desc,
-    p.price AS price,
-    p.currency AS currency,
-    p.defaultKey AS key,
-    pc.collection AS collection
-    FROM Product p
-    INNER JOIN ProductCollection pc ON p.productCollection.collectionId = pc.collectionId
-    INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
-    INNER JOIN ProductInventory inv ON pd.productInventory.productInventoryId = inv.productInventoryId
-    WHERE pd.isVisible = true AND inv.quantity > 0 AND pc.collection = :name
-    GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
-    """)
+            SELECT
+            p.uuid AS uuid,
+            p.name AS name,
+            p.description AS desc,
+            p.price AS price,
+            p.currency AS currency,
+            p.defaultKey AS key,
+            pc.collection AS collection
+            FROM Product p
+            INNER JOIN ProductCollection pc ON p.productCollection.collectionId = pc.collectionId
+            INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
+            INNER JOIN ProductSizeInventory ps ON pd.sizeInventory.pairId = ps.pairId
+            WHERE pd.isVisible = true AND ps.inventory > 0 AND pc.collection = :name
+            GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
+            """)
     Page<ProductPojo> fetchByProductByCollectionClient(String name, Pageable page);
 
     @Query(value = """
-    SELECT img.imageKey as image
-    FROM ProductImage img
-    INNER JOIN ProductDetail pd ON img.productDetails.productDetailId = pd.productDetailId
-    INNER JOIN Product p ON p.productId = pd.product.productId
-    WHERE p.name = :name
-    """)
+            SELECT img.imageKey as image
+            FROM ProductImage img
+            INNER JOIN ProductDetail pd ON img.productDetails.productDetailId = pd.productDetailId
+            INNER JOIN Product p ON p.productId = pd.product.productId
+            WHERE p.name = :name
+            """)
     List<Imagez> images(@Param(value = "name") String name);
 
 }

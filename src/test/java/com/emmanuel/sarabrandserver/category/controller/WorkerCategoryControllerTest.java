@@ -95,7 +95,7 @@ class WorkerCategoryControllerTest {
         this.MOCK_MVC
                 .perform(get(requestMapping).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray());
+                .andExpect(jsonPath("$").isArray());
     }
 
     @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})

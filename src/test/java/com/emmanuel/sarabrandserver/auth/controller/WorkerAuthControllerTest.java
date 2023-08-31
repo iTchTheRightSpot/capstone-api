@@ -56,7 +56,8 @@ class WorkerAuthControllerTest {
     @Autowired private UserRepository userRepository;
     @Autowired private BruteForceService bruteForceService;
 
-    @Container private static final MySQLContainer<?> container;
+    @Container
+    private static final MySQLContainer<?> container;
 
     static {
         container = new MySQLContainer<>("mysql:latest")
@@ -92,8 +93,11 @@ class WorkerAuthControllerTest {
         this.userRepository.deleteAll();
     }
 
-    /** Method does two things in one. Login and Register. To register, worker has to have a role WORKER */
-    @Test @Order(1)
+    /**
+     * Method does two things in one. Login and Register. To register, worker has to have a role WORKER
+     */
+    @Test
+    @Order(1)
     void register() throws Exception {
         // Login
         MvcResult login = this.MOCK_MVC
@@ -125,8 +129,11 @@ class WorkerAuthControllerTest {
                 .andExpect(status().isCreated());
     }
 
-    /** Simulates registering an existing worker */
-    @Test @Order(2)
+    /**
+     * Simulates registering an existing worker
+     */
+    @Test
+    @Order(2)
     void register_with_existing_credentials() throws Exception {
         // Login
         MvcResult login = this.MOCK_MVC
@@ -157,7 +164,8 @@ class WorkerAuthControllerTest {
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException));
     }
 
-    @Test @Order(3)
+    @Test
+    @Order(3)
     void login_wrong_password() throws Exception {
         this.MOCK_MVC
                 .perform(post(requestMapping + "login")
@@ -170,8 +178,11 @@ class WorkerAuthControllerTest {
                 .andExpect(jsonPath("$.httpStatus").value("UNAUTHORIZED"));
     }
 
-    /** Validates cookie has been clear. But cookie will still be valid if it due to jwt being stateless */
-    @Test @Order(4)
+    /**
+     * Validates cookie has been clear. But cookie will still be valid if it due to jwt being stateless
+     */
+    @Test
+    @Order(4)
     void logout() throws Exception {
         // Login
         MvcResult login = this.MOCK_MVC
@@ -188,9 +199,12 @@ class WorkerAuthControllerTest {
         assertNotNull(cookie);
 
         // Logout
-        this.MOCK_MVC
+        MvcResult logout = this.MOCK_MVC
                 .perform(post("/api/v1/logout").cookie(cookie).with(csrf()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
+
+        cookie = logout.getResponse().getCookie(JSESSIONID); // This should be empty
 
         // Access protected route with invalid cookie
         this.MOCK_MVC

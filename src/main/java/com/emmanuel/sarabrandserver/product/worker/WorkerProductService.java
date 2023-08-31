@@ -254,11 +254,7 @@ public class WorkerProductService {
      */
     private void productImages(ProductDetail detail, CustomMultiPart[] files, boolean profile, String bucket) {
         for (CustomMultiPart file : files) {
-            var obj = ProductImage.builder()
-                    .productDetails(detail)
-                    .imageKey(file.key())
-                    .imagePath(file.file().getAbsolutePath())
-                    .build();
+            var obj = new ProductImage(file.key(), file.file().getAbsolutePath(), detail);
 
             // Upload image to S3 if in desired profile
             if (profile) {

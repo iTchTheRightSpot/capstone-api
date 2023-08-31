@@ -28,3 +28,7 @@ CREATE TABLE product_sku (
     PRIMARY KEY (sku_id),
     FOREIGN KEY (detail_id) references product_detail (detail_id)
 );
+
+# Migrate to JWT
+DROP TABLE IF EXISTS SPRING_SESSION_ATTRIBUTES;
+DROP TABLE IF EXISTS SPRING_SESSION;

@@ -2,6 +2,7 @@ package com.emmanuel.sarabrandserver.auth.service;
 
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
+import com.emmanuel.sarabrandserver.auth.jwt.JwtTokenService;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.user.entity.ClientRole;
@@ -16,14 +17,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.session.ConcurrentSessionControlAuthenticationStrategy;
-import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -44,13 +43,27 @@ import static org.springframework.http.HttpStatus.OK;
 @TestPropertySource(locations = "classpath:application-test.properties")
 class AuthServiceTest {
 
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
+
+    @Value(value = "${server.servlet.session.cookie.domain}")
+    private String COOKIEDOMAIN;
+
+    @Value(value = "${server.servlet.session.cookie.path}")
+    private String COOKIEPATH;
+
+    @Value(value = "${server.servlet.session.cookie.same-site}")
+    private String SAMESITE;
+
+    @Value(value = "${server.servlet.session.cookie.secure}")
+    private boolean COOKIESECURE;
+
     private AuthService authService;
 
     @Mock private UserRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private AuthenticationManager authenticationManager;
-    @Mock private SecurityContextRepository securityContextRepository;
-    @Mock private ConcurrentSessionControlAuthenticationStrategy strategy;
+    @Mock private JwtTokenService jwtTokenService;
 
     @BeforeEach
     void setUp() {
@@ -58,9 +71,13 @@ class AuthServiceTest {
                 this.userRepository,
                 this.passwordEncoder,
                 this.authenticationManager,
-                this.securityContextRepository,
-                this.strategy
+                this.jwtTokenService
         );
+        this.authService.setJSESSIONID(JSESSIONID);
+        this.authService.setDOMAIN(COOKIEDOMAIN);
+        this.authService.setCOOKIEPATH(COOKIEPATH);
+        this.authService.setCOOKIESECURE(COOKIESECURE);
+        this.authService.setSAMESITE(SAMESITE);
     }
 
     @Test

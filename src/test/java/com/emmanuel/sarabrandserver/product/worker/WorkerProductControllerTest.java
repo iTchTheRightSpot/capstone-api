@@ -57,20 +57,13 @@ class WorkerProductControllerTest {
     private final StringBuilder colour = new StringBuilder();
     private final StringBuilder productName = new StringBuilder();
 
-    @Autowired
-    private MockMvc MOCK_MVC;
-    @Autowired
-    private WorkerProductService workerService;
-    @Autowired
-    private ProductRepository productRepository;
-    @Autowired
-    private WorkerCategoryService workerCategoryService;
-    @Autowired
-    private CategoryRepository categoryRepository;
-    @Autowired
-    private ProductDetailRepo productDetailRepo;
-    @Autowired
-    private ProductSkuRepo productSkuRepo;
+    @Autowired private MockMvc MOCK_MVC;
+    @Autowired private WorkerProductService workerService;
+    @Autowired private ProductRepository productRepository;
+    @Autowired private WorkerCategoryService workerCategoryService;
+    @Autowired private CategoryRepository categoryRepository;
+    @Autowired private ProductDetailRepo productDetailRepo;
+    @Autowired private ProductSkuRepo productSkuRepo;
 
     @Container
     private static final MySQLContainer<?> container;
@@ -182,7 +175,7 @@ class WorkerProductControllerTest {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Fetch all Products")
+    @DisplayName(value = "Simulates fetching all Products")
     void fetchAll() throws Exception {
         // Then
         this.MOCK_MVC
@@ -197,7 +190,7 @@ class WorkerProductControllerTest {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Fetch ProductDetails by product uuid")
+    @DisplayName(value = "Simulates fetching ProductDetails by product uuid")
     void fetchAllDetail() throws Exception {
         var product = this.productRepository.findAll().stream().findFirst().orElse(null);
         assertNotNull(product);
@@ -209,7 +202,6 @@ class WorkerProductControllerTest {
                 .andExpect(jsonPath("$[*].variants").isArray())
                 .andDo(print());
     }
-
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})

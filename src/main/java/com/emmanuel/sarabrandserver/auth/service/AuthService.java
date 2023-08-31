@@ -2,27 +2,28 @@ package com.emmanuel.sarabrandserver.auth.service;
 
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
+import com.emmanuel.sarabrandserver.auth.jwt.JwtTokenService;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.user.entity.ClientRole;
 import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.session.ConcurrentSessionControlAuthenticationStrategy;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.HashSet;
 
 import static org.springframework.http.HttpStatus.CREATED;
@@ -31,27 +32,39 @@ import static org.springframework.http.HttpStatus.OK;
 @Service @Setter
 public class AuthService {
 
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
+
+    @Value(value = "${server.servlet.session.cookie.domain}")
+    private String DOMAIN;
+
+    @Value(value = "${server.servlet.session.cookie.http-only}")
+    private boolean HTTPONLY;
+
+    @Value(value = "${server.servlet.session.cookie.path}")
+    private String COOKIEPATH;
+
+    @Value(value = "${server.servlet.session.cookie.same-site}")
+    private String SAMESITE;
+
+    @Value(value = "${server.servlet.session.cookie.secure}")
+    private boolean COOKIESECURE;
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authManager;
-    private final SecurityContextRepository securityContextRepository;
-    private final SecurityContextHolderStrategy securityContextHolderStrategy;
-    private final ConcurrentSessionControlAuthenticationStrategy strategy;
+    private final JwtTokenService jwtTokenService;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authManager,
-            SecurityContextRepository securityContextRepository,
-            ConcurrentSessionControlAuthenticationStrategy strategy
+            JwtTokenService jwtTokenService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authManager = authManager;
-        this.securityContextRepository = securityContextRepository;
-        this.strategy = strategy;
-        // Info about securitycontextholder https://stackoverflow.com/questions/74458719/isnt-securitycontextholder-a-bean
-        this.securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
+        this.jwtTokenService = jwtTokenService;
     }
 
     /**
@@ -108,21 +121,27 @@ public class AuthService {
      * */
     @Transactional
     public ResponseEntity<?> login(LoginDTO dto, HttpServletRequest request, HttpServletResponse response) {
+        // No need to re-authenticate if request contains valid jwt cookie
+        if (_validateRequestContainsValidCookies(request)) {
+            return new ResponseEntity<>(OK);
+        }
+
         var unauthenticated = UsernamePasswordAuthenticationToken
                 .unauthenticated(dto.getPrincipal().trim(), dto.getPassword());
 
         var authenticated = this.authManager.authenticate(unauthenticated);
 
-        // Create a new context
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authenticated);
+        // Jwt Token
+        String token = this.jwtTokenService.generateToken(authenticated);
 
-        // Update SecurityContextHolder and Strategy
-        this.securityContextHolderStrategy.setContext(context);
-        this.securityContextRepository.saveContext(context, request, response);
-
-        // Needed to put a constraint on user session
-        this.strategy.onAuthentication(authenticated, request, response);
+        // Add jwt to cookie
+        Cookie jwtCookie = new Cookie(JSESSIONID, token);
+        jwtCookie.setDomain(DOMAIN);
+        jwtCookie.setMaxAge(this.jwtTokenService.maxAge());
+        jwtCookie.setHttpOnly(HTTPONLY);
+        jwtCookie.setPath(COOKIEPATH);
+        jwtCookie.setSecure(COOKIESECURE);
+        response.addCookie(jwtCookie);
 
         return new ResponseEntity<>(OK);
     }
@@ -143,6 +162,22 @@ public class AuthService {
                 .build();
         client.addRole(new ClientRole(RoleEnum.CLIENT));
         return client;
+    }
+
+    /**
+     * Method simply prevents user from signing in again if the request contains a valid jwt and LOGGEDSESSION cookie.
+     * @param res of HttpServletRequest
+     * @return CustomAuthResponse
+     * */
+    private boolean _validateRequestContainsValidCookies(HttpServletRequest res) {
+        Cookie[] cookies = res.getCookies();
+        // Base case
+        if (cookies == null)
+            return false;
+
+        return Arrays.stream(cookies)
+                .filter(cookie -> cookie.getName().equals(JSESSIONID))
+                .anyMatch(this.jwtTokenService::_isTokenNoneExpired);
     }
 
 }

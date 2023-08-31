@@ -1,7 +1,6 @@
 package com.emmanuel.sarabrandserver.auth.config;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import com.emmanuel.sarabrandserver.auth.jwt.RefreshTokenFilter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,24 +16,16 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
-import org.springframework.security.web.authentication.logout.LogoutHandler;
-import org.springframework.security.web.authentication.session.ConcurrentSessionControlAuthenticationStrategy;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.session.FindByIndexNameSessionRepository;
-import org.springframework.session.Session;
-import org.springframework.session.security.SpringSessionBackedSessionRegistry;
 import org.springframework.session.web.http.CookieSerializer;
 import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.cors.CorsConfiguration;
@@ -42,32 +33,32 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.security.config.Customizer.withDefaults;
-import static org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED;
 
-/** API docs using session <a href="https://docs.spring.io/spring-session/reference/api.html">...</a> */
+/**
+ * API docs using session <a href="https://docs.spring.io/spring-session/reference/api.html">...</a>
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
     private final Environment environment;
-    private final LogoutHandler logoutHandler;
-    private final SpringSessionBackedSessionRegistry<? extends Session> sessionRegistry;
+    private final AuthenticationEntryPoint authEntryPoint;
+    private final RefreshTokenFilter refreshTokenFilter;
 
     public SecurityConfig(
             Environment environment,
-            @Qualifier(value = "customLogoutHandler") LogoutHandler logoutHandler,
-            SpringSessionBackedSessionRegistry<? extends Session> sessionRegistry
+            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry,
+            RefreshTokenFilter refreshTokenFilter
     ) {
         this.environment = environment;
-        this.logoutHandler = logoutHandler;
-        this.sessionRegistry = sessionRegistry;
+        this.authEntryPoint = authEntry;
+        this.refreshTokenFilter = refreshTokenFilter;
     }
 
     @Bean
@@ -92,24 +83,13 @@ public class SecurityConfig {
         return providerManager;
     }
 
-    /** <a href="https://docs.spring.io/spring-session/reference/guides/java-custom-cookie.html">...</a> */
+    /**
+     * <a href="https://docs.spring.io/spring-session/reference/guides/java-custom-cookie.html">...</a>
+     */
     @Bean
     public CookieSerializer cookieSerializer() {
         DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
-        cookieSerializer.setCookieName("JSESSIONID");
-        cookieSerializer.setUseHttpOnlyCookie(true);
-        cookieSerializer.setUseSecureCookie(true);
-        cookieSerializer.setCookiePath("/");
-        cookieSerializer.setSameSite("lax");
-        cookieSerializer.setCookieMaxAge(3600);
         cookieSerializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
-
-        var profile = this.environment.getProperty("spring.profiles.active", "");
-        if (profile.equals("dev") || profile.equals("test")) {
-            cookieSerializer.setUseHttpOnlyCookie(false);
-            cookieSerializer.setUseSecureCookie(false);
-            cookieSerializer.setCookieMaxAge(1800);
-        }
         return cookieSerializer;
     }
 
@@ -120,21 +100,20 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        List<String> allowOrigins = new ArrayList<>(4);
+        List<String> allowOrigins = new ArrayList<>(3);
         allowOrigins.add("https://admin.emmanueluluabuike.com/");
         allowOrigins.add("https://store.emmanueluluabuike.com/");
 
         var profile = this.environment.getProperty("spring.profiles.active", "");
         if (profile.equals("dev") || profile.equals("test")) {
             allowOrigins.add("http://localhost:4200/");
-            allowOrigins.add("http://localhost:4401/");
         }
 
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowOrigins);
         configuration.setAllowedMethods(List.of("GET", "PUT", "POST", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(CONTENT_TYPE, ACCEPT, "X-XSRF-TOKEN"));
-        configuration.setExposedHeaders(List.of("X-XSRF-TOKEN"));
+//        configuration.setExposedHeaders(List.of("X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -142,25 +121,26 @@ public class SecurityConfig {
         return source;
     }
 
-    /** Security filter chain responsible for upholding app security */
+    /**
+     * Security filter chain responsible for upholding app security
+     */
     @Bean
-    public SecurityFilterChain filterChain(
-            HttpSecurity http,
-            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry,
-            SecurityContextRepository contextRepository
-    ) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         var JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name", "");
         var domain = this.environment.getProperty("server.servlet.session.cookie.domain", "");
         var profile = this.environment.getProperty("spring.profiles.active", "");
         var csrfTokenRepository = getCookieCsrfTokenRepository(domain, profile);
-        int MAXSESSION = this.environment.getProperty("custom.session", Integer.class, -1);
 
         return http
+
+                // Cors and CSRF config
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfTokenRepository)
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                 )
                 .cors(withDefaults())
+
+                // Public and Protected routed
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
                             "/api/v1/home/**",
@@ -174,22 +154,22 @@ public class SecurityConfig {
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })
-                .securityContext((context) -> context.securityContextRepository(contextRepository))
-                .sessionManagement(sessionManagement -> sessionManagement
-                        .sessionCreationPolicy(IF_REQUIRED) //
-                        .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::changeSessionId)
-                        .sessionConcurrency((concurrency) -> concurrency
-                                .maximumSessions(MAXSESSION)
-                                .sessionRegistry(this.sessionRegistry)
-                        )
-                )
-                .exceptionHandling((ex) -> ex.authenticationEntryPoint(authEntry))
+
+                // Refresh Token Filter
+                .addFilterBefore(this.refreshTokenFilter, BearerTokenAuthenticationFilter.class)
+
+                // Session Management
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
+
+                // Exception Handling. Allows ControllerAdvices to take effect
+                .exceptionHandling((ex) -> ex.authenticationEntryPoint(this.authEntryPoint))
+
+                // Logout
                 // https://docs.spring.io/spring-security/reference/servlet/authentication/logout.html
                 .logout((logoutConfig) -> logoutConfig
                         .logoutUrl("/api/v1/logout")
-                        .invalidateHttpSession(true)
                         .deleteCookies(JSESSIONID)
-                        .addLogoutHandler(this.logoutHandler)
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK))
                 )
                 .build();
@@ -199,7 +179,7 @@ public class SecurityConfig {
      * Reason for Consumer<ResponseCookie.ResponseCookieBuilder> as per docs secure, domain name and path are deprecated
      * As per docs
      * <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">...</a>
-     * */
+     */
     private static CookieCsrfTokenRepository getCookieCsrfTokenRepository(String domain, String profile) {
         boolean secure = profile.equals("prod") || profile.equals("stage");
         CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
@@ -212,58 +192,6 @@ public class SecurityConfig {
                 .maxAge(-1);
         csrfTokenRepository.setCookieCustomizer(csrfCookieCustomizer);
         return csrfTokenRepository;
-    }
-
-    @Bean
-    public ConcurrentSessionControlAuthenticationStrategy sessionAuthenticationStrategy(
-            FindByIndexNameSessionRepository<? extends Session> sessionRepository
-    ) {
-        int MAXSESSION = this.environment.getProperty("custom.session", Integer.class, -1);
-        var check = new CustomConcurrentSession(sessionRepository, this.sessionRegistry, this.environment);
-        check.setMaximumSessions(MAXSESSION);
-        check.setExceptionIfMaximumExceeded(false);
-        return check;
-    }
-
-    /**
-     * Used to put a constraint on number of active sessions a user has. FindByIndexNameSessionRepository is needed to
-     * manually delete users session as inbuilt config SessionInformation.expireNow does not expire user session.
-     * */
-    private static class CustomConcurrentSession extends ConcurrentSessionControlAuthenticationStrategy {
-        private final FindByIndexNameSessionRepository<? extends Session> sessionRepository;
-        private final SessionRegistry sessionRegistry;
-        private final Environment environment;
-
-        public CustomConcurrentSession(
-                FindByIndexNameSessionRepository<? extends Session> sessionRepository,
-                SessionRegistry sessionRegistry,
-                Environment environment
-        ) {
-            super(sessionRegistry);
-            this.sessionRepository = sessionRepository;
-            this.sessionRegistry = sessionRegistry;
-            this.environment = environment;
-        }
-
-        @Override
-        public void onAuthentication(
-                Authentication authentication,
-                HttpServletRequest request,
-                HttpServletResponse response
-        ) {
-            int MAXSESSION = this.environment.getProperty("custom.session", Integer.class, -1);
-            int allowedSession = getMaximumSessionsForThisUser(authentication);
-
-            if (allowedSession == -1 || allowedSession < MAXSESSION) {
-                return;
-            }
-
-            this.sessionRegistry
-                    .getAllSessions(authentication.getPrincipal(), false)
-                    .stream() //
-                    .min(Comparator.comparing(SessionInformation::getLastRequest)) // Gets the oldest session
-                    .ifPresent(sessionInfo -> this.sessionRepository.deleteById(sessionInfo.getSessionId()));
-        }
     }
 
 }

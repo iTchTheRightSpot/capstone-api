@@ -33,10 +33,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Class simulates testing basic CRUD functionalities. It doesn't go depth of testing errors throw etc. because this is
- * done in  unit testing class.
- * */
 @RunWith(SpringRunner.class)
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

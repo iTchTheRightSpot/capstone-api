@@ -1,11 +1,14 @@
 package com.emmanuel.sarabrandserver.product.projection;
 
+import com.emmanuel.sarabrandserver.product.entity.ProductImage;
+import com.emmanuel.sarabrandserver.product.entity.ProductSku;
+
+import java.util.Set;
+
 // Spring data projection
 public interface DetailPojo {
-    String getSku();
-    Boolean getVisible();
-    String getSize();
-    Integer getQty();
     String getColour();
-    String getKey(); // image keys
+    Boolean getVisible();
+    Set<ProductImage> getImage();
+    Set<ProductSku> getSkus();
 }

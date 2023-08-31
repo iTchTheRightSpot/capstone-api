@@ -6,12 +6,12 @@ import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
+import com.emmanuel.sarabrandserver.product.repository.ProductSkuRepo;
 import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
 import com.emmanuel.sarabrandserver.product.util.DetailDTO;
 import com.emmanuel.sarabrandserver.product.util.ProductDTO;
 import com.emmanuel.sarabrandserver.product.util.SizeInventoryDTO;
 import com.github.javafaker.Faker;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,7 +28,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -37,10 +36,12 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
@@ -49,7 +50,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.properties")
-@Slf4j
 class WorkerProductControllerTest {
 
     private final static String requestMapping = "/api/v1/worker/product";
@@ -69,6 +69,8 @@ class WorkerProductControllerTest {
     private CategoryRepository categoryRepository;
     @Autowired
     private ProductDetailRepo productDetailRepo;
+    @Autowired
+    private ProductSkuRepo productSkuRepo;
 
     @Container
     private static final MySQLContainer<?> container;
@@ -107,9 +109,18 @@ class WorkerProductControllerTest {
         int i = 0;
         for (String str : set) {
             SizeInventoryDTO[] sizeInventoryDTO = {
-                    SizeInventoryDTO.builder().size("small").qty(10).build(),
-                    SizeInventoryDTO.builder().size("medium").qty(3).build(),
-                    SizeInventoryDTO.builder().size("large").qty(15).build(),
+                    SizeInventoryDTO.builder()
+                            .size(new Faker().commerce().material() + new Faker().number().numberBetween(0, 10)) // prevent duplicate
+                            .qty(new Faker().number().randomDigitNotZero())
+                            .build(),
+                    SizeInventoryDTO.builder()
+                            .size(new Faker().commerce().material() + new Faker().number().numberBetween(11, 20)) // prevent duplicate
+                            .qty(new Faker().number().randomDigitNotZero())
+                            .build(),
+                    SizeInventoryDTO.builder()
+                            .size(new Faker().commerce().material() + new Faker().number().numberBetween(21, 30)) // prevent duplicate
+                            .qty(new Faker().number().randomDigitNotZero())
+                            .build(),
             };
 
             String c = new Faker().commerce().color() + i;
@@ -131,6 +142,7 @@ class WorkerProductControllerTest {
                     .desc(new Faker().lorem().characters(255))
                     .price(new BigDecimal(new Faker().commerce().price()))
                     .currency("USD")
+                    .sizeInventory(sizeInventoryDTO)
                     .visible(true)
                     .colour(c)
                     .build();
@@ -156,7 +168,7 @@ class WorkerProductControllerTest {
                     ),
             };
 
-            this.workerService.create(dto, sizeInventoryDTO, files);
+            this.workerService.create(dto, files);
 
             i += 1;
         }
@@ -182,6 +194,22 @@ class WorkerProductControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
     }
+
+    @Test
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @DisplayName(value = "Fetch ProductDetails by product uuid")
+    void fetchAllDetail() throws Exception {
+        var product = this.productRepository.findAll().stream().findFirst().orElse(null);
+        assertNotNull(product);
+        this.MOCK_MVC
+                .perform(get(requestMapping + "/detail").param("id", product.getUuid()))
+                .andExpect(content().contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[*].variants").isArray())
+                .andDo(print());
+    }
+
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
@@ -223,6 +251,43 @@ class WorkerProductControllerTest {
                         .with(csrf())
                 )
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @DisplayName(value = """
+            Validate Custom Converter converts from String to SizeInventoryDTO[]
+            considering only one entry for size and qty
+            """)
+    void val() throws Exception {
+        // Then
+        this.MOCK_MVC
+                .perform(multipart(requestMapping)
+                        .file(new MockMultipartFile(
+                                "files",
+                                "uploads/image1.jpeg",
+                                "image/jpeg",
+                                "Test image content".getBytes()
+                        ))
+                        .file(new MockMultipartFile(
+                                "files",
+                                "uploads/image2.jpeg",
+                                "image/jpeg",
+                                "Test image content".getBytes()
+                        ))
+                        .param("category", this.category.toString())
+                        .param("collection", "")
+                        .param("sizeInventory", SizeInventoryDTO.builder().size("small").qty(10).build().toJson().toString())
+                        .param("name", new Faker().commerce().productName())
+                        .param("desc", new Faker().lorem().characters(255))
+                        .param("price", new BigDecimal(new Faker().commerce().price()).toString())
+                        .param("currency", "USD")
+                        .param("visible", "true")
+                        .param("colour", new Faker().commerce().color())
+                        .with(csrf())
+                )
+                .andExpect(status().isCreated());
+
     }
 
     @Test
@@ -346,27 +411,16 @@ class WorkerProductControllerTest {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Fetch ProductDetails")
-    void fetchAllDetail() throws Exception {
-        this.MOCK_MVC
-                .perform(get(requestMapping + "/{name}", "custom-product")
-                        .param("page", "0")
-                        .param("size", "50")
-                )
-                .andExpect(content().contentType("application/json"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray());
-    }
-
-    @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Testing update a Product.")
     void updateProduct() throws Exception {
         // Given
-        String id = this.productRepository.findAll().get(0).getUuid();
+        var product = this.productRepository.findAll().stream().findFirst().orElse(null);
+        assertNotNull(product);
         var dto = ProductDTO.builder()
-                .uuid(id)
+                .uuid(product.getUuid())
                 .name("SEJU Development")
+                .collection("")
+                .category(category.toString())
                 .desc(new Faker().lorem().characters(5, 200))
                 .price(new BigDecimal(new Faker().commerce().price()))
                 .build();
@@ -386,10 +440,14 @@ class WorkerProductControllerTest {
     @DisplayName(value = "Testing update a Product. Only difference is Product name is still the same")
     void update() throws Exception {
         // Given
-        var product = this.productRepository.findAll().get(1);
+        var product = this.productRepository.findAll().stream().findFirst().orElse(null);
+        assertNotNull(product);
+
         var dto = ProductDTO.builder()
                 .uuid(product.getUuid())
                 .name(product.getName())
+                .category(this.category.toString())
+                .collection("")
                 .desc(new Faker().lorem().characters(5, 200))
                 .price(new BigDecimal(new Faker().commerce().price()))
                 .build();
@@ -409,8 +467,11 @@ class WorkerProductControllerTest {
     @DisplayName(value = "Testing updating ProductDetail. Note ProductImage aren't updated")
     void updateDetail() throws Exception {
         var detail = this.productDetailRepo.findAll().get(0);
+        var productSku = detail.getSkus().stream().findAny().orElse(null);
 
-        var dto = new DetailDTO(detail.getSku(), true, 50, "large");
+        assertNotNull(productSku);
+
+        var dto = new DetailDTO(productSku.getSku(), true, 50, "large");
 
         // Then
         this.MOCK_MVC
@@ -421,20 +482,24 @@ class WorkerProductControllerTest {
                 )
                 .andExpect(status().isOk());
 
-        var findDetail = this.productDetailRepo.findById(detail.getProductDetailId());
+        var findDetail = this.productSkuRepo.findBySku(productSku.getSku()).orElse(null);
 
-        assertDoesNotThrow(findDetail::get);
+        assertNotNull(findDetail);
 
-        assertEquals(dto.getSku(), findDetail.get().getSku());
-        assertEquals(dto.getQty(), findDetail.get().getSizeInventory().getInventory());
-        assertEquals(dto.getSize(), findDetail.get().getSizeInventory().getSize());
+        assertEquals(dto.getSku(), findDetail.getSku());
+        assertEquals(dto.getQty(), findDetail.getInventory());
+        assertEquals(dto.getSize(), findDetail.getSize());
     }
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void deleteProduct() throws Exception {
-        this.MOCK_MVC.perform(delete(requestMapping + "/{name}", this.productName).with(csrf()))
+        var product = this.productRepository.findAll().stream().findFirst().orElse(null);
+        assertNotNull(product);
+        this.MOCK_MVC.perform(delete(requestMapping).param("id", product.getUuid()).with(csrf()))
                 .andExpect(status().isNoContent());
+        var del = this.productRepository.findById(product.getProductId()).orElse(null);
+        assertNull(del);
     }
 
 }

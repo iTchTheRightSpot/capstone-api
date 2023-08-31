@@ -14,12 +14,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
+import java.sql.SQLIntegrityConstraintViolationException;
+
 import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
 import static org.springframework.http.HttpStatus.*;
 
 @ControllerAdvice
 @Order(HIGHEST_PRECEDENCE)
 public class ControllerAdvices {
+
     private final Environment environment;
 
     public ControllerAdvices(Environment environment) {
@@ -85,6 +88,12 @@ public class ControllerAdvices {
     @ExceptionHandler({InvalidFormat.class})
     public ResponseEntity<?> formatException(Exception ex) {
         var details = new ExceptionDetails(ex.getMessage(), BAD_REQUEST);
+        return new ResponseEntity<>(details, BAD_REQUEST);
+    }
+
+    @ExceptionHandler({SQLIntegrityConstraintViolationException.class})
+    public ResponseEntity<?> sqlDuplicateException() {
+        var details = new ExceptionDetails("Duplicate entry(s)", BAD_REQUEST);
         return new ResponseEntity<>(details, BAD_REQUEST);
     }
 

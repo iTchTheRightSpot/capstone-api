@@ -19,20 +19,24 @@ public interface CollectionRepository extends JpaRepository<ProductCollection, L
     Optional<ProductCollection> findByName(@Param(value = "collection") String collection);
 
     @Query(value = """
-    SELECT c.collection AS collection, c.createAt AS created, c.modifiedAt AS modified, c.isVisible AS visible
-    FROM ProductCollection c
-    """)
-    Page<CollectionPojo> fetchAllCollection(Pageable pageable);
+            SELECT
+            c.collection AS collection,
+            c.createAt AS created,
+            c.modifiedAt AS modified,
+            c.isVisible AS visible
+            FROM ProductCollection c
+            """)
+    List<CollectionPojo> fetchAllCollection();
 
     @Query(value = """
-    SELECT
-    c.collection AS collection,
-    c.createAt AS created,
-    c.modifiedAt AS modified,
-    c.isVisible AS visible
-    FROM ProductCollection c
-    WHERE c.isVisible = true
-    """)
+            SELECT
+            c.collection AS collection,
+            c.createAt AS created,
+            c.modifiedAt AS modified,
+            c.isVisible AS visible
+            FROM ProductCollection c
+            WHERE c.isVisible = true
+            """)
     List<CollectionPojo> fetchAllCollectionClient();
 
 }

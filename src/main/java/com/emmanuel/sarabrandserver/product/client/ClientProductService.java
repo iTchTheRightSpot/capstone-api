@@ -5,6 +5,7 @@ import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.util.DetailResponse;
 import com.emmanuel.sarabrandserver.product.util.ProductResponse;
+import com.emmanuel.sarabrandserver.product.util.ProductSKUResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
@@ -76,16 +77,21 @@ public class ClientProductService {
         return this.productDetailRepo.fetchProductDetailByUUIDClient(uuid) //
                 .stream() //
                 .map(pojo -> {
-                    var urls = Arrays
-                            .stream(pojo.getKey().split(","))
-                            .map(key -> this.s3Service.getPreSignedUrl(bool, bucket, key))
+                    var urls = pojo.getImage() //
+                            .stream() //
+                            .map(image -> this.s3Service.getPreSignedUrl(bool, bucket, image.getImageKey()))
+                            .toList();
+
+                    // TODO make more efficient
+                    var variants = pojo.getSkus() //
+                            .stream() //
+                            .map(sku -> new ProductSKUResponse(sku.getSku(), sku.getSize(), sku.getInventory()))
                             .toList();
 
                     return DetailResponse.builder()
-                            .sku(pojo.getSku())
-                            .size(pojo.getSize())
                             .colour(pojo.getColour())
                             .url(urls)
+                            .variants(variants)
                             .build();
                 }) //
                 .toList();

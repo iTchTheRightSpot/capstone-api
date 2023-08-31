@@ -6,12 +6,11 @@ import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
 import com.emmanuel.sarabrandserver.product.entity.Product;
 import com.emmanuel.sarabrandserver.product.entity.ProductDetail;
 import com.emmanuel.sarabrandserver.product.entity.ProductImage;
-import com.emmanuel.sarabrandserver.product.entity.ProductSizeInventory;
-import com.emmanuel.sarabrandserver.product.projection.DetailPojo;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
+import com.emmanuel.sarabrandserver.product.repository.ProductImageRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
-import com.emmanuel.sarabrandserver.product.repository.ProductSizeInventoryRepository;
+import com.emmanuel.sarabrandserver.product.repository.ProductSkuRepo;
 import com.emmanuel.sarabrandserver.product.util.DetailDTO;
 import com.emmanuel.sarabrandserver.product.util.ProductDTO;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
@@ -46,7 +45,8 @@ class WorkerProductServiceTest {
     private WorkerProductService productService;
 
     @Mock private ProductRepository productRepository;
-    @Mock private ProductSizeInventoryRepository sizeInventoryRepository;
+    @Mock private ProductSkuRepo productSkuRepo;
+    @Mock private ProductImageRepo productImageRepo;
     @Mock private WorkerCategoryService workerCategoryService;
     @Mock private CustomUtil customUtil;
     @Mock private WorkerCollectionService collectionService;
@@ -59,7 +59,8 @@ class WorkerProductServiceTest {
         this.productService = new WorkerProductService(
                 this.productRepository,
                 this.detailRepo,
-                this.sizeInventoryRepository,
+                this.productImageRepo,
+                this.productSkuRepo,
                 this.workerCategoryService,
                 this.customUtil,
                 this.collectionService,
@@ -93,38 +94,6 @@ class WorkerProductServiceTest {
 
         // Then
         assertEquals(30, this.productService.fetchAll(0, 40).getSize());
-    }
-
-    /** Testing fetchAll method that returns a ProductResponse. */
-    @Test
-    void fetchAll() {
-        // Given
-        List<DetailPojo> list = new ArrayList<>();
-
-        for (int i = 0; i < 30; i++) {
-            var pojo = mock(DetailPojo.class);
-            when(pojo.getSku()).thenReturn(UUID.randomUUID().toString());
-            when(pojo.getVisible()).thenReturn(true);
-            when(pojo.getSize()).thenReturn(new Faker().lorem().characters(1, 15));
-            when(pojo.getColour()).thenReturn(new Faker().commerce().color());
-            var keys = "%s, %s, %s".formatted(
-                    new Faker().file().fileName(),
-                    new Faker().file().fileName(),
-                    new Faker().file().fileName()
-            );
-            when(pojo.getKey()).thenReturn(keys);
-            list.add(pojo);
-        }
-
-        Page<DetailPojo> page = new PageImpl<>(list);
-
-        // When
-        when(this.productRepository.findDetailByProductNameWorker(anyString(), any(PageRequest.class)))
-                .thenReturn(page);
-        when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
-
-        // Then
-        assertEquals(30, this.productService.fetchAll("products", 0, 40).getSize());
     }
 
     @Test
@@ -173,13 +142,10 @@ class WorkerProductServiceTest {
                 .size(new Faker().commerce().material())
                 .build();
 
-        // When
-        doReturn(Optional.of(new Date())).when(this.customUtil).toUTC(any(Date.class));
-
         // Then
         assertEquals(HttpStatus.OK, this.productService.updateProductDetail(dto).getStatusCode());
         verify(this.detailRepo, times(1))
-                .updateProductDetail(anyString(), any(Date.class), anyBoolean(), anyInt(), anyString());
+                .updateProductDetail(anyString(), anyBoolean(), anyInt(), anyString());
     }
 
     @Test
@@ -188,7 +154,7 @@ class WorkerProductServiceTest {
         var product = products().get(0);
 
         // When
-        doReturn(Optional.of(product)).when(this.productRepository).findByProductName(anyString());
+        doReturn(Optional.of(product)).when(this.productRepository).findByProductUuid(anyString());
         when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
 
         // Then
@@ -202,11 +168,10 @@ class WorkerProductServiceTest {
         String sku = UUID.randomUUID().toString();
         var detail = ProductDetail.builder()
                 .productDetailId(1L)
-                .sku(sku)
                 .isVisible(true)
                 .createAt(new Date())
-                .sizeInventory(new ProductSizeInventory("medium", 20))
                 .product(products().get(0))
+                .skus(new HashSet<>())
                 .productImages(new HashSet<>())
                 .build();
 
@@ -245,15 +210,12 @@ class WorkerProductServiceTest {
                         .build();
                 // ProductDetail
                 var detail = ProductDetail.builder()
-                        .sku(UUID.randomUUID().toString())
                         .isVisible(false)
                         .createAt(new Date())
-                        .modifiedAt(null)
                         .productImages(new HashSet<>())
+                        .skus(new HashSet<>())
                         .build();
                 detail.addImages(image);
-                // Add detail to product
-//                product.addDetail(detail);
             }
             list.add(product);
         }

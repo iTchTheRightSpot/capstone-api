@@ -2,7 +2,6 @@ package com.emmanuel.sarabrandserver.product.repository;
 
 import com.emmanuel.sarabrandserver.product.entity.Product;
 import com.emmanuel.sarabrandserver.product.entity.ProductDetail;
-import com.emmanuel.sarabrandserver.product.projection.DetailPojo;
 import com.emmanuel.sarabrandserver.product.projection.Imagez;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import org.springframework.data.domain.Page;
@@ -27,6 +26,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query(value = "SELECT p FROM Product p WHERE p.name = :name")
     Optional<Product> findByProductName(@Param(value = "name") String name);
 
+    @Query(value = "SELECT p FROM Product p WHERE p.uuid = :uuid")
+    Optional<Product> findByProductUuid(@Param(value = "uuid") String uuid);
+
     @Query(value = """
             SELECT
             p.uuid AS uuid,
@@ -34,8 +36,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             p.description AS desc,
             p.price AS price,
             p.currency AS currency,
-            p.defaultKey AS key
+            p.defaultKey AS key,
+            cat.categoryName AS category,
+            col.collection AS collection
             FROM Product p
+            INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId
+            LEFT JOIN ProductCollection col ON p.productCollection.collectionId = col.collectionId
             """)
     Page<ProductPojo> fetchAllProductsWorker(Pageable pageable);
 
@@ -50,16 +56,20 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             col.collection AS collection,
             cat.categoryName AS category
             FROM Product p
-            INNER JOIN ProductCollection col ON col.collectionId = p.productCollection.collectionId
+            LEFT JOIN ProductCollection col ON col.collectionId = p.productCollection.collectionId
             INNER JOIN ProductCategory cat ON cat.categoryId = p.productCategory.categoryId
             INNER JOIN ProductDetail pd ON pd.product.productId = p.productId
-            INNER JOIN ProductSizeInventory inv ON inv.pairId = pd.sizeInventory.pairId
-            WHERE pd.isVisible = true AND inv.inventory > 0
+            INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
+            WHERE pd.isVisible = true AND sku.inventory > 0
             GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
             """)
     Page<ProductPojo> fetchAllProductsClient(Pageable pageable);
 
-    @Query(value = "SELECT det FROM ProductDetail det WHERE det.sku = :sku")
+    @Query(value = """
+            SELECT d FROM ProductDetail d
+            INNER JOIN ProductSku s ON d.productDetailId = s.productDetail.productDetailId
+            WHERE s.sku = :sku
+            """)
     Optional<ProductDetail> findDetailBySku(@Param(value = "sku") String sku);
 
     @Transactional
@@ -78,23 +88,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query(value = """
             SELECT
-            pd.sku AS sku,
-            pd.isVisible AS visible,
-            ps.size AS size,
-            ps.inventory AS qty,
-            pd.colour AS colour,
-            GROUP_CONCAT(DISTINCT (img.imageKey)) AS key
-            FROM ProductDetail pd
-            INNER JOIN Product p ON pd.product.productId = p.productId
-            INNER JOIN ProductSizeInventory ps ON pd.sizeInventory.pairId = ps.pairId
-            INNER JOIN ProductImage img ON pd.productDetailId = img.productDetails.productDetailId
-            WHERE p.name = :name
-            GROUP BY pd.sku, ps.size, pd.colour
-            """)
-    Page<DetailPojo> findDetailByProductNameWorker(@Param(value = "name") String name, Pageable page);
-
-    @Query(value = """
-            SELECT
             p.uuid AS uuid,
             p.name AS name,
             p.description AS desc,
@@ -105,8 +98,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             FROM Product p
             INNER JOIN ProductCategory pc ON p.productCategory.categoryId = pc.categoryId
             INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
-            INNER JOIN ProductSizeInventory ps ON pd.sizeInventory.pairId = ps.pairId
-            WHERE pd.isVisible = true AND ps.inventory > 0 AND pc.categoryName = :name
+            INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
+            WHERE pd.isVisible = true AND sku.inventory > 0 AND pc.categoryName = :name
             GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
             """)
     Page<ProductPojo> fetchProductByCategoryClient(String name, Pageable page);
@@ -123,8 +116,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             FROM Product p
             INNER JOIN ProductCollection pc ON p.productCollection.collectionId = pc.collectionId
             INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
-            INNER JOIN ProductSizeInventory ps ON pd.sizeInventory.pairId = ps.pairId
-            WHERE pd.isVisible = true AND ps.inventory > 0 AND pc.collection = :name
+            INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
+            WHERE pd.isVisible = true AND sku.inventory > 0 AND pc.collection = :name
             GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
             """)
     Page<ProductPojo> fetchByProductByCollectionClient(String name, Pageable page);
@@ -134,8 +127,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             FROM ProductImage img
             INNER JOIN ProductDetail pd ON img.productDetails.productDetailId = pd.productDetailId
             INNER JOIN Product p ON p.productId = pd.product.productId
-            WHERE p.name = :name
+            WHERE p.uuid = :uuid
             """)
-    List<Imagez> images(@Param(value = "name") String name);
+    List<Imagez> images(@Param(value = "uuid") String uuid);
 
 }

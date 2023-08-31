@@ -26,7 +26,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     c.isVisible AS visible
     FROM ProductCategory c
     """)
-    Page<CategoryPojo> fetchCategoriesWorker(Pageable pageable);
+    List<CategoryPojo> fetchCategoriesWorker();
 
     /** Equivalent sql statement because jpa can be confusing at times haha
      * select parent.category_name, group_concat(child.category_name)

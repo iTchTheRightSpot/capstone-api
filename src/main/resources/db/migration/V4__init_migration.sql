@@ -11,19 +11,20 @@ ALTER TABLE product_detail
     DROP FOREIGN KEY product_detail_ibfk_3,
     DROP COLUMN colour_id;
 
+ALTER TABLE product_detail DROP COLUMN sku;
+ALTER TABLE product_detail DROP COLUMN modified_at;
 ALTER TABLE product_detail ADD COLUMN colour varchar(100) not null;
 
 DROP TABLE IF EXISTS product_size;
 DROP TABLE IF EXISTS product_colour;
 DROP TABLE IF EXISTS product_inventory;
 
-CREATE TABLE product_size_inventory (
-    size_inventory_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
-    size VARCHAR(100) NOT NULL,
+CREATE TABLE product_sku (
+    sku_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
+    sku VARCHAR(50) NOT NULL,
+    size VARCHAR(50) NOT NULL,
     inventory INTEGER NOT NULL,
-    PRIMARY KEY (size_inventory_id)
+    detail_id BIGINT NOT NULL,
+    PRIMARY KEY (sku_id),
+    FOREIGN KEY (detail_id) references product_detail (detail_id)
 );
-
-ALTER TABLE product_detail
-    ADD COLUMN size_inventory_id BIGINT NOT NULL,
-    ADD CONSTRAINT FOREIGN KEY(size_inventory_id) REFERENCES product_size_inventory(size_inventory_id);

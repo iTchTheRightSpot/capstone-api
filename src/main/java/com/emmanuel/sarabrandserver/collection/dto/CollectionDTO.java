@@ -12,9 +12,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 public class CollectionDTO {
+
     @NotNull(message = "cannot be empty")
     @NotEmpty(message = "cannot be empty")
     private String name;
+
     @NotNull(message = "cannot be empty")
     private Boolean visible;
 }

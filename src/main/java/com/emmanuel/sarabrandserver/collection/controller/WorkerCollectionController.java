@@ -19,11 +19,8 @@ public class WorkerCollectionController {
     }
 
     @GetMapping(produces = "application/json")
-    public ResponseEntity<?> fetchAll(
-            @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "30") Integer size
-    ) {
-        return new ResponseEntity<>(this.collectionService.fetchAll(page, Math.min(size, 30)), HttpStatus.OK);
+    public ResponseEntity<?> fetchAll() {
+        return new ResponseEntity<>(this.collectionService.fetchAllCategories(), HttpStatus.OK);
     }
 
     @PostMapping(consumes = "application/json")

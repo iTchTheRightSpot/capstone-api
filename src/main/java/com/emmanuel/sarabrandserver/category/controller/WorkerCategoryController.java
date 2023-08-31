@@ -21,11 +21,8 @@ public class WorkerCategoryController {
     }
 
     @GetMapping(produces = "application/json")
-    public ResponseEntity<?> allCategories(
-            @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "30") Integer size
-    ) {
-        return new ResponseEntity<>(this.workerCategoryService.fetchAll(page, Math.min(size, 30)), HttpStatus.OK);
+    public ResponseEntity<?> allCategories() {
+        return new ResponseEntity<>(this.workerCategoryService.fetchAllCategories(), HttpStatus.OK);
     }
 
     @PostMapping(consumes = "application/json")

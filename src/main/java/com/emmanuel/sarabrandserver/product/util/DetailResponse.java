@@ -13,11 +13,9 @@ import java.util.List;
 @Data
 @Builder
 public class DetailResponse {
-    private String sku;
     @JsonProperty(value = "is_visible")
     private boolean isVisible;
-    private String size;
-    private int qty;
     private String colour;
     private List<String> url;
+    private List<ProductSKUResponse> variants;
 }

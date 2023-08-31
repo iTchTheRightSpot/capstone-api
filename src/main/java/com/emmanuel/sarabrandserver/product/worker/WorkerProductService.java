@@ -9,10 +9,11 @@ import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.product.entity.Product;
 import com.emmanuel.sarabrandserver.product.entity.ProductDetail;
 import com.emmanuel.sarabrandserver.product.entity.ProductImage;
-import com.emmanuel.sarabrandserver.product.entity.ProductSizeInventory;
+import com.emmanuel.sarabrandserver.product.entity.ProductSku;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
+import com.emmanuel.sarabrandserver.product.repository.ProductImageRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
-import com.emmanuel.sarabrandserver.product.repository.ProductSizeInventoryRepository;
+import com.emmanuel.sarabrandserver.product.repository.ProductSkuRepo;
 import com.emmanuel.sarabrandserver.product.util.*;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +42,8 @@ import static org.springframework.http.HttpStatus.*;
 public class WorkerProductService {
     private final ProductRepository productRepository;
     private final ProductDetailRepo detailRepo;
-    private final ProductSizeInventoryRepository sizeInventoryRepository;
+    private final ProductImageRepo productImageRepo;
+    private final ProductSkuRepo productSkuRepo;
     private final WorkerCategoryService categoryService;
     private final CustomUtil customUtil;
     private final WorkerCollectionService collectionService;
@@ -51,7 +53,8 @@ public class WorkerProductService {
     public WorkerProductService(
             ProductRepository productRepository,
             ProductDetailRepo detailRepo,
-            ProductSizeInventoryRepository sizeInventoryRepository,
+            ProductImageRepo productImageRepo,
+            ProductSkuRepo productSkuRepo,
             WorkerCategoryService categoryService,
             CustomUtil customUtil,
             WorkerCollectionService collectionService,
@@ -60,7 +63,8 @@ public class WorkerProductService {
     ) {
         this.productRepository = productRepository;
         this.detailRepo = detailRepo;
-        this.sizeInventoryRepository = sizeInventoryRepository;
+        this.productImageRepo = productImageRepo;
+        this.productSkuRepo = productSkuRepo;
         this.categoryService = categoryService;
         this.customUtil = customUtil;
         this.collectionService = collectionService;
@@ -78,15 +82,16 @@ public class WorkerProductService {
      */
     public Page<ProductResponse> fetchAll(int page, int size) {
         var profile = this.environment.getProperty("spring.profiles.active", "");
-        boolean bool = profile.equals("prod") || profile.equals("stage") || profile.equals("dev");
+        boolean bool = profile.equals("prod") || profile.equals("stage");
         var bucket = this.environment.getProperty("aws.bucket", "");
 
         return this.productRepository
                 .fetchAllProductsWorker(PageRequest.of(page, size))
                 .map(pojo -> {
-
                     var url = this.s3Service.getPreSignedUrl(bool, bucket, pojo.getKey());
                     return ProductResponse.builder()
+                            .category(pojo.getCategory())
+                            .collection(pojo.getCollection())
                             .id(pojo.getUuid())
                             .name(pojo.getName())
                             .desc(pojo.getDesc())
@@ -98,57 +103,52 @@ public class WorkerProductService {
     }
 
     /**
-     * Method returns a list of DetailResponse. Note findDetailByProductNameWorker query method returns a list of
-     * DetailPojo using spring jpa projection.
+     * Returns a List of ProductDetail based on Product uuid
      *
-     * @param name is the name of the product
-     * @param page is amount of size based on the page
-     * @param size is the amount of items list. Note the max is set to 30 as to not overload Heap memory
-     * @return Page of DetailResponse
+     * @param uuid is the uuid of the product
+     * @return List of DetailResponse
      */
-    public Page<DetailResponse> fetchAll(String name, int page, int size) {
+    public List<DetailResponse> productDetailsByProductUUID(String uuid) {
         var profile = this.environment.getProperty("spring.profiles.active", "");
-        boolean bool = profile.equals("prod") || profile.equals("stage") || profile.equals("dev");
+        boolean bool = profile.equals("prod") || profile.equals("stage");
         var bucket = this.environment.getProperty("aws.bucket", "");
 
-        return this.productRepository
-                .findDetailByProductNameWorker(name, PageRequest.of(page, size)) //
+        return this.detailRepo
+                .findProductDetailsByProductUuidWorker(uuid) //
+                .stream()
                 .map(pojo -> {
-                    var urls = Arrays.stream(pojo.getKey().split(","))
-                            .map(key -> this.s3Service.getPreSignedUrl(bool, bucket, key))
+                    var urls = pojo.getImage() //
+                            .stream() //
+                            .map(image -> this.s3Service.getPreSignedUrl(bool, bucket, image.getImageKey()))
+                            .toList();
+
+                    // TODO make more efficient
+                    var variants = pojo.getSkus() //
+                            .stream() //
+                            .map(sku -> new ProductSKUResponse(sku.getSku(), sku.getSize(), sku.getInventory()))
                             .toList();
 
                     return DetailResponse.builder()
-                            .sku(pojo.getSku())
                             .isVisible(pojo.getVisible())
-                            .size(pojo.getSize())
-                            .qty(pojo.getQty())
                             .colour(pojo.getColour())
                             .url(urls)
+                            .variants(variants)
                             .build();
-                });
+                }).toList();
     }
-
 
     /**
      * Update to creating a new Product.
-     * 1. Validate Product does not exist.
-     * 1ai. If it does, we need to validated ProductDetail variable Colour does not exist (as you cannot have a Product detail of duplicate colours).
-     * 1aii. Throw a duplicate exception if colour is present.
-     * 2. Create a ProductImage object and save each image to s3
-     * 3. For the array size of dto sizes, create and save ProductDetail objects
-     * 4. Repeat the process above for the qty of each size too.
      *
      * @param files      of type MultipartFile
      * @param dto        of type CreateProductDTO
-     * @param sizeInvDto array of type SizeInventoryDTO
      * @return ResponseEntity of type HttpStatus
      * @throws CustomNotFoundException is thrown when category or collection name does not exist
      * @throws CustomAwsException      is thrown if File is not an image
      * @throws DuplicateException      is thrown if dto image exists in for Product
      */
     @Transactional
-    public ResponseEntity<HttpStatus> create(CreateProductDTO dto, SizeInventoryDTO[] sizeInvDto, MultipartFile[] files) {
+    public ResponseEntity<HttpStatus> create(CreateProductDTO dto, MultipartFile[] files) {
         var category = this.categoryService.findByName(dto.getCategory().trim());
         var _product = this.productRepository.findByProductName(dto.getName().trim());
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
@@ -158,7 +158,7 @@ public class WorkerProductService {
 
         StringBuilder defaultImageKey = new StringBuilder();
         // Validate MultipartFile[] are all images
-        CustomMultiPart[] list = validateMultiPartFile(files, defaultImageKey);
+        CustomMultiPart[] multiPartFile = validateMultiPartFile(files, defaultImageKey);
 
         // Persist new ProductDetail if Product exist
         if (_product.isPresent()) {
@@ -168,22 +168,22 @@ public class WorkerProductService {
                 throw new DuplicateException(message);
             }
 
-            // Product
+            // Existing Product
             var product = _product.get();
 
-            // ProductImage array
-            ProductImage[] images = productImages(list, bool, bucket);
-
-            // ProductSizeInventory array
-            ProductSizeInventory[] inventories = sizeInventories(sizeInvDto);
-
             // Save ProductDetails
-            productDetails(product, dto, inventories, images, date);
+            var detail = productDetail(product, dto, date);
+
+            // Save ProductSKUs
+            saveProductSKUs(dto, detail);
+
+            // Build/Save ProductImages (save to s3)
+            productImages(detail, multiPartFile, bool, bucket);
 
             return new ResponseEntity<>(CREATED);
         }
 
-        // Build/Save Product
+        // Build Product
         var product = Product.builder()
                 .productCategory(category)
                 .uuid(UUID.randomUUID().toString())
@@ -204,94 +204,70 @@ public class WorkerProductService {
         // Save Product
         var saved = this.productRepository.save(product);
 
-        // ProductImage array
-        ProductImage[] images = productImages(list, bool, bucket);
-
-        // ProductSizeInventory array
-        ProductSizeInventory[] inventories = sizeInventories(sizeInvDto);
-
         // Save ProductDetails
-        productDetails(saved, dto, inventories, images, date);
+        var detail = productDetail(saved, dto, date);
+
+        // Save ProductSKUs
+        saveProductSKUs(dto, detail);
+
+        // Build ProductImages (save to s3)
+        productImages(detail, multiPartFile, bool, bucket);
 
         return new ResponseEntity<>(CREATED);
     }
 
     /**
-     * Create and save ProductSizeInventory objs
+     * Save Product sku. Look in db diagram in read me in case of confusion
      */
-    private ProductSizeInventory[] sizeInventories(SizeInventoryDTO[] dto) {
-        ProductSizeInventory[] arr = new ProductSizeInventory[dto.length];
-
-        for (int i = 0; i < dto.length; i++) {
-            // ProductSizeInventory
-            var sizeInventory = ProductSizeInventory.builder()
-                    .inventory(dto[i].getQty())
-                    .size(dto[i].getSize())
-                    .productDetails(new HashSet<>())
+    private void saveProductSKUs(CreateProductDTO dto, ProductDetail detail) {
+        for (SizeInventoryDTO sizeDto : dto.getSizeInventory()) {
+            var sku = ProductSku.builder()
+                    .productDetail(detail)
+                    .sku(UUID.randomUUID().toString())
+                    .size(sizeDto.getSize())
+                    .inventory(sizeDto.getQty())
                     .build();
-
-            // Save
-            var saved = this.sizeInventoryRepository.save(sizeInventory);
-
-            // Add to Array
-            arr[i] = saved;
+            this.productSkuRepo.save(sku);
         }
-
-        return arr;
     }
 
     /**
      * Save ProductDetail
      */
-    private void productDetails(
-            Product product,
-            CreateProductDTO dto,
-            ProductSizeInventory[] inventories,
-            ProductImage[] images,
-            Date date
-    ) {
-        for (ProductSizeInventory inventory : inventories) {
-            // ProductDetail
-            var detail = ProductDetail.builder()
-                    .product(product)
-                    .sizeInventory(inventory)
-                    .colour(dto.getColour())
-                    .createAt(date)
-                    .modifiedAt(null)
-                    .sku(UUID.randomUUID().toString())
-                    .isVisible(dto.getVisible())
-                    .productImages(new HashSet<>())
-                    .build();
+    private ProductDetail productDetail(Product product, CreateProductDTO dto, Date date) {
+        // ProductDetail
+        var detail = ProductDetail.builder()
+                .product(product)
+                .colour(dto.getColour())
+                .createAt(date)
+                .isVisible(dto.getVisible())
+                .productImages(new HashSet<>())
+                .skus(new HashSet<>())
+                .build();
 
-            // Add ProductImages ProductDetail
-            detail.copyImageArray(images);
-
-            // Save ProductDetail
-            this.detailRepo.save(detail);
-        }
+        // Save ProductDetail
+        return this.detailRepo.save(detail);
     }
 
     /**
-     * Create ProductImage objs and save to s3
+     * Create ProductImage obj and save to s3
      */
-    private ProductImage[] productImages(CustomMultiPart[] files, boolean profile, String bucket) {
-        ProductImage[] images = new ProductImage[files.length];
-
-        for (int i = 0; i < files.length; i++) {
+    private void productImages(ProductDetail detail, CustomMultiPart[] files, boolean profile, String bucket) {
+        for (CustomMultiPart file : files) {
             var obj = ProductImage.builder()
-                    .imageKey(files[i].key())
-                    .imagePath(files[i].file().getAbsolutePath())
+                    .productDetails(detail)
+                    .imageKey(file.key())
+                    .imagePath(file.file().getAbsolutePath())
                     .build();
 
-            // Upload to S3 if in desired profile
+            // Upload image to S3 if in desired profile
             if (profile) {
-                this.s3Service.uploadToS3(files[i].file(), files[i].metadata(), bucket, files[i].key());
+                this.s3Service.uploadToS3(file.file(), file.metadata(), bucket, file.key());
             }
 
-            images[i] = obj;
+            // Save ProductImage
+            this.productImageRepo.save(obj);
         }
-
-        return images;
     }
 
     /**
@@ -321,10 +297,8 @@ public class WorkerProductService {
      */
     @Transactional
     public ResponseEntity<HttpStatus> updateProductDetail(final DetailDTO dto) {
-        var date = this.customUtil.toUTC(new Date()).orElse(new Date());
         this.detailRepo.updateProductDetail(
                 dto.getSku(),
-                date,
                 dto.getIsVisible(),
                 dto.getQty(),
                 dto.getSize()
@@ -335,24 +309,23 @@ public class WorkerProductService {
     /**
      * Method permanently deletes a Product and children from db.
      *
-     * @param name is the product name
+     * @param uuid is the product uuid
      * @return ResponseEntity of type HttpStatus
      * @throws CustomNotFoundException is thrown when Product id does not exist
      * @throws S3Exception             is thrown when deleting from s3
      */
     @Transactional
-    public ResponseEntity<?> deleteProduct(final String name) {
-        var product = this.productRepository.findByProductName(name.trim())
-                .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));
-        ;
+    public ResponseEntity<?> deleteProduct(final String uuid) {
+        var product = this.productRepository.findByProductUuid(uuid)
+                .orElseThrow(() -> new CustomNotFoundException(uuid + " does not exist"));
 
-        // Delete from S3
         var profile = this.environment.getProperty("spring.profiles.active", "");
         var bucket = this.environment.getProperty("aws.bucket", "");
 
+        // Delete from S3
         if (profile.equals("prod") || profile.equals("stage")) {
             // Get all Images
-            List<ObjectIdentifier> keys = this.productRepository.images(name.trim())
+            List<ObjectIdentifier> keys = this.productRepository.images(uuid)
                     .stream() //
                     .map(img -> ObjectIdentifier.builder().key(img.getImage()).build()) //
                     .toList();
@@ -362,6 +335,7 @@ public class WorkerProductService {
             }
         }
 
+        // Delete from Database
         this.productRepository.delete(product);
         return new ResponseEntity<>(NO_CONTENT);
     }
@@ -415,8 +389,8 @@ public class WorkerProductService {
         CustomMultiPart[] arr = new CustomMultiPart[multipartFiles.length];
 
         for (int i = 0; i < multipartFiles.length; i++) {
-            String originalFileName = Objects
-                    .requireNonNull(multipartFiles[i].getOriginalFilename()); // Possibly throws a NullPointerException
+            String originalFileName = Objects.requireNonNull(multipartFiles[i].getOriginalFilename());
+
             File file = new File(originalFileName);
 
             try (FileOutputStream outputStream = new FileOutputStream(file)) {

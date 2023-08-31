@@ -7,13 +7,12 @@ import com.emmanuel.sarabrandserver.collection.response.CollectionResponse;
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 
 import static org.springframework.http.HttpStatus.CREATED;
 
@@ -28,15 +27,16 @@ public class WorkerCollectionService {
     }
 
     /** Returns a list of CollectionResponse. */
-    public Page<CollectionResponse> fetchAll(int page, int size) {
-        return this.collectionRepository.fetchAllCollection(PageRequest.of(page, size)) //
+    public List<CollectionResponse> fetchAllCategories() {
+        return this.collectionRepository.fetchAllCollection() //
+                .stream()
                 .map(pojo -> CollectionResponse.builder()
                         .collection(pojo.getCollection())
                         .created(pojo.getCreated().getTime())
                         .modified(pojo.getModified() == null ? 0L : pojo.getModified().getTime())
                         .visible(pojo.getVisible())
                         .build()
-                );
+                ).toList();
     }
 
     /**

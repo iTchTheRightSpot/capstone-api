@@ -25,13 +25,14 @@ public class ProductImage implements Serializable {
     @Column(name = "image_path", nullable = false)
     private String imagePath;
 
-    @ManyToOne
-    @JoinColumn(name = "detail_id", nullable = false, referencedColumnName = "detail_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "detail_id", referencedColumnName = "detail_id", nullable = false)
     private ProductDetail productDetails;
 
-    public ProductImage(String imageKey, String imagePath) {
+    public ProductImage(String imageKey, String imagePath, ProductDetail detail) {
         this.imageKey = imageKey;
         this.imagePath = imagePath;
+        this.productDetails = detail;
     }
 
 }

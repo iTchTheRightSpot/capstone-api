@@ -39,23 +39,17 @@ public class WorkerProductController {
     /**
      * Method returns a list of DetailResponse.
      *
-     * @param name is the name of the product
-     * @param page is amount of size based on the page
-     * @param size is the amount in the list adn
+     * @param uuid is the Product UUID
      * @return ResponseEntity
      */
-    @GetMapping(path = "/{name}", produces = "application/json")
-    public ResponseEntity<?> fetchAll(
-            @NotNull @PathVariable(value = "name") String name,
-            @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "15") Integer size
-    ) {
-        return new ResponseEntity<>(this.workerProductService.fetchAll(name, page, Math.min(size, 30)), HttpStatus.OK);
+    @GetMapping(path = "/detail", produces = "application/json")
+    public ResponseEntity<?> fetchAllProductDetails(@NotNull @RequestParam(value = "id") String uuid) {
+        return new ResponseEntity<>(this.workerProductService.productDetailsByProductUUID(uuid), HttpStatus.OK);
     }
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> create(@Valid @ModelAttribute CreateProductDTO dto) {
-        return workerProductService.create(dto, dto.getSizeInventory(), dto.getFiles());
+        return workerProductService.create(dto, dto.getFiles());
     }
 
     /**
@@ -83,12 +77,12 @@ public class WorkerProductController {
     /**
      * Method permanently deletes a Product
      *
-     * @param name is the Product name
+     * @param uuid is the Product uuid
      * @return ResponseEntity of type HttpStatus
      */
-    @DeleteMapping(path = "/{name}")
-    public ResponseEntity<?> deleteProduct(@NotNull @PathVariable(value = "name") String name) {
-        return this.workerProductService.deleteProduct(name);
+    @DeleteMapping
+    public ResponseEntity<?> deleteProduct(@NotNull @RequestParam(value = "id") String uuid) {
+        return this.workerProductService.deleteProduct(uuid.trim());
     }
 
     /**

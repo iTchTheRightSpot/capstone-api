@@ -118,8 +118,7 @@ public class WorkerProductService {
                 .findProductDetailsByProductUuidWorker(uuid) //
                 .stream()
                 .map(pojo -> {
-                    var urls = Arrays.stream(pojo.getImage() //
-                            .split(","))
+                    var urls = Arrays.stream(pojo.getImage().split(","))
                             .map(key -> this.s3Service.getPreSignedUrl(bool, bucket, key))
                             .toList();
 

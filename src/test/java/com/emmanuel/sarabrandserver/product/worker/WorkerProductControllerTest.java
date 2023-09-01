@@ -4,10 +4,10 @@ import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
+import com.emmanuel.sarabrandserver.product.Result;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.repository.ProductSkuRepo;
-import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
 import com.emmanuel.sarabrandserver.product.util.DetailDTO;
 import com.emmanuel.sarabrandserver.product.util.ProductDTO;
 import com.emmanuel.sarabrandserver.product.util.SizeInventoryDTO;
@@ -33,15 +33,13 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.Set;
 
-import static org.hamcrest.Matchers.hasSize;
+import static com.emmanuel.sarabrandserver.product.ProductTestingData.getResult;
+import static com.emmanuel.sarabrandserver.product.ProductTestingData.sizeInventoryDTOArray;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
@@ -53,6 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class WorkerProductControllerTest {
 
     private final static String requestMapping = "/api/v1/worker/product";
+    private final int detailSize = 10;
     private final StringBuilder category = new StringBuilder();
     private final StringBuilder colour = new StringBuilder();
     private final StringBuilder productName = new StringBuilder();
@@ -65,8 +64,7 @@ class WorkerProductControllerTest {
     @Autowired private ProductDetailRepo productDetailRepo;
     @Autowired private ProductSkuRepo productSkuRepo;
 
-    @Container
-    private static final MySQLContainer<?> container;
+    @Container private static final MySQLContainer<?> container;
 
     static {
         container = new MySQLContainer<>("mysql:latest")
@@ -84,87 +82,55 @@ class WorkerProductControllerTest {
 
     @BeforeEach
     void setUp() {
-        Set<String> set = new HashSet<>();
+        this.category.append(new Faker().commerce().department());
 
-        for (int i = 0; i < 5; i++) {
-            set.add(new Faker().commerce().department());
-        }
+        this.workerCategoryService.create(new CategoryDTO(this.category.toString(), true, ""));
+        String prodName = new Faker().commerce().productName();
+        this.productName.append(prodName);
+        String colour = new Faker().commerce().color();
+        this.colour.append(colour);
 
-        // Save Category
-        for (String str : set) {
-            if (this.category.isEmpty()) {
-                this.category.append(str);
-            }
-            this.workerCategoryService.create(new CategoryDTO(str, true, ""));
-        }
+        // Product1 and ProductDetail1
 
-        // Save Products
-        int i = 0;
-        for (String str : set) {
-            SizeInventoryDTO[] sizeInventoryDTO = {
-                    SizeInventoryDTO.builder()
-                            .size(new Faker().commerce().material() + new Faker().number().numberBetween(0, 10)) // prevent duplicate
-                            .qty(new Faker().number().randomDigitNotZero())
-                            .build(),
-                    SizeInventoryDTO.builder()
-                            .size(new Faker().commerce().material() + new Faker().number().numberBetween(11, 20)) // prevent duplicate
-                            .qty(new Faker().number().randomDigitNotZero())
-                            .build(),
-                    SizeInventoryDTO.builder()
-                            .size(new Faker().commerce().material() + new Faker().number().numberBetween(21, 30)) // prevent duplicate
-                            .qty(new Faker().number().randomDigitNotZero())
-                            .build(),
-            };
+        SizeInventoryDTO[] sizeInventoryDTO1 = sizeInventoryDTOArray(this.detailSize);
+        Result result = getResult(
+                sizeInventoryDTO1,
+                prodName,
+                this.category.toString(),
+                colour
+        );
+        this.workerService.create(result.dto(), result.files());
 
-            String c = new Faker().commerce().color() + i;
+        // Product2 and ProductDetail2
+        SizeInventoryDTO[] sizeInventoryDTO2 = sizeInventoryDTOArray(1);
+        Result result2 =
+                getResult(
+                        sizeInventoryDTO2,
+                        new Faker().commerce().productName() + 2,
+                        this.category.toString(),
+                        colour
+                );
+        this.workerService.create(result2.dto(), result2.files());
 
-            if (this.colour.isEmpty()) {
-                this.colour.append(c);
-            }
+        // Product3 and ProductDetail3
+        SizeInventoryDTO[] sizeInventoryDTO3 = sizeInventoryDTOArray(2);
+        Result result3 = getResult(
+                sizeInventoryDTO3,
+                new Faker().commerce().productName() + 3,
+                this.category.toString(),
+                colour
+        );
+        this.workerService.create(result3.dto(), result3.files());
 
-            String name = new Faker().commerce().productName();
-
-            if (this.productName.isEmpty()) {
-                this.productName.append(name);
-            }
-
-            var dto = CreateProductDTO.builder()
-                    .category(str)
-                    .collection("")
-                    .name(name)
-                    .desc(new Faker().lorem().characters(255))
-                    .price(new BigDecimal(new Faker().commerce().price()))
-                    .currency("USD")
-                    .sizeInventory(sizeInventoryDTO)
-                    .visible(true)
-                    .colour(c)
-                    .build();
-
-            MockMultipartFile[] files = {
-                    new MockMultipartFile(
-                            "file",
-                            "uploads/image1.jpeg",
-                            "image/jpeg",
-                            "Test image content".getBytes()
-                    ),
-                    new MockMultipartFile(
-                            "file",
-                            "uploads/image2.jpeg",
-                            "image/jpeg",
-                            "Test image content".getBytes()
-                    ),
-                    new MockMultipartFile(
-                            "file",
-                            "uploads/image3.jpeg",
-                            "image/jpeg",
-                            "Test image content".getBytes()
-                    ),
-            };
-
-            this.workerService.create(dto, files);
-
-            i += 1;
-        }
+        // Product4 and ProductDetail4
+        SizeInventoryDTO[] sizeInventoryDTO4 = sizeInventoryDTOArray(5);
+        var result4 = getResult(
+                sizeInventoryDTO4,
+                new Faker().commerce().productName() + 4,
+                this.category.toString(),
+                new Faker().commerce().color()
+        );
+        this.workerService.create(result4.dto(), result4.files());
     }
 
     @AfterEach
@@ -190,17 +156,23 @@ class WorkerProductControllerTest {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Simulates fetching ProductDetails by product uuid")
+    @DisplayName(value = """
+            Simulates fetching ProductDetails by product uuid.
+            Main objective is to validate native sql query
+            """)
     void fetchAllDetail() throws Exception {
-        var product = this.productRepository.findAll().stream().findFirst().orElse(null);
+        // Given
+        var product = this.productRepository.findByProductName(this.productName.toString()).orElse(null);
         assertNotNull(product);
+
+        // Based on setUp
         this.MOCK_MVC
                 .perform(get(requestMapping + "/detail").param("id", product.getUuid()))
                 .andExpect(content().contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[*].variants").isArray())
-                .andDo(print());
+                .andExpect(jsonPath("$[*].variants.length()").value(this.detailSize));
     }
 
     @Test

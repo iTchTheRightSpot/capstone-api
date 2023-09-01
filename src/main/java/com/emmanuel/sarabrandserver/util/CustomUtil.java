@@ -3,6 +3,7 @@ package com.emmanuel.sarabrandserver.util;
 import com.emmanuel.sarabrandserver.product.util.Variant;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import org.springframework.stereotype.Service;
 
 import java.util.Calendar;
@@ -47,10 +48,32 @@ public class CustomUtil {
      * */
     public <T> Variant[] toVariantArray(String str, T clazz) {
         try {
-            return this.objectMapper.readValue(str, Variant[].class);
+            MapOut[] mapOuts = this.objectMapper.readValue(str, MapOut[].class);
+            Variant[] variant = new Variant[mapOuts.length];
+
+            for (int i = 0; i < mapOuts.length; i++) {
+                variant[i] = new Variant(mapOuts[i].sku, mapOuts[i].inventory, mapOuts[i].size);
+            }
+
+            return variant;
         } catch (JsonProcessingException e) {
             log.warning("Error converting from ProductSKUs to Variant. " + clazz);
             return null;
+        }
+    }
+
+    @Getter
+    private static class MapOut {
+        private String sku;
+        private String inventory;
+        private String size;
+
+        public MapOut() { }
+
+        public MapOut(String sku, String inventory, String size) {
+            this.sku = sku;
+            this.inventory = inventory;
+            this.size = size;
         }
     }
 

@@ -4,9 +4,10 @@ import com.emmanuel.sarabrandserver.exception.InvalidFormat;
 import com.emmanuel.sarabrandserver.product.util.SizeInventoryDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.constraints.NotNull;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
+
+import java.util.logging.Logger;
 
 /**
  * The purpose of this class is to handle Nested DTO in CreateProductDTO.
@@ -14,8 +15,8 @@ import org.springframework.stereotype.Component;
  * <a href="https://docs.spring.io/spring-framework/reference/core/validation/convert.html">...</a>
  */
 @Component
-@Slf4j
 public class SizeInventoryDTOConverter implements Converter<String[], SizeInventoryDTO[]> {
+    private static final Logger log = Logger.getLogger(SizeInventoryDTOConverter.class.getName());
 
     private final ObjectMapper objectMapper;
 
@@ -40,7 +41,7 @@ public class SizeInventoryDTOConverter implements Converter<String[], SizeInvent
             try {
                 dto[i] = objectMapper.readValue(str, SizeInventoryDTO.class);
             } catch (Exception e) {
-                log.info("Incorrect format SizeInventoryDTOConverter. {}", e.getMessage());
+                log.info("Incorrect format SizeInventoryDTOConverter. " + e.getMessage());
                 throw new InvalidFormat("Please enter a size and quantity for product");
             }
         }

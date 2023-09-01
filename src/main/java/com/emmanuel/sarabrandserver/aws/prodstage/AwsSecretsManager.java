@@ -1,6 +1,5 @@
 package com.emmanuel.sarabrandserver.aws.prodstage;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -11,10 +10,12 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 
+import java.util.logging.Logger;
+
 @Configuration
 @Profile(value = {"prod"})
-@Slf4j
 public class AwsSecretsManager {
+    private static final Logger log = Logger.getLogger(AwsSecretsManager.class.getName());
     private final Environment environment;
 
     public AwsSecretsManager(Environment environment) {
@@ -38,7 +39,7 @@ public class AwsSecretsManager {
             log.info("Successfully retrieved secrets");
             return secretString;
         } catch (Exception e) {
-            log.error("Error retrieving secrets from AWS Secret Manager {}", e.getMessage());
+            log.warning("Error retrieving secrets from AWS Secret Manager " + e.getMessage());
             throw e;
         }
     }

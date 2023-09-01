@@ -17,5 +17,5 @@ public class DetailResponse {
     private boolean isVisible;
     private String colour;
     private List<String> url;
-    private List<ProductSKUResponse> variants;
+    private Variant[] variants;
 }

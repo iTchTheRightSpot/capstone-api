@@ -2,7 +2,6 @@ package com.emmanuel.sarabrandserver.aws;
 
 import com.emmanuel.sarabrandserver.exception.CustomAwsException;
 import jakarta.validation.constraints.NotNull;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -15,9 +14,12 @@ import java.io.File;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
-@Service @Slf4j
+@Service
 public class S3Service {
+    private static final Logger log = Logger.getLogger(S3Service.class.getName());
+
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
 
@@ -41,7 +43,7 @@ public class S3Service {
 
             this.s3Client.putObject(request, RequestBody.fromFile(file));
         } catch (S3Exception e) {
-            log.error("Error uploading image to s3 {}", e.getMessage());
+            log.warning("Error uploading image to s3 " + e.getMessage());
             throw new CustomAwsException("Error uploading image. Please try again or call developer");
         }
     }
@@ -61,7 +63,7 @@ public class S3Service {
                     .build();
             this.s3Client.deleteObjects(multiObjectDeleteRequest);
         } catch (S3Exception e) {
-            log.error("Error deleting image from s3 {}", e.getMessage());
+            log.warning("Error deleting image from s3 " + e.getMessage());
             throw new CustomAwsException("Error deleting image. Please try again later or call developer");
         }
     }
@@ -103,7 +105,7 @@ public class S3Service {
             log.info("Successfully retrieved object preassigned URL");
             return request.url().toString();
         } catch (S3Exception ex) {
-            log.error("Error retrieving object preassigned url {}", ex.getMessage());
+            log.warning("Error retrieving object preassigned url " + ex.getMessage());
             return "";
         }
     }

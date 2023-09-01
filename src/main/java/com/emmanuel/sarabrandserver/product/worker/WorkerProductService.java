@@ -16,7 +16,6 @@ import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.repository.ProductSkuRepo;
 import com.emmanuel.sarabrandserver.product.util.*;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,12 +33,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.logging.Logger;
 
 import static org.springframework.http.HttpStatus.*;
 
 @Service
-@Slf4j
 public class WorkerProductService {
+    private static final Logger log = Logger.getLogger(WorkerProductService.class.getName());
+
     private final ProductRepository productRepository;
     private final ProductDetailRepo detailRepo;
     private final ProductImageRepo productImageRepo;
@@ -117,16 +118,13 @@ public class WorkerProductService {
                 .findProductDetailsByProductUuidWorker(uuid) //
                 .stream()
                 .map(pojo -> {
-                    var urls = pojo.getImage() //
-                            .stream() //
-                            .map(image -> this.s3Service.getPreSignedUrl(bool, bucket, image.getImageKey()))
+                    var urls = Arrays.stream(pojo.getImage() //
+                            .split(","))
+                            .map(key -> this.s3Service.getPreSignedUrl(bool, bucket, key))
                             .toList();
 
-                    // TODO make more efficient
-                    var variants = pojo.getSkus() //
-                            .stream() //
-                            .map(sku -> new ProductSKUResponse(sku.getSku(), sku.getSize(), sku.getInventory()))
-                            .toList();
+                    Variant[] variants = this.customUtil
+                            .toVariantArray(pojo.getVariants(), WorkerProductService.class);
 
                     return DetailResponse.builder()
                             .isVisible(pojo.getVisible())
@@ -396,7 +394,7 @@ public class WorkerProductService {
                 // Validate file is an image
                 String contentType = Files.probeContentType(file.toPath());
                 if (!contentType.startsWith("image/")) {
-                    log.error("File is not an image");
+                    log.warning("File is not an image");
                     throw new CustomAwsException("File is not an image");
                 }
 
@@ -415,7 +413,7 @@ public class WorkerProductService {
                 // Copy into array
                 arr[i] = new CustomMultiPart(file, metadata, key);
             } catch (IOException ex) {
-                log.error("Error either writing multipart to file or getting file type. {}", ex.getMessage());
+                log.warning("Error either writing multipart to file or getting file type. {}" + ex.getMessage());
                 throw new CustomAwsException("Please verify file is an image");
             }
         }

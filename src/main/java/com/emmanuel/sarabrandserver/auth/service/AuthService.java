@@ -18,8 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -43,9 +41,6 @@ public class AuthService {
 
     @Value(value = "${server.servlet.session.cookie.path}")
     private String COOKIEPATH;
-
-    @Value(value = "${server.servlet.session.cookie.same-site}")
-    private String SAMESITE;
 
     @Value(value = "${server.servlet.session.cookie.secure}")
     private boolean COOKIESECURE;

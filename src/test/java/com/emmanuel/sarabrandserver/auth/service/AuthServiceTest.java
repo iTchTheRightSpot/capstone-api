@@ -52,9 +52,6 @@ class AuthServiceTest {
     @Value(value = "${server.servlet.session.cookie.path}")
     private String COOKIEPATH;
 
-    @Value(value = "${server.servlet.session.cookie.same-site}")
-    private String SAMESITE;
-
     @Value(value = "${server.servlet.session.cookie.secure}")
     private boolean COOKIESECURE;
 
@@ -77,7 +74,6 @@ class AuthServiceTest {
         this.authService.setDOMAIN(COOKIEDOMAIN);
         this.authService.setCOOKIEPATH(COOKIEPATH);
         this.authService.setCOOKIESECURE(COOKIESECURE);
-        this.authService.setSAMESITE(SAMESITE);
     }
 
     @Test

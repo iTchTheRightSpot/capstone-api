@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -12,14 +11,15 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
+import java.util.logging.Logger;
 
 /** Production only */
 @Component
 @Setter
 @Getter
 @Profile(value = {"prod"})
-@Slf4j
 public class DataSourceConnection {
+    private static final Logger log = Logger.getLogger(DataSourceConnection.class.getName());
     private String username;
     private String password;
     private String engine;
@@ -50,7 +50,7 @@ public class DataSourceConnection {
                 this.dataSourceUrl = "jdbc:%s://%s:%s/%s".formatted(engine, host, port, dbname);
                 log.info("Successfully retrieved datasource credentials");
             } catch (JsonProcessingException e) {
-                log.error("Data connection error in constructor of class DataSourceConnection {}", e.getMessage());
+                log.warning("Data connection error in constructor of class DataSourceConnection " + e.getMessage());
                 throw new RuntimeException(e);
             }
         }

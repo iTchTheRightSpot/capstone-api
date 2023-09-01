@@ -4,18 +4,20 @@ import jakarta.servlet.http.Cookie;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.logging.Logger;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 
-@Service @Getter @Setter @Slf4j
+@Service @Getter @Setter
 public class JwtTokenService {
+    private static final Logger log = Logger.getLogger(JwtTokenService.class.getName());
+
     private int tokenExpiry = 30; // minutes.
     private int boundToSendRefreshToken = 15; // minutes
 
@@ -74,7 +76,7 @@ public class JwtTokenService {
             var bound = now.plus(boundToSendRefreshToken, MINUTES);
             return expiresAt.isAfter(now) && expiresAt.isBefore(bound);
         } catch (JwtException | NullPointerException e) {
-            log.error("JWT exception {}, {}", e.getMessage(), RefreshTokenFilter.class);
+            log.warning("JWT exception %s, %s".formatted(e.getMessage(), RefreshTokenFilter.class));
             return false;
         }
     }

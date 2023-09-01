@@ -5,8 +5,8 @@ import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.util.DetailResponse;
 import com.emmanuel.sarabrandserver.product.util.ProductResponse;
-import com.emmanuel.sarabrandserver.product.util.ProductSKUResponse;
-import lombok.extern.slf4j.Slf4j;
+import com.emmanuel.sarabrandserver.product.util.Variant;
+import com.emmanuel.sarabrandserver.util.CustomUtil;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,23 +15,26 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
 
-@Service @Slf4j
+@Service
 public class ClientProductService {
     private final ProductRepository productRepository;
     private final ProductDetailRepo productDetailRepo;
     private final S3Service s3Service;
     private final Environment environment;
+    private final CustomUtil customUtil;
 
     public ClientProductService(
             ProductRepository productRepository,
             ProductDetailRepo productDetailRepo,
             S3Service s3Service,
-            Environment environment
+            Environment environment,
+            CustomUtil customUtil
     ) {
         this.productRepository = productRepository;
         this.productDetailRepo = productDetailRepo;
         this.s3Service = s3Service;
         this.environment = environment;
+        this.customUtil = customUtil;
     }
 
     /**
@@ -77,16 +80,13 @@ public class ClientProductService {
         return this.productDetailRepo.fetchProductDetailByUUIDClient(uuid) //
                 .stream() //
                 .map(pojo -> {
-                    var urls = pojo.getImage() //
-                            .stream() //
-                            .map(image -> this.s3Service.getPreSignedUrl(bool, bucket, image.getImageKey()))
+                    var urls = Arrays.stream(pojo.getImage() //
+                                    .split(","))
+                            .map(key -> this.s3Service.getPreSignedUrl(bool, bucket, key))
                             .toList();
 
-                    // TODO make more efficient
-                    var variants = pojo.getSkus() //
-                            .stream() //
-                            .map(sku -> new ProductSKUResponse(sku.getSku(), sku.getSize(), sku.getInventory()))
-                            .toList();
+                    Variant[] variants = this.customUtil
+                            .toVariantArray(pojo.getVariants(), ClientProductService.class);
 
                     return DetailResponse.builder()
                             .colour(pojo.getColour())

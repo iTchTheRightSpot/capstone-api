@@ -140,7 +140,7 @@ public class SecurityConfig {
                 )
                 .cors(withDefaults())
 
-                // Public and Protected routed
+                // Public routes
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
                             "/api/v1/home/**",

@@ -35,17 +35,41 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
             @Param(value = "s") String size
     );
 
+    /**
+     * Retrieves all ProductDetails associated to a Product
+     * The magic is since ProductDetail has a 1 to many relationship with
+     * ProductImage and ProductSKU, we are getting all ProductImages keys (comma separated).
+     * These keys we use to retrieve pre-assigned urls from s3.
+     * Finally, for ProductSku we use json object function to create an object based on desired params
+     * and then json array to sum all objects to an array
+     * */
     @Query(value = """
             SELECT
-            d.colour AS colour,
-            d.isVisible AS visible,
-            img AS image,
-            d.skus as skus
-            FROM ProductDetail d
-            INNER JOIN Product p ON d.product.productId = p.productId
-            INNER JOIN ProductImage img ON d.productDetailId = img.productDetails.productDetailId
-            WHERE d.isVisible AND p.uuid = :uuid
-            """)
+                d.is_visible AS visible,
+                d.colour AS colour,
+                GROUP_CONCAT(DISTINCT i.image_key) AS image,
+                JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                                'sku', s.sku,
+                                'inventory', s.inventory,
+                                'size', s.size
+                            )
+                    ) AS variants
+            FROM product_detail d
+            INNER JOIN (
+                SELECT
+                    ps.detail_id,
+                    GROUP_CONCAT(DISTINCT ps.sku) AS sku,
+                    GROUP_CONCAT(DISTINCT ps.inventory) AS inventory,
+                    GROUP_CONCAT(DISTINCT ps.size) AS size
+                FROM product_sku AS ps
+                GROUP BY ps.detail_id
+            ) s ON d.detail_id = s.detail_id
+            INNER JOIN product_image i ON d.detail_id = i.detail_id
+            INNER JOIN product p ON d.product_id = p.product_id
+            WHERE p.uuid = :uuid AND d.is_visible = true
+            GROUP BY d.is_visible, d.colour
+            """, nativeQuery = true)
     List<DetailPojo> fetchProductDetailByUUIDClient(@Param(value = "uuid") String uuid);
 
     @Query(value = """
@@ -58,15 +82,31 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
 
     @Query(value = """
             SELECT
-            d.colour AS colour,
-            d.isVisible AS visible,
-            img AS image,
-            d.skus as skus
-            FROM ProductDetail d
-            INNER JOIN Product p ON d.product.productId = p.productId
-            INNER JOIN ProductImage img ON d.productDetailId = img.productDetails.productDetailId
+                d.is_visible AS visible,
+                d.colour AS colour,
+                GROUP_CONCAT(DISTINCT i.image_key) AS image,
+                JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                                'sku', s.sku,
+                                'inventory', s.inventory,
+                                'size', s.size
+                            )
+                    ) AS variants
+            FROM product_detail d
+            INNER JOIN (
+                SELECT
+                    ps.detail_id,
+                    GROUP_CONCAT(DISTINCT ps.sku) AS sku,
+                    GROUP_CONCAT(DISTINCT ps.inventory) AS inventory,
+                    GROUP_CONCAT(DISTINCT ps.size) AS size
+                FROM product_sku as ps
+                GROUP BY ps.detail_id
+            ) s ON d.detail_id = s.detail_id
+            INNER JOIN product_image i ON d.detail_id = i.detail_id
+            INNER JOIN product p ON d.product_id = p.product_id
             WHERE p.uuid = :uuid
-            """)
+            GROUP BY d.is_visible, d.colour
+            """, nativeQuery = true)
     List<DetailPojo> findProductDetailsByProductUuidWorker(@Param(value = "uuid") String uuid);
 
 }

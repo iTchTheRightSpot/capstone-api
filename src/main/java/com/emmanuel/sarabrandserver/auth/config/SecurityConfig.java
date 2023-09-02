@@ -100,9 +100,8 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        List<String> allowOrigins = new ArrayList<>(3);
-        allowOrigins.add("https://admin.emmanueluluabuike.com/");
-        allowOrigins.add("https://store.emmanueluluabuike.com/");
+        List<String> allowOrigins = new ArrayList<>(2);
+        allowOrigins.add("https://*.emmanueluluabuike.com/");
 
         var profile = this.environment.getProperty("spring.profiles.active", "");
         if (profile.equals("dev") || profile.equals("test")) {

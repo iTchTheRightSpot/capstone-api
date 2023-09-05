@@ -131,7 +131,7 @@ public class AuthService {
 
         // Add jwt to cookie
         Cookie jwtCookie = new Cookie(JSESSIONID, token);
-        jwtCookie.setDomain(DOMAIN);
+//        jwtCookie.setDomain(DOMAIN);
         jwtCookie.setMaxAge(this.jwtTokenService.maxAge());
         jwtCookie.setHttpOnly(HTTPONLY);
         jwtCookie.setPath(COOKIEPATH);

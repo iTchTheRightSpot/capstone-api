@@ -18,7 +18,7 @@ import static java.time.temporal.ChronoUnit.MINUTES;
 public class JwtTokenService {
     private static final Logger log = Logger.getLogger(JwtTokenService.class.getName());
 
-    private int tokenExpiry = 30; // minutes.
+    private int tokenExpiry = 60; // minutes.
     private int boundToSendRefreshToken = 15; // minutes
 
     private final JwtEncoder jwtEncoder;

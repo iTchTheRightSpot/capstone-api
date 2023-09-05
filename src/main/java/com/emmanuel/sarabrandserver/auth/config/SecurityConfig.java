@@ -24,6 +24,7 @@ import org.springframework.security.oauth2.server.resource.web.authentication.Be
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.session.web.http.CookieSerializer;
@@ -112,7 +113,6 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(allowOrigins);
         configuration.setAllowedMethods(List.of("GET", "PUT", "POST", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(CONTENT_TYPE, ACCEPT, "X-XSRF-TOKEN"));
-//        configuration.setExposedHeaders(List.of("X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -132,11 +132,14 @@ public class SecurityConfig {
 
         return http
 
-                // Cors and CSRF config
+                // CSRF Config
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfTokenRepository)
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                 )
+                .addFilterAfter(new CookieCsrfFilter(), BasicAuthenticationFilter.class)
+
+                // Cors Config
                 .cors(withDefaults())
 
                 // Public routes
@@ -154,7 +157,7 @@ public class SecurityConfig {
                     auth.anyRequest().authenticated();
                 })
 
-                // Refresh Token Filter
+                // Jwt Refresh Token Filter
                 .addFilterBefore(this.refreshTokenFilter, BearerTokenAuthenticationFilter.class)
 
                 // Session Management
@@ -183,7 +186,7 @@ public class SecurityConfig {
         boolean secure = profile.equals("prod") || profile.equals("stage");
         CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
         Consumer<ResponseCookie.ResponseCookieBuilder> csrfCookieCustomizer = (cookie) -> cookie
-                .domain(domain)
+//                .domain(domain)
                 .httpOnly(false)
                 .secure(secure)
                 .path("/")

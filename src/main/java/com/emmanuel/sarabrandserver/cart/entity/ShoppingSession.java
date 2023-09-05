@@ -1,9 +1,8 @@
 package com.emmanuel.sarabrandserver.cart.entity;
 
-import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
 import com.emmanuel.sarabrandserver.product.entity.Product;
+import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,7 +19,6 @@ import static jakarta.persistence.FetchType.EAGER;
 @NoArgsConstructor
 @Getter
 @Setter
-@EqualsAndHashCode
 public class ShoppingSession {
 
     @Id
@@ -45,10 +43,5 @@ public class ShoppingSession {
 
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "shoppingSession")
     private Set<Product> products;
-
-    public void setSaraBrandUser(SaraBrandUser client) {
-        this.saraBrandUser = client;
-        client.setShoppingSession(this);
-    }
 
 }

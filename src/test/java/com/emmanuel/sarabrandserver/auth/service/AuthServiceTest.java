@@ -1,5 +1,6 @@
 package com.emmanuel.sarabrandserver.auth.service;
 
+import com.emmanuel.sarabrandserver.AbstractUnitTest;
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.auth.jwt.JwtTokenService;
@@ -13,19 +14,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -38,19 +34,10 @@ import static org.mockito.Mockito.*;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 
-@ExtendWith({MockitoExtension.class, SpringExtension.class})
-@ActiveProfiles("test")
-@TestPropertySource(locations = "classpath:application-test.properties")
-class AuthServiceTest {
+class AuthServiceTest extends AbstractUnitTest {
 
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
-
-    @Value(value = "${server.servlet.session.cookie.domain}")
-    private String COOKIEDOMAIN;
-
-    @Value(value = "${server.servlet.session.cookie.path}")
-    private String COOKIEPATH;
 
     @Value(value = "${server.servlet.session.cookie.secure}")
     private boolean COOKIESECURE;
@@ -71,8 +58,6 @@ class AuthServiceTest {
                 this.jwtTokenService
         );
         this.authService.setJSESSIONID(JSESSIONID);
-        this.authService.setDOMAIN(COOKIEDOMAIN);
-        this.authService.setCOOKIEPATH(COOKIEPATH);
         this.authService.setCOOKIESECURE(COOKIESECURE);
     }
 

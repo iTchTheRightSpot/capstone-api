@@ -8,9 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -45,14 +42,4 @@ public class RegisterDTO {
     @JsonProperty(value = "password")
     private String password;
 
-    public JsonObject toJson() {
-        return Json.createObjectBuilder()
-                .add("firstname", getFirstname())
-                .add("lastname", getLastname())
-                .add("email", getEmail())
-                .add("username", getUsername())
-                .add("phone", getPhone())
-                .add("password", getPassword())
-                .build();
-    }
 }

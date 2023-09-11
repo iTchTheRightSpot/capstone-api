@@ -1,26 +1,18 @@
 package com.emmanuel.sarabrandserver.auth.controller;
 
+import com.emmanuel.sarabrandserver.AbstractIntegrationTest;
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -29,40 +21,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@Testcontainers
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
-@TestPropertySource(locations = "classpath:application-test.properties")
-class ClientAuthControllerTest {
+class ClientAuthControllerTest extends AbstractIntegrationTest {
     private final String PRINCIPAL = "SEJU@development.com";
     private final String PASSWORD = "123#-SEJU-Development";
 
-    @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
-
-    @Autowired private MockMvc MOCK_MVC;
+    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
     @Autowired private ClientRoleRepo clientRoleRepo;
     @Autowired private UserRepository userRepository;
     @Autowired private AuthService authService;
-
-    @Container private static final MySQLContainer<?> container;
-
-    static {
-        container = new MySQLContainer<>("mysql:latest")
-                .withDatabaseName("sara_brand_db")
-                .withUsername("sara")
-                .withPassword("sara");
-    }
-
-    @DynamicPropertySource
-    public static void properties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", container::getJdbcUrl);
-        registry.add("spring.datasource.username", container::getUsername);
-        registry.add("spring.datasource.password", container::getPassword);
-    }
 
     @BeforeEach
     void setUp() {
@@ -86,11 +52,11 @@ class ClientAuthControllerTest {
     /* Simulates login with username instead of email */
     @Test @Order(1)
     void login() throws Exception {
-        MvcResult login = this.MOCK_MVC
+        MvcResult login = this.MOCKMVC
                 .perform(post("/api/v1/client/auth/login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(new LoginDTO(PRINCIPAL, PASSWORD).toJson().toString())
+                        .content(this.MAPPER.writeValueAsString(new LoginDTO(PRINCIPAL, PASSWORD)))
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -99,7 +65,7 @@ class ClientAuthControllerTest {
 
         assertNotNull(cookie);
 
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(get("/test/client").cookie(cookie))
                 .andExpect(status().isOk());
     }

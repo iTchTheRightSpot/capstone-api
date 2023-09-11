@@ -1,5 +1,6 @@
 package com.emmanuel.sarabrandserver.product.worker;
 
+import com.emmanuel.sarabrandserver.AbstractUnitTest;
 import com.emmanuel.sarabrandserver.aws.S3Service;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
@@ -18,17 +19,12 @@ import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -38,10 +34,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@ExtendWith({MockitoExtension.class, SpringExtension.class})
-@ActiveProfiles("test")
-@TestPropertySource(locations = "classpath:application-test.properties")
-class WorkerProductServiceTest {
+
+class WorkerProductServiceTest extends AbstractUnitTest {
     private WorkerProductService productService;
 
     @Mock private ProductRepository productRepository;

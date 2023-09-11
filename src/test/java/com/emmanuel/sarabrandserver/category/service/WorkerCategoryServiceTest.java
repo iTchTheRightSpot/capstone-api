@@ -1,5 +1,6 @@
 package com.emmanuel.sarabrandserver.category.service;
 
+import com.emmanuel.sarabrandserver.AbstractUnitTest;
 import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
@@ -10,12 +11,7 @@ import com.emmanuel.sarabrandserver.util.CustomUtil;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -28,10 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.HttpStatus.*;
 
-@ExtendWith({ MockitoExtension.class, SpringExtension.class })
-@ActiveProfiles("test")
-@TestPropertySource(locations = "classpath:application-test.properties")
-class WorkerCategoryServiceTest {
+class WorkerCategoryServiceTest extends AbstractUnitTest {
 
     private WorkerCategoryService workerCategoryService;
 

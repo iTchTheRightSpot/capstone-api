@@ -63,18 +63,16 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
                 .ifPresent(cookie -> {
                     var principal = this.tokenService.extractSubject(cookie);
                     var userDetails = this.userDetailsService.loadUserByUsername(principal);
-                    String token = this.tokenService.generateToken(
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities() // roles
-                            )
+                    var authenticated = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities() // roles
                     );
+                    String token = this.tokenService.generateToken(authenticated);
                     cookie.setValue(token);
                     cookie.setMaxAge(this.tokenService.maxAge());
                     response.addCookie(cookie);
                 });
-
         filterChain.doFilter(request, response);
     }
 

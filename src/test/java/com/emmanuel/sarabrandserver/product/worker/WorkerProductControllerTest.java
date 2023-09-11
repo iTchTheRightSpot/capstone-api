@@ -1,5 +1,6 @@
 package com.emmanuel.sarabrandserver.product.worker;
 
+import com.emmanuel.sarabrandserver.AbstractIntegrationTest;
 import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
@@ -16,21 +17,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 
@@ -42,13 +31,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(SpringExtension.class)
-@Testcontainers
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
-@TestPropertySource(locations = "classpath:application-test.properties")
-class WorkerProductControllerTest {
+class WorkerProductControllerTest extends AbstractIntegrationTest {
 
     private final static String requestMapping = "/api/v1/worker/product";
     private final int detailSize = 10;
@@ -56,29 +39,12 @@ class WorkerProductControllerTest {
     private final StringBuilder colour = new StringBuilder();
     private final StringBuilder productName = new StringBuilder();
 
-    @Autowired private MockMvc MOCK_MVC;
     @Autowired private WorkerProductService workerService;
     @Autowired private ProductRepository productRepository;
     @Autowired private WorkerCategoryService workerCategoryService;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private ProductDetailRepo productDetailRepo;
     @Autowired private ProductSkuRepo productSkuRepo;
-
-    @Container private static final MySQLContainer<?> container;
-
-    static {
-        container = new MySQLContainer<>("mysql:latest")
-                .withDatabaseName("sara_brand_db")
-                .withUsername("sara")
-                .withPassword("sara");
-    }
-
-    @DynamicPropertySource
-    public static void properties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", container::getJdbcUrl);
-        registry.add("spring.datasource.username", container::getUsername);
-        registry.add("spring.datasource.password", container::getPassword);
-    }
 
     @BeforeEach
     void setUp() {
@@ -144,7 +110,7 @@ class WorkerProductControllerTest {
     @DisplayName(value = "Simulates fetching all Products")
     void fetchAll() throws Exception {
         // Then
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(get(requestMapping)
                         .param("page", "0")
                         .param("size", "50")
@@ -166,7 +132,7 @@ class WorkerProductControllerTest {
         assertNotNull(product);
 
         // Based on setUp
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(get(requestMapping + "/detail").param("id", product.getUuid()))
                 .andExpect(content().contentType("application/json"))
                 .andExpect(status().isOk())
@@ -180,14 +146,14 @@ class WorkerProductControllerTest {
     @DisplayName(value = "Create a product")
     void create() throws Exception {
         // Given
-        String[] sizeInventoryDTO = {
-                SizeInventoryDTO.builder().size("small").qty(10).build().toJson().toString(),
-                SizeInventoryDTO.builder().size("medium").qty(3).build().toJson().toString(),
-                SizeInventoryDTO.builder().size("large").qty(15).build().toJson().toString(),
+        SizeInventoryDTO[] sizeInventoryDTO = {
+                SizeInventoryDTO.builder().size("small").qty(10).build(),
+                SizeInventoryDTO.builder().size("medium").qty(3).build(),
+                SizeInventoryDTO.builder().size("large").qty(15).build(),
         };
 
         // Then
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(multipart(requestMapping)
                         .file(new MockMultipartFile(
                                 "files",
@@ -203,9 +169,9 @@ class WorkerProductControllerTest {
                         ))
                         .param("category", this.category.toString())
                         .param("collection", "")
-                        .param("sizeInventory", sizeInventoryDTO[0])
-                        .param("sizeInventory", sizeInventoryDTO[1])
-                        .param("sizeInventory", sizeInventoryDTO[2])
+                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[0]))
+                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[1]))
+                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[2]))
                         .param("name", new Faker().commerce().productName())
                         .param("desc", new Faker().lorem().characters(255))
                         .param("price", new BigDecimal(new Faker().commerce().price()).toString())
@@ -225,7 +191,9 @@ class WorkerProductControllerTest {
             """)
     void val() throws Exception {
         // Then
-        this.MOCK_MVC
+        String sizeInv = this.MAPPER
+                .writeValueAsString(SizeInventoryDTO.builder().size("small").qty(10).build());
+        this.MOCKMVC
                 .perform(multipart(requestMapping)
                         .file(new MockMultipartFile(
                                 "files",
@@ -241,7 +209,7 @@ class WorkerProductControllerTest {
                         ))
                         .param("category", this.category.toString())
                         .param("collection", "")
-                        .param("sizeInventory", SizeInventoryDTO.builder().size("small").qty(10).build().toJson().toString())
+                        .param("sizeInventory", sizeInv)
                         .param("name", new Faker().commerce().productName())
                         .param("desc", new Faker().lorem().characters(255))
                         .param("price", new BigDecimal(new Faker().commerce().price()).toString())
@@ -251,7 +219,6 @@ class WorkerProductControllerTest {
                         .with(csrf())
                 )
                 .andExpect(status().isCreated());
-
     }
 
     @Test
@@ -262,14 +229,14 @@ class WorkerProductControllerTest {
             """)
     void ex() throws Exception {
         // Given
-        String[] sizeInventoryDTO = {
-                SizeInventoryDTO.builder().size("small").qty(10).build().toJson().toString(),
-                SizeInventoryDTO.builder().size("medium").qty(3).build().toJson().toString(),
-                SizeInventoryDTO.builder().size("large").qty(15).build().toJson().toString(),
+        SizeInventoryDTO[] sizeInventoryDTO = {
+                SizeInventoryDTO.builder().size("small").qty(10).build(),
+                SizeInventoryDTO.builder().size("medium").qty(3).build(),
+                SizeInventoryDTO.builder().size("large").qty(15).build(),
         };
 
         // Then
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(multipart(requestMapping)
                         .file(new MockMultipartFile(
                                 "files",
@@ -285,9 +252,9 @@ class WorkerProductControllerTest {
                         ))
                         .param("category", this.category.toString())
                         .param("collection", "")
-                        .param("sizeInventory", sizeInventoryDTO[0])
-                        .param("sizeInventory", sizeInventoryDTO[1])
-                        .param("sizeInventory", sizeInventoryDTO[2])
+                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[0]))
+                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[1]))
+                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[2]))
                         .param("name", this.productName.toString())
                         .param("desc", new Faker().lorem().characters(255))
                         .param("price", new BigDecimal(new Faker().commerce().price()).toString())
@@ -304,7 +271,7 @@ class WorkerProductControllerTest {
     @DisplayName(value = "Validates bad request because sizeInventory JsonProperty is not present")
     void exThrown() throws Exception {
         // Then
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(multipart(requestMapping)
                         .file(new MockMultipartFile(
                                 "files",
@@ -336,14 +303,13 @@ class WorkerProductControllerTest {
     @DisplayName(value = "Validates Bad request due to sizeInventory[i] being null")
     void variableThrown() throws Exception {
         // Given
-        String[] sizeInventoryDTO = {
-                SizeInventoryDTO.builder().size("small").qty(10).build().toJson().toString(),
-                null,
-                SizeInventoryDTO.builder().size("large").qty(15).build().toJson().toString(),
+        SizeInventoryDTO[] sizeInventoryDTO = {
+                SizeInventoryDTO.builder().size("small").qty(10).build(),
+                SizeInventoryDTO.builder().size("large").qty(15).build(),
         };
 
         // Then
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(multipart(requestMapping)
                         .file(new MockMultipartFile(
                                 "files",
@@ -359,9 +325,9 @@ class WorkerProductControllerTest {
                         ))
                         .param("category", this.category.toString())
                         .param("collection", "")
-                        .param("sizeInventory", sizeInventoryDTO[0])
-                        .param("sizeInventory", sizeInventoryDTO[1])
-                        .param("sizeInventory", sizeInventoryDTO[2])
+                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[0]))
+                        .param("sizeInventory", (String) null)
+                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[1]))
                         .param("name", new Faker().commerce().productName())
                         .param("desc", new Faker().lorem().characters(255))
                         .param("price", new BigDecimal(new Faker().commerce().price()).toString())
@@ -390,10 +356,10 @@ class WorkerProductControllerTest {
                 .build();
 
         // Then
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(put(requestMapping)
                         .contentType(APPLICATION_JSON)
-                        .content(dto.toJson().toString())
+                        .content(this.MAPPER.writeValueAsString(dto))
                         .with(csrf())
                 )
                 .andExpect(status().isOk());
@@ -417,10 +383,10 @@ class WorkerProductControllerTest {
                 .build();
 
         // Then
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(put(requestMapping)
                         .contentType(APPLICATION_JSON)
-                        .content(dto.toJson().toString())
+                        .content(this.MAPPER.writeValueAsString(dto))
                         .with(csrf())
                 )
                 .andExpect(status().isOk());
@@ -438,10 +404,10 @@ class WorkerProductControllerTest {
         var dto = new DetailDTO(productSku.getSku(), true, 50, "large");
 
         // Then
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(put(requestMapping + "/detail")
                         .contentType(APPLICATION_JSON)
-                        .content(dto.toJson().toString())
+                        .content(this.MAPPER.writeValueAsString(dto))
                         .with(csrf())
                 )
                 .andExpect(status().isOk());
@@ -460,8 +426,10 @@ class WorkerProductControllerTest {
     void deleteProduct() throws Exception {
         var product = this.productRepository.findAll().stream().findFirst().orElse(null);
         assertNotNull(product);
-        this.MOCK_MVC.perform(delete(requestMapping).param("id", product.getUuid()).with(csrf()))
+
+        this.MOCKMVC.perform(delete(requestMapping).param("id", product.getUuid()).with(csrf()))
                 .andExpect(status().isNoContent());
+
         var del = this.productRepository.findById(product.getProductId()).orElse(null);
         assertNull(del);
     }

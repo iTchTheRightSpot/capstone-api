@@ -1,6 +1,6 @@
 package com.emmanuel.sarabrandserver.auth.controller;
 
-import com.emmanuel.sarabrandserver.auth.bruteforce.BruteForceService;
+import com.emmanuel.sarabrandserver.AbstractIntegrationTest;
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
@@ -8,22 +8,13 @@ import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.user.repository.ClientRoleRepo;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -34,49 +25,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@Testcontainers
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
-@TestPropertySource(locations = "classpath:application-test.properties")
-class WorkerAuthControllerTest {
-
-    @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
-
+class WorkerAuthControllerTest extends AbstractIntegrationTest {
     private final String PRINCIPAL = "SEJU@development.com";
     private final String PASSWORD = "123#-SEJU-Development";
     private final String requestMapping = "/api/v1/worker/auth/";
 
-    @Autowired private MockMvc MOCK_MVC;
+    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
+
     @Autowired private AuthService authService;
     @Autowired private ClientRoleRepo clientRoleRepo;
     @Autowired private UserRepository userRepository;
-    @Autowired private BruteForceService bruteForceService;
-
-    @Container
-    private static final MySQLContainer<?> container;
-
-    static {
-        container = new MySQLContainer<>("mysql:latest")
-                .withDatabaseName("sara_brand_db")
-                .withUsername("sara")
-                .withPassword("sara");
-    }
-
-    @DynamicPropertySource
-    public static void properties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", container::getJdbcUrl);
-        registry.add("spring.datasource.username", container::getUsername);
-        registry.add("spring.datasource.password", container::getPassword);
-    }
 
     @BeforeEach
     void setUp() {
-        int MAX_FAILED_AUTH = 3;
-        this.bruteForceService.setMAX(MAX_FAILED_AUTH);
         this.authService.workerRegister(new RegisterDTO(
                 "SEJU",
                 "Development",
@@ -100,11 +61,11 @@ class WorkerAuthControllerTest {
     @Order(1)
     void register() throws Exception {
         // Login
-        MvcResult login = this.MOCK_MVC
+        MvcResult login = this.MOCKMVC
                 .perform(post(requestMapping + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(new LoginDTO(PRINCIPAL, PASSWORD).toJson().toString())
+                        .content(this.MAPPER.writeValueAsString(new LoginDTO(PRINCIPAL, PASSWORD)))
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -117,13 +78,13 @@ class WorkerAuthControllerTest {
                 "james development",
                 "0000000000",
                 "A;D@#$13245eifdkj"
-        ).toJson().toString();
+        );
 
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(post(requestMapping + "register")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(dto)
+                        .content(this.MAPPER.writeValueAsString(dto))
                         .cookie(login.getResponse().getCookie(JSESSIONID))
                 )
                 .andExpect(status().isCreated());
@@ -136,11 +97,11 @@ class WorkerAuthControllerTest {
     @Order(2)
     void register_with_existing_credentials() throws Exception {
         // Login
-        MvcResult login = this.MOCK_MVC
+        MvcResult login = this.MOCKMVC
                 .perform(post(requestMapping + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(new LoginDTO(PRINCIPAL, PASSWORD).toJson().toString())
+                        .content(this.MAPPER.writeValueAsString(new LoginDTO(PRINCIPAL, PASSWORD)))
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -152,13 +113,13 @@ class WorkerAuthControllerTest {
                 "",
                 "00-000-0000",
                 PASSWORD
-        ).toJson().toString();
+        );
 
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(post(requestMapping + "register")
                         .contentType(APPLICATION_JSON)
                         .with(csrf())
-                        .content(dto)
+                        .content(this.MAPPER.writeValueAsString(dto))
                         .cookie(login.getResponse().getCookie(JSESSIONID))
                 )
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException));
@@ -167,11 +128,13 @@ class WorkerAuthControllerTest {
     @Test
     @Order(3)
     void login_wrong_password() throws Exception {
-        this.MOCK_MVC
+        String payload = this.MAPPER
+                .writeValueAsString(new LoginDTO(PRINCIPAL, "fFeubfrom@#$%^124234"));
+        this.MOCKMVC
                 .perform(post(requestMapping + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(new LoginDTO(PRINCIPAL, "fFeubfrom@#$%^124234").toJson().toString())
+                        .content(payload)
                 )
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("Bad credentials"))
@@ -185,11 +148,11 @@ class WorkerAuthControllerTest {
     @Order(4)
     void logout() throws Exception {
         // Login
-        MvcResult login = this.MOCK_MVC
+        MvcResult login = this.MOCKMVC
                 .perform(post(requestMapping + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(new LoginDTO(PRINCIPAL, PASSWORD).toJson().toString())
+                        .content(this.MAPPER.writeValueAsString(new LoginDTO(PRINCIPAL, PASSWORD)))
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -199,7 +162,7 @@ class WorkerAuthControllerTest {
         assertNotNull(cookie);
 
         // Logout
-        MvcResult logout = this.MOCK_MVC
+        MvcResult logout = this.MOCKMVC
                 .perform(post("/api/v1/logout").cookie(cookie).with(csrf()))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -207,7 +170,7 @@ class WorkerAuthControllerTest {
         cookie = logout.getResponse().getCookie(JSESSIONID); // This should be empty
 
         // Access protected route with invalid cookie
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(get("/test/worker").cookie(cookie))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message")

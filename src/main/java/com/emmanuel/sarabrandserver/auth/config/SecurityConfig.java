@@ -2,9 +2,9 @@ package com.emmanuel.sarabrandserver.auth.config;
 
 import com.emmanuel.sarabrandserver.auth.jwt.RefreshTokenFilter;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
@@ -48,16 +48,23 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-    private final Environment environment;
+
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
+
+    @Value(value = "${server.servlet.session.cookie.secure}")
+    private boolean COOKIESECURE;
+
+    @Value(value = "${spring.profiles.active}")
+    private String PROFILE;
+
     private final AuthenticationEntryPoint authEntryPoint;
     private final RefreshTokenFilter refreshTokenFilter;
 
     public SecurityConfig(
-            Environment environment,
-            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry,
-            RefreshTokenFilter refreshTokenFilter
+            RefreshTokenFilter refreshTokenFilter,
+            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry
     ) {
-        this.environment = environment;
         this.authEntryPoint = authEntry;
         this.refreshTokenFilter = refreshTokenFilter;
     }
@@ -104,8 +111,7 @@ public class SecurityConfig {
         List<String> allowOrigins = new ArrayList<>(2);
         allowOrigins.add("https://server.emmanueluluabuike.com/");
 
-        var profile = this.environment.getProperty("spring.profiles.active", "");
-        if (profile.equals("dev") || profile.equals("test")) {
+        if (this.PROFILE.equals("dev") || this.PROFILE.equals("test")) {
             allowOrigins.add("http://localhost:4200/");
         }
 
@@ -125,10 +131,7 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        var JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name", "");
-        var domain = this.environment.getProperty("server.servlet.session.cookie.domain", "");
-        var profile = this.environment.getProperty("spring.profiles.active", "");
-        var csrfTokenRepository = getCookieCsrfTokenRepository(domain, profile);
+        var csrfTokenRepository = getCookieCsrfTokenRepository(this.COOKIESECURE);
 
         return http
 
@@ -157,12 +160,12 @@ public class SecurityConfig {
                     auth.anyRequest().authenticated();
                 })
 
-                // Jwt Refresh Token Filter
+                // Jwt
                 .addFilterBefore(this.refreshTokenFilter, BearerTokenAuthenticationFilter.class)
+                .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
 
                 // Session Management
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
 
                 // Exception Handling. Allows ControllerAdvices to take effect
                 .exceptionHandling((ex) -> ex.authenticationEntryPoint(this.authEntryPoint))
@@ -182,11 +185,9 @@ public class SecurityConfig {
      * As per docs
      * <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">...</a>
      */
-    private static CookieCsrfTokenRepository getCookieCsrfTokenRepository(String domain, String profile) {
-        boolean secure = profile.equals("prod") || profile.equals("stage");
+    private static CookieCsrfTokenRepository getCookieCsrfTokenRepository(boolean secure) {
         CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
         Consumer<ResponseCookie.ResponseCookieBuilder> csrfCookieCustomizer = (cookie) -> cookie
-//                .domain(domain)
                 .httpOnly(false)
                 .secure(secure)
                 .path("/")

@@ -1,5 +1,6 @@
 package com.emmanuel.sarabrandserver.category.controller;
 
+import com.emmanuel.sarabrandserver.AbstractIntegrationTest;
 import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
@@ -8,21 +9,9 @@ import com.github.javafaker.Faker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -33,39 +22,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
-@Testcontainers
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
-@TestPropertySource(locations = "classpath:application-test.properties")
-class WorkerCategoryControllerTest {
-
-    @Autowired private MockMvc MOCK_MVC;
+class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
     @Autowired private WorkerCategoryService workerCategoryService;
-
     @Autowired private CategoryRepository categoryRepository;
 
     private CategoryDTO categoryDTO;
 
     private final static String requestMapping = "/api/v1/worker/category";
-
-    @Container private static final MySQLContainer<?> container;
-
-    static {
-        container = new MySQLContainer<>("mysql:latest")
-                .withDatabaseName("sara_brand_db")
-                .withUsername("sara")
-                .withPassword("sara");
-    }
-
-    @DynamicPropertySource
-    public static void properties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", container::getJdbcUrl);
-        registry.add("spring.datasource.username", container::getUsername);
-        registry.add("spring.datasource.password", container::getPassword);
-    }
 
     @BeforeEach
     void setUp() {
@@ -88,7 +52,7 @@ class WorkerCategoryControllerTest {
     @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void fetchCategories() throws Exception {
         // Then
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(get(requestMapping).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
@@ -97,14 +61,14 @@ class WorkerCategoryControllerTest {
     @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void create() throws Exception {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().productName(), true, "").toJson().toString();
+        var dto = new CategoryDTO(new Faker().commerce().productName(), true, "");
 
         // Then
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(post(requestMapping)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(dto)
+                        .content(this.MAPPER.writeValueAsString(dto))
                 )
                 .andExpect(status().isCreated());
     }
@@ -116,11 +80,11 @@ class WorkerCategoryControllerTest {
         var dto = new CategoryDTO(new Faker().commerce().productName(), true, this.categoryDTO.getName());
 
         // Then
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(post(requestMapping)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(dto.toJson().toString())
+                        .content(this.MAPPER.writeValueAsString(dto))
                 )
                 .andExpect(status().isCreated());
     }
@@ -132,21 +96,19 @@ class WorkerCategoryControllerTest {
         var dto = new UpdateCategoryDTO(id, "Updated category name");
 
         // Then
-        this.MOCK_MVC
+        this.MOCKMVC
                 .perform(put(requestMapping)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(dto.toJson().toString())
+                        .content(this.MAPPER.writeValueAsString(dto))
                 )
                 .andExpect(status().isOk());
     }
 
     @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void custom_delete() throws Exception {
-        this.MOCK_MVC
-                .perform(delete(requestMapping + "/{name}", this.categoryDTO.getName())
-                        .with(csrf())
-                )
+        this.MOCKMVC
+                .perform(delete(requestMapping + "/{name}", this.categoryDTO.getName()).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 

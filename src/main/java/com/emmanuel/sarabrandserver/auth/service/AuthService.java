@@ -33,15 +33,6 @@ public class AuthService {
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
 
-    @Value(value = "${server.servlet.session.cookie.domain}")
-    private String DOMAIN;
-
-    @Value(value = "${server.servlet.session.cookie.http-only}")
-    private boolean HTTPONLY;
-
-    @Value(value = "${server.servlet.session.cookie.path}")
-    private String COOKIEPATH;
-
     @Value(value = "${server.servlet.session.cookie.secure}")
     private boolean COOKIESECURE;
 
@@ -106,8 +97,7 @@ public class AuthService {
     }
 
     /**
-     * Manually login a user. As per docs
-     * <a href="https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html">...</a>
+     * Manually login a user. Gotcha is Jwt token is sent as a http true cookie
      * @param dto consist of principal and password.
      * @param request of HttpServletRequest
      * @param response of HttpServletResponse
@@ -130,18 +120,17 @@ public class AuthService {
         String token = this.jwtTokenService.generateToken(authenticated);
 
         // Add jwt to cookie
-        Cookie jwtCookie = new Cookie(JSESSIONID, token);
-//        jwtCookie.setDomain(DOMAIN);
-        jwtCookie.setMaxAge(this.jwtTokenService.maxAge());
-        jwtCookie.setHttpOnly(HTTPONLY);
-        jwtCookie.setPath(COOKIEPATH);
-        jwtCookie.setSecure(COOKIESECURE);
-        response.addCookie(jwtCookie);
+        Cookie cookie = new Cookie(JSESSIONID, token);
+        cookie.setMaxAge(this.jwtTokenService.maxAge());
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setSecure(COOKIESECURE);
+        response.addCookie(cookie);
 
         return new ResponseEntity<>(OK);
     }
 
-    /** Create a new Clientz object */
+    /** Create a new User object */
     private SaraBrandUser createUser(RegisterDTO dto) {
         var client = SaraBrandUser.builder()
                 .firstname(dto.getFirstname().trim())
@@ -162,7 +151,7 @@ public class AuthService {
     /**
      * Method simply prevents user from signing in again if the request contains a valid jwt and LOGGEDSESSION cookie.
      * @param res of HttpServletRequest
-     * @return CustomAuthResponse
+     * @return boolean
      * */
     private boolean _validateRequestContainsValidCookies(HttpServletRequest res) {
         Cookie[] cookies = res.getCookies();

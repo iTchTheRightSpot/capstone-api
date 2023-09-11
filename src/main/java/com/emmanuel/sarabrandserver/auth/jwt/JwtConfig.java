@@ -33,6 +33,7 @@ import java.util.UUID;
 public class JwtConfig {
     private RSAKey rsaKey;
 
+    // Generate pub, priv key at run time
     private record Jwks() {
         public static RSAKey generateRsa() {
             KeyPair keyPair = KeyGeneratorUtils.generateRsaKey();

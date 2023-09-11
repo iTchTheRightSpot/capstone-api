@@ -8,9 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -28,11 +25,4 @@ public class CategoryDTO {
     @NotNull(message = "parent cannot be null")
     private String parent;
 
-    public JsonObject toJson() {
-        return Json.createObjectBuilder()
-                .add("name", getName())
-                .add("visible", getVisible())
-                .add("parent", getParent())
-                .build();
-    }
 }

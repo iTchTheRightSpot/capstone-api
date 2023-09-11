@@ -13,16 +13,13 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
+import static com.emmanuel.sarabrandserver.TestConfig.container;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.properties")
@@ -30,17 +27,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public abstract class AbstractIntegrationTest {
 
     @Autowired protected MockMvc MOCKMVC;
-    @Autowired protected @Qualifier(value = "testMapper") ObjectMapper MAPPER;
+    @Autowired @Qualifier(value = "testMapper") protected ObjectMapper MAPPER;
 
-    @Container private static final MySQLContainer<?> container;
-
-    static {
-        container = new MySQLContainer<>("mysql:latest")
-                .withDatabaseName("sara_brand_db")
-                .withUsername("sara")
-                .withPassword("sara");
-    }
-
+    // Set database connection
     @DynamicPropertySource
     public static void properties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", container::getJdbcUrl);
@@ -48,6 +37,7 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.password", container::getPassword);
     }
 
+    // For every test, validate DB is running
     @Test
     void databaseIsRunning() {
         assertTrue(container.isRunning());

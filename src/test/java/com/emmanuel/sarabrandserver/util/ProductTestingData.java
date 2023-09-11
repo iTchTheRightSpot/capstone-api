@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.product;
+package com.emmanuel.sarabrandserver.util;
 
 import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
 import com.emmanuel.sarabrandserver.product.util.SizeInventoryDTO;

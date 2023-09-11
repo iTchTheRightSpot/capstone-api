@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.product.worker;
+package com.emmanuel.sarabrandserver.unit;
 
 import com.emmanuel.sarabrandserver.AbstractUnitTest;
 import com.emmanuel.sarabrandserver.aws.S3Service;
@@ -14,6 +14,7 @@ import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.repository.ProductSkuRepo;
 import com.emmanuel.sarabrandserver.product.util.DetailDTO;
 import com.emmanuel.sarabrandserver.product.util.ProductDTO;
+import com.emmanuel.sarabrandserver.product.worker.WorkerProductService;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;

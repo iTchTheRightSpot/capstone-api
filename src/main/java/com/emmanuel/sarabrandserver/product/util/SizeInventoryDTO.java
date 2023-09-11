@@ -8,9 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -25,12 +22,5 @@ public class SizeInventoryDTO {
     @NotNull(message = "Please enter or choose product size")
     @NotEmpty(message = "Please enter or choose product size")
     private String size;
-
-    public JsonObject toJson() {
-        return Json.createObjectBuilder()
-                .add("qty", getQty())
-                .add("size", getSize())
-                .build();
-    }
 
 }

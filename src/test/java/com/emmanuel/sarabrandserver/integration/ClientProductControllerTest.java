@@ -1,10 +1,10 @@
-package com.emmanuel.sarabrandserver.product.client;
+package com.emmanuel.sarabrandserver.integration;
 
 import com.emmanuel.sarabrandserver.AbstractIntegrationTest;
 import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
-import com.emmanuel.sarabrandserver.product.Result;
+import com.emmanuel.sarabrandserver.util.Result;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.util.SizeInventoryDTO;
 import com.emmanuel.sarabrandserver.product.worker.WorkerProductService;
@@ -15,8 +15,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static com.emmanuel.sarabrandserver.product.ProductTestingData.getResult;
-import static com.emmanuel.sarabrandserver.product.ProductTestingData.sizeInventoryDTOArray;
+import static com.emmanuel.sarabrandserver.util.ProductTestingData.getResult;
+import static com.emmanuel.sarabrandserver.util.ProductTestingData.sizeInventoryDTOArray;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -70,4 +70,5 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$[*].variants").isArray())
                 .andExpect(jsonPath("$[*].variants.length()").value(this.detailSize));
     }
+
 }

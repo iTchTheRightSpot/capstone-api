@@ -9,8 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.json.Json;
-import javax.json.JsonObject;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
@@ -42,16 +40,5 @@ public class ProductDTO implements Serializable {
 
     @NotNull(message = "cannot be empty")
     private String collection;
-
-    public JsonObject toJson() {
-        return Json.createObjectBuilder()
-                .add("id", getUuid())
-                .add("name", getName())
-                .add("desc", getDesc())
-                .add("price", getPrice())
-                .add("category", getCategory())
-                .add("collection", getCollection())
-                .build();
-    }
 
 }

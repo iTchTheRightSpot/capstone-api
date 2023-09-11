@@ -8,9 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -34,14 +31,5 @@ public class DetailDTO {
     @NotNull(message = "cannot be empty")
     @NotEmpty(message = "cannot be empty")
     private String size;
-
-    public JsonObject toJson() {
-        return Json.createObjectBuilder()
-                .add("sku", getSku())
-                .add("is_visible", getIsVisible())
-                .add("qty", getQty())
-                .add("size", getSize())
-                .build();
-    }
 
 }

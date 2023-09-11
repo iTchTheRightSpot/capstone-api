@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.category.controller;
+package com.emmanuel.sarabrandserver.integration;
 
 import com.emmanuel.sarabrandserver.AbstractIntegrationTest;
 import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;

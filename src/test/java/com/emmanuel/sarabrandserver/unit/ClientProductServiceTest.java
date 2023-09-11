@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.product.client;
+package com.emmanuel.sarabrandserver.unit;
 
 import com.emmanuel.sarabrandserver.AbstractUnitTest;
 import org.junit.jupiter.api.BeforeEach;

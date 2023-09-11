@@ -9,9 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -26,12 +23,5 @@ public class UpdateCategoryDTO {
     @NotEmpty(message = "cannot be empty")
     @Size(max = 50, message = "category name cannot exceed length of 50")
     private String name;
-
-    public JsonObject toJson() {
-        return Json.createObjectBuilder()
-                .add("id", getId())
-                .add("name", getName())
-                .build();
-    }
 
 }

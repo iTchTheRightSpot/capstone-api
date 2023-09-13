@@ -24,8 +24,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 
 import java.math.BigDecimal;
 
-import static com.emmanuel.sarabrandserver.util.ProductTestingData.getResult;
-import static com.emmanuel.sarabrandserver.util.ProductTestingData.sizeInventoryDTOArray;
+import static com.emmanuel.sarabrandserver.util.TestingData.getResult;
+import static com.emmanuel.sarabrandserver.util.TestingData.sizeInventoryDTOArray;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;

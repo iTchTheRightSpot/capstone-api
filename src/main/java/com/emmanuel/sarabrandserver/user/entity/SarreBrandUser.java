@@ -22,7 +22,7 @@ import static jakarta.persistence.FetchType.EAGER;
 @Getter
 @Setter
 @EqualsAndHashCode
-public class SaraBrandUser implements Serializable {
+public class SarreBrandUser implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,28 +47,19 @@ public class SaraBrandUser implements Serializable {
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
 
-    @Column(name = "credentials_none_expired", nullable = false)
-    private boolean credentialsNonExpired;
-
-    @Column(name = "account_none_expired", nullable = false)
-    private boolean accountNonExpired;
-
-    @Column(name = "account_none_locked", nullable = false)
-    private boolean accountNoneLocked;
-
     @OneToOne(cascade = ALL)
     @JoinColumn(name = "reset_id", referencedColumnName = "reset_id")
     private ClientPasswordResetToken token;
 
-    @OneToOne(mappedBy = "saraBrandUser")
+    @OneToOne(mappedBy = "sarreBrandUser")
     private ShoppingSession shoppingSession;
 
-    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "saraBrandUser", orphanRemoval = true)
+    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "sarreBrandUser", orphanRemoval = true)
     private Set<ClientRole> clientRole;
 
     public void addRole(ClientRole role) {
         this.clientRole.add(role);
-        role.setSaraBrandUser(this);
+        role.setSarreBrandUser(this);
     }
 
     public Collection<? extends GrantedAuthority> getAuthorities() {

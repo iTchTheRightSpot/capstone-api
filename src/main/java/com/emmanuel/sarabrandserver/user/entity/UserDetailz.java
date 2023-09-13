@@ -5,39 +5,41 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
-public record UserDetailz(SaraBrandUser saraBrandUser) implements UserDetails {
+public record UserDetailz(SarreBrandUser sarreBrandUser) implements UserDetails {
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.saraBrandUser.getAuthorities();
+        return this.sarreBrandUser.getAuthorities();
     }
 
     @Override
     public String getPassword() {
-        return this.saraBrandUser.getPassword();
+        return this.sarreBrandUser.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return this.saraBrandUser.getEmail();
+        return this.sarreBrandUser.getEmail();
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return this.saraBrandUser.isAccountNonExpired();
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return this.saraBrandUser.isAccountNoneLocked();
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return this.saraBrandUser.isCredentialsNonExpired();
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return this.saraBrandUser.isEnabled();
+        return this.sarreBrandUser.isEnabled();
     }
+
 }

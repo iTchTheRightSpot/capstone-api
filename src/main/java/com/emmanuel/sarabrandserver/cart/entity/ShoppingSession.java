@@ -1,7 +1,7 @@
 package com.emmanuel.sarabrandserver.cart.entity;
 
 import com.emmanuel.sarabrandserver.product.entity.Product;
-import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
+import com.emmanuel.sarabrandserver.user.entity.SarreBrandUser;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,7 +39,7 @@ public class ShoppingSession {
 
     @OneToOne(cascade = ALL)
     @JoinColumn(name = "client_id", referencedColumnName = "client_id")
-    private SaraBrandUser saraBrandUser;
+    private SarreBrandUser sarreBrandUser;
 
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "shoppingSession")
     private Set<Product> products;

@@ -6,7 +6,7 @@ import com.emmanuel.sarabrandserver.auth.jwt.JwtTokenService;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.user.entity.ClientRole;
-import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
+import com.emmanuel.sarabrandserver.user.entity.SarreBrandUser;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -67,8 +67,8 @@ public class AuthService {
                 .orElse(createUser(dto));
 
         // Note User and Role tables have a relationship fetch type EAGER
-        boolean isAdmin = client.getClientRole()
-                .stream()
+        boolean isAdmin = client.getClientRole() //
+                .stream() //
                 .anyMatch(role -> role.getRole().equals(RoleEnum.WORKER));
 
         if (isAdmin) {
@@ -97,7 +97,8 @@ public class AuthService {
     }
 
     /**
-     * Manually login a user. Gotcha is Jwt token is sent as a http true cookie
+     * Manually login a user. Gotcha is jwt token is sent as a http true cookie
+     * instead of as an Authorization header or body.
      * @param dto consist of principal and password.
      * @param request of HttpServletRequest
      * @param response of HttpServletResponse
@@ -125,23 +126,20 @@ public class AuthService {
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setSecure(COOKIESECURE);
-        response.addCookie(cookie);
+        response.addCookie(cookie); // Add cookie to response
 
         return new ResponseEntity<>(OK);
     }
 
     /** Create a new User object */
-    private SaraBrandUser createUser(RegisterDTO dto) {
-        var client = SaraBrandUser.builder()
+    private SarreBrandUser createUser(RegisterDTO dto) {
+        var client = SarreBrandUser.builder()
                 .firstname(dto.getFirstname().trim())
                 .lastname(dto.getLastname().trim())
                 .email(dto.getEmail().trim())
                 .phoneNumber(dto.getPhone().trim())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .enabled(true)
-                .credentialsNonExpired(true)
-                .accountNonExpired(true)
-                .accountNoneLocked(true)
                 .clientRole(new HashSet<>())
                 .build();
         client.addRole(new ClientRole(RoleEnum.CLIENT));

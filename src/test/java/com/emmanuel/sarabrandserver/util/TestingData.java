@@ -1,14 +1,48 @@
 package com.emmanuel.sarabrandserver.util;
 
+import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
 import com.emmanuel.sarabrandserver.product.util.SizeInventoryDTO;
+import com.emmanuel.sarabrandserver.user.entity.ClientRole;
+import com.emmanuel.sarabrandserver.user.entity.SarreBrandUser;
 import com.github.javafaker.Faker;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
 
-public class ProductTestingData {
+public class TestingData {
+
+
+    public static SarreBrandUser client() {
+        var client = SarreBrandUser.builder()
+                .firstname(new Faker().name().firstName())
+                .lastname(new Faker().name().lastName())
+                .email(new Faker().name().fullName())
+                .phoneNumber(new Faker().phoneNumber().phoneNumber())
+                .password(new Faker().phoneNumber().phoneNumber())
+                .enabled(true)
+                .clientRole(new HashSet<>())
+                .build();
+        client.addRole(new ClientRole(RoleEnum.CLIENT));
+        return client;
+    }
+
+    public static SarreBrandUser worker() {
+        var client = SarreBrandUser.builder()
+                .firstname(new Faker().name().firstName())
+                .lastname(new Faker().name().lastName())
+                .email(new Faker().name().fullName())
+                .phoneNumber(new Faker().phoneNumber().phoneNumber())
+                .password(new Faker().phoneNumber().phoneNumber())
+                .enabled(true)
+                .clientRole(new HashSet<>())
+                .build();
+        client.addRole(new ClientRole(RoleEnum.CLIENT));
+        client.addRole(new ClientRole(RoleEnum.WORKER));
+        return client;
+    }
 
     @NotNull
     public static SizeInventoryDTO[] sizeInventoryDTOArray(int size) {

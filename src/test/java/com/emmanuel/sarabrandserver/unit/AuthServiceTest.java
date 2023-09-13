@@ -5,12 +5,9 @@ import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.auth.jwt.JwtTokenService;
 import com.emmanuel.sarabrandserver.auth.service.AuthService;
-import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
-import com.emmanuel.sarabrandserver.user.entity.ClientRole;
-import com.emmanuel.sarabrandserver.user.entity.SaraBrandUser;
+import com.emmanuel.sarabrandserver.user.entity.SarreBrandUser;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
-import com.github.javafaker.Faker;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,9 +21,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.HashSet;
 import java.util.Optional;
 
+import static com.emmanuel.sarabrandserver.util.TestingData.client;
+import static com.emmanuel.sarabrandserver.util.TestingData.worker;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,11 +35,9 @@ import static org.springframework.http.HttpStatus.OK;
 
 class AuthServiceTest extends AbstractUnitTest {
 
-    @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
+    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
 
-    @Value(value = "${server.servlet.session.cookie.secure}")
-    private boolean COOKIESECURE;
+    @Value(value = "${server.servlet.session.cookie.secure}") private boolean COOKIESECURE;
 
     private AuthService authService;
 
@@ -79,7 +75,7 @@ class AuthServiceTest extends AbstractUnitTest {
 
         // Then
         assertEquals(CREATED, this.authService.workerRegister(dto).getStatusCode());
-        verify(this.userRepository, times(1)).save(any(SaraBrandUser.class));
+        verify(this.userRepository, times(1)).save(any(SarreBrandUser.class));
     }
 
     @Test
@@ -121,7 +117,7 @@ class AuthServiceTest extends AbstractUnitTest {
 
         // Then
         assertEquals(CREATED, this.authService.workerRegister(dto).getStatusCode());
-        verify(this.userRepository, times(1)).save(any(SaraBrandUser.class));
+        verify(this.userRepository, times(1)).save(any(SarreBrandUser.class));
     }
 
     @Test
@@ -174,7 +170,7 @@ class AuthServiceTest extends AbstractUnitTest {
 
         // Then
         assertEquals(CREATED, this.authService.clientRegister(dto).getStatusCode());
-        verify(this.userRepository, times(1)).save(any(SaraBrandUser.class));
+        verify(this.userRepository, times(1)).save(any(SarreBrandUser.class));
     }
 
     @Test
@@ -226,41 +222,6 @@ class AuthServiceTest extends AbstractUnitTest {
 
         // Then
         assertThrows(BadCredentialsException.class, () -> this.authService.login(dto, request, response));
-    }
-
-    private SaraBrandUser client() {
-        var client = SaraBrandUser.builder()
-                .firstname(new Faker().name().firstName())
-                .lastname(new Faker().name().lastName())
-                .email(new Faker().name().fullName())
-                .phoneNumber(new Faker().phoneNumber().phoneNumber())
-                .password(new Faker().phoneNumber().phoneNumber())
-                .enabled(true)
-                .credentialsNonExpired(true)
-                .accountNonExpired(true)
-                .accountNoneLocked(true)
-                .clientRole(new HashSet<>())
-                .build();
-        client.addRole(new ClientRole(RoleEnum.CLIENT));
-        return client;
-    }
-
-    private SaraBrandUser worker() {
-        var client = SaraBrandUser.builder()
-                .firstname(new Faker().name().firstName())
-                .lastname(new Faker().name().lastName())
-                .email(new Faker().name().fullName())
-                .phoneNumber(new Faker().phoneNumber().phoneNumber())
-                .password(new Faker().phoneNumber().phoneNumber())
-                .enabled(true)
-                .credentialsNonExpired(true)
-                .accountNonExpired(true)
-                .accountNoneLocked(true)
-                .clientRole(new HashSet<>())
-                .build();
-        client.addRole(new ClientRole(RoleEnum.CLIENT));
-        client.addRole(new ClientRole(RoleEnum.WORKER));
-        return client;
     }
 
 }

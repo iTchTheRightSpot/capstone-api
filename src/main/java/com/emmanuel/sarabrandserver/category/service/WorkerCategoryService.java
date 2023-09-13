@@ -7,8 +7,11 @@ import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.category.response.CategoryResponse;
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
+import com.emmanuel.sarabrandserver.product.util.ProductResponse;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -119,7 +122,8 @@ public class WorkerCategoryService {
 
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
 
-        this.categoryRepository.update(date, dto.getName().trim(), dto.getId());
+        this.categoryRepository
+                .update(date, dto.getName().trim(), dto.getVisible(), dto.getId());
         return new ResponseEntity<>(OK);
     }
 
@@ -141,9 +145,16 @@ public class WorkerCategoryService {
                 .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));
     }
 
-    /** Needed in WorkerProductService class */
-    public void save(ProductCategory category) {
-        this.categoryRepository.save(category);
+    public Page<ProductResponse> allProductsByCategory(String id, int page, int size) {
+        return this.categoryRepository
+                .fetchProductsByCategory(id, PageRequest.of(page, size))
+                .map(pojo -> ProductResponse.builder()
+                        .id(pojo.getUuid())
+                        .name(pojo.getName())
+                        .price(pojo.getPrice())
+                        .currency(pojo.getCurrency())
+                        .imageUrl(pojo.getKey())
+                        .build()
+                );
     }
-
 }

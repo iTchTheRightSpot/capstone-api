@@ -92,8 +92,8 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
     @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void update() throws Exception {
         // Given
-        String id = this.categoryRepository.findAll().get(0).getUuid();
-        var dto = new UpdateCategoryDTO(id, "Updated category name");
+        var category = this.categoryRepository.findAll().get(0);
+        var dto = new UpdateCategoryDTO(category.getUuid(), "Updated", category.isVisible());
 
         // Then
         this.MOCKMVC

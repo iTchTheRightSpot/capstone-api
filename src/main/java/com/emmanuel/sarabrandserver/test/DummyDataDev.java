@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Component
 @Profile(value = {"dev"})
@@ -50,6 +51,7 @@ public class DummyDataDev {
 
         for (String s : set) {
             var category = ProductCategory.builder()
+                    .uuid(UUID.randomUUID().toString())
                     .categoryName(s)
                     .createAt(new Date())
                     .isVisible(true)

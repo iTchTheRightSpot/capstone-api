@@ -24,4 +24,7 @@ public class UpdateCategoryDTO {
     @Size(max = 50, message = "category name cannot exceed length of 50")
     private String name;
 
+    @NotNull(message = "cannot be empty")
+    private Boolean visible;
+
 }

@@ -132,7 +132,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         // Then
         assertEquals(OK, this.workerCategoryService.update(dto).getStatusCode());
         verify(this.categoryRepository, times(1))
-                .update(any(Date.class), anyString(), anyString());
+                .update(any(Date.class), anyString(), anyBoolean(), anyString());
     }
 
     @Test

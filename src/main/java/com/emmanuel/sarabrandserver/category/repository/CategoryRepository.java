@@ -2,7 +2,9 @@ package com.emmanuel.sarabrandserver.category.repository;
 
 import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
 import com.emmanuel.sarabrandserver.category.projection.CategoryPojo;
+import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -63,13 +65,27 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     @Transactional
     @Query("""
         UPDATE ProductCategory pc
-        SET pc.modifiedAt = :date, pc.categoryName = :name
+        SET pc.modifiedAt = :date, pc.categoryName = :name, pc.isVisible = :visible
         WHERE pc.uuid = :uuid
     """)
     void update(
             @Param(value = "date") Date date,
             @Param(value = "name") String name,
+            @Param(value = "visible") boolean visible,
             @Param(value = "uuid") String id
     );
+
+    @Query(value = """
+    SELECT
+    p.uuid as uuid,
+    p.name as name,
+    p.price as price,
+    p.currency as currency,
+    p.defaultKey as key
+    FROM Product p
+    INNER JOIN ProductCategory c ON p.productCategory.categoryId = c.categoryId
+    WHERE c.uuid = :uuid
+    """)
+    Page<ProductPojo> fetchProductsByCategory(String uuid, Pageable page);
 
 }

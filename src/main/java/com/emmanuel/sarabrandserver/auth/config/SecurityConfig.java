@@ -62,8 +62,8 @@ public class SecurityConfig {
     private final RefreshTokenFilter refreshTokenFilter;
 
     public SecurityConfig(
-            RefreshTokenFilter refreshTokenFilter,
-            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry
+            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry,
+            RefreshTokenFilter refreshTokenFilter
     ) {
         this.authEntryPoint = authEntry;
         this.refreshTokenFilter = refreshTokenFilter;
@@ -186,7 +186,7 @@ public class SecurityConfig {
      * <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">...</a>
      */
     private static CookieCsrfTokenRepository getCookieCsrfTokenRepository(boolean secure) {
-        CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        CookieCsrfTokenRepository csrfTokenRepository = new CookieCsrfTokenRepository();
         Consumer<ResponseCookie.ResponseCookieBuilder> csrfCookieCustomizer = (cookie) -> cookie
                 .httpOnly(false)
                 .secure(secure)

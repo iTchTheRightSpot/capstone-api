@@ -58,7 +58,10 @@ public class ControllerAdvices {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<?> handleMaxFileSizeExceeded() {
         var maxSize = this.environment.getProperty("spring.servlet.multipart.max-file-size", "");
-        var exceptionDetails = new ExceptionDetails("File size exceeds the limit of %s bytes".formatted(maxSize), PAYLOAD_TOO_LARGE);
+        var exceptionDetails = new ExceptionDetails(
+                "One of more files are too large. Each file has to be %s".formatted(maxSize),
+                PAYLOAD_TOO_LARGE
+        );
         return new ResponseEntity<>(exceptionDetails, PAYLOAD_TOO_LARGE);
     }
 

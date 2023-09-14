@@ -4,7 +4,6 @@ import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
 import com.emmanuel.sarabrandserver.category.projection.CategoryPojo;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -55,11 +54,15 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     @Query("SELECT pc FROM ProductCategory pc WHERE pc.categoryName = :name")
     Optional<ProductCategory> findByName(@Param(value = "name") String name);
 
+    // Validate if category name exists but is not associated
+    // to @param uuid
     @Query(value = """
-    SELECT COUNT(pc.categoryName) FROM ProductCategory pc
-    WHERE pc.categoryName = :name
+    SELECT
+    COUNT(pc.categoryId)
+    FROM ProductCategory pc
+    WHERE pc.categoryName = :name AND pc.uuid != :uuid
     """)
-    int duplicateCategoryForUpdate(@Param(value = "name") String newName);
+    int duplicateCategoryForUpdate(String uuid, String name);
 
     @Modifying(clearAutomatically = true)
     @Transactional

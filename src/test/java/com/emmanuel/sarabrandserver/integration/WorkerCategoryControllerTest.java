@@ -5,9 +5,11 @@ import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
+import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -16,6 +18,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -34,7 +37,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         Set<String> parentCategory = new HashSet<>();
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 10; i++) {
             parentCategory.add(new Faker().commerce().department());
         }
 
@@ -89,7 +92,9 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
                 .andExpect(status().isCreated());
     }
 
-    @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @Test
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @DisplayName(value = "validates updating a product")
     void update() throws Exception {
         // Given
         var category = this.categoryRepository.findAll().get(0);
@@ -103,6 +108,30 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
                         .content(this.MAPPER.writeValueAsString(dto))
                 )
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @DisplayName(value = "validates custom query throws exception when updating a product")
+    void ex() throws Exception {
+        // Given
+        var category = this.categoryRepository.findAll();
+        // First category
+        var first = category.get(0);
+        // second category
+        var second = category.get(1);
+        // dto
+        var dto = new UpdateCategoryDTO(first.getUuid(), second.getCategoryName(), first.isVisible());
+
+        // Then
+        this.MOCKMVC
+                .perform(put(requestMapping)
+                        .with(csrf())
+                        .contentType(APPLICATION_JSON)
+                        .content(this.MAPPER.writeValueAsString(dto))
+                )
+                .andExpect(status().isConflict())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException));
     }
 
     @Test @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})

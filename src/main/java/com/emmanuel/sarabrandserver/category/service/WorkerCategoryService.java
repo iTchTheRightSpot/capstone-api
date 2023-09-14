@@ -52,6 +52,26 @@ public class WorkerCategoryService {
     }
 
     /**
+     * Returns a page of ProductResponse based on category uuid
+     * @param id category uuid
+     * @param page pagination
+     * @param size pagination
+     * @return Page of ProductResponse
+     * */
+    public Page<ProductResponse> allProductsByCategory(String id, int page, int size) {
+        return this.categoryRepository
+                .fetchProductsByCategory(id, PageRequest.of(page, size))
+                .map(pojo -> ProductResponse.builder()
+                        .id(pojo.getUuid())
+                        .name(pojo.getName())
+                        .price(pojo.getPrice())
+                        .currency(pojo.getCurrency())
+                        .imageUrl(pojo.getKey())
+                        .build()
+                );
+    }
+
+    /**
      * The logic to creating a new ProductCategory object is a worker can either add dto.name (child ProductCategory)
      * to an existing dto.parent (parent ProductCategory) or create new ProductCategory who has no parent.
      * @param dto of type CategoryDTO
@@ -109,14 +129,17 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Method is responsible for updating a ProductCategory based on its ID.
+     * Method is responsible for updating a ProductCategory based on uuid.
      * @param dto of type UpdateCategoryDTO
-     * @throws DuplicateException is thrown if category name exist
+     * @throws DuplicateException is thrown if category name exists but is not associated to uuid
      * @return ResponseEntity of type String
      * */
     @Transactional
     public ResponseEntity<?> update(UpdateCategoryDTO dto) {
-        if (this.categoryRepository.duplicateCategoryForUpdate(dto.getName().trim()) > 0) {
+        boolean bool = this.categoryRepository
+                .duplicateCategoryForUpdate(dto.getId().trim(), dto.getName().trim()) > 0;
+
+        if (bool) {
             throw new DuplicateException(dto.getName() + " cannot be created. It is a duplicate");
         }
 
@@ -145,16 +168,4 @@ public class WorkerCategoryService {
                 .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));
     }
 
-    public Page<ProductResponse> allProductsByCategory(String id, int page, int size) {
-        return this.categoryRepository
-                .fetchProductsByCategory(id, PageRequest.of(page, size))
-                .map(pojo -> ProductResponse.builder()
-                        .id(pojo.getUuid())
-                        .name(pojo.getName())
-                        .price(pojo.getPrice())
-                        .currency(pojo.getCurrency())
-                        .imageUrl(pojo.getKey())
-                        .build()
-                );
-    }
 }

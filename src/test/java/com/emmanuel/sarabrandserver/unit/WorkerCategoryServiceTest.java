@@ -122,11 +122,13 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         // Given
         var dto = UpdateCategoryDTO.builder()
                 .id(UUID.randomUUID().toString())
+                .visible(true)
                 .name("Updated category name")
                 .build();
 
         // When
-        doReturn(0).when(this.categoryRepository).duplicateCategoryForUpdate(anyString());
+        doReturn(0).when(this.categoryRepository)
+                .duplicateCategoryForUpdate(anyString(), anyString());
         when(this.customUtil.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
 
         // Then
@@ -144,7 +146,8 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
                 .build();
 
         // When
-        when(this.categoryRepository.duplicateCategoryForUpdate(anyString())).thenReturn(1);
+        when(this.categoryRepository.duplicateCategoryForUpdate(anyString(), anyString()))
+                .thenReturn(1);
 
         // Then
         assertThrows(DuplicateException.class, () -> this.workerCategoryService.update(dto));

@@ -14,7 +14,7 @@ import java.util.Set;
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.LAZY;
 
-@Table(name = "product", indexes = @Index(name = "ind_product_uuid", columnList = "uuid"))
+@Table(name = "product", indexes = @Index(name = "IX_product_uuid", columnList = "uuid"))
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor

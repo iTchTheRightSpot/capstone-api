@@ -68,6 +68,7 @@ public class DummyDataDev {
 
         for (String s : set) {
             var collection = ProductCollection.builder()
+                    .uuid(UUID.randomUUID().toString())
                     .collection(s)
                     .isVisible(true)
                     .createAt(new Date())

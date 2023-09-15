@@ -38,8 +38,8 @@ public class WorkerCategoryService {
      * */
     public List<CategoryResponse> fetchAllCategories() {
         return this.categoryRepository
-                .fetchCategoriesWorker()
-                .stream()
+                .fetchCategoriesWorker() //
+                .stream() //
                 .map(pojo -> CategoryResponse.builder()
                         .id(pojo.getUuid())
                         .category(pojo.getCategory())
@@ -132,7 +132,7 @@ public class WorkerCategoryService {
      * Method is responsible for updating a ProductCategory based on uuid.
      * @param dto of type UpdateCategoryDTO
      * @throws DuplicateException is thrown if category name exists but is not associated to uuid
-     * @return ResponseEntity of type String
+     * @return ResponseEntity of type HttpStatus
      * */
     @Transactional
     public ResponseEntity<?> update(UpdateCategoryDTO dto) {

@@ -15,9 +15,10 @@ public class ClientCollectionService {
     }
 
     public List<CollectionResponse> fetchAll() {
-        return this.collectionRepository.fetchAllCollectionClient()
-                .stream()
+        return this.collectionRepository.fetchAllCollectionClient() //
+                .stream() //
                 .map(pojo -> new CollectionResponse(pojo.getCollection()))
                 .toList();
     }
+
 }

@@ -20,3 +20,6 @@ Link for the most up-to-date schema.
 [Storefront](https://server.emmanueluluabuike.com/)
 &
 [Admin front](https://server.emmanueluluabuike.com/admin)
+
+### Development info
+* [naming index convention](https://www.quora.com/What-naming-convention-do-you-use-for-SQL-indexes)

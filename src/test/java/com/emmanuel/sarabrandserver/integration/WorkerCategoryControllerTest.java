@@ -94,7 +94,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "validates updating a product")
+    @DisplayName(value = "validates updating a ProductCategory")
     void update() throws Exception {
         // Given
         var category = this.categoryRepository.findAll().get(0);
@@ -112,7 +112,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "validates custom query throws exception when updating a product")
+    @DisplayName(value = "validates custom query throws exception when updating a ProductCategory")
     void ex() throws Exception {
         // Given
         var category = this.categoryRepository.findAll();

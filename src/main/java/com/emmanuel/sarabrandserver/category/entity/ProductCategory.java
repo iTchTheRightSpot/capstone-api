@@ -12,7 +12,7 @@ import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 
-@Table(name = "product_category")
+@Table(name = "product_category", indexes = @Index(name = "IX_product_category_uuid", columnList = "uuid"))
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -47,7 +47,7 @@ public class ProductCategory implements Serializable {
     @JoinColumn(name = "parent_category_id", referencedColumnName = "category_id")
     private ProductCategory productCategory;
 
-    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "productCategory", orphanRemoval = true)
+    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "productCategory", orphanRemoval = true)
     private Set<ProductCategory> productCategories;
 
     @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "productCategory")
@@ -56,11 +56,6 @@ public class ProductCategory implements Serializable {
     public void addCategory(ProductCategory category) {
         this.productCategories.add(category);
         category.setProductCategory(this);
-    }
-
-    public void addProduct(Product product) {
-        this.product.add(product);
-        product.setProductCategory(this);
     }
 
 }

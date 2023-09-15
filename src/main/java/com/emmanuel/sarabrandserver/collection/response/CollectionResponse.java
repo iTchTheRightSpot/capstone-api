@@ -16,6 +16,7 @@ public class CollectionResponse {
     @JsonProperty(value = "modified_at")
     private long modified;
 
+    private String id;
     private String collection;
     private boolean visible;
 

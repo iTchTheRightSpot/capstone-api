@@ -54,6 +54,9 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     @Query("SELECT pc FROM ProductCategory pc WHERE pc.categoryName = :name")
     Optional<ProductCategory> findByName(@Param(value = "name") String name);
 
+    @Query("SELECT c FROM ProductCategory c WHERE c.uuid = :uuid")
+    Optional<ProductCategory> findByUuid(@Param(value = "uuid") String uuid);
+
     // Validate if category name exists but is not associated
     // to @param uuid
     @Query(value = """

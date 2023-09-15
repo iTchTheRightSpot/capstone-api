@@ -168,4 +168,9 @@ public class WorkerCategoryService {
                 .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));
     }
 
+    public ProductCategory findByUuid(String uuid) {
+        return this.categoryRepository.findByUuid(uuid)
+                .orElseThrow(() -> new CustomNotFoundException("Product Category does not exist"));
+    }
+
 }

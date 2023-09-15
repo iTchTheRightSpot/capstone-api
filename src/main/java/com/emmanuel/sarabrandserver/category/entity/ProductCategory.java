@@ -9,7 +9,6 @@ import java.util.Date;
 import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
-import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Table(name = "product_category", indexes = @Index(name = "IX_product_category_uuid", columnList = "uuid"))

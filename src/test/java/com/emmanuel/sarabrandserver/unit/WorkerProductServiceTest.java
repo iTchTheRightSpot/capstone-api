@@ -12,20 +12,16 @@ import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductImageRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.repository.ProductSkuRepo;
-import com.emmanuel.sarabrandserver.product.util.DetailDTO;
-import com.emmanuel.sarabrandserver.product.util.ProductDTO;
 import com.emmanuel.sarabrandserver.product.worker.WorkerProductService;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -33,7 +29,8 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 
 class WorkerProductServiceTest extends AbstractUnitTest {
@@ -89,133 +86,6 @@ class WorkerProductServiceTest extends AbstractUnitTest {
 
         // Then
         assertEquals(30, this.productService.fetchAll(0, 40).getSize());
-    }
-
-    @Test
-    @DisplayName(value = "update all product name only")
-    void updateProductName() {
-        // Given
-        var product = products().get(0);
-        var dto = ProductDTO.builder()
-                .uuid(product.getUuid())
-                .name(new Faker().commerce().productName())
-                .desc(product.getDescription())
-                .price(product.getPrice())
-                .build();
-
-        // Then
-        assertEquals(HttpStatus.OK, this.productService.updateProduct(dto).getStatusCode());
-        verify(this.productRepository, times(1))
-                .updateProduct(any(String.class), any(String.class), any(String.class), any(BigDecimal.class));
-    }
-
-    @Test
-    @DisplayName(value = "update all updatable variable")
-    void updateAll() {
-        // Given
-        var product = products().get(1);
-        var dto = ProductDTO.builder()
-                .uuid(product.getUuid())
-                .name(new Faker().commerce().productName())
-                .desc(new Faker().lorem().characters(5, 200))
-                .price(new BigDecimal(new Faker().commerce().price()))
-                .build();
-
-        // Then
-        assertEquals(HttpStatus.OK, this.productService.updateProduct(dto).getStatusCode());
-        verify(this.productRepository, times(1))
-                .updateProduct(any(String.class), any(String.class), any(String.class), any(BigDecimal.class));
-    }
-
-    @Test
-    void updateProductDetail() {
-        // Given
-        var dto = DetailDTO.builder()
-                .sku(UUID.randomUUID().toString())
-                .isVisible(true)
-                .qty(new Faker().number().numberBetween(1, 29))
-                .size(new Faker().commerce().material())
-                .build();
-
-        // Then
-        assertEquals(HttpStatus.OK, this.productService.updateProductDetail(dto).getStatusCode());
-        verify(this.detailRepo, times(1))
-                .updateProductDetail(anyString(), anyBoolean(), anyInt(), anyString());
-    }
-
-    @Test
-    void deleteProduct() {
-        // Given
-        var product = products().get(0);
-
-        // When
-        doReturn(Optional.of(product)).when(this.productRepository).findByProductUuid(anyString());
-        when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
-
-        // Then
-        assertEquals(HttpStatus.NO_CONTENT, this.productService.deleteProduct(product.getName()).getStatusCode());
-        verify(this.productRepository, times(1)).delete(any(Product.class));
-    }
-
-    @Test
-    void deleteProductDetail() {
-        // Given
-        String sku = UUID.randomUUID().toString();
-        var detail = ProductDetail.builder()
-                .productDetailId(1L)
-                .isVisible(true)
-                .createAt(new Date())
-                .product(products().get(0))
-                .skus(new HashSet<>())
-                .productImages(new HashSet<>())
-                .build();
-
-        // When
-        doReturn(Optional.of(detail)).when(productRepository).findDetailBySku(anyString());
-        when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
-
-        // Then
-        assertEquals(HttpStatus.NO_CONTENT, this.productService.deleteProductDetail(sku).getStatusCode());
-        verify(this.detailRepo, times(1)).delete(any(ProductDetail.class));
-    }
-
-    private List<Product> products() {
-        List<Product> list = new ArrayList<>();
-        Set<String> set = new HashSet<>();
-
-        for (int i = 0; i < 10; i++) {
-            set.add(new Faker().commerce().productName());
-        }
-
-        for (String str : set) {
-            var product = Product.builder()
-                    .name(str)
-                    .uuid(UUID.randomUUID().toString())
-                    .description(new Faker().lorem().characters(50))
-                    .price(new BigDecimal(new Faker().commerce().price()))
-                    .currency(new Faker().currency().name())
-                    .productDetails(new HashSet<>())
-                    .build();
-
-            for (int j = 0; j < 3; j++) {
-                // ProductImage
-                var image = ProductImage.builder()
-                        .imageKey(UUID.randomUUID().toString())
-                        .imagePath(new Faker().file().fileName())
-                        .build();
-                // ProductDetail
-                var detail = ProductDetail.builder()
-                        .isVisible(false)
-                        .createAt(new Date())
-                        .productImages(new HashSet<>())
-                        .skus(new HashSet<>())
-                        .build();
-                detail.addImages(image);
-            }
-            list.add(product);
-        }
-
-        return list;
     }
 
 }

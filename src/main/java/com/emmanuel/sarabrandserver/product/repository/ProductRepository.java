@@ -1,5 +1,7 @@
 package com.emmanuel.sarabrandserver.product.repository;
 
+import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
+import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
 import com.emmanuel.sarabrandserver.product.entity.Product;
 import com.emmanuel.sarabrandserver.product.entity.ProductDetail;
 import com.emmanuel.sarabrandserver.product.projection.Imagez;
@@ -28,6 +30,13 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query(value = "SELECT p FROM Product p WHERE p.uuid = :uuid")
     Optional<Product> findByProductUuid(@Param(value = "uuid") String uuid);
+
+    @Query(value = """
+    SELECT COUNT (p.productId)
+    FROM Product p
+    WHERE p.name = :name AND p.uuid != :uuid
+    """)
+    int nameNotAssociatedToUuid(String uuid, String name);
 
     @Query(value = """
             SELECT
@@ -76,14 +85,40 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = """
             UPDATE Product p
-            SET p.name = :name, p.description = :desc, p.price = :price
+            SET
+            p.name = :name,
+            p.description = :desc,
+            p.price = :price,
+            p.productCategory = :category
             WHERE p.uuid = :uuid
             """)
-    void updateProduct(
+    void updateProductCollectionNotPresent(
             @Param(value = "uuid") String uuid,
             @Param(value = "name") String name,
             @Param(value = "desc") String desc,
-            @Param(value = "price") BigDecimal price
+            @Param(value = "price") BigDecimal price,
+            @Param(value = "category") ProductCategory category
+    );
+
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(value = """
+            UPDATE Product p
+            SET
+            p.name = :name,
+            p.description = :desc,
+            p.price = :price,
+            p.productCategory = :category,
+            p.productCollection = :collection
+            WHERE p.uuid = :uuid
+            """)
+    void updateProductCategoryCollectionPresent(
+            @Param(value = "uuid") String uuid,
+            @Param(value = "name") String name,
+            @Param(value = "desc") String desc,
+            @Param(value = "price") BigDecimal price,
+            @Param(value = "category") ProductCategory category,
+            @Param(value = "collection") ProductCollection collection
     );
 
     @Query(value = """

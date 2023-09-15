@@ -19,8 +19,6 @@ import com.emmanuel.sarabrandserver.util.CustomUtil;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -34,8 +32,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.logging.Logger;
-
-import static org.springframework.http.HttpStatus.*;
 
 @Service
 public class WorkerProductService {
@@ -137,15 +133,14 @@ public class WorkerProductService {
     /**
      * Update to creating a new Product.
      *
-     * @param files      of type MultipartFile
-     * @param dto        of type CreateProductDTO
-     * @return ResponseEntity of type HttpStatus
+     * @param files of type MultipartFile
+     * @param dto   of type CreateProductDTO
      * @throws CustomNotFoundException is thrown when category or collection name does not exist
      * @throws CustomAwsException      is thrown if File is not an image
      * @throws DuplicateException      is thrown if dto image exists in for Product
      */
     @Transactional
-    public ResponseEntity<HttpStatus> create(CreateProductDTO dto, MultipartFile[] files) {
+    public void create(CreateProductDTO dto, MultipartFile[] files) {
         var category = this.categoryService.findByName(dto.getCategory().trim());
         var _product = this.productRepository.findByProductName(dto.getName().trim());
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
@@ -177,7 +172,6 @@ public class WorkerProductService {
             // Build/Save ProductImages (save to s3)
             productImages(detail, multiPartFile, bool, bucket);
 
-            return new ResponseEntity<>(CREATED);
         }
 
         // Build Product
@@ -209,8 +203,6 @@ public class WorkerProductService {
 
         // Build ProductImages (save to s3)
         productImages(detail, multiPartFile, bool, bucket);
-
-        return new ResponseEntity<>(CREATED);
     }
 
     /**
@@ -247,7 +239,8 @@ public class WorkerProductService {
     }
 
     /**
-     * Create ProductImage obj and save to s3
+     * Save to s3 before Create ProductImage
+     * @throws CustomAwsException if there is some error uploading to s3
      */
     private void productImages(ProductDetail detail, CustomMultiPart[] files, boolean profile, String bucket) {
         for (CustomMultiPart file : files) {
@@ -264,51 +257,72 @@ public class WorkerProductService {
     }
 
     /**
-     * Method updates a Product obj based on its UUID. Note only a product is updated not a product detail.
+     * Method updates a Product obj based on its UUID.
      *
      * @param dto of type UpdateProductDTO
-     * @return ResponseEntity of type HttpStatus
-     * @throws CustomNotFoundException when dto product_id does not exist
-     * @throws DuplicateException      when dto name exist
+     * @throws CustomNotFoundException when dto category_id or collection_id does not exist
+     * @throws DuplicateException      when new product name exist but not associated to product uuid
      */
     @Transactional
-    public ResponseEntity<?> updateProduct(final ProductDTO dto) {
-        this.productRepository.updateProduct(
+    public void updateProduct(final UpdateProductDTO dto) {
+        boolean bool = this.productRepository
+                .nameNotAssociatedToUuid(dto.getUuid(), dto.getName()) > 0;
+
+        if (bool) {
+            throw new DuplicateException(dto.getName() + " exists");
+        }
+
+        var category = this.categoryService.findByUuid(dto.getCategoryId());
+
+        if (!dto.getCollection().isEmpty()) {
+            // Find ProductCollection by uuid
+            var collection = this.collectionService.findByUuid(dto.getCollectionId());
+
+            this.productRepository.updateProductCategoryCollectionPresent(
+                    dto.getUuid(),
+                    dto.getName().trim(),
+                    dto.getDesc().trim(),
+                    dto.getPrice(),
+                    category,
+                    collection
+            );
+
+            return;
+        }
+
+        this.productRepository.updateProductCollectionNotPresent(
                 dto.getUuid(),
                 dto.getName().trim(),
                 dto.getDesc().trim(),
-                dto.getPrice()
+                dto.getPrice(),
+                category
         );
-        return new ResponseEntity<>(OK);
     }
 
     /**
      * Updates a ProductDetail and its relationship with other tables except ProductImage
      *
      * @param dto of type DetailDTO
-     * @return ResponseEntity of type HttpStatus
      */
     @Transactional
-    public ResponseEntity<HttpStatus> updateProductDetail(final DetailDTO dto) {
+    public void updateProductDetail(final DetailDTO dto) {
         this.detailRepo.updateProductDetail(
                 dto.getSku(),
                 dto.getIsVisible(),
                 dto.getQty(),
                 dto.getSize()
         );
-        return new ResponseEntity<>(OK);
     }
 
     /**
      * Method permanently deletes a Product and children from db.
      *
      * @param uuid is the product uuid
-     * @return ResponseEntity of type HttpStatus
      * @throws CustomNotFoundException is thrown when Product id does not exist
      * @throws S3Exception             is thrown when deleting from s3
      */
     @Transactional
-    public ResponseEntity<?> deleteProduct(final String uuid) {
+    public void deleteProduct(final String uuid) {
         var product = this.productRepository.findByProductUuid(uuid)
                 .orElseThrow(() -> new CustomNotFoundException(uuid + " does not exist"));
 
@@ -330,7 +344,6 @@ public class WorkerProductService {
 
         // Delete from Database
         this.productRepository.delete(product);
-        return new ResponseEntity<>(NO_CONTENT);
     }
 
     /**
@@ -338,12 +351,11 @@ public class WorkerProductService {
      * Note ProductDetail has an EAGER fetch time with ProductImage
      *
      * @param sku is a unique String for each ProductDetail
-     * @return ResponseEntity of type HttpStatus
      * @throws CustomNotFoundException is thrown when sku does not exist
      * @throws S3Exception             is thrown when deleting from s3
      */
     @Transactional
-    public ResponseEntity<?> deleteProductDetail(final String sku) {
+    public void deleteProductDetail(final String sku) {
         var detail = findByDetailBySku(sku);
 
         var profile = this.environment.getProperty("spring.profiles.active", "");
@@ -362,7 +374,6 @@ public class WorkerProductService {
 
         // Remove detail from Product and Save Product
         this.detailRepo.delete(detail);
-        return new ResponseEntity<>(NO_CONTENT);
     }
 
     // Find ProductDetail by sku

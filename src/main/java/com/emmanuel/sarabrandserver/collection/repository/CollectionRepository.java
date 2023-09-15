@@ -22,6 +22,9 @@ public interface CollectionRepository extends JpaRepository<ProductCollection, L
     @Query(value = "SELECT c FROM ProductCollection c WHERE c.collection = :collection")
     Optional<ProductCollection> findByName(@Param(value = "collection") String collection);
 
+    @Query(value = "SELECT c FROM ProductCollection c WHERE c.uuid = :uuid")
+    Optional<ProductCollection> findByUuid(@Param(value = "uuid") String uuid);
+
     @Query(value = """
             SELECT
             c.uuid AS uuid,

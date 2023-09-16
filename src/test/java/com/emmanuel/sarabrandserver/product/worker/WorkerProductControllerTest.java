@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.integration;
+package com.emmanuel.sarabrandserver.product.worker;
 
 import com.emmanuel.sarabrandserver.AbstractIntegrationTest;
 import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
@@ -14,7 +14,6 @@ import com.emmanuel.sarabrandserver.product.repository.ProductSkuRepo;
 import com.emmanuel.sarabrandserver.product.util.DetailDTO;
 import com.emmanuel.sarabrandserver.product.util.SizeInventoryDTO;
 import com.emmanuel.sarabrandserver.product.util.UpdateProductDTO;
-import com.emmanuel.sarabrandserver.product.worker.WorkerProductService;
 import com.emmanuel.sarabrandserver.util.Result;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.AfterEach;

@@ -12,15 +12,12 @@ import com.emmanuel.sarabrandserver.util.CustomUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
-
-import static org.springframework.http.HttpStatus.CREATED;
 
 @Service
 public class WorkerCollectionService {
@@ -65,9 +62,8 @@ public class WorkerCollectionService {
      * Creates a ProductCollection object
      * @param dto of type CollectionDTO
      * @throws DuplicateException if collection name exists
-     * @return ResponseEntity of type HttpStatus
      * */
-    public ResponseEntity<?> create(CollectionDTO dto) {
+    public void create(CollectionDTO dto) {
         if (this.collectionRepository.findByName(dto.getName().trim()).isPresent()) {
             throw new DuplicateException(dto.getName() + " exists");
         }
@@ -83,7 +79,6 @@ public class WorkerCollectionService {
                 .build();
 
         this.collectionRepository.save(collection);
-        return new ResponseEntity<>(CREATED);
     }
 
     /**

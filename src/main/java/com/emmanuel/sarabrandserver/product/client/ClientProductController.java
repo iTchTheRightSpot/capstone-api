@@ -1,8 +1,12 @@
 package com.emmanuel.sarabrandserver.product.client;
 
+import com.emmanuel.sarabrandserver.product.util.DetailResponse;
+import com.emmanuel.sarabrandserver.product.util.ProductResponse;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 import static org.springframework.http.HttpStatus.OK;
 
@@ -17,18 +21,20 @@ public class ClientProductController {
     }
 
     /** Returns a list of ProductResponse objects */
+    @ResponseStatus(OK)
     @GetMapping(produces = "application/json")
-    public ResponseEntity<?> fetchAllProducts(
+    public Page<ProductResponse> fetchAllProducts(
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
             @NotNull @RequestParam(name = "size", defaultValue = "40") Integer size
     ) {
-        return new ResponseEntity<>(this.clientProductService.fetchAll(page, size), OK);
+        return this.clientProductService.fetchAll(page, size);
     }
 
     /** Returns a list of DetailResponse objects */
+    @ResponseStatus(OK)
     @GetMapping(path = "/detail", produces = "application/json")
-    public ResponseEntity<?> fetchProductDetails(@NotNull @RequestParam(value = "id") String uuid) {
-        return new ResponseEntity<>(this.clientProductService.fetchAll(uuid), OK);
+    public List<DetailResponse> fetchProductDetails(@NotNull @RequestParam(value = "id") String uuid) {
+        return this.clientProductService.fetchAll(uuid);
     }
 
 }

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequestMapping(path = "api/v1/worker/category")
@@ -43,19 +43,22 @@ public class WorkerCategoryController {
                 .allProductsByCategory(id, page, Math.min(size, 20));
     }
 
+    @ResponseStatus(CREATED)
     @PostMapping(consumes = "application/json")
-    public ResponseEntity<?> create(@Valid @RequestBody CategoryDTO dto) {
-        return this.workerCategoryService.create(dto);
+    public void create(@Valid @RequestBody CategoryDTO dto) {
+        this.workerCategoryService.create(dto);
     }
 
+    @ResponseStatus(OK)
     @PutMapping(consumes = "application/json")
-    public ResponseEntity<?> update(@Valid @RequestBody UpdateCategoryDTO dto) {
-        return this.workerCategoryService.update(dto);
+    public void update(@Valid @RequestBody UpdateCategoryDTO dto) {
+        this.workerCategoryService.update(dto);
     }
 
-    @DeleteMapping(path = "/{name}")
-    public ResponseEntity<?> delete(@PathVariable(value = "name") String name) {
-        return this.workerCategoryService.delete(name);
+    @ResponseStatus(NO_CONTENT)
+    @DeleteMapping(path = "/{id}")
+    public void delete(@PathVariable(value = "id") String uuid) {
+        this.workerCategoryService.delete(uuid);
     }
 
 }

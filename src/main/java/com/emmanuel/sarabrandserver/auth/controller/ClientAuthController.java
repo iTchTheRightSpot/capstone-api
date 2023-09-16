@@ -7,11 +7,12 @@ import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.OK;
 
 @RestController @RequestMapping(path = "api/v1/client/auth")
 public class ClientAuthController {
@@ -21,26 +22,29 @@ public class ClientAuthController {
         this.authService = authService;
     }
 
+    @ResponseStatus(CREATED)
     @PostMapping(path = "/register", consumes = "application/json")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterDTO dto) {
-        return this.authService.clientRegister(dto);
+    public void register(@Valid @RequestBody RegisterDTO dto) {
+        this.authService.clientRegister(dto);
     }
 
+    @ResponseStatus(OK)
     @PostMapping(path = "/login", consumes = "application/json")
-    public ResponseEntity<?> login(
+    public void login(
             @Valid @RequestBody LoginDTO dto,
             HttpServletRequest request,
             HttpServletResponse response
     ) {
-        return this.authService.login(dto, request, response);
+        this.authService.login(dto, request, response);
     }
 
     /** Validates if a user still has a valid session */
+    @ResponseStatus(OK)
     @GetMapping(produces = "application/json")
     @PreAuthorize(value = "hasRole('ROLE_CLIENT')")
-    public ResponseEntity<?> getUser() {
+    public ActiveUser getUser() {
         String name = SecurityContextHolder.getContext().getAuthentication().getName();
-        return new ResponseEntity<>(new ActiveUser(name), HttpStatus.OK);
+        return new ActiveUser(name);
     }
 
 }

@@ -31,7 +31,7 @@ public class ControllerAdvices {
 
     private record ExceptionDetails(String message, HttpStatus httpStatus) { }
 
-    @ExceptionHandler(value = {DuplicateException.class})
+    @ExceptionHandler(value = {DuplicateException.class, ResourceAttachedException.class})
     public ResponseEntity<?> duplicateException(Exception ex) {
         var exceptionDetails = new ExceptionDetails(ex.getMessage(), CONFLICT);
         return new ResponseEntity<>(exceptionDetails, CONFLICT);

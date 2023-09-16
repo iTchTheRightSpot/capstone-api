@@ -1,0 +1,32 @@
+name: Run tests before merging into main
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    name: Development Branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'oracle'
+          java-version: '17'
+
+      - name: Checkout master
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      # Run tests
+      - name: Run tests
+        run: |
+          #!/usr/bin/env bash
+          # chmod grants permission to run mvnw
+          chmod +x mvnw
+          ./mvnw clean
+          ./mvn test
+        shell: bash

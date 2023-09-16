@@ -8,7 +8,6 @@ import com.emmanuel.sarabrandserver.product.util.ProductResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,9 +44,10 @@ public class WorkerCollectionController {
                 .allProductsByCollection(id, page, Math.min(size, 20));
     }
 
+    @ResponseStatus(CREATED)
     @PostMapping(consumes = "application/json")
-    public ResponseEntity<?> create(@Valid @RequestBody CollectionDTO dto) {
-        return this.collectionService.create(dto);
+    public void create(@Valid @RequestBody CollectionDTO dto) {
+        this.collectionService.create(dto);
     }
 
     @ResponseStatus(CREATED)

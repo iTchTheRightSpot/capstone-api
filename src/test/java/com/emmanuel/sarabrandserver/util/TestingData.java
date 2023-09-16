@@ -73,26 +73,8 @@ public class TestingData {
                 .colour(colour)
                 .build();
 
-        MockMultipartFile[] files = {
-                new MockMultipartFile(
-                        "file",
-                        "uploads/image1.jpeg",
-                        "image/jpeg",
-                        "Test image content".getBytes()
-                ),
-                new MockMultipartFile(
-                        "file",
-                        "uploads/image2.jpeg",
-                        "image/jpeg",
-                        "Test image content".getBytes()
-                ),
-                new MockMultipartFile(
-                        "file",
-                        "uploads/image3.jpeg",
-                        "image/jpeg",
-                        "Test image content".getBytes()
-                ),
-        };
+        MockMultipartFile[] files = files(3);
+
         return new Result(dto, files);
     }
 

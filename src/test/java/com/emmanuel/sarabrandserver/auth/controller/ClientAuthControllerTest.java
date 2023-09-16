@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.integration;
+package com.emmanuel.sarabrandserver.auth.controller;
 
 import com.emmanuel.sarabrandserver.AbstractIntegrationTest;
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;

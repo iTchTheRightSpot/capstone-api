@@ -161,6 +161,7 @@ public class SecurityConfig {
                 })
 
                 // Jwt
+                // Adding before BearerTokenAuthenticationFilter as jwt is in custom cookie
                 .addFilterBefore(this.refreshTokenFilter, BearerTokenAuthenticationFilter.class)
                 .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
 
@@ -174,7 +175,7 @@ public class SecurityConfig {
                 // https://docs.spring.io/spring-security/reference/servlet/authentication/logout.html
                 .logout((logoutConfig) -> logoutConfig
                         .logoutUrl("/api/v1/logout")
-                        .deleteCookies(JSESSIONID)
+                        .deleteCookies(this.JSESSIONID)
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK))
                 )
                 .build();

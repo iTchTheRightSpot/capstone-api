@@ -7,20 +7,18 @@ import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
 import com.emmanuel.sarabrandserver.category.response.CategoryResponse;
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
+import com.emmanuel.sarabrandserver.exception.ResourceAttachedException;
 import com.emmanuel.sarabrandserver.product.util.ProductResponse;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
-
-import static org.springframework.http.HttpStatus.*;
 
 @Service
 public class WorkerCategoryService {
@@ -77,10 +75,9 @@ public class WorkerCategoryService {
      * @param dto of type CategoryDTO
      * @throws DuplicateException when dto.name exists
      * @throws CustomNotFoundException when dto.parent (Parent Category) does not exist
-     * @return ResponseEntity of HttpStatus
      * */
     @Transactional
-    public ResponseEntity<?> create(CategoryDTO dto) {
+    public void create(CategoryDTO dto) {
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
 
         // Handle cases based on the logic explained above.
@@ -88,7 +85,6 @@ public class WorkerCategoryService {
                 parentCategoryIsBlank(dto, date) : parentCategoryNotBlank(dto, date);
 
         this.categoryRepository.save(category);
-        return new ResponseEntity<>(CREATED);
     }
 
     private ProductCategory parentCategoryIsBlank(CategoryDTO dto, Date date) {
@@ -132,10 +128,9 @@ public class WorkerCategoryService {
      * Method is responsible for updating a ProductCategory based on uuid.
      * @param dto of type UpdateCategoryDTO
      * @throws DuplicateException is thrown if category name exists but is not associated to uuid
-     * @return ResponseEntity of type HttpStatus
      * */
     @Transactional
-    public ResponseEntity<?> update(UpdateCategoryDTO dto) {
+    public void update(UpdateCategoryDTO dto) {
         boolean bool = this.categoryRepository
                 .duplicateCategoryForUpdate(dto.getId().trim(), dto.getName().trim()) > 0;
 
@@ -147,20 +142,23 @@ public class WorkerCategoryService {
 
         this.categoryRepository
                 .update(date, dto.getName().trim(), dto.getVisible(), dto.getId());
-        return new ResponseEntity<>(OK);
     }
 
     /**
      * Method permanently deletes a ProductCategory and its children.
-     * @param node is the ProductCategory name
+     * @param uuid is the ProductCategory uuid
      * @throws CustomNotFoundException is thrown if category node does not exist
-     * @return ResponseEntity
      * */
     @Transactional
-    public ResponseEntity<?> delete(String node) {
-        var category = findByName(node);
+    public void delete(String uuid) {
+        int count = this.categoryRepository.productsAttached(uuid);
+
+        if (count > 0) {
+            throw new ResourceAttachedException("Cannot delete category because it is attached to 1 or many products");
+        }
+
+        var category = findByUuid(uuid);
         this.categoryRepository.delete(category);
-        return new ResponseEntity<>(NO_CONTENT);
     }
 
     public ProductCategory findByName(String name) {

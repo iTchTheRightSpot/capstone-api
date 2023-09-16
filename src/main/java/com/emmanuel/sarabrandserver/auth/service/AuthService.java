@@ -14,7 +14,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
@@ -23,9 +22,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.HashSet;
-
-import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.OK;
 
 @Service @Setter
 public class AuthService {
@@ -58,10 +54,9 @@ public class AuthService {
      * ROLE worker to client.
      * @param dto of type WorkerRegisterDTO
      * @throws DuplicateException when user principal exists and has a role of worker
-     * @return ResponseEntity of type HttpStatus
      * */
     @Transactional
-    public ResponseEntity<?> workerRegister(RegisterDTO dto) {
+    public void workerRegister(RegisterDTO dto) {
         var client = this.userRepository
                 .workerExists(dto.getEmail().trim())
                 .orElse(createUser(dto));
@@ -78,22 +73,19 @@ public class AuthService {
         client.addRole(new ClientRole(RoleEnum.WORKER));
 
         this.userRepository.save(client);
-        return new ResponseEntity<>(CREATED);
     }
 
     /**
      * Method is responsible for registering a new user who isn't a worker
      * @param dto of type ClientRegisterDTO
      * @throws DuplicateException when user principal exists
-     * @return ResponseEntity of type HttpStatus
      * */
     @Transactional
-    public ResponseEntity<?> clientRegister(RegisterDTO dto) {
+    public void clientRegister(RegisterDTO dto) {
         if (this.userRepository.principalExists(dto.getEmail().trim()) > 0) {
             throw new DuplicateException(dto.getEmail() + " exists");
         }
         this.userRepository.save(createUser(dto));
-        return new ResponseEntity<>(CREATED);
     }
 
     /**
@@ -103,13 +95,12 @@ public class AuthService {
      * @param request of HttpServletRequest
      * @param response of HttpServletResponse
      * @throws AuthenticationException is thrown when credentials do not exist, bad credentials account is locked e.t.c.
-     * @return ResponseEntity
      * */
     @Transactional
-    public ResponseEntity<?> login(LoginDTO dto, HttpServletRequest request, HttpServletResponse response) {
+    public void login(LoginDTO dto, HttpServletRequest request, HttpServletResponse response) {
         // No need to re-authenticate if request contains valid jwt cookie
         if (_validateRequestContainsValidCookies(request)) {
-            return new ResponseEntity<>(OK);
+            return;
         }
 
         var unauthenticated = UsernamePasswordAuthenticationToken
@@ -127,8 +118,6 @@ public class AuthService {
         cookie.setPath("/");
         cookie.setSecure(COOKIESECURE);
         response.addCookie(cookie); // Add cookie to response
-
-        return new ResponseEntity<>(OK);
     }
 
     /** Create a new User object */

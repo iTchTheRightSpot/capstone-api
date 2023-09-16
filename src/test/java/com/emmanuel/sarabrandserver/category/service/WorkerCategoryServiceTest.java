@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.unit;
+package com.emmanuel.sarabrandserver.category.service;
 
 import com.emmanuel.sarabrandserver.AbstractUnitTest;
 import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
@@ -19,11 +19,9 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.http.HttpStatus.*;
 
 class WorkerCategoryServiceTest extends AbstractUnitTest {
 
@@ -57,7 +55,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         when(this.categoryRepository.save(any(ProductCategory.class))).thenReturn(category);
 
         // Then
-        assertEquals(CREATED, this.workerCategoryService.create(dto).getStatusCode());
+        this.workerCategoryService.create(dto);
         verify(this.categoryRepository, times(1)).save(any(ProductCategory.class));
     }
 
@@ -80,7 +78,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         when(this.categoryRepository.save(any(ProductCategory.class))).thenReturn(category);
 
         // Then
-        assertEquals(CREATED, this.workerCategoryService.create(dto).getStatusCode());
+        this.workerCategoryService.create(dto);
         verify(this.categoryRepository, times(1)).save(any(ProductCategory.class));
     }
 
@@ -132,7 +130,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         when(this.customUtil.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
 
         // Then
-        assertEquals(OK, this.workerCategoryService.update(dto).getStatusCode());
+        this.workerCategoryService.update(dto);
         verify(this.categoryRepository, times(1))
                 .update(any(Date.class), anyString(), anyBoolean(), anyString());
     }
@@ -151,26 +149,6 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
 
         // Then
         assertThrows(DuplicateException.class, () -> this.workerCategoryService.update(dto));
-    }
-
-    @Test
-    void delete() {
-        // Given
-        var category = ProductCategory.builder()
-                .categoryName("Test Category")
-                .createAt(new Date())
-                .modifiedAt(null)
-                .isVisible(true)
-                .productCategories(new HashSet<>())
-                .product(new HashSet<>())
-                .build();
-
-        // When
-        doReturn(Optional.of(category)).when(this.categoryRepository).findByName(anyString());
-
-        // Then
-        assertEquals(NO_CONTENT, this.workerCategoryService.delete(category.getCategoryName()).getStatusCode());
-        verify(this.categoryRepository, times(1)).delete(any(ProductCategory.class));
     }
 
 }

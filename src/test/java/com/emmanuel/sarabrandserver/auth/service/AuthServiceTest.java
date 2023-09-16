@@ -1,10 +1,9 @@
-package com.emmanuel.sarabrandserver.unit;
+package com.emmanuel.sarabrandserver.auth.service;
 
 import com.emmanuel.sarabrandserver.AbstractUnitTest;
 import com.emmanuel.sarabrandserver.auth.dto.LoginDTO;
 import com.emmanuel.sarabrandserver.auth.dto.RegisterDTO;
 import com.emmanuel.sarabrandserver.auth.jwt.JwtTokenService;
-import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.user.entity.SarreBrandUser;
 import com.emmanuel.sarabrandserver.user.repository.UserRepository;
@@ -25,13 +24,10 @@ import java.util.Optional;
 
 import static com.emmanuel.sarabrandserver.util.TestingData.client;
 import static com.emmanuel.sarabrandserver.util.TestingData.worker;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.OK;
 
 class AuthServiceTest extends AbstractUnitTest {
 
@@ -74,7 +70,7 @@ class AuthServiceTest extends AbstractUnitTest {
         when(this.userRepository.workerExists(anyString())).thenReturn(Optional.empty());
 
         // Then
-        assertEquals(CREATED, this.authService.workerRegister(dto).getStatusCode());
+        this.authService.workerRegister(dto);
         verify(this.userRepository, times(1)).save(any(SarreBrandUser.class));
     }
 
@@ -116,7 +112,7 @@ class AuthServiceTest extends AbstractUnitTest {
         when(this.userRepository.workerExists(anyString())).thenReturn(Optional.of(client));
 
         // Then
-        assertEquals(CREATED, this.authService.workerRegister(dto).getStatusCode());
+        this.authService.workerRegister(dto);
         verify(this.userRepository, times(1)).save(any(SarreBrandUser.class));
     }
 
@@ -133,7 +129,7 @@ class AuthServiceTest extends AbstractUnitTest {
                 .thenReturn(authentication);
 
         // Then
-        assertEquals(this.authService.login(dto, request, response).getStatusCode(), OK);
+        this.authService.login(dto, request, response);
         verify(this.authenticationManager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
     }
 
@@ -169,7 +165,7 @@ class AuthServiceTest extends AbstractUnitTest {
         when(this.passwordEncoder.encode(anyString())).thenReturn(dto.getPassword());
 
         // Then
-        assertEquals(CREATED, this.authService.clientRegister(dto).getStatusCode());
+        this.authService.clientRegister(dto);
         verify(this.userRepository, times(1)).save(any(SarreBrandUser.class));
     }
 
@@ -205,7 +201,7 @@ class AuthServiceTest extends AbstractUnitTest {
                 .thenReturn(authentication);
 
         // Then
-        assertEquals(OK, this.authService.login(dto, request, response).getStatusCode());
+        this.authService.login(dto, request, response);
         verify(this.authenticationManager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
     }
 

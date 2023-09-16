@@ -3,17 +3,18 @@ package com.emmanuel.sarabrandserver.util;
 import com.emmanuel.sarabrandserver.enumeration.RoleEnum;
 import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
 import com.emmanuel.sarabrandserver.product.util.SizeInventoryDTO;
+import com.emmanuel.sarabrandserver.product.util.UpdateProductDTO;
 import com.emmanuel.sarabrandserver.user.entity.ClientRole;
 import com.emmanuel.sarabrandserver.user.entity.SarreBrandUser;
 import com.github.javafaker.Faker;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
 
 public class TestingData {
-
 
     public static SarreBrandUser client() {
         var client = SarreBrandUser.builder()
@@ -93,6 +94,50 @@ public class TestingData {
                 ),
         };
         return new Result(dto, files);
+    }
+
+    @NotNull
+    public static MockMultipartFile[] files(int num) {
+        MockMultipartFile[] files = new MockMultipartFile[num];
+        for (int i = 0; i < num; i++) {
+            files[i] = new MockMultipartFile(
+                    "file",
+                    "uploads/image%s.jpeg".formatted(i + 1),
+                    "image/jpeg",
+                    "Test image content".getBytes()
+            );
+        }
+        return files;
+    }
+
+    @NotNull
+    public static CreateProductDTO createProductDTO(SizeInventoryDTO[] dtos, MultipartFile[] files) {
+        return CreateProductDTO.builder()
+                .sizeInventory(dtos)
+                .category(new Faker().commerce().department())
+                .collection(new Faker().commerce().department())
+                .name(new Faker().commerce().productName())
+                .desc(new Faker().lorem().characters(0, 255))
+                .price(new BigDecimal(new Faker().number().numberBetween(20, 80)))
+                .currency("NGN")
+                .visible(true)
+                .colour(new Faker().commerce().color())
+                .files(files)
+                .build();
+    }
+
+    @NotNull
+    public static UpdateProductDTO updateProductDTO (String collection, String collectionId) {
+        return UpdateProductDTO.builder()
+                .category(new Faker().commerce().department())
+                .categoryId("category id")
+                .collection(collection)
+                .collectionId(collectionId)
+                .uuid("product id")
+                .name("product name")
+                .desc(new Faker().lorem().characters(0, 400))
+                .price(new BigDecimal(new Faker().number().numberBetween(20, 200)))
+                .build();
     }
 
 }

@@ -27,7 +27,6 @@ public class DetailDTO {
     @NotNull(message = "cannot be empty")
     private Integer qty;
 
-    @JsonProperty(required = true)
     @NotNull(message = "cannot be empty")
     @NotEmpty(message = "cannot be empty")
     private String size;

@@ -28,5 +28,5 @@ jobs:
           # chmod grants permission to run mvnw
           chmod +x mvnw
           ./mvnw clean
-          ./mvn test
+          ./mvnw test
         shell: bash

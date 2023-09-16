@@ -5,7 +5,7 @@ import lombok.*;
 
 import java.io.Serializable;
 
-@Table(name = "product_sku", indexes = @Index(name = "ind_product_sku_table_sku", columnList = "sku"))
+@Table(name = "product_sku", indexes = @Index(name = "IX_product_sku_sku", columnList = "sku"))
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,7 +19,7 @@ public class ProductSku implements Serializable {
     @Column(name = "sku_id", nullable = false, unique = true)
     private Long skuId;
 
-    @Column(name = "sku", nullable = false, unique = true, length = 50)
+    @Column(name = "sku", nullable = false, unique = true, length = 36)
     private String sku;
 
     @Column(name = "size", nullable = false, length = 50)

@@ -21,13 +21,15 @@ DROP TABLE IF EXISTS product_inventory;
 
 CREATE TABLE product_sku (
     sku_id BIGINT NOT NULL UNIQUE AUTO_INCREMENT,
-    sku VARCHAR(50) NOT NULL,
+    sku VARCHAR(36) NOT NULL UNIQUE,
     size VARCHAR(50) NOT NULL,
     inventory INTEGER NOT NULL,
     detail_id BIGINT NOT NULL,
     PRIMARY KEY (sku_id),
     FOREIGN KEY (detail_id) references product_detail (detail_id)
 );
+
+CREATE INDEX IX_product_sku_sku ON product_sku (sku);
 
 # Migrate to JWT
 DROP TABLE IF EXISTS SPRING_SESSION_ATTRIBUTES;

@@ -169,8 +169,10 @@ public class WorkerProductService {
             // Save ProductSKUs
             saveProductSKUs(dto, detail);
 
-            // Build/Save ProductImages (save to s3)
+	    // Build/Save ProductImages (save to s3)
             productImages(detail, multiPartFile, bool, bucket);
+
+	    return;
 
         }
 

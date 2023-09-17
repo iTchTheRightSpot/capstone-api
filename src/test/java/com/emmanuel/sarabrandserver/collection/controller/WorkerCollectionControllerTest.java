@@ -76,7 +76,7 @@ class WorkerCollectionControllerTest extends AbstractIntegrationTest {
                         .contentType(APPLICATION_JSON)
                         .content(this.MAPPER.writeValueAsString(dto))
                 )
-                .andExpect(status().isCreated());
+                .andExpect(status().isNoContent());
     }
 
     @Test

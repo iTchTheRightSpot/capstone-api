@@ -8,7 +8,6 @@ import com.emmanuel.sarabrandserver.product.util.ProductResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,7 +48,7 @@ public class WorkerCategoryController {
         this.workerCategoryService.create(dto);
     }
 
-    @ResponseStatus(OK)
+    @ResponseStatus(NO_CONTENT)
     @PutMapping(consumes = "application/json")
     public void update(@Valid @RequestBody UpdateCategoryDTO dto) {
         this.workerCategoryService.update(dto);

@@ -13,8 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequestMapping(path = "api/v1/worker/collection")
@@ -50,7 +49,7 @@ public class WorkerCollectionController {
         this.collectionService.create(dto);
     }
 
-    @ResponseStatus(CREATED)
+    @ResponseStatus(NO_CONTENT)
     @PutMapping(consumes = "application/json")
     public void update(@Valid @RequestBody UpdateCollectionDTO dto) {
         this.collectionService.update(dto);

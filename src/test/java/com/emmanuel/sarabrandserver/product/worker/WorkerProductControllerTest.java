@@ -416,7 +416,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                         .content(this.MAPPER.writeValueAsString(dto))
                         .with(csrf())
                 )
-                .andExpect(status().isCreated());
+                .andExpect(status().isNoContent());
     }
 
     @Test
@@ -449,7 +449,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                         .content(this.MAPPER.writeValueAsString(dto))
                         .with(csrf())
                 )
-                .andExpect(status().isCreated());
+                .andExpect(status().isNoContent());
     }
 
     @Test
@@ -470,7 +470,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                         .content(this.MAPPER.writeValueAsString(dto))
                         .with(csrf())
                 )
-                .andExpect(status().isCreated());
+                .andExpect(status().isNoContent());
 
         var findDetail = this.productSkuRepo.findBySku(productSku.getSku()).orElse(null);
 

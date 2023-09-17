@@ -142,7 +142,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
                         .contentType(APPLICATION_JSON)
                         .content(this.MAPPER.writeValueAsString(dto))
                 )
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
     }
 
     @Test

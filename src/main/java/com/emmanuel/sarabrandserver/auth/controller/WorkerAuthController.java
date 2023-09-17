@@ -43,6 +43,7 @@ public class WorkerAuthController {
     /** Validates if a user still has a valid session */
     @ResponseStatus(OK)
     @GetMapping(produces = "application/json")
+    @PreAuthorize(value = "hasRole('ROLE_WORKER')")
     public ActiveUser getUser() {
         String name = SecurityContextHolder.getContext().getAuthentication().getName();
         return new ActiveUser(name);

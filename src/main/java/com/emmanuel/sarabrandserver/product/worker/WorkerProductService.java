@@ -327,6 +327,8 @@ public class WorkerProductService {
         var product = this.productRepository.findByProductUuid(uuid)
                 .orElseThrow(() -> new CustomNotFoundException(uuid + " does not exist"));
 
+        // TODO validate product is has no product details
+
         var profile = this.environment.getProperty("spring.profiles.active", "");
         var bucket = this.environment.getProperty("aws.bucket", "");
 

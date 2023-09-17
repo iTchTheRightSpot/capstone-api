@@ -61,7 +61,7 @@ public class WorkerProductController {
      *
      * @param dto of type ProductDTO
      */
-    @ResponseStatus(CREATED)
+    @ResponseStatus(NO_CONTENT)
     @PutMapping(consumes = "application/json")
     public void updateProduct(@Valid @RequestBody UpdateProductDTO dto) {
         this.workerProductService.updateProduct(dto);
@@ -72,7 +72,7 @@ public class WorkerProductController {
      *
      * @param dto of type DetailDTO
      */
-    @ResponseStatus(CREATED)
+    @ResponseStatus(NO_CONTENT)
     @PutMapping(path = "/detail", consumes = "application/json")
     public void updateProductDetail(@Valid @RequestBody DetailDTO dto) {
         this.workerProductService.updateProductDetail(dto);

@@ -494,4 +494,18 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         assertNull(del);
     }
 
+    @Test
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @DisplayName(value = "Delete Product. Exception thrown because product has more than 1 ProductDetail ")
+    void deleteProductEx() throws Exception {
+        var product = this.productRepository.findAll().stream().findFirst().orElse(null);
+        assertNotNull(product);
+
+        this.MOCKMVC.perform(delete(requestMapping).param("id", product.getUuid()).with(csrf()))
+                .andExpect(status().isNoContent());
+
+        var del = this.productRepository.findById(product.getProductId()).orElse(null);
+        assertNull(del);
+    }
+
 }

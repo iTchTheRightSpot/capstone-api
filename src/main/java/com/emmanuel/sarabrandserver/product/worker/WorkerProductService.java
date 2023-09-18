@@ -6,6 +6,7 @@ import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
 import com.emmanuel.sarabrandserver.exception.CustomAwsException;
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
+import com.emmanuel.sarabrandserver.exception.ResourceAttachedException;
 import com.emmanuel.sarabrandserver.product.entity.Product;
 import com.emmanuel.sarabrandserver.product.entity.ProductDetail;
 import com.emmanuel.sarabrandserver.product.entity.ProductImage;
@@ -112,7 +113,7 @@ public class WorkerProductService {
 
         return this.detailRepo
                 .findProductDetailsByProductUuidWorker(uuid) //
-                .stream()
+                .stream() //
                 .map(pojo -> {
                     var urls = Arrays.stream(pojo.getImage().split(","))
                             .map(key -> this.s3Service.getPreSignedUrl(bool, bucket, key))
@@ -127,11 +128,12 @@ public class WorkerProductService {
                             .url(urls)
                             .variants(variants)
                             .build();
-                }).toList();
+                })
+                .toList();
     }
 
     /**
-     * Update to creating a new Product.
+     * Create a new Product.
      *
      * @param files of type MultipartFile
      * @param dto   of type CreateProductDTO
@@ -241,7 +243,7 @@ public class WorkerProductService {
 
     /**
      * Save to s3 before Create ProductImage
-     * @throws CustomAwsException if there is some error uploading to s3
+     * @throws CustomAwsException if there is an error uploading to S3
      */
     private void productImages(ProductDetail detail, CustomMultiPart[] files, boolean profile, String bucket) {
         for (CustomMultiPart file : files) {
@@ -317,9 +319,11 @@ public class WorkerProductService {
 
     /**
      * Method permanently deletes a Product and children from db.
+     * Note: A product can only be deleted if it has less than 1 ProductDetail attached.
      *
      * @param uuid is the product uuid
      * @throws CustomNotFoundException is thrown when Product id does not exist
+     * @throws ResourceAttachedException is thrown if Product has ProductDetails attached
      * @throws S3Exception             is thrown when deleting from s3
      */
     @Transactional
@@ -327,7 +331,12 @@ public class WorkerProductService {
         var product = this.productRepository.findByProductUuid(uuid)
                 .orElseThrow(() -> new CustomNotFoundException(uuid + " does not exist"));
 
-        // TODO validate product is has no product details
+        // TODO write tests
+        boolean bool = this.productRepository.productDetailAttach(uuid) > 1;
+
+        if (bool) {
+            throw new ResourceAttachedException("%s has product variants".formatted(product.getName()));
+        }
 
         var profile = this.environment.getProperty("spring.profiles.active", "");
         var bucket = this.environment.getProperty("aws.bucket", "");

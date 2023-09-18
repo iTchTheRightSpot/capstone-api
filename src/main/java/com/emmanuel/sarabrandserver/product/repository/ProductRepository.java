@@ -39,6 +39,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     int nameNotAssociatedToUuid(String uuid, String name);
 
     @Query(value = """
+    SELECT COUNT(d.productDetailId)
+    FROM ProductDetail d
+    INNER JOIN Product p ON d.product.uuid = p.uuid
+    WHERE p.uuid = :uuid
+    """)
+    int productDetailAttach(String uuid);
+
+    @Query(value = """
             SELECT
             p.uuid AS uuid,
             p.name AS name,

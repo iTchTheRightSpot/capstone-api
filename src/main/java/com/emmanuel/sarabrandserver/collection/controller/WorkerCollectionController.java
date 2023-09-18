@@ -55,4 +55,10 @@ public class WorkerCollectionController {
         this.collectionService.update(dto);
     }
 
+    @ResponseStatus(NO_CONTENT)
+    @DeleteMapping
+    public void delete(@Valid @RequestParam(name = "id") String id) {
+        this.collectionService.delete(id);
+    }
+
 }

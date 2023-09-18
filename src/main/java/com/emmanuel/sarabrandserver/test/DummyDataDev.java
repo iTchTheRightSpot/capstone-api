@@ -29,7 +29,7 @@ public class DummyDataDev {
             ProductDetailRepo detailRepo
     ) {
         return args -> {
-            extracted(categoryRepo, collRepo, productRepo, detailRepo);
+//            extracted(categoryRepo, collRepo, productRepo, detailRepo);
         };
     }
 

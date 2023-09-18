@@ -29,7 +29,9 @@ public class WorkerCollectionService {
         this.customUtil = customUtil;
     }
 
-    /** Returns a list of CollectionResponse. */
+    /**
+     * Returns a list of CollectionResponse.
+     */
     public List<CollectionResponse> fetchAllCategories() {
         return this.collectionRepository
                 .fetchAllCollection() //
@@ -60,9 +62,10 @@ public class WorkerCollectionService {
 
     /**
      * Creates a ProductCollection object
+     *
      * @param dto of type CollectionDTO
      * @throws DuplicateException if collection name exists
-     * */
+     */
     public void create(CollectionDTO dto) {
         if (this.collectionRepository.findByName(dto.getName().trim()).isPresent()) {
             throw new DuplicateException(dto.getName() + " exists");
@@ -83,9 +86,10 @@ public class WorkerCollectionService {
 
     /**
      * Method is responsible for updating a ProductCollection based on uuid.
+     *
      * @param dto of type UpdateCollectionDTO
      * @throws DuplicateException when dto.name exists, and it is not associated to uuid
-     * */
+     */
     @Transactional
     public void update(UpdateCollectionDTO dto) {
         boolean bool = this.collectionRepository
@@ -98,6 +102,19 @@ public class WorkerCollectionService {
         var date = this.customUtil.toUTC(new Date()).orElseGet(Date::new);
 
         this.collectionRepository.update(date, dto.getName(), dto.getVisible(), dto.getId().trim());
+    }
+
+    /**
+     * Deletes ProductCollection based on its uuid
+     *
+     * @param uuid unique to every ProductCollection
+     * @throws CustomNotFoundException is thrown if ProductCollection does not exist
+     */
+    @Transactional
+    public void delete(String uuid) {
+        var collection = findByUuid(uuid);
+
+        this.collectionRepository.delete(collection);
     }
 
     // Called in WorkerProductService

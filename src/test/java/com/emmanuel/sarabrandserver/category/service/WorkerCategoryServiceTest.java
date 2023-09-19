@@ -1,11 +1,11 @@
 package com.emmanuel.sarabrandserver.category.service;
 
 import com.emmanuel.sarabrandserver.AbstractUnitTest;
+import com.emmanuel.sarabrandserver.aws.S3Service;
 import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
 import com.emmanuel.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
 import com.emmanuel.sarabrandserver.category.repository.CategoryRepository;
-import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
@@ -28,12 +28,16 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
     private WorkerCategoryService workerCategoryService;
 
     @Mock private CategoryRepository categoryRepository;
-
     @Mock private CustomUtil customUtil;
+    @Mock private S3Service s3Service;
 
     @BeforeEach
     void setUp() {
-        this.workerCategoryService = new WorkerCategoryService(this.categoryRepository, this.customUtil);
+        this.workerCategoryService = new WorkerCategoryService(
+                this.categoryRepository,
+                this.customUtil,
+                this.s3Service
+        );
     }
 
     /** Simulates creating a new ProductCategory when CategoryDTO param parent is empty */

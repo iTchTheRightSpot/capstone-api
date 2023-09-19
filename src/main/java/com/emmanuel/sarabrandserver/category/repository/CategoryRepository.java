@@ -99,6 +99,6 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     INNER JOIN ProductCategory c ON p.productCategory.categoryId = c.categoryId
     WHERE c.uuid = :uuid
     """)
-    Page<ProductPojo> fetchProductsByCategory(String uuid, Pageable page);
+    Page<ProductPojo> allProductsByCategory(String uuid, Pageable page);
 
 }

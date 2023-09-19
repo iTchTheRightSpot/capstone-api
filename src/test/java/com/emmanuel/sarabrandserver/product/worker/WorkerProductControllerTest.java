@@ -11,7 +11,7 @@ import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.repository.ProductSkuRepo;
-import com.emmanuel.sarabrandserver.product.util.DetailDTO;
+import com.emmanuel.sarabrandserver.product.util.UpdateProductDetailDTO;
 import com.emmanuel.sarabrandserver.product.util.SizeInventoryDTO;
 import com.emmanuel.sarabrandserver.product.util.UpdateProductDTO;
 import com.emmanuel.sarabrandserver.util.Result;
@@ -461,7 +461,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
 
         assertNotNull(productSku);
 
-        var dto = new DetailDTO(productSku.getSku(), true, 50, "large");
+        var dto = new UpdateProductDetailDTO(productSku.getSku(), true, 50, "large");
 
         // Then
         this.MOCKMVC

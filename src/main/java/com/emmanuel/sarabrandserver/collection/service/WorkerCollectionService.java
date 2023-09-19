@@ -1,5 +1,6 @@
 package com.emmanuel.sarabrandserver.collection.service;
 
+import com.emmanuel.sarabrandserver.aws.S3Service;
 import com.emmanuel.sarabrandserver.category.dto.UpdateCollectionDTO;
 import com.emmanuel.sarabrandserver.collection.dto.CollectionDTO;
 import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
@@ -10,6 +11,7 @@ import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.product.util.ProductResponse;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -21,12 +23,25 @@ import java.util.UUID;
 
 @Service
 public class WorkerCollectionService {
+
+    @Value(value = "${aws.bucket}")
+    private String BUCKET;
+
+    @Value(value = "${spring.profiles.active}")
+    private String ACTIVEPROFILE;
+
     private final CollectionRepository collectionRepository;
     private final CustomUtil customUtil;
+    private final S3Service s3Service;
 
-    public WorkerCollectionService(CollectionRepository collectionRepository, CustomUtil customUtil) {
+    public WorkerCollectionService(
+            CollectionRepository collectionRepository,
+            CustomUtil customUtil,
+            S3Service s3Service
+    ) {
         this.collectionRepository = collectionRepository;
         this.customUtil = customUtil;
+        this.s3Service = s3Service;
     }
 
     /**
@@ -48,16 +63,20 @@ public class WorkerCollectionService {
     }
 
     public Page<ProductResponse> allProductsByCollection(String id, int page, int size) {
+        boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
         return this.collectionRepository
                 .allProductsByCollection(id, PageRequest.of(page, size))
-                .map(pojo -> ProductResponse.builder()
-                        .id(pojo.getUuid())
-                        .name(pojo.getName())
-                        .price(pojo.getPrice())
-                        .currency(pojo.getCurrency())
-                        .imageUrl(pojo.getKey())
-                        .build()
-                );
+                .map(pojo -> {
+                    var url = this.s3Service.getPreSignedUrl(bool, this.BUCKET, pojo.getKey());
+
+                    return ProductResponse.builder()
+                            .id(pojo.getUuid())
+                            .name(pojo.getName())
+                            .price(pojo.getPrice())
+                            .currency(pojo.getCurrency())
+                            .imageUrl(url)
+                            .build();
+                });
     }
 
     /**

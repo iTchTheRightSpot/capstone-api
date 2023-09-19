@@ -17,7 +17,8 @@ import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.repository.ProductSkuRepo;
 import com.emmanuel.sarabrandserver.product.util.*;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
-import org.springframework.core.env.Environment;
+import lombok.Setter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -34,8 +35,15 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.logging.Logger;
 
-@Service
+@Service @Setter
 public class WorkerProductService {
+
+    @Value(value = "${aws.bucket}")
+    private String BUCKET;
+
+    @Value(value = "${spring.profiles.active}")
+    private String ACTIVEPROFILE;
+
     private static final Logger log = Logger.getLogger(WorkerProductService.class.getName());
 
     private final ProductRepository productRepository;
@@ -46,7 +54,6 @@ public class WorkerProductService {
     private final CustomUtil customUtil;
     private final WorkerCollectionService collectionService;
     private final S3Service s3Service;
-    private final Environment environment;
 
     public WorkerProductService(
             ProductRepository productRepository,
@@ -56,8 +63,7 @@ public class WorkerProductService {
             WorkerCategoryService categoryService,
             CustomUtil customUtil,
             WorkerCollectionService collectionService,
-            S3Service s3Service,
-            Environment environment
+            S3Service s3Service
     ) {
         this.productRepository = productRepository;
         this.detailRepo = detailRepo;
@@ -67,7 +73,6 @@ public class WorkerProductService {
         this.customUtil = customUtil;
         this.collectionService = collectionService;
         this.s3Service = s3Service;
-        this.environment = environment;
     }
 
     /**
@@ -79,14 +84,12 @@ public class WorkerProductService {
      * @return Page of ProductResponse
      */
     public Page<ProductResponse> fetchAll(int page, int size) {
-        var profile = this.environment.getProperty("spring.profiles.active", "");
-        boolean bool = profile.equals("prod") || profile.equals("stage");
-        var bucket = this.environment.getProperty("aws.bucket", "");
+        boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
 
         return this.productRepository
                 .fetchAllProductsWorker(PageRequest.of(page, size))
                 .map(pojo -> {
-                    var url = this.s3Service.getPreSignedUrl(bool, bucket, pojo.getKey());
+                    var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
                     return ProductResponse.builder()
                             .category(pojo.getCategory())
                             .collection(pojo.getCollection())
@@ -107,16 +110,14 @@ public class WorkerProductService {
      * @return List of DetailResponse
      */
     public List<DetailResponse> productDetailsByProductUUID(String uuid) {
-        var profile = this.environment.getProperty("spring.profiles.active", "");
-        boolean bool = profile.equals("prod") || profile.equals("stage");
-        var bucket = this.environment.getProperty("aws.bucket", "");
+        boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
 
         return this.detailRepo
                 .findProductDetailsByProductUuidWorker(uuid) //
                 .stream() //
                 .map(pojo -> {
                     var urls = Arrays.stream(pojo.getImage().split(","))
-                            .map(key -> this.s3Service.getPreSignedUrl(bool, bucket, key))
+                            .map(key -> this.s3Service.getPreSignedUrl(bool, BUCKET, key))
                             .toList();
 
                     Variant[] variants = this.customUtil
@@ -133,6 +134,37 @@ public class WorkerProductService {
     }
 
     /**
+     * Create new ProductDetail
+     *
+     * @param dto of type DetailDTO
+     * @throws CustomNotFoundException is thrown if product uuid does not exist
+     * @throws DuplicateException is thrown if product colour exists
+     * */
+    @Transactional
+    public void createDetail(ProductDetailDTO dto) {
+        var product = this.productRepository
+                .findByProductUuid(dto.getUuid().trim())
+                .orElseThrow(() -> new CustomNotFoundException("Product does not exist"));
+
+        // TODO validate colour does not exist
+
+        var date = this.customUtil.toUTC(new Date()).orElse(new Date());
+
+        // Validate MultipartFile[] are all images
+        CustomMultiPart[] file = validateMultiPartFile(dto.getFiles(), new StringBuilder());
+
+        // Save ProductDetail
+        var detail = productDetail(product, dto.getColour(), dto.getVisible(), date);
+
+        // Save ProductSKUs
+        saveProductSKUs(dto.getSizeInventory(), detail);
+
+        // Save ProductImages (save to s3)
+        productImages(detail, file, this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage"));
+    }
+
+
+    /**
      * Create a new Product.
      *
      * @param files of type MultipartFile
@@ -146,36 +178,16 @@ public class WorkerProductService {
         var category = this.categoryService.findByName(dto.getCategory().trim());
         var _product = this.productRepository.findByProductName(dto.getName().trim());
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
-        var bucket = this.environment.getProperty("aws.bucket", "");
-        var profile = this.environment.getProperty("spring.profiles.active", "");
-        boolean bool = profile.equals("prod") || profile.equals("stage");
+        boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
+
+        // throw error if product exits
+        if (_product.isPresent()) {
+	        throw new DuplicateException(dto.getName() + " exists");
+        }
 
         StringBuilder defaultImageKey = new StringBuilder();
         // Validate MultipartFile[] are all images
         CustomMultiPart[] multiPartFile = validateMultiPartFile(files, defaultImageKey);
-
-        // Persist new ProductDetail if Product exist
-        if (_product.isPresent()) {
-            // Throw error if Product colour exist
-            if (this.detailRepo.colourExist(_product.get().getUuid(), dto.getColour()) > 0) {
-                String message = "%s with colour ***** %s ***** exists".formatted(dto.getName(), dto.getColour());
-                throw new DuplicateException(message);
-            }
-
-            // Existing Product
-            var product = _product.get();
-
-            // Save ProductDetails
-            var detail = productDetail(product, dto, date);
-
-            // Save ProductSKUs
-            saveProductSKUs(dto, detail);
-
-	        // Build/Save ProductImages (save to s3)
-            productImages(detail, multiPartFile, bool, bucket);
-
-	        return;
-        }
 
         // Build Product
         var product = Product.builder()
@@ -199,20 +211,20 @@ public class WorkerProductService {
         var saved = this.productRepository.save(product);
 
         // Save ProductDetails
-        var detail = productDetail(saved, dto, date);
+        var detail = productDetail(saved, dto.getColour(), dto.getVisible(), date);
 
         // Save ProductSKUs
-        saveProductSKUs(dto, detail);
+        saveProductSKUs(dto.getSizeInventory(), detail);
 
         // Build ProductImages (save to s3)
-        productImages(detail, multiPartFile, bool, bucket);
+        productImages(detail, multiPartFile, bool);
     }
 
     /**
      * Save Product sku. Look in db diagram in read me in case of confusion
      */
-    private void saveProductSKUs(CreateProductDTO dto, ProductDetail detail) {
-        for (SizeInventoryDTO sizeDto : dto.getSizeInventory()) {
+    private void saveProductSKUs(SizeInventoryDTO[] dto, ProductDetail detail) {
+        for (SizeInventoryDTO sizeDto : dto) {
             var sku = ProductSku.builder()
                     .productDetail(detail)
                     .sku(UUID.randomUUID().toString())
@@ -226,13 +238,12 @@ public class WorkerProductService {
     /**
      * Save ProductDetail
      */
-    private ProductDetail productDetail(Product product, CreateProductDTO dto, Date date) {
-        // ProductDetail
+    private ProductDetail productDetail(Product product, String colour, boolean visible, Date date) {
         var detail = ProductDetail.builder()
                 .product(product)
-                .colour(dto.getColour())
+                .colour(colour)
                 .createAt(date)
-                .isVisible(dto.getVisible())
+                .isVisible(visible)
                 .productImages(new HashSet<>())
                 .skus(new HashSet<>())
                 .build();
@@ -245,13 +256,13 @@ public class WorkerProductService {
      * Save to s3 before Create ProductImage
      * @throws CustomAwsException if there is an error uploading to S3
      */
-    private void productImages(ProductDetail detail, CustomMultiPart[] files, boolean profile, String bucket) {
+    private void productImages(ProductDetail detail, CustomMultiPart[] files, boolean profile) {
         for (CustomMultiPart file : files) {
             var obj = new ProductImage(file.key(), file.file().getAbsolutePath(), detail);
 
             // Upload image to S3 if in desired profile
             if (profile) {
-                this.s3Service.uploadToS3(file.file(), file.metadata(), bucket, file.key());
+                this.s3Service.uploadToS3(file.file(), file.metadata(), BUCKET, file.key());
             }
 
             // Save ProductImage
@@ -308,7 +319,7 @@ public class WorkerProductService {
      * @param dto of type DetailDTO
      */
     @Transactional
-    public void updateProductDetail(final DetailDTO dto) {
+    public void updateProductDetail(final UpdateProductDetailDTO dto) {
         this.detailRepo.updateProductDetail(
                 dto.getSku(),
                 dto.getIsVisible(),
@@ -331,18 +342,14 @@ public class WorkerProductService {
         var product = this.productRepository.findByProductUuid(uuid)
                 .orElseThrow(() -> new CustomNotFoundException(uuid + " does not exist"));
 
-        // TODO write tests
         boolean bool = this.productRepository.productDetailAttach(uuid) > 1;
 
         if (bool) {
             throw new ResourceAttachedException("%s has product variants".formatted(product.getName()));
         }
 
-        var profile = this.environment.getProperty("spring.profiles.active", "");
-        var bucket = this.environment.getProperty("aws.bucket", "");
-
         // Delete from S3
-        if (profile.equals("prod") || profile.equals("stage")) {
+        if (this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage")) {
             // Get all Images
             List<ObjectIdentifier> keys = this.productRepository.images(uuid)
                     .stream() //
@@ -350,7 +357,7 @@ public class WorkerProductService {
                     .toList();
 
             if (!keys.isEmpty()) {
-                this.s3Service.deleteFromS3(keys, bucket);
+                this.s3Service.deleteFromS3(keys, BUCKET);
             }
         }
 
@@ -370,17 +377,14 @@ public class WorkerProductService {
     public void deleteProductDetail(final String sku) {
         var detail = findByDetailBySku(sku);
 
-        var profile = this.environment.getProperty("spring.profiles.active", "");
-        var bucket = this.environment.getProperty("aws.bucket", "");
-
-        if (profile.equals("prod") || profile.equals("stage")) {
+        if (this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage")) {
             List<ObjectIdentifier> keys = detail.getProductImages() //
                     .stream() //
                     .map(image -> ObjectIdentifier.builder().key(image.getImageKey()).build())
                     .toList();
 
             if (!keys.isEmpty()) {
-                this.s3Service.deleteFromS3(keys, bucket);
+                this.s3Service.deleteFromS3(keys, BUCKET);
             }
         }
 

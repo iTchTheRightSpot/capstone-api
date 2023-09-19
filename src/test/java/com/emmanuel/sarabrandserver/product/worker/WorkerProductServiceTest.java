@@ -6,6 +6,7 @@ import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
+import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.product.entity.Product;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
@@ -18,7 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -28,11 +29,19 @@ import java.util.*;
 
 import static com.emmanuel.sarabrandserver.util.TestingData.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class WorkerProductServiceTest extends AbstractUnitTest {
+
+    @Value(value = "${aws.bucket}")
+    private String BUCKET;
+
+    @Value(value = "${spring.profiles.active}")
+    private String ACTIVEPROFILE;
+
     private WorkerProductService workerProductService;
 
     @Mock private ProductRepository productRepository;
@@ -43,7 +52,6 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     @Mock private WorkerCollectionService collectionService;
     @Mock private ProductDetailRepo detailRepo;
     @Mock private S3Service s3Service;
-    @Mock private Environment environment;
 
     @BeforeEach
     void setUp() {
@@ -55,9 +63,10 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                 this.workerCategoryService,
                 this.customUtil,
                 this.collectionService,
-                this.s3Service,
-                this.environment
+                this.s3Service
         );
+        this.workerProductService.setACTIVEPROFILE(ACTIVEPROFILE);
+        this.workerProductService.setBUCKET(BUCKET);
     }
 
     /** Testing fetchAll method that returns a ProductResponse. */
@@ -81,7 +90,6 @@ class WorkerProductServiceTest extends AbstractUnitTest {
 
         // When
         when(this.productRepository.fetchAllProductsWorker(any(PageRequest.class))).thenReturn(list);
-        when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
 
         // Then
         assertEquals(30, this.workerProductService.fetchAll(0, 40).getSize());
@@ -100,7 +108,6 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         when(this.workerCategoryService.findByName(anyString())).thenReturn(category);
         when(this.productRepository.findByProductName(anyString())).thenReturn(Optional.empty());
         when(this.customUtil.toUTC(any(Date.class))).thenReturn(Optional.empty());
-        when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
 
         // Then
         this.workerProductService.create(dto, files);
@@ -108,7 +115,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     }
 
     @Test
-    @DisplayName(value = "Create a new product. Product name exists")
+    @DisplayName(value = "Create a new product. Exception is Product name exists")
     void createE() {
         // Given
         var sizeDtoArray = sizeInventoryDTOArray(3);
@@ -121,13 +128,9 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         when(this.workerCategoryService.findByName(anyString())).thenReturn(category);
         when(this.productRepository.findByProductName(anyString())).thenReturn(Optional.of(product));
         when(this.customUtil.toUTC(any(Date.class))).thenReturn(Optional.empty());
-        when(this.environment.getProperty(anyString(), anyString())).thenReturn("test");
-        when(this.detailRepo.colourExist(anyString(), anyString())).thenReturn(0);
 
         // Then
-        this.workerProductService.create(dto, files);
-        verify(this.detailRepo, times(1)).colourExist(anyString(), anyString());
-        verify(this.productRepository, times(0)).save(any(Product.class));
+        assertThrows(DuplicateException.class, () -> this.workerProductService.create(dto, files));
     }
 
     @Test

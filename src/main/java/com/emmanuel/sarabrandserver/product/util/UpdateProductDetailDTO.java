@@ -3,42 +3,32 @@ package com.emmanuel.sarabrandserver.product.util;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Data
-public class ProductDTO implements Serializable {
+public class UpdateProductDetailDTO {
 
-    @JsonProperty(value = "id")
-    @NotNull(message = "cannot be empty")
-    private String uuid;
-
-    @JsonProperty(value = "name")
+    @JsonProperty(required = true)
     @NotNull(message = "cannot be empty")
     @NotEmpty(message = "cannot be empty")
-    private String name;
+    private String sku;
 
-    @Size(max = 400, message = "Max of 255")
+    @JsonProperty(value = "is_visible", required = true)
+    @NotNull(message = "cannot be empty")
+    private Boolean isVisible;
+
+    @JsonProperty(required = true)
+    @NotNull(message = "cannot be empty")
+    private Integer qty;
+
     @NotNull(message = "cannot be empty")
     @NotEmpty(message = "cannot be empty")
-    private String desc;
-
-    @NotNull(message = "cannot be empty")
-    private BigDecimal price;
-
-    @NotNull(message = "cannot be empty")
-    private String category;
-
-    @NotNull(message = "cannot be empty")
-    private String collection;
+    private String size;
 
 }

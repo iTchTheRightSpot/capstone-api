@@ -56,6 +56,12 @@ public class WorkerProductController {
         workerProductService.create(dto, dto.getFiles());
     }
 
+    @ResponseStatus(CREATED)
+    @PostMapping(path = "/detail", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public void createDetail(@Valid @ModelAttribute ProductDetailDTO dto) {
+        workerProductService.createDetail(dto);
+    }
+
     /**
      * Update a Product
      *
@@ -74,7 +80,7 @@ public class WorkerProductController {
      */
     @ResponseStatus(NO_CONTENT)
     @PutMapping(path = "/detail", consumes = "application/json")
-    public void updateProductDetail(@Valid @RequestBody DetailDTO dto) {
+    public void updateProductDetail(@Valid @RequestBody UpdateProductDetailDTO dto) {
         this.workerProductService.updateProductDetail(dto);
     }
 

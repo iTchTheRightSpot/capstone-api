@@ -83,7 +83,7 @@ public class TestingData {
         MockMultipartFile[] files = new MockMultipartFile[num];
         for (int i = 0; i < num; i++) {
             files[i] = new MockMultipartFile(
-                    "file",
+                    "files",
                     "uploads/image%s.jpeg".formatted(i + 1),
                     "image/jpeg",
                     "Test image content".getBytes()

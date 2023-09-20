@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
-import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Table(name = "product_detail")
@@ -38,22 +37,10 @@ public class ProductDetail { // could be called ProductVariant
     @JoinColumn(name = "product_id", referencedColumnName = "product_id", nullable = false)
     private Product product;
 
-    @OneToMany(fetch = EAGER, cascade = ALL, mappedBy = "productDetails", orphanRemoval = true)
+    @OneToMany(fetch = LAZY, cascade = ALL, mappedBy = "productDetails", orphanRemoval = true)
     private Set<ProductImage> productImages;
 
-    @OneToMany(fetch = EAGER, cascade = ALL, mappedBy = "productDetail", orphanRemoval = true)
+    @OneToMany(fetch = LAZY, cascade = ALL, mappedBy = "productDetail", orphanRemoval = true)
     private Set<ProductSku> skus;
-
-    public void addImages(ProductImage productImage) {
-        this.productImages.add(productImage);
-        productImage.setProductDetails(this);
-    }
-
-    public void copyImageArray(ProductImage[] images) {
-        for (ProductImage image : images) {
-            this.productImages.add(image);
-            image.setProductDetails(this);
-        }
-    }
 
 }

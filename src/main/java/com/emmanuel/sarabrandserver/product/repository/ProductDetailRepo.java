@@ -10,9 +10,17 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
+
+    @Query(value = """
+            SELECT d FROM ProductDetail d
+            INNER JOIN ProductSku s ON d.productDetailId = s.productDetail.productDetailId
+            WHERE s.sku = :sku
+            """)
+    Optional<ProductDetail> findDetailBySku(@Param(value = "sku") String sku);
 
     /**
      * Update a ProductDetail and ProductSku using native MySQL query as you can update multiple
@@ -28,6 +36,7 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
             """,
             nativeQuery = true
     )
+
     void updateProductDetail(
             @Param(value = "sku") String sku,
             @Param(value = "visible") boolean visible,

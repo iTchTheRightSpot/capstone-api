@@ -3,7 +3,6 @@ package com.emmanuel.sarabrandserver.product.repository;
 import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
 import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
 import com.emmanuel.sarabrandserver.product.entity.Product;
-import com.emmanuel.sarabrandserver.product.entity.ProductDetail;
 import com.emmanuel.sarabrandserver.product.projection.Imagez;
 import com.emmanuel.sarabrandserver.product.projection.ProductPojo;
 import org.springframework.data.domain.Page;
@@ -81,13 +80,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
             """)
     Page<ProductPojo> fetchAllProductsClient(Pageable pageable);
-
-    @Query(value = """
-            SELECT d FROM ProductDetail d
-            INNER JOIN ProductSku s ON d.productDetailId = s.productDetail.productDetailId
-            WHERE s.sku = :sku
-            """)
-    Optional<ProductDetail> findDetailBySku(@Param(value = "sku") String sku);
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -172,6 +164,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             INNER JOIN Product p ON p.productId = pd.product.productId
             WHERE p.uuid = :uuid
             """)
-    List<Imagez> images(@Param(value = "uuid") String uuid);
+    List<Imagez> productImagesByProductUUID(@Param(value = "uuid") String uuid);
 
 }

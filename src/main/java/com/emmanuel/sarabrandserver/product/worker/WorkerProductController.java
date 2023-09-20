@@ -1,26 +1,24 @@
 package com.emmanuel.sarabrandserver.product.worker;
 
-import com.emmanuel.sarabrandserver.product.util.*;
+import com.emmanuel.sarabrandserver.product.util.ProductResponse;
+import com.emmanuel.sarabrandserver.product.util.UpdateProductDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.HttpStatus.NO_CONTENT;
+import static org.springframework.http.HttpStatus.OK;
 
 @RestController
 @RequestMapping("api/v1/worker/product")
 @PreAuthorize(value = "hasRole('ROLE_WORKER')")
+@RequiredArgsConstructor
 public class WorkerProductController {
-    private final WorkerProductService workerProductService;
 
-    public WorkerProductController(WorkerProductService workerProductService) {
-        this.workerProductService = workerProductService;
-    }
+    private final WorkerProductService workerProductService;
 
     /**
      * Method fetches a list of ProductResponse.
@@ -39,30 +37,6 @@ public class WorkerProductController {
     }
 
     /**
-     * Method returns a list of DetailResponse.
-     *
-     * @param uuid is the Product UUID
-     * @return ResponseEntity
-     */
-    @ResponseStatus(OK)
-    @GetMapping(path = "/detail", produces = "application/json")
-    public List<DetailResponse> fetchAllProductDetails(@NotNull @RequestParam(value = "id") String uuid) {
-        return this.workerProductService.productDetailsByProductUUID(uuid);
-    }
-
-    @ResponseStatus(CREATED)
-    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public void create(@Valid @ModelAttribute CreateProductDTO dto) {
-        workerProductService.create(dto, dto.getFiles());
-    }
-
-    @ResponseStatus(CREATED)
-    @PostMapping(path = "/detail", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public void createDetail(@Valid @ModelAttribute ProductDetailDTO dto) {
-        workerProductService.createDetail(dto);
-    }
-
-    /**
      * Update a Product
      *
      * @param dto of type ProductDTO
@@ -70,18 +44,7 @@ public class WorkerProductController {
     @ResponseStatus(NO_CONTENT)
     @PutMapping(consumes = "application/json")
     public void updateProduct(@Valid @RequestBody UpdateProductDTO dto) {
-        this.workerProductService.updateProduct(dto);
-    }
-
-    /**
-     * Update a ProductDetail
-     *
-     * @param dto of type DetailDTO
-     */
-    @ResponseStatus(NO_CONTENT)
-    @PutMapping(path = "/detail", consumes = "application/json")
-    public void updateProductDetail(@Valid @RequestBody UpdateProductDetailDTO dto) {
-        this.workerProductService.updateProductDetail(dto);
+        this.workerProductService.update(dto);
     }
 
     /**
@@ -92,18 +55,7 @@ public class WorkerProductController {
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping
     public void deleteProduct(@NotNull @RequestParam(value = "id") String uuid) {
-        this.workerProductService.deleteProduct(uuid.trim());
-    }
-
-    /**
-     * Method permanently deletes a ProductDetail
-     *
-     * @param sku is a unique String for each ProductDetail
-     */
-    @ResponseStatus(NO_CONTENT)
-    @DeleteMapping(path = "/detail/{sku}")
-    public void deleteProductDetail(@NotNull @PathVariable(value = "sku") String sku) {
-        this.workerProductService.deleteProductDetail(sku);
+        this.workerProductService.delete(uuid.trim());
     }
 
 }

@@ -8,10 +8,7 @@ import com.emmanuel.sarabrandserver.collection.dto.CollectionDTO;
 import com.emmanuel.sarabrandserver.collection.repository.CollectionRepository;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
-import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
-import com.emmanuel.sarabrandserver.product.repository.ProductSkuRepo;
-import com.emmanuel.sarabrandserver.product.util.UpdateProductDetailDTO;
 import com.emmanuel.sarabrandserver.product.util.SizeInventoryDTO;
 import com.emmanuel.sarabrandserver.product.util.UpdateProductDTO;
 import com.emmanuel.sarabrandserver.util.Result;
@@ -37,7 +34,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class WorkerProductControllerTest extends AbstractIntegrationTest {
 
     private final static String requestMapping = "/api/v1/worker/product";
-    private final int detailSize = 10;
     private final StringBuilder category = new StringBuilder();
     private final StringBuilder colour = new StringBuilder();
     private final StringBuilder productName = new StringBuilder();
@@ -48,8 +44,6 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private WorkerCollectionService collectionService;
     @Autowired private CollectionRepository collectionRepository;
-    @Autowired private ProductDetailRepo productDetailRepo;
-    @Autowired private ProductSkuRepo productSkuRepo;
 
     @BeforeEach
     void setUp() {
@@ -66,7 +60,8 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         this.colour.append(colour);
 
         // Product1 and ProductDetail1
-        SizeInventoryDTO[] sizeInventoryDTO1 = sizeInventoryDTOArray(this.detailSize);
+        int detailSize = 10;
+        SizeInventoryDTO[] sizeInventoryDTO1 = sizeInventoryDTOArray(detailSize);
         Result result = getResult(
                 sizeInventoryDTO1,
                 prodName,
@@ -127,27 +122,6 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                 .andExpect(content().contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
-    }
-
-    @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = """
-            Simulates fetching ProductDetails by product uuid.
-            Main objective is to validate native sql query
-            """)
-    void fetchAllDetail() throws Exception {
-        // Given
-        var product = this.productRepository.findByProductName(this.productName.toString()).orElse(null);
-        assertNotNull(product);
-
-        // Based on setUp
-        this.MOCKMVC
-                .perform(get(requestMapping + "/detail").param("id", product.getUuid()))
-                .andExpect(content().contentType("application/json"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[*].variants").isArray())
-                .andExpect(jsonPath("$[*].variants.length()").value(this.detailSize));
     }
 
     @Test
@@ -450,35 +424,6 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                         .with(csrf())
                 )
                 .andExpect(status().isNoContent());
-    }
-
-    @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Update ProductDetail")
-    void updateDetail() throws Exception {
-        var detail = this.productDetailRepo.findAll().get(0);
-        var productSku = detail.getSkus().stream().findAny().orElse(null);
-
-        assertNotNull(productSku);
-
-        var dto = new UpdateProductDetailDTO(productSku.getSku(), true, 50, "large");
-
-        // Then
-        this.MOCKMVC
-                .perform(put(requestMapping + "/detail")
-                        .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(dto))
-                        .with(csrf())
-                )
-                .andExpect(status().isNoContent());
-
-        var findDetail = this.productSkuRepo.findBySku(productSku.getSku()).orElse(null);
-
-        assertNotNull(findDetail);
-
-        assertEquals(dto.getSku(), findDetail.getSku());
-        assertEquals(dto.getQty(), findDetail.getInventory());
-        assertEquals(dto.getSize(), findDetail.getSize());
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.repository.ProductSkuRepo;
+import com.emmanuel.sarabrandserver.product.service.WorkerProductService;
 import com.emmanuel.sarabrandserver.product.util.UpdateProductDetailDTO;
 import com.emmanuel.sarabrandserver.util.Result;
 import com.emmanuel.sarabrandserver.util.TestingData;

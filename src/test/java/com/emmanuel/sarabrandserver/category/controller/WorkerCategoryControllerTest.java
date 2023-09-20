@@ -9,7 +9,7 @@ import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.exception.ResourceAttachedException;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.util.SizeInventoryDTO;
-import com.emmanuel.sarabrandserver.product.worker.WorkerProductService;
+import com.emmanuel.sarabrandserver.product.service.WorkerProductService;
 import com.emmanuel.sarabrandserver.util.Result;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.AfterEach;

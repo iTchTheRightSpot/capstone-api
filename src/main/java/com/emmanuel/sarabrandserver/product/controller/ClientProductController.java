@@ -1,5 +1,6 @@
-package com.emmanuel.sarabrandserver.product.client;
+package com.emmanuel.sarabrandserver.product.controller;
 
+import com.emmanuel.sarabrandserver.product.service.ClientProductService;
 import com.emmanuel.sarabrandserver.product.util.DetailResponse;
 import com.emmanuel.sarabrandserver.product.util.ProductResponse;
 import jakarta.validation.constraints.NotNull;
@@ -27,14 +28,14 @@ public class ClientProductController {
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
             @NotNull @RequestParam(name = "size", defaultValue = "40") Integer size
     ) {
-        return this.clientProductService.fetchAll(page, size);
+        return this.clientProductService.fetchAllByUUID("", "", page, size);
     }
 
     /** Returns a list of DetailResponse objects */
     @ResponseStatus(OK)
     @GetMapping(path = "/detail", produces = "application/json")
     public List<DetailResponse> fetchProductDetails(@NotNull @RequestParam(value = "id") String uuid) {
-        return this.clientProductService.fetchAll(uuid);
+        return this.clientProductService.productDetailByUUID(uuid);
     }
 
 }

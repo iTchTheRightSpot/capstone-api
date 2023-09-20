@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.product.worker;
+package com.emmanuel.sarabrandserver.product.service;
 
 import com.emmanuel.sarabrandserver.aws.S3Service;
 import com.emmanuel.sarabrandserver.exception.CustomAwsException;

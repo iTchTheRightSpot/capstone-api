@@ -4,6 +4,7 @@ import com.emmanuel.sarabrandserver.aws.S3Service;
 import com.emmanuel.sarabrandserver.category.dto.UpdateCollectionDTO;
 import com.emmanuel.sarabrandserver.collection.dto.CollectionDTO;
 import com.emmanuel.sarabrandserver.collection.entity.ProductCollection;
+import com.emmanuel.sarabrandserver.collection.projection.CollectionPojo;
 import com.emmanuel.sarabrandserver.collection.repository.CollectionRepository;
 import com.emmanuel.sarabrandserver.collection.response.CollectionResponse;
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
@@ -48,6 +49,7 @@ public class WorkerCollectionService {
      * Returns a list of CollectionResponse.
      */
     public List<CollectionResponse> fetchAllCategories() {
+
         return this.collectionRepository
                 .fetchAllCollection() //
                 .stream() //
@@ -120,7 +122,13 @@ public class WorkerCollectionService {
 
         var date = this.customUtil.toUTC(new Date()).orElseGet(Date::new);
 
-        this.collectionRepository.update(date, dto.getName(), dto.getVisible(), dto.getId().trim());
+        this.collectionRepository
+                .update(
+                        date,
+                        dto.getName(),
+                        dto.getVisible(),
+                        dto.getId().trim()
+                );
     }
 
     /**

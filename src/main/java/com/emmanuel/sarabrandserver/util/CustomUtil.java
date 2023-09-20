@@ -10,6 +10,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 @Service
@@ -20,6 +21,16 @@ public class CustomUtil {
 
     public CustomUtil(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+    }
+
+    /**
+     * A custom mapper to reduce boilerplate code
+     * @param x is the object received
+     * @param function converts from T to S
+     * @return S is the return type
+     * */
+    public <T, S> S customMapper(T x, Function<T, S> function) {
+        return function.apply(x);
     }
 
     /**

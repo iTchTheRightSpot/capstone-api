@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.product.worker;
+package com.emmanuel.sarabrandserver.product.service;
 
 import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;

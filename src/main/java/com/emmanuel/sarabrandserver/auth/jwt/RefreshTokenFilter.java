@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
@@ -19,18 +19,22 @@ import java.util.Arrays;
 /** Class implements refresh token logic */
 @Component
 public class RefreshTokenFilter extends OncePerRequestFilter {
+
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
+
+    @Value(value = "${server.servlet.session.cookie.max-age}")
+    private int maxAge;
+
     private final JwtTokenService tokenService;
     private final UserDetailsService userDetailsService;
-    private final Environment environment;
 
     public RefreshTokenFilter(
             JwtTokenService tokenService,
-            @Qualifier(value = "userDetailService") UserDetailsService userDetailsService,
-            Environment environment
+            @Qualifier(value = "userDetailService") UserDetailsService userDetailsService
     ) {
         this.tokenService = tokenService;
         this.userDetailsService = userDetailsService;
-        this.environment = environment;
     }
 
     /**
@@ -53,8 +57,6 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
             return;
         }
 
-        String JSESSIONID = this.environment.getProperty("server.servlet.session.cookie.name");
-
         // validate refresh token is needed
         Arrays.stream(cookies)
                 .filter(cookie -> cookie.getName().equals(JSESSIONID))
@@ -70,7 +72,7 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
                     );
                     String token = this.tokenService.generateToken(authenticated);
                     cookie.setValue(token);
-                    cookie.setMaxAge(this.tokenService.maxAge());
+                    cookie.setMaxAge(maxAge);
                     response.addCookie(cookie);
                 });
         filterChain.doFilter(request, response);

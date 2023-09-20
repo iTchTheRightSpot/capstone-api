@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.product.worker;
+package com.emmanuel.sarabrandserver.product.service;
 
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
@@ -66,7 +66,8 @@ public class WorkerProductDetailService {
                 .findProductDetailsByProductUuidWorker(uuid) //
                 .stream() //
                 .map(pojo -> {
-                    var urls = Arrays.stream(pojo.getImage().split(","))
+                    var urls = Arrays
+                            .stream(pojo.getImage().split(","))
                             .map(key -> this.helperService.generatePreSignedUrl(bool, BUCKET, key))
                             .toList();
 
@@ -96,7 +97,6 @@ public class WorkerProductDetailService {
                 .findByProductUuid(dto.getUuid())
                 .orElseThrow(() -> new CustomNotFoundException("Product does not exist"));
 
-        // TODO validate colour does not exist
         boolean bool = this.detailRepo.colourExist(dto.getUuid(), dto.getColour()) > 0;
 
         if (bool) {

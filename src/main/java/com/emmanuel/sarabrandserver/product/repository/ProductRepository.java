@@ -134,10 +134,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             INNER JOIN ProductCategory pc ON p.productCategory.categoryId = pc.categoryId
             INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
             INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
-            WHERE pd.isVisible = true AND sku.inventory > 0 AND pc.categoryName = :name
+            WHERE pd.isVisible = true AND sku.inventory > 0 AND pc.uuid = :uuid
             GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
             """)
-    Page<ProductPojo> fetchProductByCategoryClient(String name, Pageable page);
+    Page<ProductPojo> fetchProductByCategoryClient(String uuid, Pageable page);
 
     @Query(value = """
             SELECT
@@ -152,10 +152,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             INNER JOIN ProductCollection pc ON p.productCollection.collectionId = pc.collectionId
             INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
             INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
-            WHERE pd.isVisible = true AND sku.inventory > 0 AND pc.collection = :name
+            WHERE pd.isVisible = true AND sku.inventory > 0 AND pc.uuid = :uuid
             GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
             """)
-    Page<ProductPojo> fetchByProductByCollectionClient(String name, Pageable page);
+    Page<ProductPojo> fetchByProductByCollectionClient(String uuid, Pageable page);
 
     @Query(value = """
             SELECT img.imageKey as image

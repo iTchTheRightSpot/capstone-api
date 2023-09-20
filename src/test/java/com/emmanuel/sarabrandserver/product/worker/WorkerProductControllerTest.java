@@ -9,6 +9,7 @@ import com.emmanuel.sarabrandserver.collection.repository.CollectionRepository;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
 import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
+import com.emmanuel.sarabrandserver.product.service.WorkerProductService;
 import com.emmanuel.sarabrandserver.product.util.SizeInventoryDTO;
 import com.emmanuel.sarabrandserver.product.util.UpdateProductDTO;
 import com.emmanuel.sarabrandserver.util.Result;

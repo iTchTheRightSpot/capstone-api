@@ -33,8 +33,6 @@ class AuthServiceTest extends AbstractUnitTest {
 
     @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
 
-    @Value(value = "${server.servlet.session.cookie.secure}") private boolean COOKIESECURE;
-
     private AuthService authService;
 
     @Mock private UserRepository userRepository;
@@ -51,7 +49,6 @@ class AuthServiceTest extends AbstractUnitTest {
                 this.jwtTokenService
         );
         this.authService.setJSESSIONID(JSESSIONID);
-        this.authService.setCOOKIESECURE(COOKIESECURE);
     }
 
     @Test

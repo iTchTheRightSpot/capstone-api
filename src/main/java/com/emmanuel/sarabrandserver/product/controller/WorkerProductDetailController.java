@@ -1,8 +1,9 @@
-package com.emmanuel.sarabrandserver.product.worker;
+package com.emmanuel.sarabrandserver.product.controller;
 
 import com.emmanuel.sarabrandserver.product.util.DetailResponse;
 import com.emmanuel.sarabrandserver.product.util.ProductDetailDTO;
 import com.emmanuel.sarabrandserver.product.util.UpdateProductDetailDTO;
+import com.emmanuel.sarabrandserver.product.service.WorkerProductDetailService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class WorkerProductDetailController {
     public void createDetail(@Valid @ModelAttribute ProductDetailDTO dto) {
         workerProductDetailService.create(dto, dto.getFiles());
     }
+
     /**
      * Update a ProductDetail
      *
@@ -59,6 +61,5 @@ public class WorkerProductDetailController {
     public void deleteProductDetail(@NotNull @PathVariable(value = "sku") String sku) {
         this.workerProductDetailService.delete(sku);
     }
-
 
 }

@@ -8,9 +8,9 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -19,11 +19,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 
-import java.security.KeyPair;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
-import java.util.UUID;
 
 /**
  * For Jwt config details
@@ -31,20 +27,14 @@ import java.util.UUID;
  */
 @Configuration
 public class JwtConfig {
-    private RSAKey rsaKey;
 
-    // Generate pub, priv key at run time
-    private record Jwks() {
-        public static RSAKey generateRsa() {
-            KeyPair keyPair = KeyGeneratorUtils.generateRsaKey();
-            RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-            RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-            return new RSAKey.Builder(publicKey)
-                    .privateKey(privateKey)
-                    .keyID(UUID.randomUUID().toString())
-                    .build();
-        }
-    }
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
+
+    @Value(value = "${jwt.claim}")
+    private String claim;
+
+    private RSAKey rsaKey;
 
     @Bean
     public ObjectMapper objectMapper() {
@@ -59,8 +49,8 @@ public class JwtConfig {
     }
 
     @Bean
-    public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwks) {
-        return new NimbusJwtEncoder(jwks);
+    public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
+        return new NimbusJwtEncoder(jwkSource);
     }
 
     @Bean
@@ -71,7 +61,7 @@ public class JwtConfig {
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         var authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        authoritiesConverter.setAuthoritiesClaimName("role");
+        authoritiesConverter.setAuthoritiesClaimName(claim);
         authoritiesConverter.setAuthorityPrefix("ROLE_");
 
         var converter = new JwtAuthenticationConverter();
@@ -87,16 +77,12 @@ public class JwtConfig {
      * <a href="https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/bearer-tokens.html">...</a>
      */
     @Bean
-    public BearerTokenResolver bearerTokenResolver(
-            Environment environment,
-            JwtDecoder jwtDecoder,
-            JwtTokenService jwtTokenService
-    ) {
-        return new BearerResolver(environment, jwtDecoder, jwtTokenService);
+    public BearerTokenResolver bearerTokenResolver(JwtDecoder jwtDecoder, JwtTokenService jwtTokenService) {
+        return new BearerResolver(JSESSIONID, jwtDecoder, jwtTokenService);
     }
 
     private record BearerResolver(
-            Environment env,
+            String JSESSIONID,
             JwtDecoder decoder,
             JwtTokenService service
     ) implements BearerTokenResolver {
@@ -107,7 +93,6 @@ public class JwtConfig {
                 return null;
             }
 
-            String JSESSIONID = this.env.getProperty("server.servlet.session.cookie.name");
             return Arrays.stream(cookies)
                     .filter(cookie -> cookie.getName().equals(JSESSIONID))
                     .filter(this.service::_isTokenNoneExpired)

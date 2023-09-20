@@ -23,14 +23,12 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.HashSet;
 
-@Service @Setter
+@Service
+@Setter
 public class AuthService {
 
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
-
-    @Value(value = "${server.servlet.session.cookie.secure}")
-    private boolean COOKIESECURE;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -52,9 +50,10 @@ public class AuthService {
     /**
      * Responsible for registering a new worker. Logic is throw an error if client has a role of Worker or else add
      * ROLE worker to client.
+     *
      * @param dto of type WorkerRegisterDTO
      * @throws DuplicateException when user principal exists and has a role of worker
-     * */
+     */
     @Transactional
     public void workerRegister(RegisterDTO dto) {
         var client = this.userRepository
@@ -77,9 +76,10 @@ public class AuthService {
 
     /**
      * Method is responsible for registering a new user who isn't a worker
+     *
      * @param dto of type ClientRegisterDTO
      * @throws DuplicateException when user principal exists
-     * */
+     */
     @Transactional
     public void clientRegister(RegisterDTO dto) {
         if (this.userRepository.principalExists(dto.getEmail().trim()) > 0) {
@@ -89,13 +89,15 @@ public class AuthService {
     }
 
     /**
-     * Manually login a user. Gotcha is jwt token is sent as a http true cookie
-     * instead of as an Authorization header or body.
-     * @param dto consist of principal and password.
-     * @param request of HttpServletRequest
+     * Manually login a user. Jwt is sent as a cookie
+     * instead of authorization header.
+     * Look in application properties for cookie config.
+     *
+     * @param dto      consist of principal and password.
+     * @param request  of HttpServletRequest
      * @param response of HttpServletResponse
      * @throws AuthenticationException is thrown when credentials do not exist, bad credentials account is locked e.t.c.
-     * */
+     */
     @Transactional
     public void login(LoginDTO dto, HttpServletRequest request, HttpServletResponse response) {
         // No need to re-authenticate if request contains valid jwt cookie
@@ -111,16 +113,13 @@ public class AuthService {
         // Jwt Token
         String token = this.jwtTokenService.generateToken(authenticated);
 
-        // Add jwt to cookie
-        Cookie cookie = new Cookie(JSESSIONID, token);
-        cookie.setMaxAge(this.jwtTokenService.maxAge());
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setSecure(COOKIESECURE);
-        response.addCookie(cookie); // Add cookie to response
+        // Add token to response
+        response.addCookie(new Cookie(JSESSIONID, token));
     }
 
-    /** Create a new User object */
+    /**
+     * Create a new User object
+     */
     private SarreBrandUser createUser(RegisterDTO dto) {
         var client = SarreBrandUser.builder()
                 .firstname(dto.getFirstname().trim())
@@ -137,9 +136,10 @@ public class AuthService {
 
     /**
      * Method simply prevents user from signing in again if the request contains a valid jwt and LOGGEDSESSION cookie.
+     *
      * @param res of HttpServletRequest
      * @return boolean
-     * */
+     */
     private boolean _validateRequestContainsValidCookies(HttpServletRequest res) {
         Cookie[] cookies = res.getCookies();
         // Base case

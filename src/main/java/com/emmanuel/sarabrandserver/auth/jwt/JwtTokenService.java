@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
@@ -13,12 +14,18 @@ import java.time.Instant;
 import java.util.logging.Logger;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 @Service @Getter @Setter
 public class JwtTokenService {
     private static final Logger log = Logger.getLogger(JwtTokenService.class.getName());
 
-    private int tokenExpiry = 60; // minutes.
+    @Value(value = "${server.servlet.session.cookie.max-age}")
+    private int maxAge; // seconds
+
+    @Value(value = "${jwt.claim}")
+    private String claim;
+
     private int boundToSendRefreshToken = 15; // minutes
 
     private final JwtEncoder jwtEncoder;
@@ -45,9 +52,9 @@ public class JwtTokenService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
-                .expiresAt(now.plus(tokenExpiry, MINUTES))
+                .expiresAt(now.plus(maxAge, SECONDS))
                 .subject(authentication.getName())
-                .claim("role", role)
+                .claim(claim, role)
                 .build();
 
         return this.jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
@@ -79,11 +86,6 @@ public class JwtTokenService {
             log.warning("JWT exception %s, %s".formatted(e.getMessage(), RefreshTokenFilter.class));
             return false;
         }
-    }
-
-    // Convert tokenExpiry to seconds
-    public int maxAge() {
-        return this.getTokenExpiry() * 60;
     }
 
     public String extractSubject(final Cookie cookie) {

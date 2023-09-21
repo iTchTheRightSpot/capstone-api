@@ -19,6 +19,10 @@ public class UpdateProductDetailDTO {
     @NotEmpty(message = "cannot be empty")
     private String sku;
 
+    @NotNull(message = "cannot be empty")
+    @NotEmpty(message = "cannot be empty")
+    private String colour;
+
     @JsonProperty(value = "is_visible", required = true)
     @NotNull(message = "cannot be empty")
     private Boolean isVisible;

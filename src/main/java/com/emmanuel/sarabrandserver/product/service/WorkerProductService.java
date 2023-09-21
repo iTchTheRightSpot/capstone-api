@@ -12,6 +12,7 @@ import com.emmanuel.sarabrandserver.product.util.CreateProductDTO;
 import com.emmanuel.sarabrandserver.product.util.ProductResponse;
 import com.emmanuel.sarabrandserver.product.util.UpdateProductDTO;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 @Setter
 public class WorkerProductService {
 
@@ -39,26 +41,11 @@ public class WorkerProductService {
 
     private final ProductRepository productRepository;
     private final WorkerProductDetailService workerProductDetailService;
+    private final ProductSKUService productSKUService;
     private final WorkerCategoryService categoryService;
     private final WorkerCollectionService collectionService;
     private final CustomUtil customUtil;
     private final HelperService helperService;
-
-    public WorkerProductService(
-            ProductRepository productRepository,
-            WorkerCategoryService categoryService,
-            WorkerProductDetailService workerProductDetailService,
-            CustomUtil customUtil,
-            WorkerCollectionService collectionService,
-            HelperService helperService
-    ) {
-        this.productRepository = productRepository;
-        this.categoryService = categoryService;
-        this.workerProductDetailService = workerProductDetailService;
-        this.customUtil = customUtil;
-        this.collectionService = collectionService;
-        this.helperService = helperService;
-    }
 
     /**
      * Method fetches a list of ProductResponse. Note fetchAllProductsWorker query method returns a list of
@@ -138,7 +125,7 @@ public class WorkerProductService {
                 productDetail(saved, dto.getColour(), dto.getVisible(), date);
 
         // Save ProductSKUs
-        this.helperService.saveProductSKUs(dto.getSizeInventory(), detail);
+        this.productSKUService.saveProductSKUs(dto.getSizeInventory(), detail);
 
         // Build ProductImages (save to s3)
         this.helperService.productImages(

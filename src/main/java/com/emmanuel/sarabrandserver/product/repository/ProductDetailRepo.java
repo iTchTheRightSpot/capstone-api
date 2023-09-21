@@ -31,7 +31,7 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     @Query(value = """
             UPDATE product_sku s
             INNER JOIN product_detail d ON d.detail_id = s.detail_id
-            SET d.is_visible = :visible, s.inventory = :qty, s.size = :s
+            SET d.colour = :colour, d.is_visible = :visible, s.inventory = :qty, s.size = :s
             WHERE s.sku = :sku
             """,
             nativeQuery = true
@@ -39,6 +39,7 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
 
     void updateProductDetail(
             @Param(value = "sku") String sku,
+            String colour,
             @Param(value = "visible") boolean visible,
             @Param(value = "qty") int qty,
             @Param(value = "s") String size
@@ -72,12 +73,11 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     List<DetailPojo> fetchProductDetailByUUIDClient(@Param(value = "uuid") String uuid);
 
     @Query(value = """
-            SELECT COUNT(p.uuid)
-            FROM Product p
-            INNER JOIN ProductDetail det ON p.productId = det.product.productId
-            WHERE p.uuid = :uuid AND det.colour = :colour
+            SELECT d
+            FROM ProductDetail d
+            WHERE d.colour = :colour
             """)
-    int colourExist(@Param(value = "uuid") String uuid, @Param(value = "colour") String colour);
+    Optional<ProductDetail> productDetailByColour(String colour);
 
     @Query(value = """
             SELECT

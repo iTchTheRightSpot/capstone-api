@@ -12,6 +12,8 @@ import com.emmanuel.sarabrandserver.product.util.ProductDetailDTO;
 import com.emmanuel.sarabrandserver.product.util.UpdateProductDetailDTO;
 import com.emmanuel.sarabrandserver.product.util.Variant;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,12 +21,11 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 @Service
+@RequiredArgsConstructor
+@Setter
 public class WorkerProductDetailService {
 
     @Value(value = "${aws.bucket}")
@@ -34,24 +35,11 @@ public class WorkerProductDetailService {
     private String ACTIVEPROFILE;
 
     private final ProductDetailRepo detailRepo;
+    private final ProductSKUService productSKUService;
     private final ProductImageRepo productImageRepo;
     private final ProductRepository productRepository;
     private final CustomUtil customUtil;
     private final HelperService helperService;
-
-    public WorkerProductDetailService(
-            ProductDetailRepo detailRepo,
-            ProductImageRepo productImageRepo,
-            ProductRepository productRepository,
-            CustomUtil customUtil,
-            HelperService helperService
-    ) {
-        this.detailRepo = detailRepo;
-        this.productImageRepo = productImageRepo;
-        this.productRepository = productRepository;
-        this.customUtil = customUtil;
-        this.helperService = helperService;
-    }
 
     /**
      * Returns a List of ProductDetail based on Product uuid
@@ -97,10 +85,13 @@ public class WorkerProductDetailService {
                 .findByProductUuid(dto.getUuid())
                 .orElseThrow(() -> new CustomNotFoundException("Product does not exist"));
 
-        boolean bool = this.detailRepo.colourExist(dto.getUuid(), dto.getColour()) > 0;
+        Optional<ProductDetail> exist = this.detailRepo.productDetailByColour(dto.getColour());
 
-        if (bool) {
-            throw new DuplicateException("Colour %s exists".formatted(dto.getColour()));
+        if (exist.isPresent()) {
+            // Create new ProductSKU
+            var detail = exist.get();
+            this.productSKUService.saveProductSKUs(dto.getSizeInventory(), detail);
+            return;
         }
 
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
@@ -122,7 +113,7 @@ public class WorkerProductDetailService {
         var saved = this.detailRepo.save(detail);
 
         // Save ProductSKUs
-        this.helperService.saveProductSKUs(dto.getSizeInventory(), saved);
+        this.productSKUService.saveProductSKUs(dto.getSizeInventory(), saved);
 
         // Save ProductImages (save to s3)
         this.helperService.productImages(
@@ -142,6 +133,7 @@ public class WorkerProductDetailService {
     public void update(final UpdateProductDetailDTO dto) {
         this.detailRepo.updateProductDetail(
                 dto.getSku(),
+                dto.getColour(),
                 dto.getIsVisible(),
                 dto.getQty(),
                 dto.getSize()

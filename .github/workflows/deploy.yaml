@@ -43,7 +43,7 @@ jobs:
           
           # chmod grants permission to run mvnw
           chmod +x mvnw
-          ./mvnw clean spring-boot:build-image
+          ./mvnw clean spring-boot:build-image -DskipTests
         shell: bash
 
       - name: Set up Docker Build

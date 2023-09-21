@@ -16,7 +16,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Arrays;
 
-/** Class implements refresh token logic */
 @Component
 public class RefreshTokenFilter extends OncePerRequestFilter {
 
@@ -38,10 +37,11 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
     }
 
     /**
-     * The objective of this filter is implement refresh token logic.
-     * 1. Replace JSESSIONID cookie value with new token.
-     * <br/>
-     * Note: For each request, there can only be one valid jwt as logic to validate this is done in AuthService class.
+     * The objective of this filter is to replace JSESSIONID if jwt is
+     * within expiration time.
+     * Note: For each request, there can only be one valid jwt as
+     * logic to validate this is done in AuthService class. Also,
+     * pub and priv keys are generated at runtime
      * */
     @Override
     protected void doFilterInternal(

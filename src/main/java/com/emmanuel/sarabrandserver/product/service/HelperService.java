@@ -4,11 +4,8 @@ import com.emmanuel.sarabrandserver.aws.S3Service;
 import com.emmanuel.sarabrandserver.exception.CustomAwsException;
 import com.emmanuel.sarabrandserver.product.entity.ProductDetail;
 import com.emmanuel.sarabrandserver.product.entity.ProductImage;
-import com.emmanuel.sarabrandserver.product.entity.ProductSku;
 import com.emmanuel.sarabrandserver.product.repository.ProductImageRepo;
-import com.emmanuel.sarabrandserver.product.repository.ProductSkuRepo;
 import com.emmanuel.sarabrandserver.product.util.CustomMultiPart;
-import com.emmanuel.sarabrandserver.product.util.SizeInventoryDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +25,6 @@ import java.util.*;
 @Slf4j
 public class HelperService {
 
-    private final ProductSkuRepo productSkuRepo;
     private final ProductImageRepo productImageRepo;
     private final S3Service s3Service;
 
@@ -38,21 +34,6 @@ public class HelperService {
 
     public void deleteFromS3(List<ObjectIdentifier> keys, String bucket) {
         this.s3Service.deleteFromS3(keys, bucket);
-    }
-
-    /**
-     * Save Product sku. Look in db diagram in read me in case of confusion
-     */
-    public void saveProductSKUs(SizeInventoryDTO[] dto, ProductDetail detail) {
-        for (SizeInventoryDTO sizeDto : dto) {
-            var sku = ProductSku.builder()
-                    .productDetail(detail)
-                    .sku(UUID.randomUUID().toString())
-                    .size(sizeDto.getSize())
-                    .inventory(sizeDto.getQty())
-                    .build();
-            this.productSkuRepo.save(sku);
-        }
     }
 
     /**

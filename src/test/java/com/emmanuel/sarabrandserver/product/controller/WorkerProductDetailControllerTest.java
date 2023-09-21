@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.product.worker;
+package com.emmanuel.sarabrandserver.product.controller;
 
 import com.emmanuel.sarabrandserver.AbstractIntegrationTest;
 import com.emmanuel.sarabrandserver.category.dto.CategoryDTO;
@@ -132,6 +132,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
         String sku = list.get(0).getSku();
         var dto = new UpdateProductDetailDTO(
                 sku,
+                new Faker().commerce().color(),
                 false,
                 new Faker().number().numberBetween(2, 10),
                 "large"

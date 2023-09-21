@@ -1,9 +1,9 @@
 package com.emmanuel.sarabrandserver.product.controller;
 
+import com.emmanuel.sarabrandserver.product.service.WorkerProductDetailService;
 import com.emmanuel.sarabrandserver.product.util.DetailResponse;
 import com.emmanuel.sarabrandserver.product.util.ProductDetailDTO;
 import com.emmanuel.sarabrandserver.product.util.UpdateProductDetailDTO;
-import com.emmanuel.sarabrandserver.product.service.WorkerProductDetailService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +51,7 @@ public class WorkerProductDetailController {
     public void updateProductDetail(@Valid @RequestBody UpdateProductDetailDTO dto) {
         this.workerProductDetailService.update(dto);
     }
+
     /**
      * Method permanently deletes a ProductDetail
      *

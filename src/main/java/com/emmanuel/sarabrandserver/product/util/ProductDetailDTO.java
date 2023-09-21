@@ -16,8 +16,9 @@ import org.springframework.web.multipart.MultipartFile;
 public class ProductDetailDTO {
 
     @JsonProperty(value = "uuid")
-    @NotNull(message = "cannot be empty")
-    private String uuid;
+    @NotNull(message = "UUID cannot be empty")
+    @NotEmpty(message = "UUID cannot be empty")
+    private String uuid; // productUUID
 
     @JsonProperty(required = true, value = "visible")
     @NotNull(message = "Please choose if product should be visible")
@@ -32,9 +33,7 @@ public class ProductDetailDTO {
     @NotNull(message = "Size or Inventory cannot be empty")
     private SizeInventoryDTO[] sizeInventory;
 
-    @JsonProperty(required = true, value = "files")
-    @NotNull(message = "Please enter or choose product image")
-    @NotEmpty(message = "Please enter or choose product image")
+    @JsonProperty(value = "files")
     private MultipartFile[] files;
 
 }

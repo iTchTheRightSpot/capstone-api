@@ -1,4 +1,4 @@
-package com.emmanuel.sarabrandserver.product.worker;
+package com.emmanuel.sarabrandserver.product.service;
 
 import com.emmanuel.sarabrandserver.AbstractUnitTest;
 import com.emmanuel.sarabrandserver.category.entity.ProductCategory;
@@ -9,6 +9,7 @@ import com.emmanuel.sarabrandserver.exception.DuplicateException;
 import com.emmanuel.sarabrandserver.product.entity.Product;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.service.HelperService;
+import com.emmanuel.sarabrandserver.product.service.ProductSKUService;
 import com.emmanuel.sarabrandserver.product.service.WorkerProductDetailService;
 import com.emmanuel.sarabrandserver.product.service.WorkerProductService;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
@@ -41,6 +42,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     @Mock private ProductRepository productRepository;
     @Mock private WorkerProductDetailService workerProductDetailService;
     @Mock private HelperService helperService;
+    @Mock private ProductSKUService productSKUService;
     @Mock private WorkerCategoryService workerCategoryService;
     @Mock private CustomUtil customUtil;
     @Mock private WorkerCollectionService collectionService;
@@ -49,10 +51,11 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     void setUp() {
         this.workerProductService = new WorkerProductService(
                 this.productRepository,
-                this.workerCategoryService,
                 this.workerProductDetailService,
-                this.customUtil,
+                this.productSKUService,
+                this.workerCategoryService,
                 this.collectionService,
+                this.customUtil,
                 this.helperService
         );
         this.workerProductService.setACTIVEPROFILE(ACTIVEPROFILE);

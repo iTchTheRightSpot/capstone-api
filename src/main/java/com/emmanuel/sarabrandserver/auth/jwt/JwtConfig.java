@@ -77,8 +77,8 @@ public class JwtConfig {
      * <a href="https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/bearer-tokens.html">...</a>
      */
     @Bean
-    public BearerTokenResolver bearerTokenResolver(JwtDecoder jwtDecoder, JwtTokenService jwtTokenService) {
-        return new BearerResolver(JSESSIONID, jwtDecoder, jwtTokenService);
+    public BearerTokenResolver bearerTokenResolver(JwtDecoder decoder, JwtTokenService tokenService) {
+        return new BearerResolver(JSESSIONID, decoder, tokenService);
     }
 
     private record BearerResolver(

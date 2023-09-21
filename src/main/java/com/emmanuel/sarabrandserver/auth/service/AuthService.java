@@ -30,6 +30,12 @@ public class AuthService {
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
 
+    @Value(value = "${server.servlet.session.cookie.secure}")
+    private boolean COOKIESECURE;
+
+    @Value(value = "${server.servlet.session.cookie.max-age}")
+    private int MAXAGE;
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authManager;
@@ -110,11 +116,18 @@ public class AuthService {
 
         var authenticated = this.authManager.authenticate(unauthenticated);
 
-        // Jwt Token
+        // Jwt
         String token = this.jwtTokenService.generateToken(authenticated);
 
+        // Jwt cookie
+        Cookie cookie = new Cookie(JSESSIONID, token);
+        cookie.setMaxAge(MAXAGE);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setSecure(COOKIESECURE);
+
         // Add token to response
-        response.addCookie(new Cookie(JSESSIONID, token));
+        response.addCookie(cookie);
     }
 
     /**

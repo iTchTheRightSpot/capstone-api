@@ -57,6 +57,9 @@ public class SecurityConfig {
     @Value(value = "${spring.profiles.active}")
     private String PROFILE;
 
+    @Value(value = "${server.servlet.session.cookie.same-site}")
+    private String SAMESITE;
+
     private final AuthenticationEntryPoint authEntryPoint;
     private final RefreshTokenFilter refreshTokenFilter;
 
@@ -130,7 +133,7 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        var csrfTokenRepository = getCookieCsrfTokenRepository(this.COOKIESECURE);
+        var csrfTokenRepository = getCookieCsrfTokenRepository(this.COOKIESECURE, this.SAMESITE);
 
         return http
 
@@ -186,13 +189,13 @@ public class SecurityConfig {
      * As per docs
      * <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">...</a>
      */
-    private static CookieCsrfTokenRepository getCookieCsrfTokenRepository(boolean secure) {
+    private static CookieCsrfTokenRepository getCookieCsrfTokenRepository(boolean secure, String sameSite) {
         CookieCsrfTokenRepository csrfTokenRepository = new CookieCsrfTokenRepository();
         Consumer<ResponseCookie.ResponseCookieBuilder> csrfCookieCustomizer = (cookie) -> cookie
                 .httpOnly(false)
                 .secure(secure)
                 .path("/")
-                .sameSite("lax")
+                .sameSite(sameSite)
                 .maxAge(-1);
         csrfTokenRepository.setCookieCustomizer(csrfCookieCustomizer);
         return csrfTokenRepository;

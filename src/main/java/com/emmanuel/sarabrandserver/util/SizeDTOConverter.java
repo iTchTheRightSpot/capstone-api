@@ -30,4 +30,5 @@ public class SizeDTOConverter implements Converter<String, SizeInventoryDTO[]> {
             throw new InvalidFormat("Please enter a size and quantity for product");
         }
     }
+
 }

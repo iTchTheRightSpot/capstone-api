@@ -45,9 +45,11 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
      * ORDER BY parent.createAt
      * */
     @Query(value = """
-    SELECT parent.categoryName AS category
-    FROM ProductCategory parent
-    WHERE parent.isVisible = true
+    SELECT
+    c.categoryName AS category,
+    c.uuid AS uuid
+    FROM ProductCategory c
+    WHERE c.isVisible = true
     """)
     List<CategoryPojo> fetchCategoriesClient();
 

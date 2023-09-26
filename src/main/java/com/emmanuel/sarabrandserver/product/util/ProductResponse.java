@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 @Data
 @Builder
 public class ProductResponse {
+    @JsonProperty(value = "product_id")
     private String id;
     private String name;
     private String desc;

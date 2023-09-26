@@ -4,6 +4,7 @@ import com.emmanuel.sarabrandserver.product.service.ClientProductService;
 import com.emmanuel.sarabrandserver.product.util.DetailResponse;
 import com.emmanuel.sarabrandserver.product.util.ProductResponse;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,12 +15,10 @@ import static org.springframework.http.HttpStatus.OK;
 /** All public routes */
 @RestController
 @RequestMapping("api/v1/client/product")
+@RequiredArgsConstructor
 public class ClientProductController {
-    private final ClientProductService clientProductService;
 
-    public ClientProductController(ClientProductService clientProductService) {
-        this.clientProductService = clientProductService;
-    }
+    private final ClientProductService clientProductService;
 
     /** Returns a list of ProductResponse objects */
     @ResponseStatus(OK)

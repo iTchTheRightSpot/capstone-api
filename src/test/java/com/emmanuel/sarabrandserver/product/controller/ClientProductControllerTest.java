@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class ClientProductControllerTest extends AbstractIntegrationTest {
-    private final static String requestMapping = "/api/v1/client/product";
+    private final static String requestMapping = "/api/v1/client/product/detail";
     private final StringBuilder category = new StringBuilder();
     private final int detailSize = 1;
     private final StringBuilder productName = new StringBuilder();
@@ -63,7 +63,7 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
         var product = this.productRepository.findByProductName(this.productName.toString()).orElse(null);
         assertNotNull(product);
         this.MOCKMVC
-                .perform(get(requestMapping + "/detail").param("id", product.getUuid()))
+                .perform(get(requestMapping).param("id", product.getUuid()))
                 .andExpect(content().contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())

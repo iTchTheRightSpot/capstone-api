@@ -59,11 +59,38 @@ public class TestingData {
         return dto;
     }
 
+    /** Collection is an empty string */
     @NotNull
-    public static Result getResult(SizeInventoryDTO[] sizeDto, String prodName, String cat, String colour) {
+    public static Result getResult(SizeInventoryDTO[] sizeDto, String prodName, String category, String colour) {
         var dto = CreateProductDTO.builder()
-                .category(cat)
+                .category(category)
                 .collection("")
+                .name(prodName)
+                .desc(new Faker().lorem().characters(255))
+                .price(new BigDecimal(new Faker().commerce().price()))
+                .currency("USD")
+                .sizeInventory(sizeDto)
+                .visible(true)
+                .colour(colour)
+                .build();
+
+        MockMultipartFile[] files = files(3);
+
+        return new Result(dto, files);
+    }
+
+    /** Collection is not an empty string */
+    @NotNull
+    public static Result getResultCollection(
+            String collection,
+            SizeInventoryDTO[] sizeDto,
+            String prodName,
+            String category,
+            String colour
+    ) {
+        var dto = CreateProductDTO.builder()
+                .category(category)
+                .collection(collection)
                 .name(prodName)
                 .desc(new Faker().lorem().characters(255))
                 .price(new BigDecimal(new Faker().commerce().price()))

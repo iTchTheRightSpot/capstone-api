@@ -1,7 +1,7 @@
 package com.emmanuel.sarabrandserver.collection.controller;
 
 import com.emmanuel.sarabrandserver.AbstractIntegrationTest;
-import com.emmanuel.sarabrandserver.category.dto.UpdateCollectionDTO;
+import com.emmanuel.sarabrandserver.collection.dto.UpdateCollectionDTO;
 import com.emmanuel.sarabrandserver.collection.dto.CollectionDTO;
 import com.emmanuel.sarabrandserver.collection.repository.CollectionRepository;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
@@ -26,7 +26,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class WorkerCollectionControllerTest extends AbstractIntegrationTest {
-    private final static String requestMapping = "/api/v1/worker/collection";
+
+    private final String requestMapping = "/api/v1/worker/collection";
 
     @Autowired private WorkerCollectionService collectionService;
     @Autowired private CollectionRepository collectionRepository;

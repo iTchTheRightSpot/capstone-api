@@ -27,13 +27,13 @@ public class ClientCollectionController {
         return this.collectionService.fetchAll();
     }
 
-    /** Returns a list of ProductResponse objects based on category name */
+    /** Returns a list of ProductResponse objects based on collection id */
     @ResponseStatus(OK)
-    @GetMapping(path = "/product", produces = "application/json")
+    @GetMapping(path = "/products", produces = "application/json")
     public Page<ProductResponse> fetchProductByCollection(
-            @NotNull @RequestParam(name = "uuid") String uuid,
+            @NotNull @RequestParam(name = "collection_id") String uuid,
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "18") Integer size
+            @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size
     ) {
         return this.productService.fetchAllByUUID("collection", uuid, page, size);
     }

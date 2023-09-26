@@ -130,7 +130,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @DisplayName(value = "Create a product")
     void create() throws Exception {
         // Given
-        SizeInventoryDTO[] sizeInventoryDTO = {
+        SizeInventoryDTO[] dtos = {
                 SizeInventoryDTO.builder().size("small").qty(10).build(),
                 SizeInventoryDTO.builder().size("medium").qty(3).build(),
                 SizeInventoryDTO.builder().size("large").qty(15).build(),
@@ -153,9 +153,9 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                         ))
                         .param("category", this.category.toString())
                         .param("collection", "")
-                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[0]))
-                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[1]))
-                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[2]))
+                        .param("sizeInventory", this.MAPPER.writeValueAsString(dtos[0]))
+                        .param("sizeInventory", this.MAPPER.writeValueAsString(dtos[1]))
+                        .param("sizeInventory", this.MAPPER.writeValueAsString(dtos[2]))
                         .param("name", new Faker().commerce().productName())
                         .param("desc", new Faker().lorem().characters(255))
                         .param("price", new BigDecimal(new Faker().commerce().price()).toString())

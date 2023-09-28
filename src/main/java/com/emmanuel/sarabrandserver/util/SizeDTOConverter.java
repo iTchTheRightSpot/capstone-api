@@ -27,7 +27,7 @@ public class SizeDTOConverter implements Converter<String, SizeInventoryDTO[]> {
             return new SizeInventoryDTO[]{ objectMapper.readValue(source, SizeInventoryDTO.class) };
         } catch (JsonProcessingException e) {
             log.info("Incorrect format SizeInventoryDTOConverter. " + e.getMessage());
-            throw new InvalidFormat("Please enter a size and quantity for product");
+            throw new InvalidFormat("Invalid size and inventory");
         }
     }
 

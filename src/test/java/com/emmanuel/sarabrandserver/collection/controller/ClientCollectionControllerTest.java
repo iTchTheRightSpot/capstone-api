@@ -94,7 +94,7 @@ class ClientCollectionControllerTest extends AbstractIntegrationTest {
         assertFalse(list.isEmpty());
 
         this.MOCKMVC
-                .perform(get(requestParam + "/product")
+                .perform(get(requestParam + "/products")
                         .param("collection_id", list.get(0).getUuid())
                         .contentType(APPLICATION_JSON)
                 )

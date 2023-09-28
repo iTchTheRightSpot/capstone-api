@@ -35,7 +35,7 @@ public class ClientCollectionController {
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
             @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size
     ) {
-        return this.productService.fetchAllByUUID("collection", uuid, page, size);
+        return this.productService.allProductsByUUID("collection", uuid, page, Math.min(size, 20));
     }
     
 }

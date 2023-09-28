@@ -2,6 +2,7 @@ package com.emmanuel.sarabrandserver.product.service;
 
 import com.emmanuel.sarabrandserver.aws.S3Service;
 import com.emmanuel.sarabrandserver.exception.CustomNotFoundException;
+import com.emmanuel.sarabrandserver.exception.SseException;
 import com.emmanuel.sarabrandserver.product.repository.ProductDetailRepo;
 import com.emmanuel.sarabrandserver.product.repository.ProductRepository;
 import com.emmanuel.sarabrandserver.product.util.DetailResponse;
@@ -12,9 +13,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.util.Arrays;
-import java.util.List;
 
 @Service
 public class ClientProductService {
@@ -50,13 +53,12 @@ public class ClientProductService {
      * @param page number
      * @param size number of ProductResponse for each page
      */
-    public Page<ProductResponse> fetchAllByUUID(String key, String uuid, int page, int size) {
+    public Page<ProductResponse> allProductsByUUID(String key, String uuid, int page, int size) {
         boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
 
         return switch (key) {
-            // Load or refresh of UI
             case "" -> this.productRepository
-                    .fetchAllProductsClient(PageRequest.of(page, Math.min(size, 40))) //
+                    .fetchAllProductsClient(PageRequest.of(page, size)) //
                     .map(pojo -> {
                         var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
                         return ProductResponse.builder()
@@ -72,7 +74,7 @@ public class ClientProductService {
                     });
 
             case "category" -> this.productRepository
-                    .fetchProductByCategoryClient(uuid, PageRequest.of(page, Math.min(size, 30))) //
+                    .fetchProductByCategoryClient(uuid, PageRequest.of(page, size)) //
                     .map(pojo -> {
                         var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
                         return ProductResponse.builder()
@@ -87,7 +89,7 @@ public class ClientProductService {
                     });
 
             case "collection" -> this.productRepository
-                    .fetchByProductByCollectionClient(uuid, PageRequest.of(page, Math.min(size, 30)))
+                    .fetchByProductByCollectionClient(uuid, PageRequest.of(page, size))
                     .map(pojo -> {
                         var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
                         return ProductResponse.builder()
@@ -106,17 +108,16 @@ public class ClientProductService {
     }
 
     /**
-     * Method list all ProductDetails bases on a Product uuid. A validation is made to make sure product visibility is
-     * true and inventory count is greater than zero.
+     * Returns a SseEmitter. Where the payload is a List of DetailResponse objects
      *
      * @param uuid is the uuid of the product
-     * @return List of DetailResponse
+     * @return SseEmitter
      */
-    public List<DetailResponse> productDetailByUUID(String uuid) {
-
+    public SseEmitter productDetailsByProductUUID(String uuid) {
         boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
 
-        return this.productDetailRepo.fetchProductDetailByUUIDClient(uuid) //
+        var details = this.productDetailRepo
+                .productDetailsByProductUUIDClient(uuid) //
                 .stream() //
                 .map(pojo -> {
                     var urls = Arrays.stream(pojo.getImage().split(","))
@@ -126,13 +127,20 @@ public class ClientProductService {
                     Variant[] variants = this.customUtil
                             .toVariantArray(pojo.getVariants(), ClientProductService.class);
 
-                    return DetailResponse.builder()
-                            .colour(pojo.getColour())
-                            .url(urls)
-                            .variants(variants)
-                            .build();
+                    return new DetailResponse(pojo.getColour(), urls, variants);
                 }) //
                 .toList();
+
+        // Send updates every 10 minutes
+        SseEmitter sse = new SseEmitter(Duration.ofMinutes(10).toMillis());
+
+        try {
+            sse.send(details);
+        } catch (IOException e) {
+            throw new SseException("Error retrieving Product Details. Please try again later");
+        }
+
+        return sse;
     }
 
 }

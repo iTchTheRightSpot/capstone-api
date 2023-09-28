@@ -36,7 +36,7 @@ public class ClientCategoryController {
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
             @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size
     ) {
-        return this.productService.fetchAllByUUID("category", id, page, size);
+        return this.productService.allProductsByUUID("category", id, page, Math.min(size, 20));
     }
 
 }

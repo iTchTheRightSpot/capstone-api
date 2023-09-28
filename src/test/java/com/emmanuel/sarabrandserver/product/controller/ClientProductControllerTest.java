@@ -57,6 +57,7 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
         this.categoryRepository.deleteAll();
     }
 
+    // TODO test SSeEmitter
     @Test
     @DisplayName(value = "Get ProductDetails for store front")
     void fetchProductDetails() throws Exception {

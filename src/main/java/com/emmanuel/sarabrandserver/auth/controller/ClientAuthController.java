@@ -7,6 +7,7 @@ import com.emmanuel.sarabrandserver.auth.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -14,13 +15,12 @@ import org.springframework.web.bind.annotation.*;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 
-@RestController @RequestMapping(path = "api/v1/client/auth")
+@RestController
+@RequestMapping(path = "api/v1/client/auth")
+@RequiredArgsConstructor
 public class ClientAuthController {
-    private final AuthService authService;
 
-    public ClientAuthController(AuthService authService) {
-        this.authService = authService;
-    }
+    private final AuthService authService;
 
     @ResponseStatus(CREATED)
     @PostMapping(path = "/register", consumes = "application/json")

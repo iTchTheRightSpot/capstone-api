@@ -39,9 +39,7 @@ public interface CollectionRepository extends JpaRepository<ProductCollection, L
     @Query(value = """
             SELECT
             c.collection AS collection,
-            c.createAt AS created,
-            c.modifiedAt AS modified,
-            c.isVisible AS visible
+            c.uuid AS uuid
             FROM ProductCollection c
             WHERE c.isVisible = true
             """)

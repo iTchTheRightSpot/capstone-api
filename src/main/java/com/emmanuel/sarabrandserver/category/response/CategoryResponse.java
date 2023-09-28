@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Arrays;
 import java.util.List;
 
 @AllArgsConstructor
@@ -14,23 +13,21 @@ import java.util.List;
 @Builder
 @Data
 public class CategoryResponse {
+
     @JsonProperty(value = "created_at")
     private long created;
     @JsonProperty(value = "modified_at")
     private long modified;
 
+    @JsonProperty(value = "category_id")
     private String id;
     private String category;
     private boolean visible;
     private List<String> child;
 
-    // For storefront Page
-    public CategoryResponse(String category, String child) {
+    public CategoryResponse(String id, String category) {
+        this.id = id;
         this.category = category;
-        this.child = Arrays.stream(child.split(",")).toList();
     }
 
-    public CategoryResponse(String category) {
-        this.category = category;
-    }
 }

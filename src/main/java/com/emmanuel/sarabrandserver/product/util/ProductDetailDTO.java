@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Data
 public class ProductDetailDTO {
 
-    @JsonProperty(value = "uuid")
+    @JsonProperty(value = "product_id")
     @NotNull(message = "UUID cannot be empty")
     @NotEmpty(message = "UUID cannot be empty")
     private String uuid; // productUUID

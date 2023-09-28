@@ -34,15 +34,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
-    @Autowired
-    private WorkerCategoryService workerCategoryService;
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private WorkerProductService workerProductService;
-    @Autowired
-    private ProductRepository productRepository;
+    @Autowired private WorkerCategoryService workerCategoryService;
+    @Autowired private CategoryRepository categoryRepository;
+    @Autowired private WorkerProductService workerProductService;
+    @Autowired private ProductRepository productRepository;
 
     private CategoryDTO categoryDTO;
 
@@ -51,12 +46,12 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        Set<String> parentCategory = new HashSet<>();
+        Set<String> set = new HashSet<>();
         for (int i = 0; i < 10; i++) {
-            parentCategory.add(new Faker().commerce().department());
+            set.add(new Faker().commerce().department());
         }
 
-        parentCategory.forEach(str -> {
+        set.forEach(str -> {
             if (this.category.isEmpty()) {
                 this.category.append(str);
             }
@@ -87,7 +82,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
     void fetchCategories() throws Exception {
         // Then
         this.MOCKMVC
-                .perform(get(requestMapping).contentType(MediaType.APPLICATION_JSON))
+                .perform(get(requestMapping).contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }

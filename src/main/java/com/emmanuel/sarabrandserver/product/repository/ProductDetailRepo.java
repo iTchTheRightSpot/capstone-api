@@ -70,7 +70,7 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
             WHERE p.uuid = :uuid AND d.is_visible = true
             GROUP BY d.colour
             """, nativeQuery = true)
-    List<DetailPojo> fetchProductDetailByUUIDClient(@Param(value = "uuid") String uuid);
+    List<DetailPojo> productDetailsByProductUUIDClient(@Param(value = "uuid") String uuid);
 
     @Query(value = """
             SELECT d

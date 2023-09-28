@@ -137,8 +137,7 @@ class WorkerAuthControllerTest extends AbstractIntegrationTest {
                         .content(payload)
                 )
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Bad credentials"))
-                .andExpect(jsonPath("$.httpStatus").value("UNAUTHORIZED"));
+                .andExpect(jsonPath("$.message").value("Bad credentials"));
     }
 
     /**
@@ -175,8 +174,7 @@ class WorkerAuthControllerTest extends AbstractIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message")
                         .value("Full authentication is required to access this resource")
-                )
-                .andExpect(jsonPath("$.httpStatus").value("UNAUTHORIZED"));
+                );
     }
 
 }

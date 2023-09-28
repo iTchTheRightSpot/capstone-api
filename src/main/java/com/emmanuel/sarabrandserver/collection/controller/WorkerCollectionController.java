@@ -1,6 +1,6 @@
 package com.emmanuel.sarabrandserver.collection.controller;
 
-import com.emmanuel.sarabrandserver.category.dto.UpdateCollectionDTO;
+import com.emmanuel.sarabrandserver.collection.dto.UpdateCollectionDTO;
 import com.emmanuel.sarabrandserver.collection.dto.CollectionDTO;
 import com.emmanuel.sarabrandserver.collection.response.CollectionResponse;
 import com.emmanuel.sarabrandserver.collection.service.WorkerCollectionService;
@@ -35,7 +35,7 @@ public class WorkerCollectionController {
     @ResponseStatus(OK)
     @GetMapping(path = "/products", produces = "application/json")
     public Page<ProductResponse> allProductByCollection(
-            @NotNull @RequestParam(name = "id") String id,
+            @NotNull @RequestParam(name = "collection_id") String id,
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
             @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size
     ) {

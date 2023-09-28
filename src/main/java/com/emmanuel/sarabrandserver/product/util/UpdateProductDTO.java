@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 @Data
 public class UpdateProductDTO {
 
-    @JsonProperty(value = "id")
+    @JsonProperty(value = "product_id")
     @NotNull(message = "cannot be empty")
     private String uuid;
 

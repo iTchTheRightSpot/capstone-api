@@ -7,6 +7,7 @@ import com.emmanuel.sarabrandserver.category.service.WorkerCategoryService;
 import com.emmanuel.sarabrandserver.product.util.ProductResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,12 +19,10 @@ import static org.springframework.http.HttpStatus.*;
 @RestController
 @RequestMapping(path = "api/v1/worker/category")
 @PreAuthorize(value = "hasRole('ROLE_WORKER')")
+@RequiredArgsConstructor
 public class WorkerCategoryController {
-    private final WorkerCategoryService workerCategoryService;
 
-    public WorkerCategoryController(WorkerCategoryService workerCategoryService) {
-        this.workerCategoryService = workerCategoryService;
-    }
+    private final WorkerCategoryService workerCategoryService;
 
     @ResponseStatus(OK)
     @GetMapping(produces = "application/json")
@@ -34,7 +33,7 @@ public class WorkerCategoryController {
     @ResponseStatus(OK)
     @GetMapping(path = "/products", produces = "application/json")
     public Page<ProductResponse> allProductByCategory(
-            @NotNull @RequestParam(name = "id") String id,
+            @NotNull @RequestParam(name = "category_id") String id,
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
             @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size
     ) {

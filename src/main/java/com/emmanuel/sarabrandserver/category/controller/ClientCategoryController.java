@@ -28,15 +28,15 @@ public class ClientCategoryController {
         return this.clientCategoryService.fetchAll();
     }
 
-    /** Returns a list of ProductResponse objects based on category name */
+    /** Returns a list of ProductResponse objects based on category uuid */
     @ResponseStatus(OK)
-    @GetMapping(path = "/product", produces = "application/json")
+    @GetMapping(path = "/products", produces = "application/json")
     public Page<ProductResponse> fetchProductByCategory(
-            @NotNull @RequestParam(name = "uuid") String uuid,
+            @NotNull @RequestParam(name = "category_id") String id,
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "18") Integer size
+            @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size
     ) {
-        return this.productService.fetchAllByUUID("category", uuid, page, size);
+        return this.productService.allProductsByUUID("category", id, page, Math.min(size, 20));
     }
 
 }

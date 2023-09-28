@@ -44,8 +44,5 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Push image to Docker Hub
-        run: |
-          #!/usr/bin/env bash
-          docker push --all-tags emmanuelu17/sara-brand-server
-        shell: bash
+        run: docker push --all-tags emmanuelu17/sara-brand-server
           

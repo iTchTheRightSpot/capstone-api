@@ -16,7 +16,8 @@ import lombok.NoArgsConstructor;
 public class UpdateCategoryDTO {
 
     @NotNull(message = "cannot be empty")
-    @JsonProperty(required = true)
+    @NotEmpty(message = "cannot not empty")
+    @JsonProperty(value = "category_id")
     private String id;
 
     @NotNull(message = "cannot be empty")

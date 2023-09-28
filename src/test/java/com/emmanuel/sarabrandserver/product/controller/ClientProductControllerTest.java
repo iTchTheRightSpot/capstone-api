@@ -26,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class ClientProductControllerTest extends AbstractIntegrationTest {
     private final static String requestMapping = "/api/v1/client/product";
+    private final int detailSize = 1;
 
     @Autowired private WorkerProductService workerService;
     @Autowired private ProductRepository productRepository;
@@ -39,7 +40,7 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
         this.workerCategoryService.create(new CategoryDTO(category, true, ""));
 
         // Create and save Product
-        SizeInventoryDTO[] sizeInventoryDTO1 = sizeInventoryDTOArray(1);
+        SizeInventoryDTO[] sizeInventoryDTO1 = sizeInventoryDTOArray(this.detailSize);
         Result result = getResult(
                 sizeInventoryDTO1,
                 new Faker().commerce().productName(),
@@ -62,6 +63,22 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
         assertFalse(list.isEmpty());
 
         String productID = list.get(0).getUuid();
+
+//        MvcResult result = MOCKMVC
+//                .perform(get(requestMapping + "/detail")
+//                        .param("product_id", productID)
+//                )
+//                .andExpect(request().asyncStarted())
+//                .andDo(MockMvcResultHandlers.log())
+//                .andReturn();
+
+//        MOCKMVC
+//                .perform(asyncDispatch(result))
+//                .andExpect(status().isOk())
+//                .andDo(print())
+//                .andExpect(jsonPath("$").isArray())
+//                .andExpect(jsonPath("$[*].variants").isArray())
+//                .andExpect(jsonPath("$[*].variants.length()").value(this.detailSize));
 
         this.MOCKMVC
                 .perform(get(requestMapping + "/detail")

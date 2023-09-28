@@ -123,12 +123,11 @@ public class ClientProductService {
                 .toList();
 
         // Send updates every 10 minutes
+        // TODO implement ExecutorService due to returning getPreSignedUrl
         SseEmitter sse = new SseEmitter(Duration.ofMinutes(10).toMillis());
-//        SseEmitter sse = new SseEmitter(Duration.ofSeconds(10).toMillis());
 
         try {
             sse.send(details);
-            sse.complete();
         } catch (IOException e) {
             sse.completeWithError(e);
             throw new SseException("Error retrieving Product Details. Please try again later");

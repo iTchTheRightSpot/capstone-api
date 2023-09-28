@@ -54,4 +54,8 @@ jobs:
 
       # Deploy image to docker registry
       - name: Push Image to Docker Hub
-        run: docker push --all-tags emmanuelu17/sara-brand-server
+        run: |
+          #!/usr/bin/env bash
+          docker push --all-tags emmanuelu17/sara-brand-server
+        shell: bash
+          

@@ -98,8 +98,9 @@ public class ClientProductService {
     }
 
     /**
-     * Returns a SseEmitter. Where the payload is a List of DetailResponse objects.
-     * Article on SseEmitter <a href="https://howtodoinjava.com/spring-boot/spring-async-controller-sseemitter/">...</a>
+     * Returns a List of DetailResponse as a SseEmitter. Note response is sent every
+     * 10 mins after the initial handshake. Article on SseEmitter
+     * <a href="https://howtodoinjava.com/spring-boot/spring-async-controller-sseemitter/">...</a>
      *
      * @param uuid is the uuid of the product
      * @return SseEmitter
@@ -122,7 +123,6 @@ public class ClientProductService {
                 }) //
                 .toList();
 
-        // Send updates every 10 minutes
         // TODO implement ExecutorService due to returning getPreSignedUrl
         SseEmitter sse = new SseEmitter(Duration.ofMinutes(10).toMillis());
 

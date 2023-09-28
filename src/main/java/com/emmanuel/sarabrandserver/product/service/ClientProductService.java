@@ -9,6 +9,7 @@ import com.emmanuel.sarabrandserver.product.util.DetailResponse;
 import com.emmanuel.sarabrandserver.product.util.ProductResponse;
 import com.emmanuel.sarabrandserver.product.util.Variant;
 import com.emmanuel.sarabrandserver.util.CustomUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +21,7 @@ import java.time.Duration;
 import java.util.Arrays;
 
 @Service
+@RequiredArgsConstructor
 public class ClientProductService {
 
     @Value(value = "${aws.bucket}")
@@ -32,18 +34,6 @@ public class ClientProductService {
     private final ProductDetailRepo productDetailRepo;
     private final S3Service s3Service;
     private final CustomUtil customUtil;
-
-    public ClientProductService(
-            ProductRepository productRepository,
-            ProductDetailRepo productDetailRepo,
-            S3Service s3Service,
-            CustomUtil customUtil
-    ) {
-        this.productRepository = productRepository;
-        this.productDetailRepo = productDetailRepo;
-        this.s3Service = s3Service;
-        this.customUtil = customUtil;
-    }
 
     /**
      * Returns a page of ProductResponse
@@ -108,7 +98,8 @@ public class ClientProductService {
     }
 
     /**
-     * Returns a SseEmitter. Where the payload is a List of DetailResponse objects
+     * Returns a SseEmitter. Where the payload is a List of DetailResponse objects.
+     * Article on SseEmitter <a href="https://howtodoinjava.com/spring-boot/spring-async-controller-sseemitter/">...</a>
      *
      * @param uuid is the uuid of the product
      * @return SseEmitter
@@ -133,10 +124,13 @@ public class ClientProductService {
 
         // Send updates every 10 minutes
         SseEmitter sse = new SseEmitter(Duration.ofMinutes(10).toMillis());
+//        SseEmitter sse = new SseEmitter(Duration.ofSeconds(10).toMillis());
 
         try {
             sse.send(details);
+            sse.complete();
         } catch (IOException e) {
+            sse.completeWithError(e);
             throw new SseException("Error retrieving Product Details. Please try again later");
         }
 

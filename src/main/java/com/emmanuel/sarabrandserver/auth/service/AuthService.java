@@ -12,6 +12,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,6 +25,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 @Service
+@RequiredArgsConstructor
 @Setter
 public class AuthService {
 
@@ -40,18 +42,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authManager;
     private final JwtTokenService jwtTokenService;
-
-    public AuthService(
-            UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            AuthenticationManager authManager,
-            JwtTokenService jwtTokenService
-    ) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.authManager = authManager;
-        this.jwtTokenService = jwtTokenService;
-    }
 
     /**
      * Responsible for registering a new worker. Logic is throw an error if client has a role of Worker or else add

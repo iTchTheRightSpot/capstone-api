@@ -3,6 +3,7 @@ package com.emmanuel.sarabrandserver.exception;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,42 +27,51 @@ public class ControllerAdvices {
     private final Environment environment;
 
     @ExceptionHandler(value = {DuplicateException.class, ResourceAttachedException.class})
-    public ExceptionResponse duplicateException(Exception ex) {
-        return new ExceptionResponse(ex.getMessage(), CONFLICT);
+    public ResponseEntity<ExceptionResponse> duplicateException(Exception ex) {
+        var res = new ExceptionResponse(ex.getMessage(), CONFLICT);
+        return new ResponseEntity<>(res, CONFLICT);
     }
 
     @ExceptionHandler(value = {CustomNotFoundException.class})
-    public ExceptionResponse customNotFoundException(Exception ex) {
-        return new ExceptionResponse(ex.getMessage(), NOT_FOUND);
+    public ResponseEntity<ExceptionResponse> customNotFoundException(Exception ex) {
+        var res = new ExceptionResponse(ex.getMessage(), NOT_FOUND);
+        return new ResponseEntity<>(res, NOT_FOUND);
     }
 
     @ExceptionHandler(value = {AuthenticationException.class, UsernameNotFoundException.class})
-    public ExceptionResponse authenticationException(Exception e) {
-        return new ExceptionResponse(e.getMessage(), UNAUTHORIZED);
+    public ResponseEntity<ExceptionResponse> authenticationException(Exception e) {
+        var r = new ExceptionResponse(e.getMessage(), UNAUTHORIZED);
+        return new ResponseEntity<>(r, UNAUTHORIZED);
     }
 
     @ExceptionHandler(value = {AccessDeniedException.class})
-    public ExceptionResponse accessException(Exception e) {
-        return new ExceptionResponse(e.getMessage(), FORBIDDEN);
+    public ResponseEntity<ExceptionResponse> accessException(Exception e) {
+        var res = new ExceptionResponse(e.getMessage(), FORBIDDEN);
+        return new ResponseEntity<>(res, FORBIDDEN);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ExceptionResponse handleMaxFileSizeExceeded() {
-        var maxSize = this.environment.getProperty("spring.servlet.multipart.max-file-size", "");
-        return new ExceptionResponse(
+    public ResponseEntity<ExceptionResponse> handleMaxFileSizeExceeded() {
+        var maxSize = this.environment
+                .getProperty("spring.servlet.multipart.max-file-size", "");
+
+        var res = new ExceptionResponse(
                 "One of more files are too large. Each file has to be %s".formatted(maxSize),
                 PAYLOAD_TOO_LARGE
         );
+
+        return new ResponseEntity<>(res, PAYLOAD_TOO_LARGE);
     }
 
     @ExceptionHandler({S3Exception.class, CustomAwsException.class, SseException.class})
-    public ExceptionResponse awsException(Exception ex) {
-        return  new ExceptionResponse(ex.getMessage(), INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ExceptionResponse> awsException(Exception ex) {
+        var res = new ExceptionResponse(ex.getMessage(), INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(res, INTERNAL_SERVER_ERROR);
     }
 
     /** Displays custom exception */
     @ExceptionHandler({MethodArgumentNotValidException.class})
-    public ExceptionResponse validationException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ExceptionResponse> validationException(MethodArgumentNotValidException ex) {
         StringBuilder sb = new StringBuilder();
         String lineSeparator = System.getProperty("line.separator");
 
@@ -71,17 +81,21 @@ public class ControllerAdvices {
             sb.append(fieldName).append(": ").append(errMessage).append(lineSeparator);
         });
 
-        return new ExceptionResponse(sb.toString(), BAD_REQUEST);
+        var res = new ExceptionResponse(sb.toString(), BAD_REQUEST);
+
+        return new ResponseEntity<>(res, BAD_REQUEST);
     }
 
     @ExceptionHandler({InvalidFormat.class})
-    public ExceptionResponse formatException(Exception ex) {
-        return  new ExceptionResponse(ex.getMessage(), BAD_REQUEST);
+    public ResponseEntity<ExceptionResponse> formatException(Exception ex) {
+        var res = new ExceptionResponse(ex.getMessage(), BAD_REQUEST);
+        return new ResponseEntity<>(res, BAD_REQUEST);
     }
 
     @ExceptionHandler({SQLIntegrityConstraintViolationException.class})
-    public ExceptionResponse sqlDuplicateException() {
-        return new ExceptionResponse("Duplicate entry(s)", CONFLICT);
+    public ResponseEntity<ExceptionResponse> sqlDuplicateException() {
+        var res = new ExceptionResponse("Duplicate entry(s)", CONFLICT);
+        return new ResponseEntity<>(res, CONFLICT);
     }
 
 }

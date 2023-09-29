@@ -1,7 +1,10 @@
 name: Sara Brand Server
 
 on:
-  [push, pull_request]:
+  push:
+    branches:
+      - master
+  pull_request:
     branches:
       - master
 

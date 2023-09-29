@@ -1,48 +1,44 @@
 name: Sara Brand Server
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
+  [push, pull_request]:
     branches:
       - master
 
 jobs:
   build:
-    name: Master Branch
+    name: Build and Deploy to Production
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout master and JDK Temurin
+      - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
         with:
-          distribution: 'oracle'
+          distribution: 'temurin'
           java-version: '17'
-
-      - name: Checkout master
-        uses: actions/checkout@v3
-        with:
-          submodules: true
+          cache: 'maven'
 
       # Log into dockerhub
       - name: Log into DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: emmanuelu17
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Image
-        run: |
-          #!/usr/bin/env bash
-          
-          # chmod grants permission to run mvnw
-          chmod +x mvnw
-          ./mvnw clean spring-boot:build-image -DskipTests
-        shell: bash
+        run: mvn spring-boot:build-image -DskipTests
+      #        run: |
+      #          #!/usr/bin/env bash
+      #
+      #          # chmod grants permission to run mvnw
+      #          chmod +x mvnw
+      #          ./mvnw clean spring-boot:build-image -DskipTests
+      #        shell: bash
 
       - name: Set up Docker Build
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
-      - name: Push image to Docker Hub
+      # Deploy image to docker registry
+      - name: Push Image to Docker Hub
         run: docker push --all-tags emmanuelu17/sara-brand-server
-          

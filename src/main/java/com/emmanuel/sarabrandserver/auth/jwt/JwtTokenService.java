@@ -5,20 +5,22 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.logging.Logger;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
 @Service @Getter @Setter
 public class JwtTokenService {
-    private static final Logger log = Logger.getLogger(JwtTokenService.class.getName());
+
+    private static final Logger log = LoggerFactory.getLogger(JwtTokenService.class.getName());
 
     @Value(value = "${server.servlet.session.cookie.max-age}")
     private int maxAge; // seconds
@@ -83,7 +85,7 @@ public class JwtTokenService {
             var bound = now.plus(boundToSendRefreshToken, MINUTES);
             return expiresAt.isAfter(now) && expiresAt.isBefore(bound);
         } catch (JwtException | NullPointerException e) {
-            log.warning("JWT exception %s, %s".formatted(e.getMessage(), RefreshTokenFilter.class));
+            log.error("JWT exception %s, %s".formatted(e.getMessage(), RefreshTokenFilter.class));
             return false;
         }
     }

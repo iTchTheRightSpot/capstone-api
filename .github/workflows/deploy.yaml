@@ -1,4 +1,4 @@
-name: Sara Brand Server
+name: Sarre Brand API
 on:
   push:
     branches:
@@ -9,11 +9,11 @@ on:
 
 jobs:
   build:
-    name: Build and Deploy to Production
+    name: Build and Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout master
+      - name: Checkout source code
         uses: actions/checkout@v3
 
       - name: Set up JDK Temurin
@@ -30,11 +30,10 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Image
-        run: mvn spring-boot:build-image -DskipTests
+        run: mvn -Pnative spring-boot:build-image -DskipTests
 
       - name: Set up Docker Build
         uses: docker/setup-buildx-action@v3
 
-      # Deploy image to docker registry
       - name: Push Image to Docker Hub
         run: docker push --all-tags emmanuelu17/sara-brand-server

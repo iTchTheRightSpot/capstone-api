@@ -5,7 +5,6 @@ import org.flywaydb.core.api.migration.Context;
 
 import java.sql.Statement;
 
-// https://thorben-janssen.com/java-based-database-migrations-callbacks-flyway/
 /**
  * Programmatically migration as per docs
  * <a href="https://thorben-janssen.com/java-based-database-migrations-callbacks-flyway/">...</a>

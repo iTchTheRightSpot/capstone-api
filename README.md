@@ -1,5 +1,5 @@
-# Sara Brand Server
-Server side code for Sara The Brand e-commerce.
+# Sarre Brand Server
+Server side code for Sarre Brand.
 
 ### Technologies Thus Far
 * Java 17

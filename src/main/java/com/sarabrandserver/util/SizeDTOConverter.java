@@ -1,10 +1,9 @@
 package com.sarabrandserver.util;
 
-import com.sarabrandserver.exception.InvalidFormat;
-import com.sarabrandserver.product.util.SizeInventoryDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.validation.constraints.NotNull;
+import com.sarabrandserver.exception.InvalidFormat;
+import com.sarabrandserver.product.util.SizeInventoryDTO;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +22,7 @@ public class SizeDTOConverter implements Converter<String, SizeInventoryDTO[]> {
     }
 
     @Override
-    public SizeInventoryDTO[] convert(@NotNull String source) {
+    public SizeInventoryDTO[] convert(String source) {
         try {
             return new SizeInventoryDTO[]{ objectMapper.readValue(source, SizeInventoryDTO.class) };
         } catch (JsonProcessingException e) {

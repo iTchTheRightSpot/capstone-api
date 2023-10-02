@@ -145,24 +145,13 @@
             <plugin>
                 <groupId>org.graalvm.buildtools</groupId>
                 <artifactId>native-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>build-native</id>
-                        <goals>
-                            <goal>compile-no-fork</goal>
-                        </goals>
-                        <phase>package</phase>
-                    </execution>
-                </executions>
-                <configuration>
-                    <buildArgs>
-                        <arg>--verbose</arg>
-                        <arg>--initialize-at-build-time=org.slf4j.LoggerFactory,ch.qos.logback</arg>
-                        <arg>--trace-class-initialization=ch.qos.logback.core.status.InfoStatus,ch.qos.logback.core.util.StatusPrinter,ch.qos.logback.classic.Level,ch.qos.logback.classic.Logger,ch.qos.logback.core.util.Loader,ch.qos.logback.core.status.StatusBase</arg>
-                    </buildArgs>
-                    <imageName>docker.io/emmanuelu17/${project.artifactId}:latest</imageName>
-                    <mainClass>com.sarabrandserver.Application</mainClass>
-                </configuration>
+<!--                <configuration>-->
+<!--                    <buildArgs>-->
+<!--                        <arg>&#45;&#45;verbose</arg>-->
+<!--                        <arg>&#45;&#45;initialize-at-build-time=org.slf4j.LoggerFactory,ch.qos.logback</arg>-->
+<!--                        <arg>&#45;&#45;trace-class-initialization=ch.qos.logback.core.status.InfoStatus,ch.qos.logback.core.util.StatusPrinter,ch.qos.logback.classic.Level,ch.qos.logback.classic.Logger,ch.qos.logback.core.util.Loader,ch.qos.logback.core.status.StatusBase</arg>-->
+<!--                    </buildArgs>-->
+<!--                </configuration>-->
             </plugin>
 
             <plugin>

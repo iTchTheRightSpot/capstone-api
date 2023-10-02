@@ -1,9 +1,8 @@
 package com.sarabrandserver.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.exception.InvalidFormat;
 import com.sarabrandserver.product.util.SizeInventoryDTO;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
@@ -25,15 +24,7 @@ public class SizeInventoryDTOConverter implements Converter<String[], SizeInvent
     }
 
     @Override
-    public SizeInventoryDTO[] convert(String @NotNull(message = "size or quantity cannot be null") [] source) {
-        return getSizeInventoryDTOS(source, this.objectMapper);
-    }
-
-    @NotNull
-    static SizeInventoryDTO[] getSizeInventoryDTOS(
-            String @NotNull(message = "size or quantity cannot be null") [] source,
-            ObjectMapper objectMapper
-    ) {
+    public SizeInventoryDTO[] convert(String[] source) {
         SizeInventoryDTO[] dto = new SizeInventoryDTO[source.length];
 
         for (int i = 0; i < source.length; i++) {
@@ -48,4 +39,5 @@ public class SizeInventoryDTOConverter implements Converter<String[], SizeInvent
 
         return dto;
     }
+
 }

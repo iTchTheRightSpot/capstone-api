@@ -1,5 +1,4 @@
-name: Run tests before merging into main
-
+name: Run tests before merging into master
 on:
   push:
     branches:
@@ -11,17 +10,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/setup-java@v3
-        with:
-          distribution: 'oracle'
-          java-version: '17'
-
       - name: Checkout master
         uses: actions/checkout@v3
-        with:
-          submodules: true
 
-      # Run tests
+      - name: Set up JDK Temurin
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
       - name: Run tests
         run: |
           #!/usr/bin/env bash

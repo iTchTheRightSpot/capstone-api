@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-image:
-    name: Build and Deploy
+    name: Build and deploy image
     runs-on: ubuntu-latest
 
     steps:
@@ -36,10 +36,12 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Push image to dockerhub
-        run: docker push --all-tags emmanuelu17/sarre-bk
+        run: |
+          docker image tag emmanuelu17/sara-brand-server:latest emmanuelu17/sarre-bk:latest
+          docker push --all-tags emmanuelu17/sarre-bk
 
   build-native-image:
-    name: Build and Deploy
+    name: Build and Deploy native image
     runs-on: ubuntu-latest
 
     steps:
@@ -65,4 +67,6 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Push native image to dockerhub
-        run: docker push --all-tags emmanuelu17/sarre-bk-native-image
+        run: |
+          docker image tag emmanuelu17/sara-brand-server:latest emmanuelu17/sarre-bk-native:latest
+          docker push --all-tags emmanuelu17/sarre-bk-native

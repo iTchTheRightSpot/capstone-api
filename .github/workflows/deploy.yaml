@@ -36,7 +36,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Push image to dockerhub
-        run: docker push --all-tags emmanuelu17/sarreBK
+        run: docker push --all-tags emmanuelu17/sarre-bk
 
   build-native-image:
     name: Build and Deploy

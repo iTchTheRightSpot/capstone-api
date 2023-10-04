@@ -1,15 +1,14 @@
 package com.sarabrandserver.product.service;
 
+import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractUnitTest;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.entity.ProductDetail;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductImageRepo;
 import com.sarabrandserver.product.repository.ProductRepository;
-import com.sarabrandserver.product.util.ProductDetailDTO;
 import com.sarabrandserver.util.CustomUtil;
 import com.sarabrandserver.util.TestingData;
-import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -55,16 +54,10 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
     @DisplayName(value = "Create a new ProductDetail.")
     void create() {
         // Given
-        var si = TestingData.sizeInventoryDTOArray(4);
+        var dtos = TestingData.sizeInventoryDTOArray(4);
         var files = TestingData.files(3);
         var product = Product.builder().uuid("product uuid").build();
-        var dto = ProductDetailDTO.builder()
-                .uuid(product.getUuid())
-                .visible(true)
-                .colour(new Faker().commerce().color())
-                .sizeInventory(si)
-                .files(files)
-                .build();
+        var dto = TestingData.productDetailDTO(product.getUuid(), "mat-black", dtos);
 
         // When
         when(productRepository.findByProductUuid(anyString())).thenReturn(Optional.of(product));
@@ -80,17 +73,12 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
     @DisplayName(value = "Create a new ProductDetail. Colour exists")
     void createE() {
         // Given
-        var si = TestingData.sizeInventoryDTOArray(4);
+        var dtos = TestingData.sizeInventoryDTOArray(4);
         var files = TestingData.files(3);
         var product = Product.builder().uuid("product uuid").build();
         var detail = ProductDetail.builder().colour(new Faker().commerce().color()).build();
-        var dto = ProductDetailDTO.builder()
-                .uuid(product.getUuid())
-                .visible(true)
-                .colour(detail.getColour())
-                .sizeInventory(si)
-                .files(files)
-                .build();
+        var dto = TestingData.productDetailDTO(product.getUuid(), detail.getColour(), dtos);
+
 
         // When
         when(productRepository.findByProductUuid(anyString())).thenReturn(Optional.of(product));

@@ -74,6 +74,7 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
                     cookie.setMaxAge(maxAge);
                     response.addCookie(cookie);
                 });
+
         filterChain.doFilter(request, response);
     }
 

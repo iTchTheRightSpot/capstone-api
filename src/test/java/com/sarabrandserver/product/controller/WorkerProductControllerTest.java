@@ -1,5 +1,6 @@
 package com.sarabrandserver.product.controller;
 
+import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.repository.CategoryRepository;
@@ -10,10 +11,10 @@ import com.sarabrandserver.collection.service.WorkerCollectionService;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.product.repository.ProductRepository;
 import com.sarabrandserver.product.service.WorkerProductService;
+import com.sarabrandserver.product.util.CreateProductDTO;
 import com.sarabrandserver.product.util.SizeInventoryDTO;
 import com.sarabrandserver.product.util.UpdateProductDTO;
 import com.sarabrandserver.util.Result;
-import com.github.javafaker.Faker;
 import com.sarabrandserver.util.TestingData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,13 +28,15 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class WorkerProductControllerTest extends AbstractIntegrationTest {
 
-    private final static String requestMapping = "/api/v1/worker/product";
+    private final String requestMapping = "/api/v1/worker/product";
+
     private final StringBuilder category = new StringBuilder();
     private final StringBuilder colour = new StringBuilder();
     private final StringBuilder productName = new StringBuilder();
@@ -128,39 +131,37 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Create a product")
     void create() throws Exception {
-        // Given
+        // payload
+        MockMultipartFile[] files = TestingData.files(2);
+
         SizeInventoryDTO[] dtos = {
                 SizeInventoryDTO.builder().size("small").qty(10).build(),
                 SizeInventoryDTO.builder().size("medium").qty(3).build(),
                 SizeInventoryDTO.builder().size("large").qty(15).build(),
         };
 
+        var dto = TestingData
+                .createProductDTOCollectionNotPresent(
+                        new Faker().commerce().productName(),
+                        this.category.toString(),
+                        "",
+                        dtos
+                );
+
+        var json = new MockMultipartFile(
+                "dto",
+                null,
+                "application/json",
+                this.MAPPER.writeValueAsString(dto).getBytes()
+        );
+
         // Then
         this.MOCKMVC
                 .perform(multipart(requestMapping)
-                        .file(new MockMultipartFile(
-                                "files",
-                                "uploads/image1.jpeg",
-                                "image/jpeg",
-                                "Test image content".getBytes()
-                        ))
-                        .file(new MockMultipartFile(
-                                "files",
-                                "uploads/image2.jpeg",
-                                "image/jpeg",
-                                "Test image content".getBytes()
-                        ))
-                        .param("category", this.category.toString())
-                        .param("collection", "")
-                        .param("sizeInventory", this.MAPPER.writeValueAsString(dtos[0]))
-                        .param("sizeInventory", this.MAPPER.writeValueAsString(dtos[1]))
-                        .param("sizeInventory", this.MAPPER.writeValueAsString(dtos[2]))
-                        .param("name", new Faker().commerce().productName())
-                        .param("desc", new Faker().lorem().characters(255))
-                        .param("price", new BigDecimal(new Faker().commerce().price()).toString())
-                        .param("currency", "USD")
-                        .param("visible", "true")
-                        .param("colour", new Faker().commerce().color())
+                        .file(files[0])
+                        .file(files[1])
+                        .file(json)
+                        .contentType(MULTIPART_FORM_DATA)
                         .with(csrf())
                 )
                 .andExpect(status().isCreated());
@@ -168,37 +169,34 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = """
-            Validate Custom Converter converts from String to SizeInventoryDTO[]
-            considering only one entry for size and qty
-            """)
+    @DisplayName(value = "Validate SizeInventoryDTO[] size is 1")
     void val() throws Exception {
         // Then
-        String sizeInv = this.MAPPER
-                .writeValueAsString(SizeInventoryDTO.builder().size("small").qty(10).build());
+        SizeInventoryDTO[] dtos = { SizeInventoryDTO.builder().size("small").qty(10).build() };
+
+        MockMultipartFile[] files = TestingData.files(2);
+
+        var dto = TestingData
+                .createProductDTOCollectionNotPresent(
+                        new Faker().commerce().productName(),
+                        this.category.toString(),
+                        "",
+                        dtos
+                );
+
+        var json = new MockMultipartFile(
+                "dto",
+                null,
+                "application/json",
+                this.MAPPER.writeValueAsString(dto).getBytes()
+        );
+
         this.MOCKMVC
                 .perform(multipart(requestMapping)
-                        .file(new MockMultipartFile(
-                                "files",
-                                "uploads/image1.jpeg",
-                                "image/jpeg",
-                                "Test image content".getBytes()
-                        ))
-                        .file(new MockMultipartFile(
-                                "files",
-                                "uploads/image2.jpeg",
-                                "image/jpeg",
-                                "Test image content".getBytes()
-                        ))
-                        .param("category", this.category.toString())
-                        .param("collection", "")
-                        .param("sizeInventory", sizeInv)
-                        .param("name", new Faker().commerce().productName())
-                        .param("desc", new Faker().lorem().characters(255))
-                        .param("price", new BigDecimal(new Faker().commerce().price()).toString())
-                        .param("currency", "USD")
-                        .param("visible", "true")
-                        .param("colour", new Faker().commerce().color())
+                        .file(files[0])
+                        .file(files[1])
+                        .file(json)
+                        .contentType(MULTIPART_FORM_DATA)
                         .with(csrf())
                 )
                 .andExpect(status().isCreated());
@@ -212,38 +210,40 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
             """)
     void ex() throws Exception {
         // Given
-        SizeInventoryDTO[] sizeInventoryDTO = {
+        MockMultipartFile[] files = TestingData.files(2);
+
+        SizeInventoryDTO[] dtos = {
                 SizeInventoryDTO.builder().size("small").qty(10).build(),
                 SizeInventoryDTO.builder().size("medium").qty(3).build(),
                 SizeInventoryDTO.builder().size("large").qty(15).build(),
         };
 
+        var dto = CreateProductDTO.builder()
+                .sizeInventory(dtos)
+                .category(this.category.toString())
+                .collection("")
+                .name(this.productName.toString())
+                .desc(new Faker().lorem().characters(0, 255))
+                .price(new BigDecimal(new Faker().number().numberBetween(20, 80)))
+                .currency("NGN")
+                .visible(true)
+                .colour(this.colour.toString())
+                .build();
+
+
+        var json = new MockMultipartFile(
+                "dto",
+                null,
+                "application/json",
+                this.MAPPER.writeValueAsString(dto).getBytes()
+        );
+
         // Then
         this.MOCKMVC
                 .perform(multipart(requestMapping)
-                        .file(new MockMultipartFile(
-                                "files",
-                                "uploads/image1.jpeg",
-                                "image/jpeg",
-                                "Test image content".getBytes()
-                        ))
-                        .file(new MockMultipartFile(
-                                "files",
-                                "uploads/image2.jpeg",
-                                "image/jpeg",
-                                "Test image content".getBytes()
-                        ))
-                        .param("category", this.category.toString())
-                        .param("collection", "")
-                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[0]))
-                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[1]))
-                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[2]))
-                        .param("name", this.productName.toString())
-                        .param("desc", new Faker().lorem().characters(255))
-                        .param("price", new BigDecimal(new Faker().commerce().price()).toString())
-                        .param("currency", "USD")
-                        .param("visible", "true")
-                        .param("colour", this.colour.toString())
+                        .file(files[0])
+                        .file(files[1])
+                        .file(json)
                         .with(csrf())
                 )
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException));
@@ -253,70 +253,33 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Validates bad request because sizeInventory JsonProperty is not present")
     void exThrown() throws Exception {
-        // Then
-        this.MOCKMVC
-                .perform(multipart(requestMapping)
-                        .file(new MockMultipartFile(
-                                "files",
-                                "uploads/image1.jpeg",
-                                "image/jpeg",
-                                "Test image content".getBytes()
-                        ))
-                        .file(new MockMultipartFile(
-                                "files",
-                                "uploads/image2.jpeg",
-                                "image/jpeg",
-                                "Test image content".getBytes()
-                        ))
-                        .param("category", this.category.toString())
-                        .param("collection", "")
-                        .param("name", new Faker().commerce().productName())
-                        .param("desc", new Faker().lorem().characters(255))
-                        .param("price", new BigDecimal(new Faker().commerce().price()).toString())
-                        .param("currency", "USD")
-                        .param("visible", "true")
-                        .param("colour", new Faker().commerce().color())
-                        .with(csrf())
-                )
-                .andExpect(status().isBadRequest());
-    }
+        MockMultipartFile[] files = TestingData.files(2);
 
-    @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Validates Bad request due to sizeInventory[i] being null")
-    void variableThrown() throws Exception {
-        // Given
-        SizeInventoryDTO[] sizeInventoryDTO = {
-                SizeInventoryDTO.builder().size("small").qty(10).build(),
-                SizeInventoryDTO.builder().size("large").qty(15).build(),
-        };
+        var dto = CreateProductDTO.builder()
+                .sizeInventory(null)
+                .category(this.category.toString())
+                .collection("")
+                .name(new Faker().commerce().productName())
+                .desc(new Faker().lorem().characters(0, 255))
+                .price(new BigDecimal(new Faker().number().numberBetween(20, 80)))
+                .currency("NGN")
+                .visible(true)
+                .colour(this.colour.toString())
+                .build();
+
+        var json = new MockMultipartFile(
+                "dto",
+                null,
+                "application/json",
+                this.MAPPER.writeValueAsString(dto).getBytes()
+        );
 
         // Then
         this.MOCKMVC
                 .perform(multipart(requestMapping)
-                        .file(new MockMultipartFile(
-                                "files",
-                                "uploads/image1.jpeg",
-                                "image/jpeg",
-                                "Test image content".getBytes()
-                        ))
-                        .file(new MockMultipartFile(
-                                "files",
-                                "uploads/image2.jpeg",
-                                "image/jpeg",
-                                "Test image content".getBytes()
-                        ))
-                        .param("category", this.category.toString())
-                        .param("collection", "")
-                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[0]))
-                        .param("sizeInventory", (String) null)
-                        .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInventoryDTO[1]))
-                        .param("name", new Faker().commerce().productName())
-                        .param("desc", new Faker().lorem().characters(255))
-                        .param("price", new BigDecimal(new Faker().commerce().price()).toString())
-                        .param("currency", "USD")
-                        .param("visible", "true")
-                        .param("colour", new Faker().commerce().color())
+                        .file(files[0])
+                        .file(files[1])
+                        .file(json)
                         .with(csrf())
                 )
                 .andExpect(status().isBadRequest());

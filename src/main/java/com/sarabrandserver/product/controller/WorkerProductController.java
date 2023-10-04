@@ -1,18 +1,20 @@
 package com.sarabrandserver.product.controller;
 
+import com.sarabrandserver.product.service.WorkerProductService;
 import com.sarabrandserver.product.util.CreateProductDTO;
 import com.sarabrandserver.product.util.ProductResponse;
 import com.sarabrandserver.product.util.UpdateProductDTO;
-import com.sarabrandserver.product.service.WorkerProductService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
 @RequestMapping("api/v1/worker/product")
@@ -30,8 +32,8 @@ public class WorkerProductController {
      * @return ResponseEntity
      */
     @ResponseStatus(OK)
-    @GetMapping(produces = "application/json")
-    public Page<ProductResponse> fetchAll(
+    @GetMapping(produces = APPLICATION_JSON_VALUE)
+    public Page<ProductResponse> allProducts(
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
             @NotNull @RequestParam(name = "size", defaultValue = "30") Integer size
     ) {
@@ -42,18 +44,21 @@ public class WorkerProductController {
      * Create a new Product
      */
     @ResponseStatus(CREATED)
-    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public void createDetail(@Valid @ModelAttribute CreateProductDTO dto) {
-        this.workerProductService.create(dto, dto.getFiles());
+    @PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
+    public void create(
+            @Valid @RequestPart CreateProductDTO dto,
+            @NotNull @RequestPart MultipartFile[] files
+    ) {
+        this.workerProductService.create(dto, files);
     }
 
     /**
      * Update a Product
      *
-     * @param dto of type ProductDTO
+     * @param dto of type UpdateProductDTO
      */
     @ResponseStatus(NO_CONTENT)
-    @PutMapping(consumes = "application/json")
+    @PutMapping(consumes = APPLICATION_JSON_VALUE)
     public void updateProduct(@Valid @RequestBody UpdateProductDTO dto) {
         this.workerProductService.update(dto);
     }

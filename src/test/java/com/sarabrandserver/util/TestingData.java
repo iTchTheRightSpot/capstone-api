@@ -2,6 +2,7 @@ package com.sarabrandserver.util;
 
 import com.sarabrandserver.enumeration.RoleEnum;
 import com.sarabrandserver.product.util.CreateProductDTO;
+import com.sarabrandserver.product.util.ProductDetailDTO;
 import com.sarabrandserver.product.util.SizeInventoryDTO;
 import com.sarabrandserver.product.util.UpdateProductDTO;
 import com.sarabrandserver.user.entity.ClientRole;
@@ -120,7 +121,7 @@ public class TestingData {
     }
 
     @NotNull
-    public static CreateProductDTO createProductDTO(SizeInventoryDTO[] dtos, MultipartFile[] files) {
+    public static CreateProductDTO createProductDTO(SizeInventoryDTO[] dtos) {
         return CreateProductDTO.builder()
                 .sizeInventory(dtos)
                 .category(new Faker().commerce().department())
@@ -131,7 +132,36 @@ public class TestingData {
                 .currency("NGN")
                 .visible(true)
                 .colour(new Faker().commerce().color())
-                .files(files)
+                .build();
+    }
+
+    @NotNull
+    public static CreateProductDTO createProductDTOCollectionNotPresent(
+            String product,
+            String category,
+            String collection,
+            SizeInventoryDTO[] dtos
+    ) {
+        return CreateProductDTO.builder()
+                .sizeInventory(dtos)
+                .category(category)
+                .collection(collection)
+                .name(product)
+                .desc(new Faker().lorem().characters(0, 255))
+                .price(new BigDecimal(new Faker().number().numberBetween(20, 80)))
+                .currency("NGN")
+                .visible(true)
+                .colour(new Faker().commerce().color())
+                .build();
+    }
+
+    @NotNull
+    public static ProductDetailDTO productDetailDTO(String productID, String colour, SizeInventoryDTO[] dtos) {
+        return ProductDetailDTO.builder()
+                .uuid(productID)
+                .visible(false)
+                .colour(colour)
+                .sizeInventory(dtos)
                 .build();
     }
 

@@ -64,7 +64,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         // Given
         var sizeDtoArray = TestingData.sizeInventoryDTOArray(3);
         var files = TestingData.files(3);
-        var dto = TestingData.createProductDTO(sizeDtoArray, files);
+        var dto = TestingData.createProductDTO(sizeDtoArray);
         var category = ProductCategory.builder().categoryName(dto.getCategory()).build();
 
         // When
@@ -83,7 +83,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         // Given
         var sizeDtoArray = TestingData.sizeInventoryDTOArray(3);
         var files = TestingData.files(3);
-        var dto = TestingData.createProductDTO(sizeDtoArray, files);
+        var dto = TestingData.createProductDTO(sizeDtoArray);
         var category = ProductCategory.builder().categoryName(dto.getCategory()).build();
         var product = Product.builder().name(dto.getName()).uuid("uuid").build();
 

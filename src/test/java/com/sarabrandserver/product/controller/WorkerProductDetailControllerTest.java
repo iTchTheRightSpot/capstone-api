@@ -1,5 +1,6 @@
 package com.sarabrandserver.product.controller;
 
+import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.service.WorkerCategoryService;
@@ -10,7 +11,6 @@ import com.sarabrandserver.product.service.WorkerProductService;
 import com.sarabrandserver.product.util.UpdateProductDetailDTO;
 import com.sarabrandserver.util.Result;
 import com.sarabrandserver.util.TestingData;
-import com.github.javafaker.Faker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
 
-    private final static String requestMapping = "/api/v1/worker/product/detail";
+    private final String requestMapping = "/api/v1/worker/product/detail";
     private final int detailSize = 5;
 
     @Autowired private WorkerProductService workerProductService;
@@ -87,7 +87,9 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
 
         // Based on setUp
         this.MOCKMVC
-                .perform(get(requestMapping).param("id", list.get(0).getUuid()))
+                .perform(get(requestMapping)
+                        .param("id", list.get(0).getUuid())
+                )
                 .andExpect(content().contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -103,21 +105,25 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
 
         // payload
         MockMultipartFile[] files = TestingData.files(3);
-        var sizeInv = sizeInventoryDTOArray(5);
+
+        var dtos = TestingData.sizeInventoryDTOArray(5);
+
+        String productID = list.get(0).getUuid();
+        var dto = TestingData.productDetailDTO(productID, "exon-mobile-colour", dtos);
+
+        var json = new MockMultipartFile(
+                "dto",
+                null,
+                "application/json",
+                this.MAPPER.writeValueAsString(dto).getBytes()
+        );
 
         // request
         this.MOCKMVC.perform(multipart(requestMapping)
                 .file(files[0])
                 .file(files[1])
                 .file(files[2])
-                .param("uuid", list.get(0).getUuid())
-                .param("visible", "false")
-                .param("colour", "exon-mobile-colour")
-                .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInv[0]))
-                .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInv[1]))
-                .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInv[2]))
-                .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInv[3]))
-                .param("sizeInventory", this.MAPPER.writeValueAsString(sizeInv[4]))
+                .file(json)
                 .with(csrf())
         ).andExpect(status().isCreated());
     }

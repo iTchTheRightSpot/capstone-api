@@ -158,7 +158,7 @@ class AuthServiceTest extends AbstractUnitTest {
 
         // When
         when(this.userRepository.principalExists(anyString())).thenReturn(0);
-        when(this.passwordEncoder.encode(anyString())).thenReturn(dto.getPassword());
+        when(this.passwordEncoder.encode(anyString())).thenReturn(dto.password());
 
         // Then
         this.authService.clientRegister(dto);

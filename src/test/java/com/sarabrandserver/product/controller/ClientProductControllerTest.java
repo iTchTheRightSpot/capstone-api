@@ -1,14 +1,14 @@
 package com.sarabrandserver.product.controller;
 
+import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.product.repository.ProductRepository;
 import com.sarabrandserver.product.service.WorkerProductService;
-import com.sarabrandserver.product.util.SizeInventoryDTO;
+import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.util.Result;
-import com.github.javafaker.Faker;
 import com.sarabrandserver.util.TestingData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,8 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class ClientProductControllerTest extends AbstractIntegrationTest {
-    private final static String requestMapping = "/api/v1/client/product";
-    private final int detailSize = 1;
+
+    private final String requestMapping = "/api/v1/client/product";
 
     @Autowired private WorkerProductService workerService;
     @Autowired private ProductRepository productRepository;
@@ -39,7 +39,8 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
         this.workerCategoryService.create(new CategoryDTO(category, true, ""));
 
         // Create and save Product
-        SizeInventoryDTO[] sizeInventoryDTO1 = TestingData.sizeInventoryDTOArray(this.detailSize);
+        int detailSize = 1;
+        SizeInventoryDTO[] sizeInventoryDTO1 = TestingData.sizeInventoryDTOArray(detailSize);
         Result result = TestingData.getResult(
                 sizeInventoryDTO1,
                 new Faker().commerce().productName(),

@@ -1,5 +1,6 @@
 package com.sarabrandserver.category.controller;
 
+import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
@@ -8,10 +9,9 @@ import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
 import com.sarabrandserver.product.repository.ProductRepository;
-import com.sarabrandserver.product.util.SizeInventoryDTO;
 import com.sarabrandserver.product.service.WorkerProductService;
+import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.util.Result;
-import com.github.javafaker.Faker;
 import com.sarabrandserver.util.TestingData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +23,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -39,7 +40,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
     private CategoryDTO categoryDTO;
 
-    private final static String requestMapping = "/api/v1/worker/category";
+    private final String requestMapping = "/api/v1/worker/category";
     private final StringBuilder category = new StringBuilder();
 
     @BeforeEach
@@ -108,7 +109,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void create1() throws Exception {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().productName(), true, this.categoryDTO.getName());
+        var dto = new CategoryDTO(new Faker().commerce().productName(), true, this.categoryDTO.name());
 
         // Then
         this.MOCKMVC

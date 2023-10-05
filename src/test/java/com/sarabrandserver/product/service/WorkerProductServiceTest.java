@@ -65,7 +65,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         var sizeDtoArray = TestingData.sizeInventoryDTOArray(3);
         var files = TestingData.files(3);
         var dto = TestingData.createProductDTO(sizeDtoArray);
-        var category = ProductCategory.builder().categoryName(dto.getCategory()).build();
+        var category = ProductCategory.builder().categoryName(dto.category()).build();
 
         // When
         when(this.workerCategoryService.findByName(anyString())).thenReturn(category);
@@ -84,8 +84,8 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         var sizeDtoArray = TestingData.sizeInventoryDTOArray(3);
         var files = TestingData.files(3);
         var dto = TestingData.createProductDTO(sizeDtoArray);
-        var category = ProductCategory.builder().categoryName(dto.getCategory()).build();
-        var product = Product.builder().name(dto.getName()).uuid("uuid").build();
+        var category = ProductCategory.builder().categoryName(dto.category()).build();
+        var product = Product.builder().name(dto.name()).uuid("uuid").build();
 
         // When
         when(this.workerCategoryService.findByName(anyString())).thenReturn(category);
@@ -99,8 +99,16 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     @DisplayName(value = "Update a new product. category and collection are present in the payload")
     void update() {
         // Given
-        var payload = TestingData.updateProductDTO("collection", "collectionId");
-        var category = ProductCategory.builder().categoryName(payload.getCategory()).build();
+        var payload = TestingData
+                .updateProductDTO(
+                        "",
+                        "",
+                        "",
+                        "",
+                        "collection",
+                        "collectionId"
+                );
+        var category = ProductCategory.builder().categoryName(payload.category()).build();
         var collection = ProductCollection.builder().collection("collection").build();
 
         // When
@@ -126,8 +134,16 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     @DisplayName(value = "Update a new product. collection and collection_id are empty")
     void updateEmpty() {
         // Given
-        var payload = TestingData.updateProductDTO("", "");
-        var category = ProductCategory.builder().categoryName(payload.getCategory()).build();
+        var payload = TestingData
+                .updateProductDTO(
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        ""
+                );
+        var category = ProductCategory.builder().categoryName(payload.category()).build();
 
         // When
         when(this.productRepository.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);

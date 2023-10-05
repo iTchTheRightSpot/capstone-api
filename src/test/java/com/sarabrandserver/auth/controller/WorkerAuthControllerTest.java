@@ -38,14 +38,15 @@ class WorkerAuthControllerTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        this.authService.workerRegister(new RegisterDTO(
+        var dto = new RegisterDTO(
                 "SEJU",
                 "Development",
                 PRINCIPAL,
                 "",
                 "000-000-0000",
                 PASSWORD
-        ));
+        );
+        this.authService.workerRegister(dto);
     }
 
     @AfterEach

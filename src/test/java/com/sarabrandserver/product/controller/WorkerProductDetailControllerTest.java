@@ -8,7 +8,7 @@ import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductRepository;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
-import com.sarabrandserver.product.util.UpdateProductDetailDTO;
+import com.sarabrandserver.product.dto.UpdateProductDetailDTO;
 import com.sarabrandserver.util.Result;
 import com.sarabrandserver.util.TestingData;
 import org.junit.jupiter.api.AfterEach;
@@ -157,8 +157,8 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
 
         assertNotNull(findDetail);
 
-        assertEquals(dto.getQty(), findDetail.getInventory());
-        assertEquals(dto.getSize(), findDetail.getSize());
+        assertEquals(dto.qty(), findDetail.getInventory());
+        assertEquals(dto.size(), findDetail.getSize());
     }
 
 }

@@ -1,8 +1,8 @@
 package com.sarabrandserver.collection.service;
 
 import com.sarabrandserver.aws.S3Service;
-import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
 import com.sarabrandserver.collection.dto.CollectionDTO;
+import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
 import com.sarabrandserver.collection.entity.ProductCollection;
 import com.sarabrandserver.collection.repository.CollectionRepository;
 import com.sarabrandserver.collection.response.CollectionResponse;
@@ -86,17 +86,17 @@ public class WorkerCollectionService {
      * @throws DuplicateException if collection name exists
      */
     public void create(CollectionDTO dto) {
-        if (this.collectionRepository.findByName(dto.getName().trim()).isPresent()) {
-            throw new DuplicateException(dto.getName() + " exists");
+        if (this.collectionRepository.findByName(dto.name().trim()).isPresent()) {
+            throw new DuplicateException(dto.name() + " exists");
         }
 
         var date = this.customUtil.toUTC(new Date()).orElseGet(Date::new);
         var collection = ProductCollection.builder()
                 .uuid(UUID.randomUUID().toString())
-                .collection(dto.getName().trim())
+                .collection(dto.name().trim())
                 .createAt(date)
                 .modifiedAt(null)
-                .isVisible(dto.getVisible())
+                .isVisible(dto.visible())
                 .products(new HashSet<>())
                 .build();
 
@@ -112,10 +112,10 @@ public class WorkerCollectionService {
     @Transactional
     public void update(UpdateCollectionDTO dto) {
         boolean bool = this.collectionRepository
-                .duplicateCategoryForUpdate(dto.getId().trim(), dto.getName().trim()) > 0;
+                .duplicateCategoryForUpdate(dto.id().trim(), dto.name().trim()) > 0;
 
         if (bool) {
-            throw new DuplicateException(dto.getName() + " is a duplicate");
+            throw new DuplicateException(dto.name() + " is a duplicate");
         }
 
         var date = this.customUtil.toUTC(new Date()).orElseGet(Date::new);
@@ -123,9 +123,9 @@ public class WorkerCollectionService {
         this.collectionRepository
                 .update(
                         date,
-                        dto.getName(),
-                        dto.getVisible(),
-                        dto.getId().trim()
+                        dto.name(),
+                        dto.visible(),
+                        dto.id().trim()
                 );
     }
 

@@ -1,21 +1,26 @@
-package com.sarabrandserver.collection.dto;
+package com.sarabrandserver.product.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
-public record UpdateCollectionDTO(
-        @JsonProperty(value = "collection_id")
+public record UpdateProductDetailDTO(
         @NotNull(message = "cannot be empty")
         @NotEmpty(message = "cannot be empty")
-        String id,
+        String sku,
 
         @NotNull(message = "cannot be empty")
         @NotEmpty(message = "cannot be empty")
-        @Size(max = 50, message = "category name cannot exceed length of 50")
-        String name,
+        String colour,
+
+        @JsonProperty(value = "is_visible")
+        @NotNull(message = "cannot be empty")
+        Boolean isVisible,
 
         @NotNull(message = "cannot be empty")
-        Boolean visible
+        Integer qty,
+
+        @NotNull(message = "cannot be empty")
+        @NotEmpty(message = "cannot be empty")
+        String size
 ) { }

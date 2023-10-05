@@ -1,16 +1,15 @@
 package com.sarabrandserver.util;
 
+import com.github.javafaker.Faker;
 import com.sarabrandserver.enumeration.RoleEnum;
-import com.sarabrandserver.product.util.CreateProductDTO;
-import com.sarabrandserver.product.util.ProductDetailDTO;
-import com.sarabrandserver.product.util.SizeInventoryDTO;
-import com.sarabrandserver.product.util.UpdateProductDTO;
+import com.sarabrandserver.product.dto.CreateProductDTO;
+import com.sarabrandserver.product.dto.ProductDetailDTO;
+import com.sarabrandserver.product.dto.SizeInventoryDTO;
+import com.sarabrandserver.product.dto.UpdateProductDTO;
 import com.sarabrandserver.user.entity.ClientRole;
 import com.sarabrandserver.user.entity.SarreBrandUser;
-import com.github.javafaker.Faker;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -51,11 +50,7 @@ public class TestingData {
         SizeInventoryDTO[] dto = new SizeInventoryDTO[size];
 
         for (int i = 0; i < size; i++) {
-            var obj = SizeInventoryDTO.builder()
-                    .size("tall") // prevent duplicate
-                    .qty(new Faker().number().randomDigitNotZero())
-                    .build();
-            dto[i] = obj;
+            dto[i] = new SizeInventoryDTO(new Faker().number().randomDigitNotZero(), "tall");
         }
         return dto;
     }
@@ -63,17 +58,13 @@ public class TestingData {
     /** Collection is an empty string */
     @NotNull
     public static Result getResult(SizeInventoryDTO[] sizeDto, String prodName, String category, String colour) {
-        var dto = CreateProductDTO.builder()
-                .category(category)
-                .collection("")
-                .name(prodName)
-                .desc(new Faker().lorem().characters(255))
-                .price(new BigDecimal(new Faker().commerce().price()))
-                .currency("USD")
-                .sizeInventory(sizeDto)
-                .visible(true)
-                .colour(colour)
-                .build();
+        var dto = productDTO(
+                category,
+                "",
+                prodName,
+                sizeDto,
+                colour
+        );
 
         MockMultipartFile[] files = files(3);
 
@@ -84,22 +75,18 @@ public class TestingData {
     @NotNull
     public static Result getResultCollection(
             String collection,
-            SizeInventoryDTO[] sizeDto,
+            SizeInventoryDTO[] dtos,
             String prodName,
             String category,
             String colour
     ) {
-        var dto = CreateProductDTO.builder()
-                .category(category)
-                .collection(collection)
-                .name(prodName)
-                .desc(new Faker().lorem().characters(255))
-                .price(new BigDecimal(new Faker().commerce().price()))
-                .currency("USD")
-                .sizeInventory(sizeDto)
-                .visible(true)
-                .colour(colour)
-                .build();
+        var dto = productDTO(
+                category,
+                collection,
+                prodName,
+                dtos,
+                colour
+        );
 
         MockMultipartFile[] files = files(3);
 
@@ -122,17 +109,13 @@ public class TestingData {
 
     @NotNull
     public static CreateProductDTO createProductDTO(SizeInventoryDTO[] dtos) {
-        return CreateProductDTO.builder()
-                .sizeInventory(dtos)
-                .category(new Faker().commerce().department())
-                .collection(new Faker().commerce().department())
-                .name(new Faker().commerce().productName())
-                .desc(new Faker().lorem().characters(0, 255))
-                .price(new BigDecimal(new Faker().number().numberBetween(20, 80)))
-                .currency("NGN")
-                .visible(true)
-                .colour(new Faker().commerce().color())
-                .build();
+        return productDTO(
+                new Faker().commerce().department(),
+                new Faker().commerce().department(),
+                new Faker().commerce().productName(),
+                dtos,
+                new Faker().commerce().color()
+        );
     }
 
     @NotNull
@@ -142,41 +125,54 @@ public class TestingData {
             String collection,
             SizeInventoryDTO[] dtos
     ) {
-        return CreateProductDTO.builder()
-                .sizeInventory(dtos)
-                .category(category)
-                .collection(collection)
-                .name(product)
-                .desc(new Faker().lorem().characters(0, 255))
-                .price(new BigDecimal(new Faker().number().numberBetween(20, 80)))
-                .currency("NGN")
-                .visible(true)
-                .colour(new Faker().commerce().color())
-                .build();
+        return productDTO(category, collection, product, dtos, new Faker().commerce().color());
+    }
+
+    @NotNull
+    public static CreateProductDTO productDTO(
+            String category,
+            String collection,
+            String productName,
+            SizeInventoryDTO[] dtos,
+            String colour
+    ) {
+        return new CreateProductDTO(
+                category,
+                collection,
+                productName,
+                new Faker().lorem().characters(0, 255),
+                new BigDecimal(new Faker().number().numberBetween(20, 80)),
+                "NGN",
+                true,
+                dtos,
+                colour
+        );
     }
 
     @NotNull
     public static ProductDetailDTO productDetailDTO(String productID, String colour, SizeInventoryDTO[] dtos) {
-        return ProductDetailDTO.builder()
-                .uuid(productID)
-                .visible(false)
-                .colour(colour)
-                .sizeInventory(dtos)
-                .build();
+        return new ProductDetailDTO(productID, false, colour, dtos);
     }
 
     @NotNull
-    public static UpdateProductDTO updateProductDTO (String collection, String collectionId) {
-        return UpdateProductDTO.builder()
-                .category(new Faker().commerce().department())
-                .categoryId("category id")
-                .collection(collection)
-                .collectionId(collectionId)
-                .uuid("product id")
-                .name("product name")
-                .desc(new Faker().lorem().characters(0, 400))
-                .price(new BigDecimal(new Faker().number().numberBetween(20, 200)))
-                .build();
+    public static UpdateProductDTO updateProductDTO(
+            String productID,
+            String productName,
+            String category,
+            String categoryId,
+            String collection,
+            String collectionId
+    ) {
+        return new UpdateProductDTO(
+                productID,
+                productName,
+                new Faker().lorem().characters(0, 400),
+                new BigDecimal(new Faker().number().numberBetween(20, 200)),
+                category,
+                categoryId,
+                collection,
+                collectionId
+        );
     }
 
 }

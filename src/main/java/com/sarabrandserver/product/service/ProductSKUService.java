@@ -1,23 +1,21 @@
 package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.exception.CustomNotFoundException;
+import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.product.entity.ProductDetail;
 import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
-import com.sarabrandserver.product.util.SizeInventoryDTO;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class ProductSKUService {
 
     private final ProductSkuRepo productSkuRepo;
-
-    public ProductSKUService(ProductSkuRepo productSkuRepo) {
-        this.productSkuRepo = productSkuRepo;
-    }
 
     /**
      * Save Product sku. Look in db diagram in read me in case of confusion
@@ -27,8 +25,8 @@ public class ProductSKUService {
             var sku = ProductSku.builder()
                     .productDetail(detail)
                     .sku(UUID.randomUUID().toString())
-                    .size(sizeDto.getSize())
-                    .inventory(sizeDto.getQty())
+                    .size(sizeDto.size())
+                    .inventory(sizeDto.qty())
                     .build();
             this.productSkuRepo.save(sku);
         }

@@ -1,9 +1,9 @@
 package com.sarabrandserver.product.controller;
 
 import com.sarabrandserver.product.service.WorkerProductService;
-import com.sarabrandserver.product.util.CreateProductDTO;
+import com.sarabrandserver.product.dto.CreateProductDTO;
 import com.sarabrandserver.product.util.ProductResponse;
-import com.sarabrandserver.product.util.UpdateProductDTO;
+import com.sarabrandserver.product.dto.UpdateProductDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -59,7 +59,7 @@ public class WorkerProductController {
      */
     @ResponseStatus(NO_CONTENT)
     @PutMapping(consumes = APPLICATION_JSON_VALUE)
-    public void updateProduct(@Valid @RequestBody UpdateProductDTO dto) {
+    public void update(@Valid @RequestBody UpdateProductDTO dto) {
         this.workerProductService.update(dto);
     }
 
@@ -70,7 +70,7 @@ public class WorkerProductController {
      */
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping
-    public void deleteProduct(@NotNull @RequestParam(value = "id") String uuid) {
+    public void delete(@NotNull @RequestParam(value = "id") String uuid) {
         this.workerProductService.delete(uuid.trim());
     }
 

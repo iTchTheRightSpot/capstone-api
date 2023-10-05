@@ -8,8 +8,8 @@ import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductImageRepo;
 import com.sarabrandserver.product.repository.ProductRepository;
 import com.sarabrandserver.product.util.DetailResponse;
-import com.sarabrandserver.product.util.ProductDetailDTO;
-import com.sarabrandserver.product.util.UpdateProductDetailDTO;
+import com.sarabrandserver.product.dto.ProductDetailDTO;
+import com.sarabrandserver.product.dto.UpdateProductDetailDTO;
 import com.sarabrandserver.product.util.Variant;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
@@ -82,15 +82,15 @@ public class WorkerProductDetailService {
     @Transactional
     public void create(ProductDetailDTO dto, MultipartFile[] multipartFiles) {
         var product = this.productRepository
-                .findByProductUuid(dto.getUuid())
+                .findByProductUuid(dto.uuid())
                 .orElseThrow(() -> new CustomNotFoundException("Product does not exist"));
 
-        Optional<ProductDetail> exist = this.detailRepo.productDetailByColour(dto.getColour());
+        Optional<ProductDetail> exist = this.detailRepo.productDetailByColour(dto.colour());
 
         if (exist.isPresent()) {
             // Create new ProductSKU
             var detail = exist.get();
-            this.productSKUService.saveProductSKUs(dto.getSizeInventory(), detail);
+            this.productSKUService.saveProductSKUs(dto.sizeInventory(), detail);
             return;
         }
 
@@ -102,9 +102,9 @@ public class WorkerProductDetailService {
         // Save ProductDetail
         var detail = ProductDetail.builder()
                 .product(product)
-                .colour(dto.getColour())
+                .colour(dto.colour())
                 .createAt(date)
-                .isVisible(dto.getVisible())
+                .isVisible(dto.visible())
                 .productImages(new HashSet<>())
                 .skus(new HashSet<>())
                 .build();
@@ -113,7 +113,7 @@ public class WorkerProductDetailService {
         var saved = this.detailRepo.save(detail);
 
         // Save ProductSKUs
-        this.productSKUService.saveProductSKUs(dto.getSizeInventory(), saved);
+        this.productSKUService.saveProductSKUs(dto.sizeInventory(), saved);
 
         // Save ProductImages (save to s3)
         this.helperService.productImages(
@@ -132,11 +132,11 @@ public class WorkerProductDetailService {
     @Transactional
     public void update(final UpdateProductDetailDTO dto) {
         this.detailRepo.updateProductDetail(
-                dto.getSku(),
-                dto.getColour(),
-                dto.getIsVisible(),
-                dto.getQty(),
-                dto.getSize()
+                dto.sku(),
+                dto.colour(),
+                dto.isVisible(),
+                dto.qty(),
+                dto.size()
         );
     }
 

@@ -1,5 +1,6 @@
 package com.sarabrandserver.category.service;
 
+import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractUnitTest;
 import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.category.dto.CategoryDTO;
@@ -9,7 +10,6 @@ import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.util.CustomUtil;
-import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -47,7 +47,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         var dto = new CategoryDTO(new Faker().commerce().department(), true, "");
 
         var category = ProductCategory.builder()
-                .categoryName(dto.getName().trim())
+                .categoryName(dto.name().trim())
                 .createAt(new Date())
                 .productCategories(new HashSet<>())
                 .product(new HashSet<>())
@@ -122,11 +122,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
     @Test
     void update() {
         // Given
-        var dto = UpdateCategoryDTO.builder()
-                .id(UUID.randomUUID().toString())
-                .visible(true)
-                .name("Updated category name")
-                .build();
+        var dto = new UpdateCategoryDTO(UUID.randomUUID().toString(), "update category name", true);
 
         // When
         doReturn(0).when(this.categoryRepository)
@@ -142,10 +138,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
     @Test
     void update_category_name_to_existing_name() {
         // Given
-        var dto = UpdateCategoryDTO.builder()
-                .id(UUID.randomUUID().toString())
-                .name("Updated category name")
-                .build();
+        var dto = new UpdateCategoryDTO(UUID.randomUUID().toString(), "update category name", true);
 
         // When
         when(this.categoryRepository.duplicateCategoryForUpdate(anyString(), anyString()))

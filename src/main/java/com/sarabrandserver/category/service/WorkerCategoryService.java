@@ -12,6 +12,7 @@ import com.sarabrandserver.exception.ResourceAttachedException;
 import com.sarabrandserver.product.util.ProductResponse;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class WorkerCategoryService {
 
     @Value(value = "${aws.bucket}")
@@ -34,16 +36,6 @@ public class WorkerCategoryService {
     private final CategoryRepository categoryRepository;
     private final CustomUtil customUtil;
     private final S3Service s3Service;
-
-    public WorkerCategoryService(
-            CategoryRepository categoryRepository,
-            CustomUtil customUtil,
-            S3Service s3Service
-    ) {
-        this.categoryRepository = categoryRepository;
-        this.customUtil = customUtil;
-        this.s3Service = s3Service;
-    }
 
     /**
      * Returns a lis of ProductCategory parameters.
@@ -101,21 +93,21 @@ public class WorkerCategoryService {
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
 
         // Handle cases based on the logic explained above.
-        var category = dto.getParent().isBlank() ?
+        var category = dto.parent().isBlank() ?
                 parentCategoryIsBlank(dto, date) : parentCategoryNotBlank(dto, date);
 
         this.categoryRepository.save(category);
     }
 
     private ProductCategory parentCategoryIsBlank(CategoryDTO dto, Date date) {
-        if (this.categoryRepository.findByName(dto.getName().trim()).isPresent()) {
-            throw new DuplicateException(dto.getName() + " exists");
+        if (this.categoryRepository.findByName(dto.name().trim()).isPresent()) {
+            throw new DuplicateException(dto.name() + " exists");
         }
 
         return ProductCategory.builder()
                 .uuid(UUID.randomUUID().toString())
-                .categoryName(dto.getName().trim())
-                .isVisible(dto.getVisible())
+                .categoryName(dto.name().trim())
+                .isVisible(dto.visible())
                 .createAt(date)
                 .modifiedAt(null)
                 .productCategories(new HashSet<>())
@@ -124,13 +116,13 @@ public class WorkerCategoryService {
     }
 
     private ProductCategory parentCategoryNotBlank(CategoryDTO dto, Date date) {
-        var parentCategory = findByName(dto.getParent().trim());
+        var parentCategory = findByName(dto.parent().trim());
         parentCategory.setModifiedAt(date);
 
         var childCategory = ProductCategory.builder()
                 .uuid(UUID.randomUUID().toString())
-                .categoryName(dto.getName().trim())
-                .isVisible(dto.getVisible())
+                .categoryName(dto.name().trim())
+                .isVisible(dto.visible())
                 .createAt(date)
                 .modifiedAt(null)
                 .productCategories(new HashSet<>())
@@ -152,16 +144,16 @@ public class WorkerCategoryService {
     @Transactional
     public void update(UpdateCategoryDTO dto) {
         boolean bool = this.categoryRepository
-                .duplicateCategoryForUpdate(dto.getId().trim(), dto.getName().trim()) > 0;
+                .duplicateCategoryForUpdate(dto.id().trim(), dto.name().trim()) > 0;
 
         if (bool) {
-            throw new DuplicateException(dto.getName() + " cannot be created. It is a duplicate");
+            throw new DuplicateException(dto.name() + " cannot be created. It is a duplicate");
         }
 
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
 
         this.categoryRepository
-                .update(date, dto.getName().trim(), dto.getVisible(), dto.getId());
+                .update(date, dto.name().trim(), dto.visible(), dto.id());
     }
 
     /**

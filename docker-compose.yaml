@@ -5,12 +5,12 @@ services:
 #    container_name: api
 #    image: "emmanuelu17/sara-brand-server:latest"
 #    ports:
-#      - "1997:8080"
+#      - "1997:1997"
 #    depends_on:
 #      mysql:
 #        condition: service_healthy
 #    environment:
-#      SERVER_PORT: 8080
+#      SERVER_PORT: 1997
 #      SPRING_PROFILES_ACTIVE: dev
 #      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sara_brand_db
 #      SPRING_DATASOURCE_USERNAME: sara
@@ -20,7 +20,7 @@ services:
 #      AWS_BUCKET:
 
   mysql:
-    image: "mysql:latest"
+    image: "mysql:8.0"
     container_name: mysql
     ports:
     - "3306:3306"

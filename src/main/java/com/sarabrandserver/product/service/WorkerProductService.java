@@ -8,9 +8,9 @@ import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.repository.ProductRepository;
-import com.sarabrandserver.product.util.CreateProductDTO;
+import com.sarabrandserver.product.dto.CreateProductDTO;
 import com.sarabrandserver.product.util.ProductResponse;
-import com.sarabrandserver.product.util.UpdateProductDTO;
+import com.sarabrandserver.product.dto.UpdateProductDTO;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -86,12 +86,12 @@ public class WorkerProductService {
      */
     @Transactional
     public void create(CreateProductDTO dto, MultipartFile[] files) {
-        var category = this.categoryService.findByName(dto.getCategory().trim());
-        var _product = this.productRepository.findByProductName(dto.getName().trim());
+        var category = this.categoryService.findByName(dto.category().trim());
+        var _product = this.productRepository.findByProductName(dto.name().trim());
 
         // throw error if product exits
         if (_product.isPresent()) {
-            throw new DuplicateException(dto.getName() + " exists");
+            throw new DuplicateException(dto.name() + " exists");
         }
 
         // Validate MultipartFile[] are all images
@@ -102,17 +102,17 @@ public class WorkerProductService {
         var product = Product.builder()
                 .productCategory(category)
                 .uuid(UUID.randomUUID().toString())
-                .name(dto.getName().trim())
-                .description(dto.getDesc().trim())
+                .name(dto.name().trim())
+                .description(dto.desc().trim())
                 .defaultKey(defaultImageKey.toString())
-                .price(dto.getPrice())
-                .currency(dto.getCurrency()) // default is USD
+                .price(dto.price())
+                .currency(dto.currency()) // default is USD
                 .productDetails(new HashSet<>())
                 .build();
 
         // Set ProductCollection to Product
-        if (!dto.getCollection().isBlank()) {
-            var collection = this.collectionService.findByName(dto.getCollection().trim());
+        if (!dto.collection().isBlank()) {
+            var collection = this.collectionService.findByName(dto.collection().trim());
             product.setProductCollection(collection);
         }
 
@@ -122,10 +122,10 @@ public class WorkerProductService {
         // Save ProductDetails
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
         var detail = this.workerProductDetailService.
-                productDetail(saved, dto.getColour(), dto.getVisible(), date);
+                productDetail(saved, dto.colour(), dto.visible(), date);
 
         // Save ProductSKUs
-        this.productSKUService.saveProductSKUs(dto.getSizeInventory(), detail);
+        this.productSKUService.saveProductSKUs(dto.sizeInventory(), detail);
 
         // Build ProductImages (save to s3)
         this.helperService.productImages(
@@ -146,23 +146,23 @@ public class WorkerProductService {
     @Transactional
     public void update(final UpdateProductDTO dto) {
         boolean bool = this.productRepository
-                .nameNotAssociatedToUuid(dto.getUuid(), dto.getName()) > 0;
+                .nameNotAssociatedToUuid(dto.uuid(), dto.name()) > 0;
 
         if (bool) {
-            throw new DuplicateException(dto.getName() + " exists");
+            throw new DuplicateException(dto.name() + " exists");
         }
 
-        var category = this.categoryService.findByUuid(dto.getCategoryId());
+        var category = this.categoryService.findByUuid(dto.categoryId());
 
-        if (!dto.getCollection().isEmpty()) {
+        if (!dto.collection().isEmpty()) {
             // Find ProductCollection by uuid
-            var collection = this.collectionService.findByUuid(dto.getCollectionId());
+            var collection = this.collectionService.findByUuid(dto.collectionId());
 
             this.productRepository.updateProductCategoryCollectionPresent(
-                    dto.getUuid(),
-                    dto.getName().trim(),
-                    dto.getDesc().trim(),
-                    dto.getPrice(),
+                    dto.uuid(),
+                    dto.name().trim(),
+                    dto.desc().trim(),
+                    dto.price(),
                     category,
                     collection
             );
@@ -171,10 +171,10 @@ public class WorkerProductService {
         }
 
         this.productRepository.updateProductCollectionNotPresent(
-                dto.getUuid(),
-                dto.getName().trim(),
-                dto.getDesc().trim(),
-                dto.getPrice(),
+                dto.uuid(),
+                dto.name().trim(),
+                dto.desc().trim(),
+                dto.price(),
                 category
         );
     }

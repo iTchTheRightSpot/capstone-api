@@ -1,18 +1,17 @@
 package com.sarabrandserver.collection.controller;
 
+import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
-import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
 import com.sarabrandserver.collection.dto.CollectionDTO;
+import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
 import com.sarabrandserver.collection.repository.CollectionRepository;
 import com.sarabrandserver.collection.service.WorkerCollectionService;
 import com.sarabrandserver.exception.DuplicateException;
-import com.github.javafaker.Faker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.HashSet;
@@ -55,11 +54,14 @@ class WorkerCollectionControllerTest extends AbstractIntegrationTest {
         var dto = new CollectionDTO(new Faker().commerce().productName(), true);
 
         // request
-        this.MOCKMVC.perform(post(requestMapping)
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(this.MAPPER.writeValueAsString(dto))
-        ).andExpect(status().isCreated());
+        this.MOCKMVC
+                .perform(
+                        post(requestMapping)
+                                .with(csrf())
+                                .contentType(APPLICATION_JSON)
+                                .content(this.MAPPER.writeValueAsString(dto))
+                )
+                .andExpect(status().isCreated());
     }
 
     @Test

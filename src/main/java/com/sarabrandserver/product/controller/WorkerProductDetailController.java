@@ -2,8 +2,8 @@ package com.sarabrandserver.product.controller;
 
 import com.sarabrandserver.product.service.WorkerProductDetailService;
 import com.sarabrandserver.product.util.DetailResponse;
-import com.sarabrandserver.product.util.ProductDetailDTO;
-import com.sarabrandserver.product.util.UpdateProductDetailDTO;
+import com.sarabrandserver.product.dto.ProductDetailDTO;
+import com.sarabrandserver.product.dto.UpdateProductDetailDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;

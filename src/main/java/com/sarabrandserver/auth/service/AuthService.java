@@ -53,7 +53,7 @@ public class AuthService {
     @Transactional
     public void workerRegister(RegisterDTO dto) {
         var client = this.userRepository
-                .workerExists(dto.getEmail().trim())
+                .workerExists(dto.email().trim())
                 .orElse(createUser(dto));
 
         // Note User and Role tables have a relationship fetch type EAGER
@@ -62,7 +62,7 @@ public class AuthService {
                 .anyMatch(role -> role.getRole().equals(RoleEnum.WORKER));
 
         if (isAdmin) {
-            throw new DuplicateException(dto.getUsername() + " exists");
+            throw new DuplicateException(dto.email() + " exists");
         }
 
         client.addRole(new ClientRole(RoleEnum.WORKER));
@@ -78,8 +78,8 @@ public class AuthService {
      */
     @Transactional
     public void clientRegister(RegisterDTO dto) {
-        if (this.userRepository.principalExists(dto.getEmail().trim()) > 0) {
-            throw new DuplicateException(dto.getEmail() + " exists");
+        if (this.userRepository.principalExists(dto.email().trim()) > 0) {
+            throw new DuplicateException(dto.email() + " exists");
         }
         this.userRepository.save(createUser(dto));
     }
@@ -102,7 +102,7 @@ public class AuthService {
         }
 
         var unauthenticated = UsernamePasswordAuthenticationToken
-                .unauthenticated(dto.getPrincipal().trim(), dto.getPassword());
+                .unauthenticated(dto.principal().trim(), dto.password());
 
         var authenticated = this.authManager.authenticate(unauthenticated);
 
@@ -125,11 +125,11 @@ public class AuthService {
      */
     private SarreBrandUser createUser(RegisterDTO dto) {
         var client = SarreBrandUser.builder()
-                .firstname(dto.getFirstname().trim())
-                .lastname(dto.getLastname().trim())
-                .email(dto.getEmail().trim())
-                .phoneNumber(dto.getPhone().trim())
-                .password(passwordEncoder.encode(dto.getPassword()))
+                .firstname(dto.firstname().trim())
+                .lastname(dto.lastname().trim())
+                .email(dto.email().trim())
+                .phoneNumber(dto.phone().trim())
+                .password(passwordEncoder.encode(dto.password()))
                 .enabled(true)
                 .clientRole(new HashSet<>())
                 .build();

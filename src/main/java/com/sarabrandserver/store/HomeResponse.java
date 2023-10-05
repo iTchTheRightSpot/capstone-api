@@ -1,3 +1,5 @@
 package com.sarabrandserver.store;
 
-public record HomeResponse(String url) { }
+import java.io.Serializable;
+
+public record HomeResponse(String url) implements Serializable { }

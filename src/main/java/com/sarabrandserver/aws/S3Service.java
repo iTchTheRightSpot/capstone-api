@@ -2,6 +2,9 @@ package com.sarabrandserver.aws;
 
 import com.sarabrandserver.exception.CustomAwsException;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -14,20 +17,15 @@ import java.io.File;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Service
+@RequiredArgsConstructor
 public class S3Service {
+
     private static final Logger log = LoggerFactory.getLogger(S3Service.class.getName());
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
-
-    public S3Service(S3Client s3Client, S3Presigner s3Presigner) {
-        this.s3Client = s3Client;
-        this.s3Presigner = s3Presigner;
-    }
 
     /**
      * Upload image to s3. As per docs
@@ -71,6 +69,7 @@ public class S3Service {
 
     /**
      * Returns a pre-signed url from s3
+     *
      * @param profile is to verify what profile spring app running on
      * @param bucket is the bucket name
      * @param key is the object key
@@ -86,6 +85,7 @@ public class S3Service {
     /**
      * Retrieves image pre-assigned url. As per docs
      * <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/GetObjectPresignedUrl.java">...</a>
+     *
      * @param bucket is the bucket name
      * @param key is the object key
      * @return String

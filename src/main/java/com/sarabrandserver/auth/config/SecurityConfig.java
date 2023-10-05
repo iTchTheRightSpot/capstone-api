@@ -48,17 +48,11 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
-
-    @Value(value = "${server.servlet.session.cookie.secure}")
-    private boolean COOKIESECURE;
-
-    @Value(value = "${spring.profiles.active}")
-    private String PROFILE;
-
-    @Value(value = "${server.servlet.session.cookie.same-site}")
-    private String SAMESITE;
+    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
+    @Value(value = "${server.servlet.session.cookie.secure}") private boolean COOKIESECURE;
+    @Value(value = "${spring.profiles.active}") private String PROFILE;
+    @Value(value = "${server.servlet.session.cookie.same-site}") private String SAMESITE;
+    @Value(value = "${cors.ui.domain}") private String UIDOMAIN;
 
     private final AuthenticationEntryPoint authEntryPoint;
     private final RefreshTokenFilter refreshTokenFilter;
@@ -111,7 +105,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         List<String> allowOrigins = new ArrayList<>(2);
-        allowOrigins.add("https://server.emmanueluluabuike.com/");
+        allowOrigins.add(this.UIDOMAIN);
 
         if (this.PROFILE.equals("dev") || this.PROFILE.equals("test")) {
             allowOrigins.add("http://localhost:4200/");

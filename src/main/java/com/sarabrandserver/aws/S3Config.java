@@ -1,8 +1,7 @@
-package com.sarabrandserver.aws.development;
+package com.sarabrandserver.aws;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
@@ -10,8 +9,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 @Configuration
-@Profile(value = {"dev", "test"})
-public class S3ConfigDev {
+public class S3Config {
 
     @Bean
     public static S3Client s3Client() {

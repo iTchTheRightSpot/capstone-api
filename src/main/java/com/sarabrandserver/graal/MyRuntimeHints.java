@@ -1,10 +1,17 @@
 package com.sarabrandserver.graal;
 
-import com.sarabrandserver.product.dto.SizeInventoryDTO;
+import com.sarabrandserver.auth.dto.LoginDTO;
+import com.sarabrandserver.auth.dto.RegisterDTO;
+import com.sarabrandserver.category.dto.CategoryDTO;
+import com.sarabrandserver.category.dto.UpdateCategoryDTO;
+import com.sarabrandserver.collection.dto.CollectionDTO;
+import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
+import com.sarabrandserver.product.dto.*;
+import com.sarabrandserver.product.response.DetailResponse;
+import com.sarabrandserver.product.response.Variant;
 import com.sarabrandserver.store.HomeResponse;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
-import org.springframework.aot.hint.TypeReference;
 
 /**
  * As per docs
@@ -14,7 +21,28 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
 
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
-        hints.serialization().registerType(TypeReference.of(SizeInventoryDTO.class));
+        // Auth
+        hints.serialization().registerType(LoginDTO.class);
+        hints.serialization().registerType(RegisterDTO.class);
+
+        // Category
+        hints.serialization().registerType(CategoryDTO.class);
+        hints.serialization().registerType(UpdateCategoryDTO.class);
+
+        // Collection
+        hints.serialization().registerType(CollectionDTO.class);
+        hints.serialization().registerType(UpdateCollectionDTO.class);
+
+        // Product
+        hints.serialization().registerType(CreateProductDTO.class);
+        hints.serialization().registerType(ProductDetailDTO.class);
+        hints.serialization().registerType(SizeInventoryDTO.class);
+        hints.serialization().registerType(UpdateProductDetailDTO.class);
+        hints.serialization().registerType(UpdateProductDTO.class);
+        hints.serialization().registerType(Variant.class);
+        hints.serialization().registerType(DetailResponse.class);
+
+        // Store-front
         hints.serialization().registerType(HomeResponse.class);
     }
 

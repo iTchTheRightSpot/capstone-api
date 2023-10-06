@@ -2,7 +2,6 @@ package com.sarabrandserver.address.entity;
 
 import com.sarabrandserver.order.entity.OrderDetail;
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,7 +15,6 @@ import static jakarta.persistence.CascadeType.ALL;
 @NoArgsConstructor
 @Getter
 @Setter
-@EqualsAndHashCode
 public class Address implements Serializable {
 
     @Id

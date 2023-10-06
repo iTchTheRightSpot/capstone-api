@@ -21,7 +21,6 @@ import static jakarta.persistence.FetchType.EAGER;
 @Builder
 @Getter
 @Setter
-@EqualsAndHashCode
 public class SarreBrandUser implements Serializable {
 
     @Id

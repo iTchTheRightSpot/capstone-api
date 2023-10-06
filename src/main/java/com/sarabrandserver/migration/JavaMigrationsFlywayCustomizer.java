@@ -20,8 +20,7 @@ public class JavaMigrationsFlywayCustomizer implements FlywayConfigurationCustom
                         new V2__init_migration(),
                         new V3__init_migration(),
                         new V4__init_migration(),
-                        new V5__init_migration(),
-                        new V6__init_migration()
+                        new V5__init_migration()
                 );
     }
 

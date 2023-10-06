@@ -11,9 +11,19 @@ public class V5__init_migration extends BaseJavaMigration {
     public void migrate(Context context) throws Exception {
         try (Statement statement = context.getConnection().createStatement()) {
             final String migration = """
-                ALTER TABLE clientz DROP COLUMN credentials_none_expired;
-                ALTER TABLE clientz DROP COLUMN account_none_expired;
-                ALTER TABLE clientz DROP COLUMN account_none_locked;
+                # product
+                UPDATE product SET uuid=(SELECT uuid()) WHERE uuid IS NULL;
+                ALTER TABLE product MODIFY COLUMN uuid varchar(36) NOT NULL UNIQUE;
+                CREATE INDEX IX_product_uuid ON product (uuid);
+                                
+                # category
+                UPDATE product_category SET uuid=(SELECT uuid()) WHERE uuid IS NULL;
+                ALTER TABLE product_category MODIFY COLUMN uuid varchar(36) NOT NULL UNIQUE;
+                CREATE INDEX IX_product_category_uuid ON product_category (uuid);
+                                
+                # collection
+                ALTER TABLE product_collection ADD uuid varchar(36) NOT NULL UNIQUE;
+                CREATE INDEX IX_product_collection_uuid ON product_collection (uuid);
                 """;
 
             for (String table : migration.split(";")) {

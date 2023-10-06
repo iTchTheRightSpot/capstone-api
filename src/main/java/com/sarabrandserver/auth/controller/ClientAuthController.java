@@ -1,6 +1,6 @@
 package com.sarabrandserver.auth.controller;
 
-import com.sarabrandserver.auth.dto.ActiveUser;
+import com.sarabrandserver.auth.response.ActiveUser;
 import com.sarabrandserver.auth.dto.LoginDTO;
 import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.service.AuthService;

@@ -5,7 +5,7 @@ import com.sarabrandserver.exception.CustomAwsException;
 import com.sarabrandserver.product.entity.ProductDetail;
 import com.sarabrandserver.product.entity.ProductImage;
 import com.sarabrandserver.product.repository.ProductImageRepo;
-import com.sarabrandserver.product.util.CustomMultiPart;
+import com.sarabrandserver.product.response.CustomMultiPart;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

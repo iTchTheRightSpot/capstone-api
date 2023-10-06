@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
+import java.io.Serializable;
+
 public record ProductDetailDTO(
         @JsonProperty(value = "product_id")
         @NotNull(message = "UUID cannot be empty")
@@ -20,4 +22,4 @@ public record ProductDetailDTO(
         @JsonProperty(value = "sizeInventory")
         @NotNull(message = "Size or Inventory cannot be empty")
         SizeInventoryDTO[] sizeInventory
-) { }
+) implements Serializable { }

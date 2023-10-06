@@ -4,7 +4,7 @@ import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
 import com.sarabrandserver.collection.dto.CollectionDTO;
 import com.sarabrandserver.collection.response.CollectionResponse;
 import com.sarabrandserver.collection.service.WorkerCollectionService;
-import com.sarabrandserver.product.util.ProductResponse;
+import com.sarabrandserver.product.response.ProductResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;

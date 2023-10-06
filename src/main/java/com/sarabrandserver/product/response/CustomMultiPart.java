@@ -1,4 +1,4 @@
-package com.sarabrandserver.product.util;
+package com.sarabrandserver.product.response;
 
 import java.io.File;
 import java.util.Map;

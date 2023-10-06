@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 public record UpdateProductDTO(
@@ -39,4 +40,4 @@ public record UpdateProductDTO(
         @JsonProperty(value = "collection_id")
         @NotNull(message = "cannot be empty")
         String collectionId
-) { }
+) implements Serializable { }

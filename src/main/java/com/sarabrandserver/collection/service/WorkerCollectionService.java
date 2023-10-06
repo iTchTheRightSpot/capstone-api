@@ -8,7 +8,7 @@ import com.sarabrandserver.collection.repository.CollectionRepository;
 import com.sarabrandserver.collection.response.CollectionResponse;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
-import com.sarabrandserver.product.util.ProductResponse;
+import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;

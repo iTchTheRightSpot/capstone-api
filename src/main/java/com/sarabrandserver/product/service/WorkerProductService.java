@@ -9,7 +9,7 @@ import com.sarabrandserver.exception.ResourceAttachedException;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.repository.ProductRepository;
 import com.sarabrandserver.product.dto.CreateProductDTO;
-import com.sarabrandserver.product.util.ProductResponse;
+import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.product.dto.UpdateProductDTO;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;

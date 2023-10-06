@@ -3,7 +3,7 @@ package com.sarabrandserver.category.controller;
 import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.category.service.ClientCategoryService;
 import com.sarabrandserver.product.service.ClientProductService;
-import com.sarabrandserver.product.util.ProductResponse;
+import com.sarabrandserver.product.response.ProductResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

@@ -4,7 +4,7 @@ import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.category.service.WorkerCategoryService;
-import com.sarabrandserver.product.util.ProductResponse;
+import com.sarabrandserver.product.response.ProductResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;

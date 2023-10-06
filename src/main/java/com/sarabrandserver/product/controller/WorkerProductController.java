@@ -2,7 +2,7 @@ package com.sarabrandserver.product.controller;
 
 import com.sarabrandserver.product.service.WorkerProductService;
 import com.sarabrandserver.product.dto.CreateProductDTO;
-import com.sarabrandserver.product.util.ProductResponse;
+import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.product.dto.UpdateProductDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

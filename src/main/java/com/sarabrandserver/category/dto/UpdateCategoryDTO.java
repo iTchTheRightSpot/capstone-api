@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.io.Serializable;
+
 public record UpdateCategoryDTO(
         @NotNull(message = "cannot be empty")
         @NotEmpty(message = "cannot not empty")
@@ -18,4 +20,4 @@ public record UpdateCategoryDTO(
 
         @NotNull(message = "cannot be empty")
         Boolean visible
-) { }
+) implements Serializable { }

@@ -1,3 +1,3 @@
-package com.sarabrandserver.auth.dto;
+package com.sarabrandserver.auth.response;
 
 public record ActiveUser(String principal) { }

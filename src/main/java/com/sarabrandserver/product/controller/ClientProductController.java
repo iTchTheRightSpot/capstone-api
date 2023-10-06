@@ -1,7 +1,7 @@
 package com.sarabrandserver.product.controller;
 
 import com.sarabrandserver.product.service.ClientProductService;
-import com.sarabrandserver.product.util.ProductResponse;
+import com.sarabrandserver.product.response.ProductResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
+import java.io.Serializable;
+
 public record UpdateProductDetailDTO(
         @NotNull(message = "cannot be empty")
         @NotEmpty(message = "cannot be empty")
@@ -23,4 +25,4 @@ public record UpdateProductDetailDTO(
         @NotNull(message = "cannot be empty")
         @NotEmpty(message = "cannot be empty")
         String size
-) { }
+) implements Serializable { }

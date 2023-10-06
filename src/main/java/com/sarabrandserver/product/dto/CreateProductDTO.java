@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 public record CreateProductDTO(
@@ -42,4 +43,4 @@ public record CreateProductDTO(
         @NotNull(message = "Please enter or choose product colour")
         @NotEmpty(message = "Please enter or choose product colour")
         String colour
-) { }
+) implements Serializable { }

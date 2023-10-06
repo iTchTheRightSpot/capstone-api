@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.io.Serializable;
+
 public record CategoryDTO(
         @NotNull(message = "name cannot be null")
         @NotEmpty(message = "name cannot be empty")
@@ -15,4 +17,4 @@ public record CategoryDTO(
 
         @NotNull(message = "parent cannot be null")
         String parent
-) { }
+) implements Serializable { }

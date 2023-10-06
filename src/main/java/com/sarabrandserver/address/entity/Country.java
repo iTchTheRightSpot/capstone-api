@@ -1,7 +1,6 @@
 package com.sarabrandserver.address.entity;
 
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,7 +12,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Getter
 @Setter
-@EqualsAndHashCode
 public class Country implements Serializable {
 
     @Id
@@ -26,9 +24,5 @@ public class Country implements Serializable {
 
     @OneToOne(mappedBy = "country")
     private Address address;
-
-    public Country(String country) {
-        this.country = country;
-    }
 
 }

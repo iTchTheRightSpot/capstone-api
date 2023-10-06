@@ -1,9 +1,10 @@
 package com.sarabrandserver.util;
 
-import com.sarabrandserver.product.response.Variant;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sarabrandserver.product.response.Variant;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -15,15 +16,12 @@ import java.util.TimeZone;
 import java.util.function.Function;
 
 @Service
+@RequiredArgsConstructor
 public class CustomUtil {
 
     private static final Logger log = LoggerFactory.getLogger(CustomUtil.class.getName());
 
     private final ObjectMapper objectMapper;
-
-    public CustomUtil(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     /**
      * A custom mapper to reduce boilerplate code

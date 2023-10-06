@@ -3,7 +3,7 @@ services:
 
 #  api:
 #    container_name: api
-#    image: "emmanuelu17/sarre-bk-native:latest"
+#    image: "emmanuelu17/sara-brand-server:latest"
 #    ports:
 #      - "1997:1997"
 #    depends_on:
@@ -18,7 +18,7 @@ services:
 #      AWS_ACCESS_KEY_ID:
 #      AWS_SECRET_ACCESS_KEY:
 #      AWS_BUCKET:
-#      CORS_UI_DOMAIN:
+#      CORS_UI_DOMAIN: https://server.emmanueluluabuike.com
 
   mysql:
     image: "mysql:8.0"

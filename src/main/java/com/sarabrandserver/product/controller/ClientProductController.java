@@ -1,16 +1,17 @@
 package com.sarabrandserver.product.controller;
 
-import com.sarabrandserver.product.service.ClientProductService;
+import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.ProductResponse;
+import com.sarabrandserver.product.service.ClientProductService;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.util.List;
 
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
 
 /** All public routes */
 @RestController
@@ -32,8 +33,10 @@ public class ClientProductController {
 
     /** Returns a SseEmitter of a list of DetailResponse objects */
     @ResponseStatus(OK)
-    @GetMapping(path = "/detail", produces = TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter productDetailsByProductUUID(@NotNull @RequestParam(value = "product_id") String uuid) {
+    @GetMapping(path = "/detail", produces = APPLICATION_JSON_VALUE)
+    public List<DetailResponse> productDetailsByProductUUID(
+            @NotNull @RequestParam(value = "product_id") String uuid
+    ) {
         return this.clientProductService.productDetailsByProductUUID(uuid);
     }
 

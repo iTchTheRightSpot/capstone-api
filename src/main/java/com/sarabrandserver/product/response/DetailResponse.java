@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.List;
 
 @NoArgsConstructor
@@ -14,16 +15,18 @@ import java.util.List;
 @Data
 @Builder
 public class DetailResponse implements Serializable {
+
+    // product
+    private String name;
+    private String currency;
+    private BigDecimal price;
+    private String desc;
+
+    // details
     @JsonProperty(value = "is_visible")
     private boolean isVisible;
     private String colour;
     private List<String> url;
     private Variant[] variants;
-
-    public DetailResponse(String colour, List<String> url, Variant[] variants) {
-        this.colour = colour;
-        this.url = url;
-        this.variants = variants;
-    }
 
 }

@@ -5,9 +5,9 @@ import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.category.service.WorkerCategoryService;
+import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.product.repository.ProductRepository;
 import com.sarabrandserver.product.service.WorkerProductService;
-import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.util.Result;
 import com.sarabrandserver.util.TestingData;
 import org.junit.jupiter.api.AfterEach;
@@ -17,15 +17,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class ClientProductControllerTest extends AbstractIntegrationTest {
 
-    private final String requestMapping = "/api/v1/client/product";
+    private final int detailSize = 1;
 
     @Autowired private WorkerProductService workerService;
     @Autowired private ProductRepository productRepository;
@@ -39,8 +38,7 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
         this.workerCategoryService.create(new CategoryDTO(category, true, ""));
 
         // Create and save Product
-        int detailSize = 1;
-        SizeInventoryDTO[] sizeInventoryDTO1 = TestingData.sizeInventoryDTOArray(detailSize);
+        SizeInventoryDTO[] sizeInventoryDTO1 = TestingData.sizeInventoryDTOArray(this.detailSize);
         Result result = TestingData.getResult(
                 sizeInventoryDTO1,
                 new Faker().commerce().productName(),
@@ -80,13 +78,17 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
 //                .andExpect(jsonPath("$[*].variants").isArray())
 //                .andExpect(jsonPath("$[*].variants.length()").value(this.detailSize));
 
+        String requestMapping = "/api/v1/client/product";
         this.MOCKMVC
                 .perform(get(requestMapping + "/detail")
                         .param("product_id", productID)
                 )
-                .andExpect(content().contentType(TEXT_EVENT_STREAM_VALUE))
+                .andExpect(content().contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andDo(print());
+                .andDo(print())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[*].variants").isArray())
+                .andExpect(jsonPath("$[*].variants.length()").value(this.detailSize));
     }
 
 }

@@ -9,7 +9,6 @@ import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
 import com.sarabrandserver.product.dto.*;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.Variant;
-import com.sarabrandserver.store.HomeResponse;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 
@@ -41,9 +40,6 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
         hints.serialization().registerType(UpdateProductDTO.class);
         hints.serialization().registerType(Variant.class);
         hints.serialization().registerType(DetailResponse.class);
-
-        // Store-front
-        hints.serialization().registerType(HomeResponse.class);
     }
 
 }

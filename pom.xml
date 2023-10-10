@@ -135,23 +135,13 @@
         </dependency>
     </dependencies>
 
-<!--    <build>-->
-<!--        <finalName>${project.artifactId}</finalName>-->
-<!--        <resources>-->
-<!--            <resource>-->
-<!--                <directory>src/main/resources</directory>-->
-<!--                <filtering>true</filtering>-->
-<!--            </resource>-->
-<!--        </resources>-->
-<!--    </build>-->
-
     <profiles>
         <!-- development profile -->
         <profile>
             <id>dev</id>
-<!--            <activation>-->
-<!--                <activeByDefault>true</activeByDefault>-->
-<!--            </activation>-->
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
 
             <properties>
                 <spring.profiles.active>dev</spring.profiles.active>
@@ -223,10 +213,6 @@
         <!-- Stage profile -->
         <profile>
             <id>stage</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-
             <properties>
                 <spring.profiles.active>stage</spring.profiles.active>
             </properties>

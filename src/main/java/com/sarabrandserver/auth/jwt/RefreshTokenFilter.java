@@ -18,11 +18,9 @@ import java.util.Arrays;
 @Component
 public class RefreshTokenFilter extends OncePerRequestFilter {
 
-    @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
-
-    @Value(value = "${server.servlet.session.cookie.max-age}")
-    private int maxAge;
+    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
+    @Value(value = "${server.servlet.session.cookie.path}") private String PATH;
+    @Value(value = "${server.servlet.session.cookie.max-age}") private int MAXAGE;
 
     private final JwtTokenService tokenService;
     private final UserDetailsService userDetailsService;
@@ -71,7 +69,8 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
                     );
                     String token = this.tokenService.generateToken(authenticated);
                     cookie.setValue(token);
-                    cookie.setMaxAge(maxAge);
+                    cookie.setMaxAge(MAXAGE);
+                    cookie.setPath(PATH);
                     response.addCookie(cookie);
                 });
 

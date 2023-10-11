@@ -4,11 +4,11 @@ import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.service.WorkerCategoryService;
+import com.sarabrandserver.product.dto.UpdateProductDetailDTO;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductRepository;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
-import com.sarabrandserver.product.dto.UpdateProductDetailDTO;
 import com.sarabrandserver.util.Result;
 import com.sarabrandserver.util.TestingData;
 import org.junit.jupiter.api.AfterEach;
@@ -119,13 +119,15 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
         );
 
         // request
-        this.MOCKMVC.perform(multipart(requestMapping)
-                .file(files[0])
-                .file(files[1])
-                .file(files[2])
-                .file(json)
-                .with(csrf())
-        ).andExpect(status().isCreated());
+        this.MOCKMVC
+                .perform(multipart(requestMapping)
+                        .file(files[0])
+                        .file(files[1])
+                        .file(files[2])
+                        .file(json)
+                        .with(csrf())
+                )
+                .andExpect(status().isCreated());
     }
 
     @Test

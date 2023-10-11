@@ -4,9 +4,8 @@ import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.auth.dto.LoginDTO;
 import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.service.AuthService;
-import com.sarabrandserver.user.repository.ClientRoleRepo;
 import com.sarabrandserver.user.repository.UserRepository;
-import lombok.extern.slf4j.Slf4j;
+import com.sarabrandserver.user.repository.UserRoleRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
@@ -22,7 +21,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Slf4j
 class ClientAuthControllerTest extends AbstractIntegrationTest {
 
     private final String PRINCIPAL = "SEJU@development.com";
@@ -30,7 +28,7 @@ class ClientAuthControllerTest extends AbstractIntegrationTest {
 
     @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
 
-    @Autowired private ClientRoleRepo clientRoleRepo;
+    @Autowired private UserRoleRepository userRoleRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private AuthService authService;
 
@@ -49,7 +47,7 @@ class ClientAuthControllerTest extends AbstractIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        this.clientRoleRepo.deleteAll();
+        this.userRoleRepository.deleteAll();
         this.userRepository.deleteAll();
     }
 
@@ -57,7 +55,6 @@ class ClientAuthControllerTest extends AbstractIntegrationTest {
     @Test @Order(1)
     void login() throws Exception {
         String dto = this.MAPPER.writeValueAsString(new LoginDTO(PRINCIPAL, PASSWORD));
-        log.info("DTO {}", dto);
 
         MvcResult login = this.MOCKMVC
                 .perform(post("/api/v1/client/auth/login")

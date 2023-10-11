@@ -29,14 +29,9 @@ import java.util.HashSet;
 @Setter
 public class AuthService {
 
-    @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
-
-    @Value(value = "${server.servlet.session.cookie.secure}")
-    private boolean COOKIESECURE;
-
-    @Value(value = "${server.servlet.session.cookie.max-age}")
-    private int MAXAGE;
+    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
+    @Value(value = "${server.servlet.session.cookie.secure}") private boolean COOKIESECURE;
+    @Value(value = "${server.servlet.session.cookie.max-age}") private int MAXAGE;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;

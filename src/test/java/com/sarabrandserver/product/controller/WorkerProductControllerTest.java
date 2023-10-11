@@ -32,7 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class WorkerProductControllerTest extends AbstractIntegrationTest {
 
     private final String requestMapping = "/api/v1/worker/product";
-
     private final StringBuilder category = new StringBuilder();
     private final StringBuilder colour = new StringBuilder();
     private final StringBuilder productName = new StringBuilder();

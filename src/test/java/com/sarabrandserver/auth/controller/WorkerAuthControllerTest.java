@@ -5,7 +5,7 @@ import com.sarabrandserver.auth.dto.LoginDTO;
 import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.service.AuthService;
 import com.sarabrandserver.exception.DuplicateException;
-import com.sarabrandserver.user.repository.ClientRoleRepo;
+import com.sarabrandserver.user.repository.UserRoleRepository;
 import com.sarabrandserver.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
@@ -33,7 +33,7 @@ class WorkerAuthControllerTest extends AbstractIntegrationTest {
     @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
 
     @Autowired private AuthService authService;
-    @Autowired private ClientRoleRepo clientRoleRepo;
+    @Autowired private UserRoleRepository userRoleRepository;
     @Autowired private UserRepository userRepository;
 
     @BeforeEach
@@ -51,7 +51,7 @@ class WorkerAuthControllerTest extends AbstractIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        this.clientRoleRepo.deleteAll();
+        this.userRoleRepository.deleteAll();
         this.userRepository.deleteAll();
     }
 

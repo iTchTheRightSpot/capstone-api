@@ -76,7 +76,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             INNER JOIN ProductCategory cat ON cat.categoryId = p.productCategory.categoryId
             INNER JOIN ProductDetail pd ON pd.product.productId = p.productId
             INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
-            WHERE pd.isVisible = true AND sku.inventory > 0
+            WHERE cat.isVisible = true AND col.isVisible = true AND pd.isVisible = true AND sku.inventory > 0
             GROUP BY p.uuid, p.name, p.description, p.price, p.currency, p.defaultKey
             """)
     Page<ProductPojo> fetchAllProductsClient(Pageable pageable);

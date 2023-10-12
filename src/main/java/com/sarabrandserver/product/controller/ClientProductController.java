@@ -26,9 +26,9 @@ public class ClientProductController {
     @GetMapping(produces = APPLICATION_JSON_VALUE)
     public Page<ProductResponse> allProducts(
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "40") Integer size
+            @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size
     ) {
-        return this.clientProductService.allProductsByUUID("", "", page, Math.min(size, 40));
+        return this.clientProductService.allProductsByUUID("", "", page, Math.min(size, 20));
     }
 
     /** Returns a SseEmitter of a list of DetailResponse objects */

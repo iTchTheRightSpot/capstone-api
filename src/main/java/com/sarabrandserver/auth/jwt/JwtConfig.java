@@ -27,14 +27,10 @@ import java.util.Arrays;
  */
 @Configuration
 public class JwtConfig {
+    private static final RSAKey rsaKey = RSAConfig.GENERATERSAKEY();
 
-    @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
-
-    @Value(value = "${jwt.claim}")
-    private String claim;
-
-    private RSAKey rsaKey;
+    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
+    @Value(value = "${jwt.claim}") private String claim;
 
     @Bean
     public ObjectMapper objectMapper() {
@@ -43,7 +39,6 @@ public class JwtConfig {
 
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
-        rsaKey = Jwks.generateRsa();
         JWKSet jwkSet = new JWKSet(rsaKey);
         return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
     }

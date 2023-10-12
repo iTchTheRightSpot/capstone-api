@@ -3,17 +3,29 @@ package com.sarabrandserver.auth.jwt;
 import com.nimbusds.jose.jwk.RSAKey;
 
 import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.UUID;
 
-public record Jwks() {
+record RSAConfig() {
+
+    /** pub and priv key */
+    private static KeyPair RSAKEYPAIR() {
+        try {
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            keyPairGenerator.initialize(2048);
+            return keyPairGenerator.generateKeyPair();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
     /**
-     * Generate RSA Public & Private key at runtime to increase security
+     * Generate RSA at runtime
      * */
-    public static RSAKey generateRsa() {
-        KeyPair keyPair = KeyGeneratorUtils.generateRsaKey();
+    static RSAKey GENERATERSAKEY() {
+        KeyPair keyPair = RSAKEYPAIR();
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
         RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
         return new RSAKey.Builder(publicKey)

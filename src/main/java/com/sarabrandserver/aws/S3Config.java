@@ -1,7 +1,5 @@
 package com.sarabrandserver.aws;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.StandardEnvironment;
@@ -16,15 +14,16 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 @Configuration
 public class S3Config {
 
-    private static final Logger log = LoggerFactory.getLogger(S3Config.class);
+    private final static AwsCredentialsProvider PROVIDER;
+    private final static Region REGION;
 
-    private static AwsCredentialsProvider PROVIDER() {
+    static {
         String profile = new StandardEnvironment()
                 .getProperty("spring.profiles.active", "");
 
-        log.info("Active Profile {}", profile);
+        REGION = Region.CA_CENTRAL_1;
 
-        return profile.equals("dev") || profile.equals("test")
+        PROVIDER = profile.equals("dev") || profile.equals("test")
                 ? EnvironmentVariableCredentialsProvider.create()
                 : InstanceProfileCredentialsProvider.builder().build();
     }
@@ -32,8 +31,8 @@ public class S3Config {
     @Bean
     public static S3Client s3Client() {
         return S3Client.builder()
-                .region(Region.CA_CENTRAL_1)
-                .credentialsProvider(PROVIDER())
+                .region(REGION)
+                .credentialsProvider(PROVIDER)
                 .httpClient(UrlConnectionHttpClient.builder().build())
                 .build();
     }
@@ -41,8 +40,8 @@ public class S3Config {
     @Bean
     public static S3Presigner s3Presigner() {
         return S3Presigner.builder()
-                .region(Region.CA_CENTRAL_1)
-                .credentialsProvider(PROVIDER())
+                .region(REGION)
+                .credentialsProvider(PROVIDER)
                 .build();
     }
 

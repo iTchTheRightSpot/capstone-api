@@ -54,17 +54,6 @@ public class SecurityConfig {
     @Value(value = "${server.servlet.session.cookie.same-site}") private String SAMESITE;
     @Value(value = "${cors.ui.domain}") private String UIDOMAIN;
 
-    private final AuthenticationEntryPoint authEntryPoint;
-    private final RefreshTokenFilter refreshTokenFilter;
-
-    public SecurityConfig(
-            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry,
-            RefreshTokenFilter refreshTokenFilter
-    ) {
-        this.authEntryPoint = authEntry;
-        this.refreshTokenFilter = refreshTokenFilter;
-    }
-
     @Bean
     public AuthenticationProvider provider(
             @Qualifier(value = "userDetailService") UserDetailsService detailsService,
@@ -126,9 +115,12 @@ public class SecurityConfig {
      * Security filter chain responsible for upholding app security
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntryPoint,
+            RefreshTokenFilter refreshTokenFilter
+    ) throws Exception {
         var csrfTokenRepository = getCookieCsrfTokenRepository(this.COOKIESECURE, this.SAMESITE);
-
         return http
 
                 // CSRF Config
@@ -145,7 +137,6 @@ public class SecurityConfig {
                 // Public routes
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
-                            "/api/v1/home/**",
                             "/api/v1/auth/csrf",
                             "/api/v1/client/auth/register",
                             "/api/v1/client/auth/login",
@@ -159,14 +150,14 @@ public class SecurityConfig {
 
                 // Jwt
                 // Adding before BearerTokenAuthenticationFilter as jwt is in custom cookie
-                .addFilterBefore(this.refreshTokenFilter, BearerTokenAuthenticationFilter.class)
+                .addFilterBefore(refreshTokenFilter, BearerTokenAuthenticationFilter.class)
                 .oauth2ResourceServer((oauth2) -> oauth2.jwt(withDefaults()))
 
                 // Session Management
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
 
                 // Exception Handling. Allows ControllerAdvices to take effect
-                .exceptionHandling((ex) -> ex.authenticationEntryPoint(this.authEntryPoint))
+                .exceptionHandling((ex) -> ex.authenticationEntryPoint(authEntryPoint))
 
                 // Logout
                 // https://docs.spring.io/spring-security/reference/servlet/authentication/logout.html

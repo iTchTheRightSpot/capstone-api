@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-// Contains native query
+/** Contains native query */
 @Repository
 public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
 
@@ -37,7 +37,6 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
             """,
             nativeQuery = true
     )
-
     void updateProductDetail(
             @Param(value = "sku") String sku,
             String colour,

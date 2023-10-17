@@ -30,7 +30,7 @@ public class JwtConfig {
     private static final RSAKey rsaKey = RSAConfig.GENERATERSAKEY();
 
     @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
-    @Value(value = "${jwt.claim}") private String claim;
+    @Value(value = "${jwt.claim}") private String CLAIM;
 
     @Bean
     public ObjectMapper objectMapper() {
@@ -56,7 +56,7 @@ public class JwtConfig {
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         var authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        authoritiesConverter.setAuthoritiesClaimName(claim);
+        authoritiesConverter.setAuthoritiesClaimName(CLAIM);
         authoritiesConverter.setAuthorityPrefix("ROLE_");
 
         var converter = new JwtAuthenticationConverter();

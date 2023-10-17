@@ -65,4 +65,7 @@ public class Product implements Serializable {
     @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "product", orphanRemoval = true)
     private Set<ProductDetail> productDetails;
 
+    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "product", orphanRemoval = true)
+    private Set<PriceCurrency> priceCurrency;
+
 }

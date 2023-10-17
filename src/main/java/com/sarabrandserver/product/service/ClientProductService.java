@@ -45,7 +45,7 @@ public class ClientProductService {
 
         return switch (key) {
             case "" -> this.productRepository
-                    .fetchAllProductsClient(PageRequest.of(page, size)) //
+                    .allProductsClient(PageRequest.of(page, size)) //
                     .map(pojo -> {
                         var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
                         return ProductResponse.builder()

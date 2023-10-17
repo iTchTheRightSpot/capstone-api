@@ -30,7 +30,7 @@ public class V5__init_migration extends BaseJavaMigration {
                 if (table.length() > 1) {
                     statement.execute(table.trim());
                 }
-            }
+            } // end of for loop
         }
     }
 

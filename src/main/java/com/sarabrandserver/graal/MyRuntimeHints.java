@@ -20,6 +20,9 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
 
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
+        // migration
+        hints.resources().registerPattern("db/migration/V6__init_migration.sql");
+
         // Auth
         hints.serialization().registerType(LoginDTO.class);
         hints.serialization().registerType(RegisterDTO.class);

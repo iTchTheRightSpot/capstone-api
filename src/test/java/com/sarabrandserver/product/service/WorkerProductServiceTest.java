@@ -8,6 +8,7 @@ import com.sarabrandserver.collection.service.WorkerCollectionService;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.stripe.StripeService;
 import com.sarabrandserver.util.CustomUtil;
 import com.sarabrandserver.util.TestingData;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +36,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
 
     private WorkerProductService workerProductService;
 
+    @Mock private StripeService stripeService;
     @Mock private ProductRepository productRepository;
     @Mock private WorkerProductDetailService workerProductDetailService;
     @Mock private HelperService helperService;
@@ -46,6 +48,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     @BeforeEach
     void setUp() {
         this.workerProductService = new WorkerProductService(
+                this.stripeService,
                 this.productRepository,
                 this.workerProductDetailService,
                 this.productSKUService,

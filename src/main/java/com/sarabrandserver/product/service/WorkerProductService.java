@@ -2,15 +2,18 @@ package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.collection.service.WorkerCollectionService;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomAwsException;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
+import com.sarabrandserver.product.dto.CreateProductDTO;
+import com.sarabrandserver.product.dto.UpdateProductDTO;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.repository.ProductRepository;
-import com.sarabrandserver.product.dto.CreateProductDTO;
 import com.sarabrandserver.product.response.ProductResponse;
-import com.sarabrandserver.product.dto.UpdateProductDTO;
+import com.sarabrandserver.stripe.PriceCurrencyPair;
+import com.sarabrandserver.stripe.StripeService;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -39,6 +42,7 @@ public class WorkerProductService {
     @Value(value = "${spring.profiles.active}")
     private String ACTIVEPROFILE;
 
+    private final StripeService stripeService;
     private final ProductRepository productRepository;
     private final WorkerProductDetailService workerProductDetailService;
     private final ProductSKUService productSKUService;
@@ -98,15 +102,22 @@ public class WorkerProductService {
         StringBuilder defaultImageKey = new StringBuilder();
         var file = this.helperService.customMultiPartFiles(files, defaultImageKey);
 
+        var productID = this.stripeService
+                .createProduct(
+                        dto.name(),
+                        new PriceCurrencyPair(45000L, SarreCurrency.NGN),
+                        new PriceCurrencyPair(1000L, SarreCurrency.USD)
+                );
+
         // Build Product
         var product = Product.builder()
                 .productCategory(category)
-                .uuid(UUID.randomUUID().toString())
+                .uuid(productID)
                 .name(dto.name().trim())
                 .description(dto.desc().trim())
                 .defaultKey(defaultImageKey.toString())
                 .price(dto.price())
-                .currency(dto.currency()) // default is USD
+                .currency(dto.currency()) // default is NGN
                 .productDetails(new HashSet<>())
                 .build();
 

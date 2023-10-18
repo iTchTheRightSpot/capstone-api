@@ -28,7 +28,7 @@ public class HelperService {
     private final ProductImageRepo productImageRepo;
     private final S3Service s3Service;
 
-    public String generatePreSignedUrl(boolean profile, @NotNull String bucket, @NotNull String key) {
+    public String preSignedURL(boolean profile, @NotNull String bucket, @NotNull String key) {
         return this.s3Service.getPreSignedUrl(profile, bucket, key);
     }
 
@@ -64,44 +64,44 @@ public class HelperService {
      * @return CustomMultiPart array
      */
     public CustomMultiPart[] customMultiPartFiles(MultipartFile[] multipartFiles, StringBuilder defaultKey) {
-        CustomMultiPart[] arr = new CustomMultiPart[multipartFiles.length];
+        return Arrays.stream(multipartFiles)
+                .map(multipartFile -> {
+                    try {
+                        String originalFileName = Objects.requireNonNull(multipartFile.getOriginalFilename());
 
-        for (int i = 0; i < multipartFiles.length; i++) {
-            String originalFileName = Objects.requireNonNull(multipartFiles[i].getOriginalFilename());
+                        File file = new File(originalFileName);
 
-            File file = new File(originalFileName);
+                        try (FileOutputStream outputStream = new FileOutputStream(file)) {
+                            // write MultipartFile to file
+                            outputStream.write(multipartFile.getBytes());
 
-            try (FileOutputStream outputStream = new FileOutputStream(file)) {
-                // write MultipartFile to file
-                outputStream.write(multipartFiles[i].getBytes());
+                            // Validate file is an image
+                            String contentType = Files.probeContentType(file.toPath());
+                            if (!contentType.startsWith("image/")) {
+                                log.warn("File is not an image");
+                                throw new CustomAwsException("File is not an image");
+                            }
 
-                // Validate file is an image
-                String contentType = Files.probeContentType(file.toPath());
-                if (!contentType.startsWith("image/")) {
-                    log.warn("File is not an image");
-                    throw new CustomAwsException("File is not an image");
-                }
+                            // Create image metadata for storing in AWS
+                            Map<String, String> metadata = new HashMap<>();
+                            metadata.put("Content-Type", contentType);
+                            metadata.put("Title", originalFileName);
+                            metadata.put("Type", StringUtils.getFilenameExtension(originalFileName));
 
-                // Create image metadata for storing in AWS
-                Map<String, String> metadata = new HashMap<>();
-                metadata.put("Content-Type", contentType);
-                metadata.put("Title", originalFileName);
-                metadata.put("Type", StringUtils.getFilenameExtension(originalFileName));
+                            // Default key
+                            String key = UUID.randomUUID().toString();
+                            if (defaultKey.isEmpty()) {
+                                defaultKey.append(key);
+                            }
 
-                // Default key
-                String key = UUID.randomUUID().toString();
-                if (defaultKey.isEmpty()) {
-                    defaultKey.append(key);
-                }
-
-                // Copy into array
-                arr[i] = new CustomMultiPart(file, metadata, key);
-            } catch (IOException ex) {
-                log.warn("Error either writing multipart to file or getting file type. {}", ex.getMessage());
-                throw new CustomAwsException("Please verify file is an image");
-            }
-        }
-        return arr;
+                            return new CustomMultiPart(file, metadata, key);
+                        }
+                    } catch (IOException ex) {
+                        log.error("Error either writing multipart to file or getting file type. {}", ex.getMessage());
+                        throw new CustomAwsException("please verify files are images");
+                    }
+                })
+                .toArray(CustomMultiPart[]::new);
     }
 
 }

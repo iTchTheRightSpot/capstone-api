@@ -41,6 +41,9 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
         hints.serialization().registerType(SizeInventoryDTO.class);
         hints.serialization().registerType(UpdateProductDetailDTO.class);
         hints.serialization().registerType(UpdateProductDTO.class);
+        hints.serialization().registerType(PriceCurrencyDTO.class);
+
+        // response
         hints.serialization().registerType(Variant.class);
         hints.serialization().registerType(DetailResponse.class);
     }

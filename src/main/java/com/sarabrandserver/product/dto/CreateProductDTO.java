@@ -26,12 +26,8 @@ public record CreateProductDTO(
         @NotEmpty(message = "Please enter product description")
         String desc,
 
-        @NotNull(message = "Please enter product price")
-        BigDecimal price,
-
-        @NotNull(message = "Please enter or choose a product currency")
-        @NotEmpty(message = "Please enter or choose a product currency")
-        String currency,
+        @NotNull(message = "cannot be empty")
+        PriceCurrencyDTO[] priceCurrency,
 
         @NotNull(message = "Please choose if product should be visible")
         Boolean visible,

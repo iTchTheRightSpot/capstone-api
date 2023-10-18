@@ -2,11 +2,7 @@ package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.collection.service.WorkerCollectionService;
-import com.sarabrandserver.enumeration.SarreCurrency;
-import com.sarabrandserver.exception.CustomAwsException;
-import com.sarabrandserver.exception.CustomNotFoundException;
-import com.sarabrandserver.exception.DuplicateException;
-import com.sarabrandserver.exception.ResourceAttachedException;
+import com.sarabrandserver.exception.*;
 import com.sarabrandserver.product.dto.CreateProductDTO;
 import com.sarabrandserver.product.dto.UpdateProductDTO;
 import com.sarabrandserver.product.entity.Product;
@@ -26,21 +22,21 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
+
+import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
+import static com.sarabrandserver.enumeration.SarreCurrency.USD;
 
 @Service
 @RequiredArgsConstructor
 @Setter
 public class WorkerProductService {
 
-    @Value(value = "${aws.bucket}")
-    private String BUCKET;
-
-    @Value(value = "${spring.profiles.active}")
-    private String ACTIVEPROFILE;
+    @Value(value = "${aws.bucket}") private String BUCKET;
+    @Value(value = "${spring.profiles.active}") private String ACTIVEPROFILE;
 
     private final StripeService stripeService;
     private final ProductRepository productRepository;
@@ -65,7 +61,7 @@ public class WorkerProductService {
         return this.productRepository
                 .fetchAllProductsWorker(PageRequest.of(page, size))
                 .map(pojo -> {
-                    var url = this.helperService.generatePreSignedUrl(bool, BUCKET, pojo.getKey());
+                    var url = this.helperService.preSignedURL(bool, BUCKET, pojo.getKey());
                     return ProductResponse.builder()
                             .category(pojo.getCategory())
                             .collection(pojo.getCollection())
@@ -90,6 +86,10 @@ public class WorkerProductService {
      */
     @Transactional
     public void create(CreateProductDTO dto, MultipartFile[] files) {
+        if (!this.customUtil.validateContainsCurrencies(dto.priceCurrency())) {
+            throw new CustomInvalidFormatException("currencies has to be NGN & USD.");
+        }
+
         var category = this.categoryService.findByName(dto.category().trim());
         var _product = this.productRepository.findByProductName(dto.name().trim());
 
@@ -102,11 +102,14 @@ public class WorkerProductService {
         StringBuilder defaultImageKey = new StringBuilder();
         var file = this.helperService.customMultiPartFiles(files, defaultImageKey);
 
+        long ngn = this.customUtil.toNGN(dto.priceCurrency());
+        long usd = this.customUtil.toUSD(dto.priceCurrency());
+
         var productID = this.stripeService
                 .createProduct(
                         dto.name(),
-                        new PriceCurrencyPair(45000L, SarreCurrency.NGN),
-                        new PriceCurrencyPair(1000L, SarreCurrency.USD)
+                        new PriceCurrencyPair(ngn, NGN),
+                        new PriceCurrencyPair(usd, USD)
                 );
 
         // Build Product
@@ -116,8 +119,8 @@ public class WorkerProductService {
                 .name(dto.name().trim())
                 .description(dto.desc().trim())
                 .defaultKey(defaultImageKey.toString())
-                .price(dto.price())
-                .currency(dto.currency()) // default is NGN
+                .price(new BigDecimal(ngn * 0.01)) // TODO validate stripe conversion for NGN
+                .currency(NGN.name()) // default is NGN
                 .productDetails(new HashSet<>())
                 .build();
 
@@ -206,7 +209,7 @@ public class WorkerProductService {
         boolean bool = this.productRepository.productDetailAttach(uuid) > 1;
 
         if (bool) {
-            String message = "Cannot delete %s as it has many Variants".formatted(product.getName());
+            String message = "cannot delete %s as it has many variants".formatted(product.getName());
             throw new ResourceAttachedException(message);
         }
 

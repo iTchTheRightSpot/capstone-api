@@ -10,10 +10,10 @@ import com.sarabrandserver.collection.repository.CollectionRepository;
 import com.sarabrandserver.collection.service.WorkerCollectionService;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
-import com.sarabrandserver.util.Result;
-import com.sarabrandserver.util.TestingData;
+import com.sarabrandserver.data.Result;
+import com.sarabrandserver.data.TestingData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,7 +37,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     private final StringBuilder productName = new StringBuilder();
 
     @Autowired private WorkerProductService workerProductService;
-    @Autowired private ProductRepository productRepository;
+    @Autowired private ProductRepo productRepo;
     @Autowired private WorkerCategoryService workerCategoryService;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private WorkerCollectionService collectionService;
@@ -102,7 +102,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        this.productRepository.deleteAll();
+        this.productRepo.deleteAll();
         this.categoryRepository.deleteAll();
         this.collectionRepository.deleteAll();
     }
@@ -278,7 +278,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @DisplayName(value = "Update Product. Ex thrown because product name exists")
     void updateEx() throws Exception {
         // Given
-        var product = this.productRepository.findAll();
+        var product = this.productRepo.findAll();
         assertFalse(product.isEmpty());
         assertTrue(product.size() > 2);
 
@@ -312,7 +312,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @DisplayName(value = "Update Product. Category and Collection are in the payload")
     void updateProduct() throws Exception {
         // Given
-        var product = this.productRepository.findAll();
+        var product = this.productRepo.findAll();
         assertFalse(product.isEmpty());
 
         var category = this.categoryRepository.findAll();
@@ -347,7 +347,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @DisplayName(value = "Update Product. Collection and collection_id are empty payload")
     void updateCol() throws Exception {
         // Given
-        var product = this.productRepository.findAll();
+        var product = this.productRepo.findAll();
         assertFalse(product.isEmpty());
 
         var category = this.categoryRepository.findAll();
@@ -377,7 +377,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void deleteProduct() throws Exception {
-        var product = this.productRepository.findAll().stream().findFirst().orElse(null);
+        var product = this.productRepo.findAll().stream().findFirst().orElse(null);
         assertNotNull(product);
 
         this.MOCKMVC
@@ -387,7 +387,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                 )
                 .andExpect(status().isNoContent());
 
-        var del = this.productRepository.findById(product.getProductId()).orElse(null);
+        var del = this.productRepo.findById(product.getProductId()).orElse(null);
         assertNull(del);
     }
 
@@ -395,13 +395,13 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Delete Product. Exception thrown because product has more than 1 ProductDetail ")
     void deleteProductEx() throws Exception {
-        var product = this.productRepository.findAll().stream().findFirst().orElse(null);
+        var product = this.productRepo.findAll().stream().findFirst().orElse(null);
         assertNotNull(product);
 
         this.MOCKMVC.perform(delete(requestMapping).param("id", product.getUuid()).with(csrf()))
                 .andExpect(status().isNoContent());
 
-        var del = this.productRepository.findById(product.getProductId()).orElse(null);
+        var del = this.productRepo.findById(product.getProductId()).orElse(null);
         assertNull(del);
     }
 

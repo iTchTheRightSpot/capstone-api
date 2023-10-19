@@ -22,9 +22,7 @@ jobs:
 
       - name: Run tests
         run: |
-          #!/usr/bin/env bash
-          # chmod grants permission to run mvnw
-          chmod +x mvnw
-          ./mvnw clean
-          ./mvnw test
+          mvn clean test -DargLine="-DSTRIPE_API_KEY=$STRIPE_API_KEY"
         shell: bash
+        env:
+          STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}

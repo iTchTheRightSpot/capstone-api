@@ -8,11 +8,11 @@ import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
-import com.sarabrandserver.util.Result;
-import com.sarabrandserver.util.TestingData;
+import com.sarabrandserver.data.Result;
+import com.sarabrandserver.data.TestingData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,7 +36,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
     @Autowired private WorkerCategoryService workerCategoryService;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private WorkerProductService workerProductService;
-    @Autowired private ProductRepository productRepository;
+    @Autowired private ProductRepo productRepo;
 
     private CategoryDTO categoryDTO;
 
@@ -72,7 +72,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        this.productRepository.deleteAll();
+        this.productRepo.deleteAll();
         this.categoryRepository.deleteAll();
     }
 

@@ -22,7 +22,7 @@ import java.util.Optional;
  * All methods ending with worker are for admin dashboard. Client is the opposite
  */
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepo extends JpaRepository<Product, Long> {
 
     @Query(value = "SELECT p FROM Product p WHERE p.name = :name")
     Optional<Product> findByProductName(@Param(value = "name") String name);

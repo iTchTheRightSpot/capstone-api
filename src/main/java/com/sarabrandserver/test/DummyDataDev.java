@@ -5,7 +5,7 @@ import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.collection.entity.ProductCollection;
 import com.sarabrandserver.collection.repository.CollectionRepository;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.product.repository.ProductRepo;
 import com.github.javafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -25,7 +25,7 @@ public class DummyDataDev {
     public CommandLineRunner runner(
             CategoryRepository categoryRepo,
             CollectionRepository collRepo,
-            ProductRepository productRepo,
+            ProductRepo productRepo,
             ProductDetailRepo detailRepo
     ) {
         return args -> {
@@ -36,7 +36,7 @@ public class DummyDataDev {
     private static void extracted(
             CategoryRepository categoryRepo,
             CollectionRepository collRepo,
-            ProductRepository productRepo,
+            ProductRepo productRepo,
             ProductDetailRepo detailRepo
     ) {
         categoryRepo.deleteAll();

@@ -3,6 +3,7 @@ package com.sarabrandserver.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.exception.CustomInvalidFormatException;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.product.dto.PriceCurrencyDTO;
 import com.sarabrandserver.product.response.Variant;
@@ -11,11 +12,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Function;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
+import static java.math.BigDecimal.ZERO;
+import static java.math.RoundingMode.FLOOR;
 
 @Service
 @RequiredArgsConstructor
@@ -52,45 +56,70 @@ public class CustomUtil {
         return Optional.of(calendar.getTime());
     }
 
-    public long toNGN(PriceCurrencyDTO[] dto) {
-        PriceCurrencyDTO ngnAmount = Arrays.stream(dto)
-                .filter(predicate -> predicate.currency().equals(NGN.name()))
-                .findFirst()
-                .orElseThrow(() -> new CustomNotFoundException("please enter NGN amount"));
-        return convertCurrency(NGN, ngnAmount.price().longValue());
-    }
-
-    public long toUSD(PriceCurrencyDTO[] dto) {
-        PriceCurrencyDTO usdAmount = Arrays.stream(dto)
-                .filter(predicate -> predicate.currency().equals(USD.name()))
-                .findFirst()
-                .orElseThrow(() -> new CustomNotFoundException("please enter USD amount"));
-        return convertCurrency(USD, usdAmount.price().longValue());
-    }
-
+    /** Validates DTO is in the right format */
     public boolean validateContainsCurrencies(PriceCurrencyDTO[] dto) {
         if (dto.length < 2) {
             return false;
         }
 
+        boolean bool = Arrays.stream(dto)
+                .anyMatch(p -> {
+                    int compare = p.price().compareTo(ZERO);
+                    // 1 if compare is greater than BigDecimal.ZERO
+                    // -1 if compare is less than BigDecimal.ZERO
+                    // 0 if compare is equal to BigDecimal.ZERO
+                    return compare < 0;
+                });
+
+        if (bool) {
+            throw new CustomInvalidFormatException("price cannot be less than zero");
+        }
+
         boolean ngn = Arrays.stream(dto)
-                .anyMatch(dto1 -> dto1.currency().equals(NGN.name()));
+                .anyMatch(dto1 -> dto1.currency().toUpperCase().equals(NGN.name()));
         boolean usd = Arrays.stream(dto)
-                .anyMatch(dto1 -> dto1.currency().equals(USD.name()));
+                .anyMatch(dto1 -> dto1.currency().toUpperCase().equals(USD.name()));
 
         return ngn && usd;
     }
 
-    public long convertCurrency(SarreCurrency currency, long unitAmount) {
+    public long toCurrency(PriceCurrencyDTO[] dto, SarreCurrency obj) {
+        String error = "please enter %s amount".formatted(obj.name());
+
+        PriceCurrencyDTO usd = Arrays.stream(dto)
+                .filter(predicate -> predicate.currency().equals(obj.name()))
+                .findFirst()
+                .orElseThrow(() -> new CustomNotFoundException(error));
+
+        return convertCurrency(obj, usd.price());
+    }
+
+    /**
+     * Converts from the amount to the lowest. E.g. converting from USD to cents
+     * would be
+     * 1 cent = 0.01 usd
+     * x cent = 10 usd
+     * after cross multiplication,
+     * x = (10 / 0.01) or 1000 cents
+     */
+    public long convertCurrency(SarreCurrency currency, BigDecimal bigDecimal) {
         return switch (currency) {
             // TODO find out how stripe converts NGN
-            // 45000 NGN = 450 kobo on stripe
             case NGN -> 0L;
+            case USD -> {
+                // truncate without rounding and scale 2. meaning leave only 2 nums after .
+                BigDecimal b = bigDecimal.setScale(2, FLOOR);
+                int compare = b.compareTo(ZERO);
 
-            // 1 cent = 0.01 usd
-            // x cent = 10 usd
-            // x cent = 10 / 0.01
-            case USD -> (long) (unitAmount / 0.01);
+                if (compare == 0) {
+                    yield 0;
+                }
+
+                // convert to whole number
+                // look in unit test class
+                double d = b.doubleValue() * 100;
+                yield (long) d;
+            }
         };
     }
 

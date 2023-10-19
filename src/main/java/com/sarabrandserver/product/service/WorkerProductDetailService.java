@@ -6,7 +6,7 @@ import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.entity.ProductDetail;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductImageRepo;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.dto.ProductDetailDTO;
 import com.sarabrandserver.product.dto.UpdateProductDetailDTO;
@@ -34,7 +34,7 @@ public class WorkerProductDetailService {
     private final ProductDetailRepo detailRepo;
     private final ProductSKUService productSKUService;
     private final ProductImageRepo productImageRepo;
-    private final ProductRepository productRepository;
+    private final ProductRepo productRepo;
     private final CustomUtil customUtil;
     private final HelperService helperService;
 
@@ -78,7 +78,7 @@ public class WorkerProductDetailService {
      */
     @Transactional
     public void create(ProductDetailDTO dto, MultipartFile[] multipartFiles) {
-        var product = this.productRepository
+        var product = this.productRepo
                 .findByProductUuid(dto.uuid())
                 .orElseThrow(() -> new CustomNotFoundException("Product does not exist"));
 

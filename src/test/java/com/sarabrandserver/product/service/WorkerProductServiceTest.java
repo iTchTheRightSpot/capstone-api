@@ -7,10 +7,11 @@ import com.sarabrandserver.collection.entity.ProductCollection;
 import com.sarabrandserver.collection.service.WorkerCollectionService;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.product.entity.Product;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.product.repository.PriceCurrencyRepo;
+import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.stripe.StripeService;
 import com.sarabrandserver.util.CustomUtil;
-import com.sarabrandserver.util.TestingData;
+import com.sarabrandserver.data.TestingData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,8 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     private WorkerProductService workerProductService;
 
     @Mock private StripeService stripeService;
-    @Mock private ProductRepository productRepository;
+    @Mock private PriceCurrencyRepo priceCurrencyRepo;
+    @Mock private ProductRepo productRepo;
     @Mock private WorkerProductDetailService workerProductDetailService;
     @Mock private HelperService helperService;
     @Mock private ProductSKUService productSKUService;
@@ -49,7 +51,8 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     void setUp() {
         this.workerProductService = new WorkerProductService(
                 this.stripeService,
-                this.productRepository,
+                this.priceCurrencyRepo,
+                this.productRepo,
                 this.workerProductDetailService,
                 this.productSKUService,
                 this.workerCategoryService,
@@ -72,12 +75,12 @@ class WorkerProductServiceTest extends AbstractUnitTest {
 
         // When
         when(this.workerCategoryService.findByName(anyString())).thenReturn(category);
-        when(this.productRepository.findByProductName(anyString())).thenReturn(Optional.empty());
+        when(this.productRepo.findByProductName(anyString())).thenReturn(Optional.empty());
         when(this.customUtil.toUTC(any(Date.class))).thenReturn(Optional.empty());
 
         // Then
         this.workerProductService.create(dto, files);
-        verify(this.productRepository, times(1)).save(any(Product.class));
+        verify(this.productRepo, times(1)).save(any(Product.class));
     }
 
     @Test
@@ -92,7 +95,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
 
         // When
         when(this.workerCategoryService.findByName(anyString())).thenReturn(category);
-        when(this.productRepository.findByProductName(anyString())).thenReturn(Optional.of(product));
+        when(this.productRepo.findByProductName(anyString())).thenReturn(Optional.of(product));
 
         // Then
         assertThrows(DuplicateException.class, () -> this.workerProductService.create(dto, files));
@@ -115,14 +118,14 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         var collection = ProductCollection.builder().collection("collection").build();
 
         // When
-        when(this.productRepository.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
+        when(this.productRepo.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
         when(this.workerCategoryService.findByUuid(anyString())).thenReturn(category);
         when(this.collectionService.findByUuid(anyString())).thenReturn(collection);
 
         // Then
         this.workerProductService.update(payload);
         verify(this.collectionService, times(1)).findByUuid(anyString());
-        verify(this.productRepository, times(1))
+        verify(this.productRepo, times(1))
                 .updateProductCategoryCollectionPresent(
                         anyString(),
                         anyString(),
@@ -149,13 +152,13 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         var category = ProductCategory.builder().categoryName(payload.category()).build();
 
         // When
-        when(this.productRepository.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
+        when(this.productRepo.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
         when(this.workerCategoryService.findByUuid(anyString())).thenReturn(category);
 
         // Then
         this.workerProductService.update(payload);
         verify(this.collectionService, times(0)).findByUuid(anyString());
-        verify(this.productRepository, times(1))
+        verify(this.productRepo, times(1))
                 .updateProductCollectionNotPresent(
                         anyString(),
                         anyString(),

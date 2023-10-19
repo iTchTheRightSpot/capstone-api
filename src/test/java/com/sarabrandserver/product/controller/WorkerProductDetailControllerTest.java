@@ -6,11 +6,11 @@ import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.product.dto.UpdateProductDetailDTO;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
-import com.sarabrandserver.util.Result;
-import com.sarabrandserver.util.TestingData;
+import com.sarabrandserver.data.Result;
+import com.sarabrandserver.data.TestingData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,8 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 
-import static com.sarabrandserver.util.TestingData.getResult;
-import static com.sarabrandserver.util.TestingData.sizeInventoryDTOArray;
+import static com.sarabrandserver.data.TestingData.getResult;
+import static com.sarabrandserver.data.TestingData.sizeInventoryDTOArray;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -33,7 +33,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
     private final int detailSize = 5;
 
     @Autowired private WorkerProductService workerProductService;
-    @Autowired private ProductRepository productRepository;
+    @Autowired private ProductRepo productRepo;
     @Autowired private WorkerCategoryService workerCategoryService;
     @Autowired private ProductDetailRepo productDetailRepo;
     @Autowired private ProductSkuRepo productSkuRepo;
@@ -71,7 +71,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
     void tearDown() {
         this.productSkuRepo.deleteAll();
         this.productDetailRepo.deleteAll();
-        this.productRepository.deleteAll();
+        this.productRepo.deleteAll();
     }
 
     @Test
@@ -82,7 +82,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
             """)
     void fetchAllDetail() throws Exception {
         // Given
-        var list = this.productRepository.findAll();
+        var list = this.productRepo.findAll();
         assertFalse(list.isEmpty());
 
         // Based on setUp
@@ -100,7 +100,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void create() throws Exception {
-        var list = this.productRepository.findAll();
+        var list = this.productRepo.findAll();
         assertFalse(list.isEmpty());
 
         // payload

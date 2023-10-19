@@ -4,9 +4,9 @@ import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.category.service.WorkerCategoryService;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
-import com.sarabrandserver.util.TestingData;
+import com.sarabrandserver.data.TestingData;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +31,7 @@ class ClientCategoryControllerTest extends AbstractIntegrationTest {
     @Autowired private WorkerCategoryService workerCategoryService;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private WorkerProductService workerProductService;
-    @Autowired private ProductRepository productRepository;
+    @Autowired private ProductRepo productRepo;
 
     /** Persist dummy data on start of application */
     @BeforeEach
@@ -61,7 +61,7 @@ class ClientCategoryControllerTest extends AbstractIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        this.productRepository.deleteAll();
+        this.productRepo.deleteAll();
         this.categoryRepository.deleteAll();
     }
 

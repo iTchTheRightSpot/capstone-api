@@ -3,7 +3,7 @@ package com.sarabrandserver.product.service;
 import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.product.response.Variant;
@@ -27,7 +27,7 @@ public class ClientProductService {
     @Value(value = "${spring.profiles.active}")
     private String ACTIVEPROFILE;
 
-    private final ProductRepository productRepository;
+    private final ProductRepo productRepo;
     private final ProductDetailRepo productDetailRepo;
     private final S3Service s3Service;
     private final CustomUtil customUtil;
@@ -44,7 +44,7 @@ public class ClientProductService {
         boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
 
         return switch (key) {
-            case "" -> this.productRepository
+            case "" -> this.productRepo
                     .allProductsClient(PageRequest.of(page, size)) //
                     .map(pojo -> {
                         var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
@@ -60,7 +60,7 @@ public class ClientProductService {
                                 .build();
                     });
 
-            case "category" -> this.productRepository
+            case "category" -> this.productRepo
                     .fetchProductByCategoryClient(uuid, PageRequest.of(page, size)) //
                     .map(pojo -> {
                         var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
@@ -75,7 +75,7 @@ public class ClientProductService {
                                 .build();
                     });
 
-            case "collection" -> this.productRepository
+            case "collection" -> this.productRepo
                     .fetchByProductByCollectionClient(uuid, PageRequest.of(page, size))
                     .map(pojo -> {
                         var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
@@ -98,7 +98,7 @@ public class ClientProductService {
     public List<DetailResponse> productDetailsByProductUUID(String uuid) {
         boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
 
-        var product = this.productRepository.findByProductUuid(uuid).orElse(null);
+        var product = this.productRepo.findByProductUuid(uuid).orElse(null);
 
         if (product == null) return null;
 

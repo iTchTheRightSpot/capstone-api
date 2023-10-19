@@ -7,9 +7,9 @@ import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.collection.dto.CollectionDTO;
 import com.sarabrandserver.collection.repository.CollectionRepository;
 import com.sarabrandserver.collection.service.WorkerCollectionService;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
-import com.sarabrandserver.util.TestingData;
+import com.sarabrandserver.data.TestingData;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +37,7 @@ class ClientCollectionControllerTest extends AbstractIntegrationTest {
     @Autowired private WorkerCollectionService collectionService;
     @Autowired private CollectionRepository collectionRepository;
     @Autowired private WorkerProductService workerProductService;
-    @Autowired private ProductRepository productRepository;
+    @Autowired private ProductRepo productRepo;
 
     @BeforeEach
     void setUp() {
@@ -72,7 +72,7 @@ class ClientCollectionControllerTest extends AbstractIntegrationTest {
     @AfterEach
     void tearDown() {
         this.categoryRepository.deleteAll();
-        this.productRepository.deleteAll();
+        this.productRepo.deleteAll();
         this.collectionRepository.deleteAll();
     }
 

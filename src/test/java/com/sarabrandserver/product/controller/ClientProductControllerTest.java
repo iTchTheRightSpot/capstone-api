@@ -6,10 +6,10 @@ import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
-import com.sarabrandserver.util.Result;
-import com.sarabrandserver.util.TestingData;
+import com.sarabrandserver.data.Result;
+import com.sarabrandserver.data.TestingData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,7 +27,7 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
     private final int detailSize = 1;
 
     @Autowired private WorkerProductService workerService;
-    @Autowired private ProductRepository productRepository;
+    @Autowired private ProductRepo productRepo;
     @Autowired private WorkerCategoryService workerCategoryService;
     @Autowired private CategoryRepository categoryRepository;
 
@@ -50,14 +50,14 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        this.productRepository.deleteAll();
+        this.productRepo.deleteAll();
         this.categoryRepository.deleteAll();
     }
 
     @Test
     @DisplayName(value = "Testing getting ProductDetail by product id only this is a SSeEmitter")
     void fetchProductDetails() throws Exception {
-        var list = this.productRepository.findAll();
+        var list = this.productRepo.findAll();
         assertFalse(list.isEmpty());
 
         String productID = list.get(0).getUuid();

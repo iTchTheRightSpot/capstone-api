@@ -7,7 +7,7 @@ import com.sarabrandserver.auth.jwt.JwtTokenService;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.user.entity.SarreBrandUser;
 import com.sarabrandserver.user.repository.UserRepository;
-import com.sarabrandserver.util.TestingData;
+import com.sarabrandserver.data.TestingData;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;

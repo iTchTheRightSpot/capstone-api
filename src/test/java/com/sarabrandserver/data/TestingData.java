@@ -1,11 +1,8 @@
-package com.sarabrandserver.util;
+package com.sarabrandserver.data;
 
 import com.github.javafaker.Faker;
 import com.sarabrandserver.enumeration.RoleEnum;
-import com.sarabrandserver.product.dto.CreateProductDTO;
-import com.sarabrandserver.product.dto.ProductDetailDTO;
-import com.sarabrandserver.product.dto.SizeInventoryDTO;
-import com.sarabrandserver.product.dto.UpdateProductDTO;
+import com.sarabrandserver.product.dto.*;
 import com.sarabrandserver.user.entity.ClientRole;
 import com.sarabrandserver.user.entity.SarreBrandUser;
 import jakarta.validation.constraints.NotNull;
@@ -136,13 +133,17 @@ public class TestingData {
             SizeInventoryDTO[] dtos,
             String colour
     ) {
+        PriceCurrencyDTO[] arr = {
+                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "USD"),
+                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "USD"),
+        };
+
         return new CreateProductDTO(
                 category,
                 collection,
                 productName,
                 new Faker().lorem().characters(0, 255),
-                new BigDecimal(new Faker().number().numberBetween(20, 80)),
-                "NGN",
+                arr,
                 true,
                 dtos,
                 colour

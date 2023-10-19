@@ -6,7 +6,8 @@ import com.sarabrandserver.exception.*;
 import com.sarabrandserver.product.dto.CreateProductDTO;
 import com.sarabrandserver.product.dto.UpdateProductDTO;
 import com.sarabrandserver.product.entity.Product;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.product.repository.PriceCurrencyRepo;
+import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.stripe.PriceCurrencyPair;
 import com.sarabrandserver.stripe.StripeService;
@@ -39,7 +40,8 @@ public class WorkerProductService {
     @Value(value = "${spring.profiles.active}") private String ACTIVEPROFILE;
 
     private final StripeService stripeService;
-    private final ProductRepository productRepository;
+    private final PriceCurrencyRepo priceCurrencyRepo;
+    private final ProductRepo productRepo;
     private final WorkerProductDetailService workerProductDetailService;
     private final ProductSKUService productSKUService;
     private final WorkerCategoryService categoryService;
@@ -58,7 +60,7 @@ public class WorkerProductService {
     public Page<ProductResponse> fetchAll(int page, int size) {
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
 
-        return this.productRepository
+        return this.productRepo
                 .fetchAllProductsWorker(PageRequest.of(page, size))
                 .map(pojo -> {
                     var url = this.helperService.preSignedURL(bool, BUCKET, pojo.getKey());
@@ -91,7 +93,7 @@ public class WorkerProductService {
         }
 
         var category = this.categoryService.findByName(dto.category().trim());
-        var _product = this.productRepository.findByProductName(dto.name().trim());
+        var _product = this.productRepo.findByProductName(dto.name().trim());
 
         // throw error if product exits
         if (_product.isPresent()) {
@@ -102,8 +104,8 @@ public class WorkerProductService {
         StringBuilder defaultImageKey = new StringBuilder();
         var file = this.helperService.customMultiPartFiles(files, defaultImageKey);
 
-        long ngn = this.customUtil.toNGN(dto.priceCurrency());
-        long usd = this.customUtil.toUSD(dto.priceCurrency());
+        long ngn = this.customUtil.toCurrency(dto.priceCurrency(), NGN);
+        long usd = this.customUtil.toCurrency(dto.priceCurrency(), USD);
 
         var productID = this.stripeService
                 .createProduct(
@@ -131,7 +133,7 @@ public class WorkerProductService {
         }
 
         // Save Product
-        var saved = this.productRepository.save(product);
+        var saved = this.productRepo.save(product);
 
         // Save ProductDetails
         var date = this.customUtil.toUTC(new Date()).orElse(new Date());
@@ -159,7 +161,7 @@ public class WorkerProductService {
      */
     @Transactional
     public void update(final UpdateProductDTO dto) {
-        boolean bool = this.productRepository
+        boolean bool = this.productRepo
                 .nameNotAssociatedToUuid(dto.uuid(), dto.name()) > 0;
 
         if (bool) {
@@ -172,7 +174,7 @@ public class WorkerProductService {
             // Find ProductCollection by uuid
             var collection = this.collectionService.findByUuid(dto.collectionId());
 
-            this.productRepository.updateProductCategoryCollectionPresent(
+            this.productRepo.updateProductCategoryCollectionPresent(
                     dto.uuid(),
                     dto.name().trim(),
                     dto.desc().trim(),
@@ -184,7 +186,7 @@ public class WorkerProductService {
             return;
         }
 
-        this.productRepository.updateProductCollectionNotPresent(
+        this.productRepo.updateProductCollectionNotPresent(
                 dto.uuid(),
                 dto.name().trim(),
                 dto.desc().trim(),
@@ -203,10 +205,10 @@ public class WorkerProductService {
      */
     @Transactional
     public void delete(final String uuid) {
-        var product = this.productRepository.findByProductUuid(uuid)
+        var product = this.productRepo.findByProductUuid(uuid)
                 .orElseThrow(() -> new CustomNotFoundException(uuid + " does not exist"));
 
-        boolean bool = this.productRepository.productDetailAttach(uuid) > 1;
+        boolean bool = this.productRepo.productDetailAttach(uuid) > 1;
 
         if (bool) {
             String message = "cannot delete %s as it has many variants".formatted(product.getName());
@@ -216,7 +218,7 @@ public class WorkerProductService {
         // Delete from S3
         if (this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage")) {
             // Get all Images
-            List<ObjectIdentifier> keys = this.productRepository.productImagesByProductUUID(uuid)
+            List<ObjectIdentifier> keys = this.productRepo.productImagesByProductUUID(uuid)
                     .stream() //
                     .map(img -> ObjectIdentifier.builder().key(img.getImage()).build()) //
                     .toList();
@@ -227,7 +229,7 @@ public class WorkerProductService {
         }
 
         // Delete from Database
-        this.productRepository.delete(product);
+        this.productRepo.delete(product);
     }
 
 }

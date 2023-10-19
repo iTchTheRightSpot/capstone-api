@@ -22,7 +22,7 @@ jobs:
 
       - name: Run tests
         run: |
-          mvn clean test -DargLine="-DSTRIPE_API_KEY=$STRIPE_API_KEY"
+          mvn clean test -DSTRIPE_API_KEY=$STRIPE_API_KEY
         shell: bash
         env:
           STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}

@@ -1,13 +1,14 @@
 package com.sarabrandserver.category.controller;
 
+import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.category.service.WorkerCategoryService;
+import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
-import com.sarabrandserver.data.TestingData;
-import com.github.javafaker.Faker;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Slf4j
 class ClientCategoryControllerTest extends AbstractIntegrationTest {
 
     private final String requestParam = "/api/v1/client/category";
@@ -66,7 +68,6 @@ class ClientCategoryControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName(value = "Fetch all categories")
     void allCategories() throws Exception {
         this.MOCKMVC
                 .perform(get(requestParam).contentType(APPLICATION_JSON))
@@ -76,7 +77,7 @@ class ClientCategoryControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName(value = "Fetch all Products by category id")
+    @DisplayName(value = "All Products by category id")
     void fetchProductByCategory() throws Exception {
         // Given
         var list = this.categoryRepository.findAll();

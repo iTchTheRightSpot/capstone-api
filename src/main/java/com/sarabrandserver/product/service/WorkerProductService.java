@@ -89,7 +89,7 @@ public class WorkerProductService {
     @Transactional
     public void create(CreateProductDTO dto, MultipartFile[] files) {
         if (!this.customUtil.validateContainsCurrencies(dto.priceCurrency())) {
-            throw new CustomInvalidFormatException("currencies has to be NGN & USD.");
+            throw new CustomInvalidFormatException("please check currencies and prices");
         }
 
         var category = this.categoryService.findByName(dto.category().trim());

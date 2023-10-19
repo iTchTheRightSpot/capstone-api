@@ -67,7 +67,8 @@ class AuthServiceTest extends AbstractUnitTest {
 
         // Then
         this.authService.workerRegister(dto);
-        verify(this.userRepository, times(1)).save(any(SarreBrandUser.class));
+        verify(this.userRepository, times(1))
+                .save(any(SarreBrandUser.class));
     }
 
     @Test

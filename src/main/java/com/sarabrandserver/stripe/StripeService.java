@@ -18,7 +18,8 @@ public class StripeService {
 
     private static final Logger log = LoggerFactory.getLogger(StripeService.class);
 
-    @Value(value = "${stripe.api.key}") private String APIKEY;
+    @Value(value = "${stripe.api.key}")
+    private String APIKEY;
 
     /**
      * Create a com.stripe.model.Product
@@ -49,8 +50,8 @@ public class StripeService {
 
             var price = createPrice(product.getId(), pairs[1].unitAmount(), pairs[1].currency());
 
-            log.info("Product {}", product.toJson());
-            log.info("Product gotten from price {}", price.getProduct());
+//            log.info("Product {}", product.toJson());
+//            log.info("Product gotten from price {}", price.getProduct());
 
             return product.getId();
         } catch (StripeException ex) {

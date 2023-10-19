@@ -29,11 +29,8 @@ import static org.mockito.Mockito.*;
 
 class WorkerProductServiceTest extends AbstractUnitTest {
 
-    @Value(value = "${aws.bucket}")
-    private String BUCKET;
-
-    @Value(value = "${spring.profiles.active}")
-    private String ACTIVEPROFILE;
+    @Value(value = "${aws.bucket}") private String BUCKET;
+    @Value(value = "${spring.profiles.active}") private String ACTIVEPROFILE;
 
     private WorkerProductService workerProductService;
 
@@ -74,6 +71,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         var category = ProductCategory.builder().categoryName(dto.category()).build();
 
         // When
+        when(this.customUtil.validateContainsCurrencies(dto.priceCurrency())).thenReturn(true);
         when(this.workerCategoryService.findByName(anyString())).thenReturn(category);
         when(this.productRepo.findByProductName(anyString())).thenReturn(Optional.empty());
         when(this.customUtil.toUTC(any(Date.class))).thenReturn(Optional.empty());
@@ -94,6 +92,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         var product = Product.builder().name(dto.name()).uuid("uuid").build();
 
         // When
+        when(this.customUtil.validateContainsCurrencies(dto.priceCurrency())).thenReturn(true);
         when(this.workerCategoryService.findByName(anyString())).thenReturn(category);
         when(this.productRepo.findByProductName(anyString())).thenReturn(Optional.of(product));
 

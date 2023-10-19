@@ -1,7 +1,9 @@
 package com.sarabrandserver.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractUnitTest;
+import com.sarabrandserver.product.dto.PriceCurrencyDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,7 +13,7 @@ import org.mockito.Mock;
 import java.math.BigDecimal;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 class CustomUtilTest extends AbstractUnitTest {
@@ -26,6 +28,37 @@ class CustomUtilTest extends AbstractUnitTest {
     }
 
     private record AmountConversion(BigDecimal given, long expected) { }
+
+    @Test
+    void validate_contains_desired_currencies() {
+        PriceCurrencyDTO[] arr = {
+                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "USD"),
+                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "NGN"),
+        };
+
+        assertTrue(this.customUtil.validateContainsCurrencies(arr));
+    }
+
+    @Test
+    void error_thrown_from_negative_price() {
+        PriceCurrencyDTO[] arr = {
+                new PriceCurrencyDTO(new BigDecimal("-1"), "USD"),
+                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "NGN"),
+        };
+
+        assertFalse(this.customUtil.validateContainsCurrencies(arr));
+    }
+
+    @Test
+    void can_only_be_ngn_and_usd() {
+        PriceCurrencyDTO[] arr = {
+                new PriceCurrencyDTO(new BigDecimal("9.99"), "USD"),
+                new PriceCurrencyDTO(new BigDecimal("0"), "USD"),
+                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "NGN"),
+        };
+
+        assertFalse(this.customUtil.validateContainsCurrencies(arr));
+    }
 
     @Test
     @DisplayName(value = "validate conversion from usd to cents")

@@ -58,7 +58,7 @@ public class CustomUtil {
 
     /** Validates DTO is in the right format */
     public boolean validateContainsCurrencies(PriceCurrencyDTO[] dto) {
-        if (dto.length < 2) {
+        if (dto.length != 2) {
             return false;
         }
 
@@ -72,7 +72,7 @@ public class CustomUtil {
                 });
 
         if (bool) {
-            throw new CustomInvalidFormatException("price cannot be less than zero");
+            return false;
         }
 
         boolean ngn = Arrays.stream(dto)

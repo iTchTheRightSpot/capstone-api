@@ -1,7 +1,6 @@
 package com.sarabrandserver.data;
 
 import com.github.javafaker.Faker;
-import com.sarabrandserver.enumeration.RoleEnum;
 import com.sarabrandserver.product.dto.*;
 import com.sarabrandserver.user.entity.ClientRole;
 import com.sarabrandserver.user.entity.SarreBrandUser;
@@ -10,6 +9,9 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
+
+import static com.sarabrandserver.enumeration.RoleEnum.CLIENT;
+import static com.sarabrandserver.enumeration.RoleEnum.WORKER;
 
 public class TestingData {
 
@@ -23,7 +25,7 @@ public class TestingData {
                 .enabled(true)
                 .clientRole(new HashSet<>())
                 .build();
-        client.addRole(new ClientRole(RoleEnum.CLIENT));
+        client.addRole(new ClientRole(CLIENT));
         return client;
     }
 
@@ -37,8 +39,8 @@ public class TestingData {
                 .enabled(true)
                 .clientRole(new HashSet<>())
                 .build();
-        client.addRole(new ClientRole(RoleEnum.CLIENT));
-        client.addRole(new ClientRole(RoleEnum.WORKER));
+        client.addRole(new ClientRole(CLIENT));
+        client.addRole(new ClientRole(WORKER));
         return client;
     }
 

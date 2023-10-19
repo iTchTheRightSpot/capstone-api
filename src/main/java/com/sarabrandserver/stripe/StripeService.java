@@ -18,8 +18,7 @@ public class StripeService {
 
     private static final Logger log = LoggerFactory.getLogger(StripeService.class);
 
-    @Value(value = "${stripe.api.key}")
-    private String APIKEY;
+    @Value(value = "${stripe.api.key}") private String APIKEY;
 
     /**
      * Create a com.stripe.model.Product

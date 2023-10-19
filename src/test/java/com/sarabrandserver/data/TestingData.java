@@ -135,7 +135,7 @@ public class TestingData {
     ) {
         PriceCurrencyDTO[] arr = {
                 new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "USD"),
-                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "USD"),
+                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "NGN"),
         };
 
         return new CreateProductDTO(

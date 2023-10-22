@@ -1,6 +1,5 @@
 package com.sarabrandserver.cart.entity;
 
-import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.user.entity.SarreBrandUser;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,9 +25,6 @@ public class ShoppingSession {
     @Column(name = "session_id", nullable = false, unique = true)
     private Long shoppingSessionId;
 
-    @Column(nullable = false)
-    private int qty;
-
     @Column(name = "created_at", nullable = false)
     @Temporal(TIMESTAMP)
     private Date createAt;
@@ -41,14 +37,7 @@ public class ShoppingSession {
     @JoinColumn(name = "client_id", referencedColumnName = "client_id")
     private SarreBrandUser sarreBrandUser;
 
-    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "shoppingSession")
-    private Set<ProductSku> skus;
-
-    /**
-     * Adds ProductSKU to users session
-     */
-    public void persist(ProductSku sku) {
-        this.skus.add(sku);
-    }
+    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "shoppingSession", orphanRemoval = true)
+    private Set<CartItem> cartItems;
 
 }

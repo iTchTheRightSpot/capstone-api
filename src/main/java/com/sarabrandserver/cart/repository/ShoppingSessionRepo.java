@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface CartRepository extends JpaRepository<ShoppingSession, Long> {
+public interface ShoppingSessionRepo extends JpaRepository<ShoppingSession, Long> {
 
     @Query("SELECT s FROM ShoppingSession s WHERE s.shoppingSessionId = :id")
     Optional<ShoppingSession> shoppingSessionById(long id);

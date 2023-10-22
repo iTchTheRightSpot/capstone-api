@@ -72,8 +72,8 @@ public class JwtConfig {
      * <a href="https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/bearer-tokens.html">...</a>
      */
     @Bean
-    public BearerTokenResolver bearerTokenResolver(JwtDecoder decoder, JwtTokenService tokenService) {
-        return new BearerResolver(JSESSIONID, decoder, tokenService);
+    public BearerTokenResolver bearerTokenResolver(JwtDecoder decoder, JwtTokenService service) {
+        return new BearerResolver(JSESSIONID, decoder, service);
     }
 
     private record BearerResolver(
@@ -84,11 +84,9 @@ public class JwtConfig {
         @Override
         public String resolve(HttpServletRequest request) {
             Cookie[] cookies = request.getCookies();
-            if (cookies == null) {
-                return null;
-            }
-
-            return Arrays.stream(cookies)
+            // ternary operator
+            return cookies == null ? null : Arrays
+                    .stream(cookies)
                     .filter(cookie -> cookie.getName().equals(JSESSIONID))
                     .filter(this.service::_isTokenNoneExpired)
                     .map(Cookie::getValue)

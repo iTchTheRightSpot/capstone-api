@@ -4,19 +4,12 @@ import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.collection.dto.CollectionDTO;
 import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
-import com.sarabrandserver.collection.repository.CollectionRepository;
-import com.sarabrandserver.collection.service.WorkerCollectionService;
 import com.sarabrandserver.exception.DuplicateException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.test.context.support.WithMockUser;
 
-import java.util.HashSet;
-import java.util.Set;
-
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -28,25 +21,6 @@ class WorkerCollectionControllerTest extends AbstractIntegrationTest {
 
     private final String requestMapping = "/api/v1/worker/collection";
 
-    @Autowired private WorkerCollectionService collectionService;
-    @Autowired private CollectionRepository collectionRepository;
-
-    @BeforeEach
-    void setUp() {
-        Set<String> set = new HashSet<>();
-        for (int i = 0; i < 10; i++) {
-            set.add(new Faker().commerce().department());
-        }
-
-        // Save dummy data pre tests
-        set.forEach(e -> this.collectionService.create(new CollectionDTO(e, true)));
-    }
-
-    @AfterEach
-    void tearDown() {
-        this.collectionRepository.deleteAll();
-    }
-
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void create() throws Exception {
@@ -55,11 +29,10 @@ class WorkerCollectionControllerTest extends AbstractIntegrationTest {
 
         // request
         this.MOCKMVC
-                .perform(
-                        post(requestMapping)
-                                .with(csrf())
-                                .contentType(APPLICATION_JSON)
-                                .content(this.MAPPER.writeValueAsString(dto))
+                .perform(post(requestMapping)
+                        .with(csrf())
+                        .contentType(APPLICATION_JSON)
+                        .content(this.MAPPER.writeValueAsString(dto))
                 )
                 .andExpect(status().isCreated());
     }
@@ -87,11 +60,14 @@ class WorkerCollectionControllerTest extends AbstractIntegrationTest {
     @DisplayName(value = "validates custom query throws exception when updating a ProductCollection")
     void ex() throws Exception {
         // Given
-        var category = this.collectionRepository.findAll();
-        // First category
-        var first = category.get(0);
-        // second category
-        var second = category.get(1);
+        var collections = this.collectionRepository.findAll();
+
+        assertFalse(collections.isEmpty());
+
+        // First collections
+        var first = collections.get(0);
+        // second collections
+        var second = collections.get(1);
         // dto
         var dto = new UpdateCollectionDTO(first.getUuid(), second.getCollection(), true);
 

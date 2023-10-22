@@ -74,7 +74,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         when(this.customUtil.validateContainsCurrencies(dto.priceCurrency())).thenReturn(true);
         when(this.workerCategoryService.findByName(anyString())).thenReturn(category);
         when(this.productRepo.findByProductName(anyString())).thenReturn(Optional.empty());
-        when(this.customUtil.toUTC(any(Date.class))).thenReturn(Optional.empty());
+        when(this.customUtil.toUTC(any(Date.class))).thenReturn(null);
 
         // Then
         this.workerProductService.create(dto, files);

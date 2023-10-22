@@ -133,18 +133,15 @@ public class AuthService {
     }
 
     /**
-     * Method simply prevents user from signing in again if the request contains a valid jwt and LOGGEDSESSION cookie.
+     * Prevents a user from generating a new jwt only
+     * if a valid jwt cookie contains in the cookie.
      *
      * @param res of HttpServletRequest
      * @return boolean
      */
     private boolean _validateRequestContainsValidCookies(HttpServletRequest res) {
         Cookie[] cookies = res.getCookies();
-        // Base case
-        if (cookies == null)
-            return false;
-
-        return Arrays.stream(cookies)
+        return cookies != null && Arrays.stream(cookies)
                 .filter(cookie -> cookie.getName().equals(JSESSIONID))
                 .anyMatch(this.jwtTokenService::_isTokenNoneExpired);
     }

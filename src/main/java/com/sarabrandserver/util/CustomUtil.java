@@ -46,14 +46,11 @@ public class CustomUtil {
      * @param date of type java.util.date
      * @return Date of type java.util.date
      */
-    public Optional<Date> toUTC(Date date) {
-        if (date == null) {
-            return Optional.empty();
-        }
+    public Date toUTC(Date date) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return Optional.of(calendar.getTime());
+        return calendar.getTime();
     }
 
     /** Validates DTO is in the right format */

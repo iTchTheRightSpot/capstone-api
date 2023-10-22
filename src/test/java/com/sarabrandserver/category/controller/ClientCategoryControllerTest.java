@@ -1,22 +1,9 @@
 package com.sarabrandserver.category.controller;
 
-import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
-import com.sarabrandserver.category.dto.CategoryDTO;
-import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.category.service.WorkerCategoryService;
-import com.sarabrandserver.data.TestingData;
-import com.sarabrandserver.product.repository.ProductRepo;
-import com.sarabrandserver.product.service.WorkerProductService;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.HashSet;
-import java.util.Set;
 
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -29,43 +16,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ClientCategoryControllerTest extends AbstractIntegrationTest {
 
     private final String requestParam = "/api/v1/client/category";
-
-    @Autowired private WorkerCategoryService workerCategoryService;
-    @Autowired private CategoryRepository categoryRepository;
-    @Autowired private WorkerProductService workerProductService;
-    @Autowired private ProductRepo productRepo;
-
-    /** Persist dummy data on start of application */
-    @BeforeEach
-    void setUp() {
-        Set<String> set = new HashSet<>();
-        for (int i = 0; i < 5; i++) {
-            set.add(new Faker().commerce().department() + i);
-        }
-
-        // Persist categories
-        set.forEach((s) -> this.workerCategoryService.create(new CategoryDTO(s, true, "")));
-
-        // Persist Products
-        int i = 0;
-        for (String cat : set) {
-            var sizeInv = TestingData.sizeInventoryDTOArray(5);
-            var res = TestingData.getResult(
-                    sizeInv,
-                    new Faker().commerce().productName() + i,
-                    cat,
-                    new Faker().commerce().color()
-            );
-            this.workerProductService.create(res.dto(), res.files());
-            i += 1;
-        }
-    }
-
-    @AfterEach
-    void tearDown() {
-        this.productRepo.deleteAll();
-        this.categoryRepository.deleteAll();
-    }
 
     @Test
     void allCategories() throws Exception {

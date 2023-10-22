@@ -90,7 +90,7 @@ public class WorkerCategoryService {
      * */
     @Transactional
     public void create(CategoryDTO dto) {
-        var date = this.customUtil.toUTC(new Date()).orElse(new Date());
+        var date = this.customUtil.toUTC(new Date());
 
         // Handle cases based on the logic explained above.
         var category = dto.parent().isBlank() ?
@@ -150,7 +150,7 @@ public class WorkerCategoryService {
             throw new DuplicateException(dto.name() + " cannot be created. It is a duplicate");
         }
 
-        var date = this.customUtil.toUTC(new Date()).orElse(new Date());
+        var date = this.customUtil.toUTC(new Date());
 
         this.categoryRepository
                 .update(date, dto.name().trim(), dto.visible(), dto.id());

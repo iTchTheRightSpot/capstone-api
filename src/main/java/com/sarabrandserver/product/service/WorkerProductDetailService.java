@@ -87,11 +87,11 @@ public class WorkerProductDetailService {
         if (exist.isPresent()) {
             // Create new ProductSKU
             var detail = exist.get();
-            this.productSKUService.saveProductSKUs(dto.sizeInventory(), detail);
+            this.productSKUService.save(dto.sizeInventory(), detail);
             return;
         }
 
-        var date = this.customUtil.toUTC(new Date()).orElse(new Date());
+        var date = this.customUtil.toUTC(new Date());
 
         // Validate MultipartFile[] are all images
         var files = this.helperService.customMultiPartFiles(multipartFiles, new StringBuilder());
@@ -110,7 +110,7 @@ public class WorkerProductDetailService {
         var saved = this.detailRepo.save(detail);
 
         // Save ProductSKUs
-        this.productSKUService.saveProductSKUs(dto.sizeInventory(), saved);
+        this.productSKUService.save(dto.sizeInventory(), saved);
 
         // Save ProductImages (save to s3)
         this.helperService.productImages(

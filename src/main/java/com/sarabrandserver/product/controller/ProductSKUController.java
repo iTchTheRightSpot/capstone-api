@@ -24,7 +24,7 @@ public class ProductSKUController {
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping
     public void deleteProductSKU(@NotNull @RequestParam(value = "sku") String sku) {
-        this.productSKUService.deleteProductSKU(sku);
+        this.productSKUService.delete(sku);
     }
 
 }

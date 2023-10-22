@@ -1,9 +1,12 @@
 package com.sarabrandserver.product.entity;
 
+import com.sarabrandserver.cart.entity.ShoppingSession;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
+
+import static jakarta.persistence.FetchType.LAZY;
 
 @Table(name = "product_sku", indexes = @Index(name = "IX_product_sku_sku", columnList = "sku"))
 @Entity
@@ -27,6 +30,10 @@ public class ProductSku implements Serializable {
 
     @Column(name = "inventory", nullable = false)
     private int inventory;
+
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "session_id", referencedColumnName = "session_id")
+    private ShoppingSession shoppingSession;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "detail_id", referencedColumnName = "detail_id", nullable = false)

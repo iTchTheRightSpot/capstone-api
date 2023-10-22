@@ -61,7 +61,7 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
         // When
         when(productRepo.findByProductUuid(anyString())).thenReturn(Optional.of(product));
         when(detailRepo.productDetailByColour(anyString())).thenReturn(Optional.empty());
-        when(customUtil.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
+        when(customUtil.toUTC(any(Date.class))).thenReturn(new Date());
 
         // Then
         productDetailService.create(dto, files);

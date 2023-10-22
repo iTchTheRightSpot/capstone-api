@@ -2,6 +2,7 @@ package com.sarabrandserver.graal;
 
 import com.sarabrandserver.auth.dto.LoginDTO;
 import com.sarabrandserver.auth.dto.RegisterDTO;
+import com.sarabrandserver.cart.dto.CartDTO;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.sarabrandserver.collection.dto.CollectionDTO;
@@ -22,6 +23,10 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
         // migration
         hints.resources().registerPattern("db/migration/V6__init_migration.sql");
+        hints.resources().registerPattern("db/migration/V7__init_migration.sql");
+
+        // shopping session
+        hints.serialization().registerType(CartDTO.class);
 
         // Auth
         hints.serialization().registerType(LoginDTO.class);

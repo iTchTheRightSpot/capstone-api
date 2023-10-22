@@ -9,7 +9,6 @@ import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.repository.PriceCurrencyRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.response.ProductResponse;
-import com.sarabrandserver.stripe.PriceCurrencyPair;
 import com.sarabrandserver.stripe.StripeService;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +26,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
@@ -77,6 +77,7 @@ public class WorkerProductService {
                 });
     }
 
+    // TODO
     /**
      * Create a new Product.
      *
@@ -107,22 +108,22 @@ public class WorkerProductService {
         long ngn = this.customUtil.toCurrency(dto.priceCurrency(), NGN);
         long usd = this.customUtil.toCurrency(dto.priceCurrency(), USD);
 
-        var productID = this.stripeService
-                .createProduct(
-                        dto.name(),
-                        new PriceCurrencyPair(ngn, NGN),
-                        new PriceCurrencyPair(usd, USD)
-                );
+//        var productID = this.stripeService
+//                .createProduct(
+//                        dto.name(),
+//                        new PriceCurrencyPair(ngn, NGN),
+//                        new PriceCurrencyPair(usd, USD)
+//                );
 
         // Build Product
         var product = Product.builder()
                 .productCategory(category)
-                .uuid(productID)
+                .uuid(UUID.randomUUID().toString())
                 .name(dto.name().trim())
                 .description(dto.desc().trim())
                 .defaultKey(defaultImageKey.toString())
-                .price(new BigDecimal(ngn * 0.01)) // TODO validate stripe conversion for NGN
-                .currency(NGN.name()) // default is NGN
+                .defaultPrice(new BigDecimal(ngn * 0.01)) // TODO validate stripe conversion for NGN
+                .defaultCurrency(NGN.name()) // default is NGN
                 .productDetails(new HashSet<>())
                 .build();
 
@@ -136,12 +137,12 @@ public class WorkerProductService {
         var saved = this.productRepo.save(product);
 
         // Save ProductDetails
-        var date = this.customUtil.toUTC(new Date()).orElse(new Date());
+        var date = this.customUtil.toUTC(new Date());
         var detail = this.workerProductDetailService.
                 productDetail(saved, dto.colour(), dto.visible(), date);
 
         // Save ProductSKUs
-        this.productSKUService.saveProductSKUs(dto.sizeInventory(), detail);
+        this.productSKUService.save(dto.sizeInventory(), detail);
 
         // Build ProductImages (save to s3)
         this.helperService.productImages(

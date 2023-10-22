@@ -10,7 +10,9 @@ import java.util.UUID;
 
 record RSAConfig() {
 
-    /** pub and priv key */
+    /**
+     * java.security.KeyPair pub & priv key
+     */
     private static KeyPair RSAKEYPAIR() {
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
@@ -22,9 +24,9 @@ record RSAConfig() {
     }
 
     /**
-     * Generate RSA at runtime
+     * Generate com.nimbusds.jose.jwk.RSAKey at runtime
      * */
-    static RSAKey GENERATERSAKEY() {
+    public static RSAKey GENERATERSAKEY() {
         KeyPair keyPair = RSAKEYPAIR();
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
         RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();

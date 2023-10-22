@@ -1,6 +1,5 @@
 package com.sarabrandserver.product.entity;
 
-import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.collection.entity.ProductCollection;
 import com.sarabrandserver.order.entity.OrderItem;
@@ -40,11 +39,11 @@ public class Product implements Serializable {
     @Column(name = "default_image_key", nullable = false)
     private String defaultKey;
 
-    @Column(name = "price", nullable = false)
-    private BigDecimal price;
+    @Column(name = "default_price", nullable = false)
+    private BigDecimal defaultPrice;
 
-    @Column(name = "currency", nullable = false, length = 50)
-    private String currency;
+    @Column(name = "default_currency", nullable = false, length = 10)
+    private String defaultCurrency;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "category_id", referencedColumnName = "category_id")
@@ -53,10 +52,6 @@ public class Product implements Serializable {
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "collection_id", referencedColumnName = "collection_id")
     private ProductCollection productCollection;
-
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "session_id", referencedColumnName = "session_id")
-    private ShoppingSession shoppingSession;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "order_item_id", referencedColumnName = "order_item_id")

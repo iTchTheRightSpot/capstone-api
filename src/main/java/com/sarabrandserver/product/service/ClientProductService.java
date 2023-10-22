@@ -115,8 +115,8 @@ public class ClientProductService {
 
                     return DetailResponse.builder()
                             .name(product.getName())
-                            .currency(product.getCurrency())
-                            .price(product.getPrice())
+                            .currency(product.getDefaultCurrency())
+                            .price(product.getDefaultPrice())
                             .desc(product.getDescription())
                             .colour(pojo.getColour())
                             .url(urls)

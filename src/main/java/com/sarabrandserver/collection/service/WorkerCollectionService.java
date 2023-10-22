@@ -90,7 +90,7 @@ public class WorkerCollectionService {
             throw new DuplicateException(dto.name() + " exists");
         }
 
-        var date = this.customUtil.toUTC(new Date()).orElseGet(Date::new);
+        var date = this.customUtil.toUTC(new Date());
         var collection = ProductCollection.builder()
                 .uuid(UUID.randomUUID().toString())
                 .collection(dto.name().trim())
@@ -118,11 +118,9 @@ public class WorkerCollectionService {
             throw new DuplicateException(dto.name() + " is a duplicate");
         }
 
-        var date = this.customUtil.toUTC(new Date()).orElseGet(Date::new);
-
         this.collectionRepository
                 .update(
-                        date,
+                        this.customUtil.toUTC(new Date()),
                         dto.name(),
                         dto.visible(),
                         dto.id().trim()

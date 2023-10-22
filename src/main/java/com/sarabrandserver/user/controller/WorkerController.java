@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(path = "api/v1/worker/user")
 @RequiredArgsConstructor
 @PreAuthorize(value = "hasRole('ROLE_WORKER')")
-public class UserController {
+public class WorkerController {
 
     private final WorkerService workerService;
 

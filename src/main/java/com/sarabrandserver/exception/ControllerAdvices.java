@@ -26,7 +26,7 @@ public class ControllerAdvices {
 
     private final Environment environment;
 
-    @ExceptionHandler(value = {DuplicateException.class, ResourceAttachedException.class})
+    @ExceptionHandler(value = {DuplicateException.class, ResourceAttachedException.class, OutOfStockException.class})
     public ResponseEntity<ExceptionResponse> duplicateException(Exception ex) {
         var res = new ExceptionResponse(ex.getMessage(), CONFLICT);
         return new ResponseEntity<>(res, CONFLICT);

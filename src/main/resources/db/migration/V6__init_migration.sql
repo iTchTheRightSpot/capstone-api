@@ -1,6 +1,4 @@
-# ALTER TABLE product RENAME COLUMN price TO default_price;
 ALTER TABLE product MODIFY COLUMN currency varchar(10);
-# ALTER TABLE product RENAME COLUMN currency TO default_currency;
 
 CREATE TABLE IF NOT EXISTS price_currency (
     price_currency_id BIGINT      NOT NULL UNIQUE AUTO_INCREMENT,

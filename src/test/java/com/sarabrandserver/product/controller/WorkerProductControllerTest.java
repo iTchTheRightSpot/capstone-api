@@ -2,23 +2,11 @@ package com.sarabrandserver.product.controller;
 
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
-import com.sarabrandserver.category.dto.CategoryDTO;
-import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.category.service.WorkerCategoryService;
-import com.sarabrandserver.collection.dto.CollectionDTO;
-import com.sarabrandserver.collection.repository.CollectionRepository;
-import com.sarabrandserver.collection.service.WorkerCollectionService;
+import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
-import com.sarabrandserver.product.repository.ProductRepo;
-import com.sarabrandserver.product.service.WorkerProductService;
-import com.sarabrandserver.data.Result;
-import com.sarabrandserver.data.TestingData;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 
@@ -32,79 +20,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class WorkerProductControllerTest extends AbstractIntegrationTest {
 
     private final String requestMapping = "/api/v1/worker/product";
-    private final StringBuilder category = new StringBuilder();
-    private final StringBuilder colour = new StringBuilder();
-    private final StringBuilder productName = new StringBuilder();
 
-    @Autowired private WorkerProductService workerProductService;
-    @Autowired private ProductRepo productRepo;
-    @Autowired private WorkerCategoryService workerCategoryService;
-    @Autowired private CategoryRepository categoryRepository;
-    @Autowired private WorkerCollectionService collectionService;
-    @Autowired private CollectionRepository collectionRepository;
-
-    @BeforeEach
-    void setUp() {
-        // Persist collection
-        this.collectionService.create(new CollectionDTO(new Faker().commerce().department(), false));
-
-        // Persist category
-        this.category.append(new Faker().commerce().department());
-        this.workerCategoryService.create(new CategoryDTO(this.category.toString(), true, ""));
-
-        String prodName = new Faker().commerce().productName();
-        this.productName.append(prodName);
-        String colour = new Faker().commerce().color();
-        this.colour.append(colour);
-
-        // Product1 and ProductDetail1
-        int detailSize = 10;
-        SizeInventoryDTO[] sizeInventoryDTO1 = TestingData.sizeInventoryDTOArray(detailSize);
-        Result result = TestingData.getResult(
-                sizeInventoryDTO1,
-                prodName,
-                this.category.toString(),
-                colour
-        );
-        this.workerProductService.create(result.dto(), result.files());
-
-        // Product2 and ProductDetail2
-        SizeInventoryDTO[] sizeInventoryDTO2 = TestingData.sizeInventoryDTOArray(1);
-        Result result2 =
-                TestingData.getResult(
-                        sizeInventoryDTO2,
-                        new Faker().commerce().productName() + 2,
-                        this.category.toString(),
-                        colour
-                );
-        this.workerProductService.create(result2.dto(), result2.files());
-
-        // Product3 and ProductDetail3
-        SizeInventoryDTO[] sizeInventoryDTO3 = TestingData.sizeInventoryDTOArray(2);
-        Result result3 = TestingData.getResult(
-                sizeInventoryDTO3,
-                new Faker().commerce().productName() + 3,
-                this.category.toString(),
-                colour
-        );
-        this.workerProductService.create(result3.dto(), result3.files());
-
-        // Product4 and ProductDetail4
-        SizeInventoryDTO[] sizeInventoryDTO4 = TestingData.sizeInventoryDTOArray(5);
-        var result4 = TestingData.getResult(
-                sizeInventoryDTO4,
-                new Faker().commerce().productName() + 4,
-                this.category.toString(),
-                new Faker().commerce().color()
-        );
-        this.workerProductService.create(result4.dto(), result4.files());
+    private String productName() {
+        var list = this.productRepo.findAll();
+        assertFalse(list.isEmpty());
+        return list.get(0).getName();
     }
 
-    @AfterEach
-    void tearDown() {
-        this.productRepo.deleteAll();
-        this.categoryRepository.deleteAll();
-        this.collectionRepository.deleteAll();
+    private String category() {
+        var list = this.categoryRepository.findAll();
+        assertFalse(list.isEmpty());
+        return list.get(0).getCategoryName();
+    }
+
+    private String colour() {
+        var list = this.productDetailRepo.findAll();
+        assertFalse(list.isEmpty());
+        return list.get(0).getColour();
     }
 
     @Test
@@ -126,6 +58,8 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Create a product")
     void create() throws Exception {
+        category();
+
         // payload
         MockMultipartFile[] files = TestingData.files(2);
 
@@ -138,7 +72,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         var dto = TestingData
                 .createProductDTOCollectionNotPresent(
                         new Faker().commerce().productName(),
-                        this.category.toString(),
+                        category(),
                         "",
                         dtos
                 );
@@ -174,7 +108,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         var dto = TestingData
                 .createProductDTOCollectionNotPresent(
                         new Faker().commerce().productName(),
-                        this.category.toString(),
+                        category(),
                         "",
                         dtos
                 );
@@ -215,11 +149,11 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
 
         var dto = TestingData
                 .productDTO(
-                        this.category.toString(),
+                        category(),
                         "",
-                        this.productName.toString(),
+                        productName(),
                         dtos,
-                        this.colour.toString()
+                        colour()
                 );
 
         var json = new MockMultipartFile(
@@ -248,11 +182,11 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
 
         var dto = TestingData
                 .productDTO(
-                        this.category.toString(),
+                        category(),
                         "",
                         new Faker().commerce().productName(),
                         null,
-                        this.colour.toString()
+                        colour()
                 );
 
         var json = new MockMultipartFile(

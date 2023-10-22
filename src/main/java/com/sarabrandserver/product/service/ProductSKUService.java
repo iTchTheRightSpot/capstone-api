@@ -20,7 +20,8 @@ public class ProductSKUService {
     /**
      * Save Product sku. Look in db diagram in read me in case of confusion
      */
-    public void saveProductSKUs(SizeInventoryDTO[] dto, ProductDetail detail) {
+    @Transactional
+    public void save(SizeInventoryDTO[] dto, ProductDetail detail) {
         for (SizeInventoryDTO sizeDto : dto) {
             var sku = ProductSku.builder()
                     .productDetail(detail)
@@ -36,12 +37,17 @@ public class ProductSKUService {
      * Deletes ProductSKU
      * */
     @Transactional
-    public void deleteProductSKU(final String sku) {
-        var obj = this.productSkuRepo
-                .findBySku(sku)
-                .orElseThrow(() -> new CustomNotFoundException("SKU %s does not exist".formatted(sku)));
+    public void delete(final String sku) {
+        // TODO validate if it contains in order or user session before deleting
+        var obj = productSkuBySKU(sku);
 
         this.productSkuRepo.delete(obj);
+    }
+
+    public ProductSku productSkuBySKU(String sku) {
+        return this.productSkuRepo
+                .findBySku(sku)
+                .orElseThrow(() -> new CustomNotFoundException("SKU %s does not exist".formatted(sku)));
     }
 
 }

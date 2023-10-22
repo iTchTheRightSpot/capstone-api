@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractUnitTest;
 import com.sarabrandserver.product.dto.PriceCurrencyDTO;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,12 +14,11 @@ import java.math.BigDecimal;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Slf4j
 class CustomUtilTest extends AbstractUnitTest {
 
-    private CustomUtil customUtil;
-
     @Mock ObjectMapper mapper;
+
+    private CustomUtil customUtil;
 
     @BeforeEach
     void setUp() {

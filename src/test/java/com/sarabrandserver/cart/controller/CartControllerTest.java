@@ -1,9 +1,18 @@
 package com.sarabrandserver.cart.controller;
 
 import com.sarabrandserver.AbstractIntegrationTest;
+import com.sarabrandserver.auth.dto.RegisterDTO;
+import com.sarabrandserver.auth.service.AuthService;
 import com.sarabrandserver.cart.dto.CartDTO;
+import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
+import com.sarabrandserver.cart.service.CartService;
 import com.sarabrandserver.product.entity.ProductSku;
+import com.sarabrandserver.user.repository.UserRepository;
+import com.sarabrandserver.user.repository.UserRoleRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.test.context.support.WithMockUser;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -13,10 +22,39 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
 class CartControllerTest extends AbstractIntegrationTest {
 
     private final String path = "/api/v1/client/cart";
+
+    @Autowired private ShoppingSessionRepo shoppingSessionRepo;
+    @Autowired private CartService cartService;
+    @Autowired private AuthService authService;
+    @Autowired private UserRoleRepository roleRepository;
+    @Autowired private UserRepository userRepository;
+
+    @BeforeEach
+    void setUp() {
+        var registerDTO = new RegisterDTO(
+                "SEJU",
+                "Development",
+                "fart@client.com",
+                "",
+                "000-000-0000",
+                "password"
+        );
+        this.authService.workerRegister(registerDTO);
+
+        var sku = productSku();
+        var dto = new CartDTO(null, sku.getSku(), sku.getInventory());
+        this.cartService.create(dto);
+    }
+
+    @AfterEach
+    void tearDown() {
+        this.shoppingSessionRepo.deleteAll();
+        this.roleRepository.deleteAll();
+        this.userRepository.deleteAll();
+    }
 
     ProductSku productSku() {
         var list = this.productSkuRepo.findAll();
@@ -25,11 +63,11 @@ class CartControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "client@client.com", password = "password", roles = {"CLIENT"})
+    @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
     void create_new_shopping_session() throws Exception {
-        var productSKU = productSku();
+        var sku = productSku();
 
-        var dto = new CartDTO(null, productSKU.getSku(), 10);
+        var dto = new CartDTO(null, sku.getSku(), sku.getInventory());
 
         this.MOCKMVC
                 .perform(post(path)
@@ -38,14 +76,27 @@ class CartControllerTest extends AbstractIntegrationTest {
                         .with(csrf())
                 )
                 .andDo(print())
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
     }
 
     @Test
-    @WithMockUser(username = "client@client.com", password = "password", roles = {"CLIENT"})
+    @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
     void add_to_existing_shopping_session() throws Exception {
-        var productSKU = productSku();
+        var sku = productSku();
+        var list = this.shoppingSessionRepo.findAll();
+        assertFalse(list.isEmpty());
 
+        var session = list.get(0);
+
+        var dto = new CartDTO(session.getShoppingSessionId(), sku.getSku(), sku.getInventory());
+
+        this.MOCKMVC
+                .perform(post(path)
+                        .contentType(APPLICATION_JSON)
+                        .content(this.MAPPER.writeValueAsString(dto))
+                        .with(csrf())
+                )
+                .andExpect(status().isCreated());
     }
 
 }

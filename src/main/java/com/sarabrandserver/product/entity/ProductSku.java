@@ -1,6 +1,5 @@
 package com.sarabrandserver.product.entity;
 
-import com.sarabrandserver.cart.entity.CartItem;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,10 +29,6 @@ public class ProductSku implements Serializable {
 
     @Column(name = "inventory", nullable = false)
     private int inventory;
-
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "cart_id", referencedColumnName = "cart_id")
-    private CartItem cartItem;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "detail_id", referencedColumnName = "detail_id", nullable = false)

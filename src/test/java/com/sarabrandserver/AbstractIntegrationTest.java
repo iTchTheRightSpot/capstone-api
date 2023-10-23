@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -51,7 +50,7 @@ public abstract class AbstractIntegrationTest {
     @Autowired protected CollectionRepository collectionRepository;
 
     @BeforeEach
-    void setUp() {
+    void beforeEachMethod() {
         // Persist collection
         this.collectionService
                 .create(new CollectionDTO(new Faker().commerce().department(), false));
@@ -116,7 +115,7 @@ public abstract class AbstractIntegrationTest {
     }
 
     @AfterEach
-    void tearDown() {
+    void afterEachMethod() {
         this.productSkuRepo.deleteAll();
         this.productRepo.deleteAll();
         this.categoryRepository.deleteAll();

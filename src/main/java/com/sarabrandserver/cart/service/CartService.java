@@ -5,9 +5,9 @@ import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
+import com.sarabrandserver.cart.response.CartResponse;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.OutOfStockException;
-import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.service.ProductSKUService;
 import com.sarabrandserver.user.service.ClientService;
 import com.sarabrandserver.util.CustomUtil;
@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,6 +31,27 @@ public class CartService {
     private final ClientService clientService;
     private final ProductSKUService productSKUService;
     private final CustomUtil customUtil;
+
+    public List<CartResponse> cartItems() {
+        var principal = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        // find user session
+        var sessionOptional = this.shoppingSessionRepo
+                .shoppingSessionByPrincipal(principal);
+
+        if (sessionOptional.isEmpty()) {
+            return null;
+        }
+
+        // all cart items
+        List<CartItem> list = this.cartItemRepo
+                .cartItemByShoppingSessionId(sessionOptional.get().getShoppingSessionId());
+
+        // build list
+
+        return null;
+    }
 
     /**
      * Creates a new shopping session or persists details into an existing shopping session
@@ -45,8 +67,6 @@ public class CartService {
             throw new OutOfStockException("chosen quantity is out of stock");
         }
 
-        var date = new Date();
-
         boolean find = this.shoppingSessionRepo
                 .shoppingSessionById(dto.session_id())
                 .isPresent();
@@ -54,23 +74,22 @@ public class CartService {
         String principal = SecurityContextHolder.getContext().getAuthentication().getName();
 
         if (!find) {
-            shoppingSessionNotExist(date, productSKU, principal, dto);
+            create_new_shopping_session(principal, dto);
         } else {
-            shoppingSessionExists(date, productSKU, dto);
+            add_to_existing_shopping_session(principal, dto);
         }
     }
 
     /**
      * Creates a new shopping session
      *
-     * @param date      is of type java.util.Date;
-     * @param sku       is a ProductSku object
      * @param principal is the user email
      * @param dto       contains necessary details to create a new session
      */
-    void shoppingSessionNotExist(Date date, ProductSku sku, String principal, CartDTO dto) {
-        // 24 hrs from date
-        var expireAt = Duration.ofMillis(Duration.ofHours(24).toMillis());
+    void create_new_shopping_session(String principal, CartDTO dto) {
+        var date = new Date();
+        // 14 hrs from date
+        var expireAt = Duration.ofMillis(Duration.ofHours(12).toMillis());
 
         this.clientService
                 .userByPrincipal(principal)
@@ -85,28 +104,37 @@ public class CartService {
 
                     var session = this.shoppingSessionRepo.save(shoppingSession);
 
-                    var cartItem = new CartItem(dto.qty(), session, new HashSet<>());
-                    cartItem.addToCart(sku);
+                    var cartItem = new CartItem(dto.qty(), dto.sku(), session);
 
                     this.cartItemRepo.save(cartItem);
                 });
     }
 
-    void shoppingSessionExists(Date date, ProductSku sku, CartDTO dto) {
+    /**
+     * Update existing session
+     */
+    void add_to_existing_shopping_session(String principal, CartDTO dto) {
         var session = this.shoppingSessionRepo
                 .shoppingSessionById(dto.session_id())
                 .orElseThrow(() -> new CustomNotFoundException("invalid shopping session"));
 
         Optional<CartItem> cartItem = this.cartItemRepo
-                .cartItemBySKU(dto.sku());
+                .cartItemBySKUAndPrincipal(dto.sku(), principal);
 
+        // update quantity if cart is present
         if (cartItem.isPresent()) {
-            // TODO update qty
-            return;
+            this.cartItemRepo.updateCartQtyByCartId(cartItem.get().getCartId(), dto.qty());
+        } else {
+            // create new cart
+            var cart = new CartItem(dto.qty(), dto.sku(), session);
+            this.cartItemRepo.save(cart);
         }
 
-
-
+        // TODO update session expiry date
+//        this.shoppingSessionRepo.updateSessionExpiry(
+//                session.getShoppingSessionId(),
+//                this.customUtil.toUTC(da)
+//        );
     }
 
 }

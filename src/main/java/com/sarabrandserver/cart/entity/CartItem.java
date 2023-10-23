@@ -1,12 +1,10 @@
 package com.sarabrandserver.cart.entity;
 
-import com.sarabrandserver.product.entity.ProductSku;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.util.Set;
-
-import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Table(name = "cart_item")
@@ -24,22 +22,17 @@ public class CartItem {
     @Column(nullable = false)
     private int qty;
 
+    @Column(nullable = false, length = 36)
+    private String sku;
+
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "session_id", referencedColumnName = "session_id")
+    @JoinColumn(name = "session_id", referencedColumnName = "session_id", nullable = false)
     private ShoppingSession shoppingSession;
 
-    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "cartItem")
-    private Set<ProductSku> skus;
-
-    public CartItem(int qty, ShoppingSession shoppingSession, Set<ProductSku> skus) {
+    public CartItem(int qty, String sku, ShoppingSession shoppingSession) {
         this.qty = qty;
+        this.sku = sku;
         this.shoppingSession = shoppingSession;
-        this.skus = skus;
-    }
-
-    /** Persists  */
-    public void addToCart(ProductSku sku) {
-        this.skus.add(sku);
     }
 
 }

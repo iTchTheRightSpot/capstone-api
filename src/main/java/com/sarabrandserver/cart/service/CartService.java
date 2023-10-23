@@ -1,5 +1,6 @@
 package com.sarabrandserver.cart.service;
 
+import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.cart.dto.CartDTO;
 import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.cart.entity.ShoppingSession;
@@ -12,6 +13,8 @@ import com.sarabrandserver.product.service.ProductSKUService;
 import com.sarabrandserver.user.service.ClientService;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,33 +27,49 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CartService {
+
+    @Value(value = "${aws.bucket}")
+    private String BUCKET;
+    @Value(value = "${spring.profiles.active}")
+    private String ACTIVEPROFILE;
 
     private final ShoppingSessionRepo shoppingSessionRepo;
     private final CartItemRepo cartItemRepo;
     private final ClientService clientService;
     private final ProductSKUService productSKUService;
     private final CustomUtil customUtil;
+    private final S3Service s3Service;
 
+    /**
+     * Returns a list of CartResponse based on user principal
+     */
     public List<CartResponse> cartItems() {
-        var principal = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
+        var principal = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // find user session
-        var sessionOptional = this.shoppingSessionRepo
-                .shoppingSessionByPrincipal(principal);
+        boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
 
-        if (sessionOptional.isEmpty()) {
-            return null;
-        }
+        return this.shoppingSessionRepo.cartItemsByPrincipal(principal) //
+                .stream() //
+                .map(pojo -> {
+                    String formatted = """
+                            Pojo {
+                                Name: %s
+                                Key: %s
+                                Session ID: %s
+                                Sku: %s
+                                Qty: %s
+                            }
+                            """.formatted(pojo.getName(), pojo.getKey(), pojo.getSession(), pojo.getSku(), pojo.getQty());
 
-        // all cart items
-        List<CartItem> list = this.cartItemRepo
-                .cartItemByShoppingSessionId(sessionOptional.get().getShoppingSessionId());
+                    log.info(formatted);
 
-        // build list
+                    var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
 
-        return null;
+                    return new CartResponse(pojo.getSession(), url, pojo.getName(), pojo.getSku(), pojo.getQty());
+                }) //
+                .toList();
     }
 
     /**
@@ -82,9 +101,6 @@ public class CartService {
 
     /**
      * Creates a new shopping session
-     *
-     * @param principal is the user email
-     * @param dto       contains necessary details to create a new session
      */
     void create_new_shopping_session(String principal, CartDTO dto) {
         var date = new Date();

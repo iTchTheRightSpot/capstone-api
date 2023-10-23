@@ -36,8 +36,10 @@ import static com.sarabrandserver.enumeration.SarreCurrency.USD;
 @Setter
 public class WorkerProductService {
 
-    @Value(value = "${aws.bucket}") private String BUCKET;
-    @Value(value = "${spring.profiles.active}") private String ACTIVEPROFILE;
+    @Value(value = "${aws.bucket}")
+    private String BUCKET;
+    @Value(value = "${spring.profiles.active}")
+    private String ACTIVEPROFILE;
 
     private final StripeService stripeService;
     private final PriceCurrencyRepo priceCurrencyRepo;

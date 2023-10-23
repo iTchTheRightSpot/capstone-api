@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -28,12 +27,5 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     void updateCartQtyByCartId(long id, int qty);
-
-    @Query(value = """
-    SELECT c FROM CartItem c
-    INNER JOIN ShoppingSession s On c.shoppingSession.shoppingSessionId = s.shoppingSessionId
-    WHERE s.shoppingSessionId = :id
-    """)
-    List<CartItem> cartItemByShoppingSessionId(long id);
 
 }

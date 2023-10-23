@@ -15,9 +15,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.test.context.support.WithMockUser;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -56,10 +59,26 @@ class CartControllerTest extends AbstractIntegrationTest {
         this.userRepository.deleteAll();
     }
 
+    List<ProductSku> products() {
+        var list = this.productSkuRepo.findAll();
+        assertFalse(list.isEmpty());
+        assertFalse(list.size() < 2);
+        return list;
+    }
+
     ProductSku productSku() {
         var list = this.productSkuRepo.findAll();
         assertFalse(list.isEmpty());
         return list.get(0);
+    }
+
+    @Test
+    @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
+    void cartItems() throws Exception {
+        this.MOCKMVC
+                .perform(get(path).with(csrf()))
+                .andDo(print())
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -75,7 +94,6 @@ class CartControllerTest extends AbstractIntegrationTest {
                         .content(this.MAPPER.writeValueAsString(dto))
                         .with(csrf())
                 )
-                .andDo(print())
                 .andExpect(status().isCreated());
     }
 

@@ -25,13 +25,13 @@ public class CartController {
 
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    List<CartResponse> cartItems() {
+    public List<CartResponse> cartItems() {
         return this.cartService.cartItems();
     }
 
     @ResponseStatus(CREATED)
     @PostMapping(consumes = APPLICATION_JSON_VALUE)
-    void create(@Valid @RequestBody CartDTO dto) {
+    public void create(@Valid @RequestBody CartDTO dto) {
         cartService.create(dto);
     }
 

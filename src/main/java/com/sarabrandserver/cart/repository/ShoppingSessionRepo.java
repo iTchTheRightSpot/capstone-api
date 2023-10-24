@@ -18,21 +18,14 @@ public interface ShoppingSessionRepo extends JpaRepository<ShoppingSession, Long
     @Query("SELECT s FROM ShoppingSession s WHERE s.shoppingSessionId = :id")
     Optional<ShoppingSession> shoppingSessionById(Long id);
 
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = """
     UPDATE ShoppingSession s
     SET s.expireAt = :d
     WHERE s.shoppingSessionId = :id
     """)
-    @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
     void updateSessionExpiry(long id, Date d);
-
-    @Query(value = """
-    SELECT s FROM ShoppingSession s
-    INNER JOIN SarreBrandUser u ON s.sarreBrandUser.clientId = u.clientId
-    WHERE u.email = :principal
-    """)
-    Optional<ShoppingSession> shoppingSessionByPrincipal(String principal);
 
     @Query(value = """
     SELECT

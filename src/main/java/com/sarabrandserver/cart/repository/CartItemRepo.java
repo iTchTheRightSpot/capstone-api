@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+/** Custom query present */
 @Repository
 public interface CartItemRepo extends JpaRepository<CartItem, Long> {
 
@@ -27,5 +28,13 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     void updateCartQtyByCartId(long id, int qty);
+
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(value = """
+    DELETE FROM CartItem c
+    WHERE c.shoppingSession.shoppingSessionId = :id AND c.sku = :sku
+    """)
+    void deleteByCartSku(long id, String sku);
 
 }

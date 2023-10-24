@@ -1,10 +1,10 @@
 package com.sarabrandserver.cart.controller;
 
-
 import com.sarabrandserver.cart.dto.CartDTO;
 import com.sarabrandserver.cart.response.CartResponse;
 import com.sarabrandserver.cart.service.CartService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +33,15 @@ public class CartController {
     @PostMapping(consumes = APPLICATION_JSON_VALUE)
     public void create(@Valid @RequestBody CartDTO dto) {
         cartService.create(dto);
+    }
+
+    @ResponseStatus(OK)
+    @DeleteMapping
+    public void deleteItem(
+            @NotNull @RequestParam(name = "session_id") Long id,
+            @NotNull @RequestParam(name = "sku") String sku
+    ) {
+        this.cartService.remove_from_cart(id, sku);
     }
 
 }

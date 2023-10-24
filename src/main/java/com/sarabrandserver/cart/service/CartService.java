@@ -13,7 +13,6 @@ import com.sarabrandserver.product.service.ProductSKUService;
 import com.sarabrandserver.user.service.ClientService;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,6 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class CartService {
 
     @Value(value = "${aws.bucket}")
@@ -47,26 +45,12 @@ public class CartService {
      */
     public List<CartResponse> cartItems() {
         var principal = SecurityContextHolder.getContext().getAuthentication().getName();
-
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
 
         return this.shoppingSessionRepo.cartItemsByPrincipal(principal) //
                 .stream() //
                 .map(pojo -> {
-                    String formatted = """
-                            Pojo {
-                                Name: %s
-                                Key: %s
-                                Session ID: %s
-                                Sku: %s
-                                Qty: %s
-                            }
-                            """.formatted(pojo.getName(), pojo.getKey(), pojo.getSession(), pojo.getSku(), pojo.getQty());
-
-                    log.info(formatted);
-
                     var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
-
                     return new CartResponse(pojo.getSession(), url, pojo.getName(), pojo.getSku(), pojo.getQty());
                 }) //
                 .toList();
@@ -102,7 +86,7 @@ public class CartService {
     /**
      * Creates a new shopping session
      */
-    void create_new_shopping_session(String principal, CartDTO dto) {
+    public void create_new_shopping_session(String principal, CartDTO dto) {
         var date = new Date();
         // 14 hrs from date
         var expireAt = Duration.ofMillis(Duration.ofHours(12).toMillis());
@@ -129,7 +113,7 @@ public class CartService {
     /**
      * Update existing session
      */
-    void add_to_existing_shopping_session(String principal, CartDTO dto) {
+    public void add_to_existing_shopping_session(String principal, CartDTO dto) {
         var session = this.shoppingSessionRepo
                 .shoppingSessionById(dto.session_id())
                 .orElseThrow(() -> new CustomNotFoundException("invalid shopping session"));
@@ -147,10 +131,19 @@ public class CartService {
         }
 
         // TODO update session expiry date
-//        this.shoppingSessionRepo.updateSessionExpiry(
-//                session.getShoppingSessionId(),
-//                this.customUtil.toUTC(da)
-//        );
+//        this.shoppingSessionRepo
+//                .updateSessionExpiry(session.getShoppingSessionId(), this.customUtil.toUTC(da));
+    }
+
+    /**
+     * Deletes/Removes an item from shopping session
+     *
+     * @param id ShoppingSession primary key
+     * @param sku unique ProductSku
+     * */
+    @Transactional
+    public void remove_from_cart(long id, String sku) {
+        this.cartItemRepo.deleteByCartSku(id, sku);
     }
 
 }

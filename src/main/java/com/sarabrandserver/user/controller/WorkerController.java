@@ -5,11 +5,14 @@ import com.sarabrandserver.user.service.WorkerService;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequestMapping(path = "api/v1/worker/user")
@@ -19,7 +22,7 @@ public class WorkerController {
 
     private final WorkerService workerService;
 
-    @GetMapping(produces = "application/json")
+    @GetMapping(produces = APPLICATION_JSON_VALUE)
     public Page<UserResponse> allUsers(
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
             @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size

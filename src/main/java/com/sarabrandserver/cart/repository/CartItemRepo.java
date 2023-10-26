@@ -20,13 +20,13 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     """)
     Optional<CartItem> cartItemBySKUAndPrincipal(String sku, String principal);
 
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = """
     UPDATE CartItem c
     SET c.qty = :qty
     WHERE c.cartId = :id
     """)
-    @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
     void updateCartQtyByCartId(long id, int qty);
 
     @Transactional

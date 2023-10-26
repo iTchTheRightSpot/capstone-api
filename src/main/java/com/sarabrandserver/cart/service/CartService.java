@@ -47,7 +47,6 @@ public class CartService {
     public List<CartResponse> cartItems(SarreCurrency currency) {
         var principal = SecurityContextHolder.getContext().getAuthentication().getName();
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
-        // TODO
         return this.shoppingSessionRepo.cartItemsByPrincipal(currency, principal) //
                 .stream() //
                 .map(pojo -> {

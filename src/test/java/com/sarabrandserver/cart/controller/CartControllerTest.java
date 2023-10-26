@@ -77,7 +77,7 @@ class CartControllerTest extends AbstractIntegrationTest {
 
     @Test
     @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
-    void cartItems() throws Exception {
+    void listCartItems() throws Exception {
         this.MOCKMVC
                 .perform(get(path).with(csrf()))
                 .andDo(print())

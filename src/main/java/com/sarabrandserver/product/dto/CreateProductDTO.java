@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 
 public record CreateProductDTO(
         @NotNull(message = "Please select category as product has to below to a category")

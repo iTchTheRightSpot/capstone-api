@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 
 public record PriceCurrencyDTO (
         @NotNull(message = "Please enter product price")
+        @NotEmpty(message = "cannot be empty")
         BigDecimal price,
         @NotNull(message = "Please enter or choose a product currency")
         @NotEmpty(message = "Please enter or choose a product currency")

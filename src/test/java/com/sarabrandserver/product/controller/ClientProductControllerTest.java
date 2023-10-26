@@ -11,32 +11,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class ClientProductControllerTest extends AbstractIntegrationTest {
 
+    final String path = "/api/v1/client/product";
+
+    @Test
+    void list_products_ngn_currency() throws Exception {
+        this.MOCKMVC
+                .perform(get(path))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void list_products_usd_currency() throws Exception {
+        this.MOCKMVC
+                .perform(get(path).param("currency", "usd"))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
     @Test
     void fetchProductDetails() throws Exception {
         var list = this.productRepo.findAll();
         assertFalse(list.isEmpty());
-
         String productID = list.get(0).getUuid();
 
-//        MvcResult result = MOCKMVC
-//                .perform(get(requestMapping + "/detail")
-//                        .param("product_id", productID)
-//                )
-//                .andExpect(request().asyncStarted())
-//                .andDo(MockMvcResultHandlers.log())
-//                .andReturn();
-
-//        MOCKMVC
-//                .perform(asyncDispatch(result))
-//                .andExpect(status().isOk())
-//                .andDo(print())
-//                .andExpect(jsonPath("$").isArray())
-//                .andExpect(jsonPath("$[*].variants").isArray())
-//                .andExpect(jsonPath("$[*].variants.length()").value(this.detailSize));
-
         this.MOCKMVC
-                .perform(get("/api/v1/client/product/detail")
-                                .param("product_id", productID)
+                .perform(get(path + "/detail")
+                        .param("product_id", productID)
                 )
                 .andExpect(content().contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())

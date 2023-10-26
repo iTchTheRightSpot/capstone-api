@@ -9,5 +9,4 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(path = "api/v1/client/user")
 @RequiredArgsConstructor
 @PreAuthorize(value = "hasRole('ROLE_CLIENT')")
-public class ClientController {
-}
+public class ClientController { }

@@ -2,6 +2,7 @@ package com.sarabrandserver.category.controller;
 
 import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.category.service.ClientCategoryService;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.service.ClientProductService;
 import com.sarabrandserver.product.response.ProductResponse;
 import jakarta.validation.constraints.NotNull;
@@ -34,9 +35,11 @@ public class ClientCategoryController {
     public Page<ProductResponse> fetchProductByCategory(
             @NotNull @RequestParam(name = "category_id") String id,
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size
+            @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size,
+            @NotNull @RequestParam(name = "currency", defaultValue = "NGN") String currency
     ) {
-        return this.productService.allProductsByUUID("category", id, page, Math.min(size, 20));
+        return this.productService
+                .allProductsByUUID("category", SarreCurrency.valueOf(currency), id, page, Math.min(size, 20));
     }
 
 }

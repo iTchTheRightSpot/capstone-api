@@ -2,14 +2,15 @@ package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.collection.service.WorkerCollectionService;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.*;
 import com.sarabrandserver.product.dto.CreateProductDTO;
 import com.sarabrandserver.product.dto.UpdateProductDTO;
+import com.sarabrandserver.product.entity.PriceCurrency;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.repository.PriceCurrencyRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.response.ProductResponse;
-import com.sarabrandserver.stripe.StripeService;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -41,7 +42,6 @@ public class WorkerProductService {
     @Value(value = "${spring.profiles.active}")
     private String ACTIVEPROFILE;
 
-    private final StripeService stripeService;
     private final PriceCurrencyRepo priceCurrencyRepo;
     private final ProductRepo productRepo;
     private final WorkerProductDetailService workerProductDetailService;
@@ -52,18 +52,18 @@ public class WorkerProductService {
     private final HelperService helperService;
 
     /**
-     * Method fetches a list of ProductResponse. Note fetchAllProductsWorker query method returns a list of
+     * Method returns a list of ProductResponse. Note fetchAllProductsWorker query method returns a list of
      * ProductPojo using spring jpa projection. It only returns a Product not Including its details.
      *
+     * @param currency is of SarreCurrency
      * @param page is the UI page number
      * @param size is the max amount to be displayed on a page
      * @return Page of ProductResponse
      */
-    public Page<ProductResponse> fetchAll(int page, int size) {
+    public Page<ProductResponse> allProducts(SarreCurrency currency, int page, int size) {
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
-
         return this.productRepo
-                .fetchAllProductsWorker(PageRequest.of(page, size))
+                .fetchAllProductsWorker(currency, PageRequest.of(page, size))
                 .map(pojo -> {
                     var url = this.helperService.preSignedURL(bool, BUCKET, pojo.getKey());
                     return ProductResponse.builder()
@@ -71,7 +71,7 @@ public class WorkerProductService {
                             .collection(pojo.getCollection())
                             .id(pojo.getUuid())
                             .name(pojo.getName())
-                            .desc(pojo.getDesc())
+                            .desc(pojo.getDescription())
                             .price(pojo.getPrice())
                             .currency(pojo.getCurrency())
                             .imageUrl(url)
@@ -79,13 +79,13 @@ public class WorkerProductService {
                 });
     }
 
-    // TODO
     /**
      * Create a new Product.
      *
      * @param files of type MultipartFile
      * @param dto   of type CreateProductDTO
-     * @throws CustomNotFoundException is thrown when category or collection name does not exist
+     * @throws CustomNotFoundException is thrown if category or collection name does not exist in database
+     * or currency passed in truncateAmount does not contain in dto property priceCurrency
      * @throws CustomAwsException      is thrown if File is not an image
      * @throws DuplicateException      is thrown if dto image exists in for Product
      */
@@ -107,16 +107,6 @@ public class WorkerProductService {
         StringBuilder defaultImageKey = new StringBuilder();
         var file = this.helperService.customMultiPartFiles(files, defaultImageKey);
 
-        long ngn = this.customUtil.toCurrency(dto.priceCurrency(), NGN);
-        long usd = this.customUtil.toCurrency(dto.priceCurrency(), USD);
-
-//        var productID = this.stripeService
-//                .createProduct(
-//                        dto.name(),
-//                        new PriceCurrencyPair(ngn, NGN),
-//                        new PriceCurrencyPair(usd, USD)
-//                );
-
         // Build Product
         var product = Product.builder()
                 .productCategory(category)
@@ -124,8 +114,6 @@ public class WorkerProductService {
                 .name(dto.name().trim())
                 .description(dto.desc().trim())
                 .defaultKey(defaultImageKey.toString())
-                .defaultPrice(new BigDecimal(ngn * 0.01)) // TODO validate stripe conversion for NGN
-                .defaultCurrency(NGN.name()) // default is NGN
                 .productDetails(new HashSet<>())
                 .build();
 
@@ -137,6 +125,12 @@ public class WorkerProductService {
 
         // Save Product
         var saved = this.productRepo.save(product);
+
+        // save ngn & usd price
+        BigDecimal ngn = this.customUtil.truncateAmount(dto.priceCurrency(), NGN);
+        BigDecimal usd = this.customUtil.truncateAmount(dto.priceCurrency(), USD);
+        this.priceCurrencyRepo.save(new PriceCurrency(ngn, NGN, product));
+        this.priceCurrencyRepo.save(new PriceCurrency(usd, USD, product));
 
         // Save ProductDetails
         var date = this.customUtil.toUTC(new Date());
@@ -181,7 +175,6 @@ public class WorkerProductService {
                     dto.uuid(),
                     dto.name().trim(),
                     dto.desc().trim(),
-                    dto.price(),
                     category,
                     collection
             );
@@ -193,7 +186,6 @@ public class WorkerProductService {
                 dto.uuid(),
                 dto.name().trim(),
                 dto.desc().trim(),
-                dto.price(),
                 category
         );
     }

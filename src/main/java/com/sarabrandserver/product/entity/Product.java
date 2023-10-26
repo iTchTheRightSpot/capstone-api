@@ -7,7 +7,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
@@ -38,12 +37,6 @@ public class Product implements Serializable {
 
     @Column(name = "default_image_key", nullable = false)
     private String defaultKey;
-
-    @Column(name = "default_price", nullable = false)
-    private BigDecimal defaultPrice;
-
-    @Column(name = "default_currency", nullable = false, length = 10)
-    private String defaultCurrency;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "category_id", referencedColumnName = "category_id")

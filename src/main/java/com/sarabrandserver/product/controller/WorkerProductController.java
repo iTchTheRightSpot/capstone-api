@@ -1,12 +1,14 @@
 package com.sarabrandserver.product.controller;
 
-import com.sarabrandserver.product.service.WorkerProductService;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.dto.CreateProductDTO;
-import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.product.dto.UpdateProductDTO;
+import com.sarabrandserver.product.response.ProductResponse;
+import com.sarabrandserver.product.service.WorkerProductService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 @RequestMapping("api/v1/worker/product")
 @PreAuthorize(value = "hasRole('ROLE_WORKER')")
 @RequiredArgsConstructor
+@Slf4j
 public class WorkerProductController {
 
     private final WorkerProductService workerProductService;
@@ -34,10 +37,12 @@ public class WorkerProductController {
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
     public Page<ProductResponse> allProducts(
-            @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "30") Integer size
+            @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @RequestParam(name = "size", defaultValue = "30") Integer size,
+            @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
-        return this.workerProductService.fetchAll(page, Math.min(size, 30));
+        var c = SarreCurrency.valueOf(currency.toUpperCase());
+        return this.workerProductService.allProducts(c, page, Math.min(size, 30));
     }
 
     /**

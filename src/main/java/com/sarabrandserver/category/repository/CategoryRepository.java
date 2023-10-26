@@ -94,8 +94,16 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     SELECT
     p.uuid as uuid,
     p.name as name,
-    p.defaultPrice as price,
-    p.defaultCurrency as currency,
+    (SELECT
+    c.currency
+    FROM PriceCurrency c
+    WHERE p.productId = c.product.productId AND c.currency = :currency
+    ) AS currency,
+    (SELECT
+    c.price
+    FROM PriceCurrency c
+    WHERE p.productId = c.product.productId AND c.currency = :currency
+    ) AS price,
     p.defaultKey as key
     FROM Product p
     INNER JOIN ProductCategory c ON p.productCategory.categoryId = c.categoryId

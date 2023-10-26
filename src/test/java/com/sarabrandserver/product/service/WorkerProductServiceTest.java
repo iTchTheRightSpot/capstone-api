@@ -5,13 +5,12 @@ import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.collection.entity.ProductCollection;
 import com.sarabrandserver.collection.service.WorkerCollectionService;
+import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.repository.PriceCurrencyRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
-import com.sarabrandserver.stripe.StripeService;
 import com.sarabrandserver.util.CustomUtil;
-import com.sarabrandserver.data.TestingData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +33,6 @@ class WorkerProductServiceTest extends AbstractUnitTest {
 
     private WorkerProductService workerProductService;
 
-    @Mock private StripeService stripeService;
     @Mock private PriceCurrencyRepo priceCurrencyRepo;
     @Mock private ProductRepo productRepo;
     @Mock private WorkerProductDetailService workerProductDetailService;
@@ -47,7 +45,6 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     @BeforeEach
     void setUp() {
         this.workerProductService = new WorkerProductService(
-                this.stripeService,
                 this.priceCurrencyRepo,
                 this.productRepo,
                 this.workerProductDetailService,
@@ -129,7 +126,6 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                         anyString(),
                         anyString(),
                         anyString(),
-                        any(BigDecimal.class),
                         any(ProductCategory.class),
                         any(ProductCollection.class)
                 );
@@ -162,7 +158,6 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                         anyString(),
                         anyString(),
                         anyString(),
-                        any(BigDecimal.class),
                         any(ProductCategory.class)
                 );
     }

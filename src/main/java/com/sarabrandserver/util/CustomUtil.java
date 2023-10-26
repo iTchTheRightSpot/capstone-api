@@ -3,7 +3,6 @@ package com.sarabrandserver.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.enumeration.SarreCurrency;
-import com.sarabrandserver.exception.CustomInvalidFormatException;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.product.dto.PriceCurrencyDTO;
 import com.sarabrandserver.product.response.Variant;
@@ -13,7 +12,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 import java.util.function.Function;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
@@ -53,7 +55,9 @@ public class CustomUtil {
         return calendar.getTime();
     }
 
-    /** Validates DTO is in the right format */
+    /**
+     * Validates DTO is in the right format
+     * */
     public boolean validateContainsCurrencies(PriceCurrencyDTO[] dto) {
         if (dto.length != 2) {
             return false;
@@ -80,15 +84,61 @@ public class CustomUtil {
         return ngn && usd;
     }
 
+    /**
+     * Retrieves the price based on the currency.
+     *
+     * @param arr dto object gotten from the user
+     * @param currency gets the price in the array
+     * @return BigDecimal
+     * */
+    public BigDecimal truncateAmount(PriceCurrencyDTO[] arr, SarreCurrency currency) {
+        String error = "please enter %s amount".formatted(currency.name());
+
+        PriceCurrencyDTO dto = Arrays
+                .stream(arr)
+                .filter(predicate -> predicate.currency().equals(currency.name()))
+                .findFirst()
+                .orElseThrow(() -> new CustomNotFoundException(error));
+
+        return dto.price().setScale(2, FLOOR);
+    }
+
+    /**
+     * Convert String gotten from DetailPojo getVariant method to
+     * a Variant array object
+     *
+     * @param str is String method getVariants in DetailPojo
+     * @param clazz is the class that cause the error
+     * @return Variant array
+     * */
+    public <T> Variant[] toVariantArray(String str, T clazz) {
+        record VariantHelperMapper(String sku, String inventory, String size) { }
+
+        try {
+            VariantHelperMapper[] mapper = this.objectMapper.readValue(str, VariantHelperMapper[].class);
+            Variant[] variant = new Variant[mapper.length];
+
+            for (int i = 0; i < mapper.length; i++) {
+                variant[i] = new Variant(mapper[i].sku, mapper[i].inventory, mapper[i].size);
+            }
+
+            return variant;
+        } catch (JsonProcessingException e) {
+            log.error("Error converting from ProductSKUs to Variant. " + clazz);
+            return null;
+        }
+    }
+
     public long toCurrency(PriceCurrencyDTO[] dto, SarreCurrency obj) {
         String error = "please enter %s amount".formatted(obj.name());
 
-        PriceCurrencyDTO usd = Arrays.stream(dto)
+        PriceCurrencyDTO currencyDTO = Arrays
+                .stream(dto)
                 .filter(predicate -> predicate.currency().equals(obj.name()))
                 .findFirst()
                 .orElseThrow(() -> new CustomNotFoundException(error));
 
-        return convertCurrency(obj, usd.price());
+        return convertCurrency(obj, currencyDTO.price());
     }
 
     /**
@@ -101,8 +151,18 @@ public class CustomUtil {
      */
     public long convertCurrency(SarreCurrency currency, BigDecimal bigDecimal) {
         return switch (currency) {
-            // TODO find out how stripe converts NGN
-            case NGN -> 0L;
+            case NGN -> {
+                BigDecimal b = bigDecimal.setScale(2, FLOOR);
+                int compare = b.compareTo(ZERO);
+
+                if (compare == 0) {
+                    yield 0;
+                }
+
+                double d = b.doubleValue();
+                yield (long) d;
+
+            }
             case USD -> {
                 // truncate without rounding and scale 2. meaning leave only 2 nums after .
                 BigDecimal b = bigDecimal.setScale(2, FLOOR);
@@ -118,32 +178,6 @@ public class CustomUtil {
                 yield (long) d;
             }
         };
-    }
-
-
-    private record VariantHelperMapper(String sku, String inventory, String size) { }
-    /**
-     * Convert String gotten from DetailPojo getVariant method to
-     * a Variant array object
-     *
-     * @param str is String method getVariants in DetailPojo
-     * @param clazz is the class that cause the error
-     * @return Variant array
-     * */
-    public <T> Variant[] toVariantArray(String str, T clazz) {
-        try {
-            VariantHelperMapper[] mapper = this.objectMapper.readValue(str, VariantHelperMapper[].class);
-            Variant[] variant = new Variant[mapper.length];
-
-            for (int i = 0; i < mapper.length; i++) {
-                variant[i] = new Variant(mapper[i].sku, mapper[i].inventory, mapper[i].size);
-            }
-
-            return variant;
-        } catch (JsonProcessingException e) {
-            log.error("Error converting from ProductSKUs to Variant. " + clazz);
-            return null;
-        }
     }
 
 }

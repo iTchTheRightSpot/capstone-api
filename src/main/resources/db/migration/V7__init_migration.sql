@@ -1,8 +1,11 @@
-# rename product columns
+# reduce the size of role in client_role table
+ALTER TABLE client_role CHANGE COLUMN role role VARCHAR(10);
+
+# drop price and currency columns
 ALTER TABLE product
-    RENAME COLUMN price TO default_price;
+    DROP COLUMN price;
 ALTER TABLE product
-    RENAME COLUMN currency TO default_currency;
+    DROP COLUMN currency;
 
 # CartItem table
 CREATE TABLE IF NOT EXISTS cart_item

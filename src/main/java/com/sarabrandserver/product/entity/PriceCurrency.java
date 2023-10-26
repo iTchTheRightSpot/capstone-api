@@ -1,7 +1,10 @@
 package com.sarabrandserver.product.entity;
 
+import com.sarabrandserver.enumeration.SarreCurrency;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
@@ -10,8 +13,6 @@ import static jakarta.persistence.FetchType.LAZY;
 @Table(name = "price_currency")
 @Entity
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Getter
 @Setter
 public class PriceCurrency {
@@ -24,11 +25,18 @@ public class PriceCurrency {
     @Column(nullable = false)
     private BigDecimal price;
 
+    @Enumerated(value = EnumType.STRING)
     @Column(nullable = false, length = 10)
-    private String currency;
+    private SarreCurrency currency;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "product_id", referencedColumnName = "product_id", nullable = false)
     private Product product;
+
+    public PriceCurrency(BigDecimal price, SarreCurrency currency, Product product) {
+        this.price = price;
+        this.currency = currency;
+        this.product = product;
+    }
 
 }

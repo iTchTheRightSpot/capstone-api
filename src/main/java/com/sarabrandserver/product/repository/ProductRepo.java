@@ -2,6 +2,7 @@ package com.sarabrandserver.product.repository;
 
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.collection.entity.ProductCollection;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.projection.Imagez;
 import com.sarabrandserver.product.projection.ProductPojo;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * All methods ending with worker are for admin dashboard. Client is the opposite
+ * Native query present
  */
 @Repository
 public interface ProductRepo extends JpaRepository<Product, Long> {
@@ -49,9 +50,17 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             SELECT
             p.uuid AS uuid,
             p.name AS name,
-            p.description AS desc,
-            p.defaultPrice AS price,
-            p.defaultCurrency AS currency,
+            p.description AS description,
+            (SELECT
+            c.currency
+            FROM PriceCurrency c
+            WHERE p.productId = c.product.productId AND c.currency = :currency
+            ) AS currency,
+            (SELECT
+            c.price
+            FROM PriceCurrency c
+            WHERE p.productId = c.product.productId AND c.currency = :currency
+            ) AS price,
             p.defaultKey AS key,
             cat.categoryName AS category,
             col.collection AS collection
@@ -59,27 +68,36 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId
             LEFT JOIN ProductCollection col ON p.productCollection.collectionId = col.collectionId
             """)
-    Page<ProductPojo> fetchAllProductsWorker(Pageable pageable);
+    Page<ProductPojo> fetchAllProductsWorker(SarreCurrency currency, Pageable pageable);
 
+    /** Returns a Product based non default currency */
     @Query(value = """
-            SELECT
-            p.uuid AS uuid,
-            p.name AS name,
-            p.description AS desc,
-            p.defaultPrice AS price,
-            p.defaultCurrency AS currency,
-            p.defaultKey AS key,
-            col.collection AS collection,
-            cat.categoryName AS category
-            FROM Product p
-            LEFT JOIN ProductCollection col ON col.collectionId = p.productCollection.collectionId
-            INNER JOIN ProductCategory cat ON cat.categoryId = p.productCategory.categoryId
-            INNER JOIN ProductDetail pd ON pd.product.productId = p.productId
-            INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
-            WHERE cat.isVisible = true AND pd.isVisible = true AND sku.inventory > 0
-            GROUP BY p.uuid, p.name, p.description, p.defaultPrice, p.defaultCurrency, p.defaultKey
-            """)
-    Page<ProductPojo> allProductsClient(Pageable pageable);
+    SELECT
+    p.uuid AS uuid,
+    p.name AS name,
+    p.description AS description,
+    (SELECT
+    c.currency
+    FROM PriceCurrency c
+    WHERE p.productId = c.product.productId AND c.currency = :currency
+    ) AS currency,
+    (SELECT
+    c.price
+    FROM PriceCurrency c
+    WHERE p.productId = c.product.productId AND c.currency = :currency
+    ) AS price,
+    p.defaultKey AS key,
+    col.collection AS collection,
+    cat.categoryName AS category
+    FROM Product p
+    LEFT JOIN ProductCollection col ON col.collectionId = p.productCollection.collectionId
+    INNER JOIN ProductCategory cat ON cat.categoryId = p.productCategory.categoryId
+    INNER JOIN ProductDetail pd ON pd.product.productId = p.productId
+    INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
+    WHERE cat.isVisible = TRUE AND pd.isVisible = TRUE AND sku.inventory > 0
+    GROUP BY p.uuid, p.name, p.description, p.defaultKey
+    """)
+    Page<ProductPojo> allProductsByCurrencyClient(SarreCurrency currency, Pageable pageable);
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -88,7 +106,6 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             SET
             p.name = :name,
             p.description = :desc,
-            p.defaultPrice = :price,
             p.productCategory = :category
             WHERE p.uuid = :uuid
             """)
@@ -96,7 +113,6 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             @Param(value = "uuid") String uuid,
             @Param(value = "name") String name,
             @Param(value = "desc") String desc,
-            @Param(value = "price") BigDecimal price,
             @Param(value = "category") ProductCategory category
     );
 
@@ -107,7 +123,6 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             SET
             p.name = :name,
             p.description = :desc,
-            p.defaultPrice = :price,
             p.productCategory = :category,
             p.productCollection = :collection
             WHERE p.uuid = :uuid
@@ -116,7 +131,6 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             @Param(value = "uuid") String uuid,
             @Param(value = "name") String name,
             @Param(value = "desc") String desc,
-            @Param(value = "price") BigDecimal price,
             @Param(value = "category") ProductCategory category,
             @Param(value = "collection") ProductCollection collection
     );
@@ -125,9 +139,17 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             SELECT
             p.uuid AS uuid,
             p.name AS name,
-            p.description AS desc,
-            p.defaultPrice AS price,
-            p.defaultCurrency AS currency,
+            p.description AS description,
+            (SELECT
+            c.currency
+            FROM PriceCurrency c
+            WHERE p.productId = c.product.productId AND c.currency = :currency
+            ) AS currency,
+            (SELECT
+            c.price
+            FROM PriceCurrency c
+            WHERE p.productId = c.product.productId AND c.currency = :currency
+            ) AS price,
             p.defaultKey AS key,
             pc.categoryName AS category
             FROM Product p
@@ -135,17 +157,25 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
             INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
             WHERE pd.isVisible = true AND sku.inventory > 0 AND pc.uuid = :uuid
-            GROUP BY p.uuid, p.name, p.description, p.defaultPrice, p.defaultCurrency, p.defaultKey
+            GROUP BY p.uuid, p.name, p.description, p.defaultKey
             """)
-    Page<ProductPojo> fetchProductByCategoryClient(String uuid, Pageable page);
+    Page<ProductPojo> fetchProductByCategoryClient(SarreCurrency currency, String uuid, Pageable page);
 
     @Query(value = """
             SELECT
             p.uuid AS uuid,
             p.name AS name,
-            p.description AS desc,
-            p.defaultPrice AS price,
-            p.defaultCurrency AS currency,
+            p.description AS description,
+            (SELECT
+            c.currency
+            FROM PriceCurrency c
+            WHERE p.productId = c.product.productId AND c.currency = :currency
+            ) AS currency,
+            (SELECT
+            c.price
+            FROM PriceCurrency c
+            WHERE p.productId = c.product.productId AND c.currency = :currency
+            ) AS price,
             p.defaultKey AS key,
             pc.collection AS collection
             FROM Product p
@@ -153,9 +183,9 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
             INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
             WHERE pd.isVisible = true AND sku.inventory > 0 AND pc.uuid = :uuid
-            GROUP BY p.uuid, p.name, p.description, p.defaultPrice, p.defaultCurrency, p.defaultKey
+            GROUP BY p.uuid, p.name, p.description, p.defaultKey
             """)
-    Page<ProductPojo> fetchByProductByCollectionClient(String uuid, Pageable page);
+    Page<ProductPojo> fetchByProductByCollectionClient(SarreCurrency currency, String uuid, Pageable page);
 
     @Query(value = """
             SELECT img.imageKey as image

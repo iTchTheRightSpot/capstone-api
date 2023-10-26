@@ -2,6 +2,7 @@ package com.sarabrandserver.collection.controller;
 
 import com.sarabrandserver.collection.response.CollectionResponse;
 import com.sarabrandserver.collection.service.ClientCollectionService;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.service.ClientProductService;
 import com.sarabrandserver.product.response.ProductResponse;
 import jakarta.validation.constraints.NotNull;
@@ -33,9 +34,11 @@ public class ClientCollectionController {
     public Page<ProductResponse> fetchProductByCollection(
             @NotNull @RequestParam(name = "collection_id") String uuid,
             @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size
+            @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size,
+            @NotNull @RequestParam(name = "currency", defaultValue = "NGN") String currency
     ) {
-        return this.productService.allProductsByUUID("collection", uuid, page, Math.min(size, 20));
+        return this.productService
+                .allProductsByUUID("collection", SarreCurrency.valueOf(currency), uuid, page, Math.min(size, 20));
     }
     
 }

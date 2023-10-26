@@ -29,13 +29,12 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
      */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query(value = """
+    @Query(nativeQuery = true, value = """
             UPDATE product_sku s
             INNER JOIN product_detail d ON d.detail_id = s.detail_id
             SET d.colour = :colour, d.is_visible = :visible, s.inventory = :qty, s.size = :s
             WHERE s.sku = :sku
-            """,
-            nativeQuery = true
+            """
     )
     void updateProductDetail(
             @Param(value = "sku") String sku,
@@ -55,7 +54,7 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
      * NOTE: this method is similar to findProductDetailsByProductUuidWorker only it
      * filters by ProductDetail being visible
      */
-    @Query(value = """
+    @Query(nativeQuery = true, value = """
             SELECT
             d.is_visible AS visible,
             d.colour AS colour,
@@ -69,7 +68,7 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
             INNER JOIN product_sku s ON d.detail_id = s.detail_id
             WHERE p.uuid = :uuid AND d.is_visible = true
             GROUP BY d.colour
-            """, nativeQuery = true)
+            """)
     List<DetailPojo> productDetailsByProductUUIDClient(@Param(value = "uuid") String uuid);
 
     @Query(value = """
@@ -79,7 +78,7 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
             """)
     Optional<ProductDetail> productDetailByColour(String colour);
 
-    @Query(value = """
+    @Query(nativeQuery = true, value = """
             SELECT
             d.is_visible AS visible,
             d.colour AS colour,
@@ -93,7 +92,7 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
             INNER JOIN product_sku s ON d.detail_id = s.detail_id
             WHERE p.uuid = :uuid
             GROUP BY d.is_visible, d.colour
-            """, nativeQuery = true)
+            """)
     List<DetailPojo> findProductDetailsByProductUuidWorker(@Param(value = "uuid") String uuid);
 
 }

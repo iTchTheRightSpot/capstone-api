@@ -7,6 +7,7 @@ import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
 import com.sarabrandserver.cart.response.CartResponse;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.OutOfStockException;
 import com.sarabrandserver.product.service.ProductSKUService;
@@ -41,17 +42,25 @@ public class CartService {
     private final S3Service s3Service;
 
     /**
-     * Returns a list of CartResponse based on user principal
+     * Returns a list of CartResponse based on user principal and currency
      */
-    public List<CartResponse> cartItems() {
+    public List<CartResponse> cartItems(SarreCurrency currency) {
         var principal = SecurityContextHolder.getContext().getAuthentication().getName();
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
         // TODO
-        return this.shoppingSessionRepo.cartItemsByPrincipal(principal) //
+        return this.shoppingSessionRepo.cartItemsByPrincipal(currency, principal) //
                 .stream() //
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
-                    return new CartResponse(pojo.getSession(), url, pojo.getName(), pojo.getSku(), pojo.getQty());
+                    return new CartResponse(
+                            pojo.getSession(),
+                            url,
+                            pojo.getName(),
+                            pojo.getPrice(),
+                            pojo.getCurrency().name(),
+                            pojo.getSku(),
+                            pojo.getQty()
+                    );
                 }) //
                 .toList();
     }

@@ -28,7 +28,7 @@ public class ClientProductController {
     public Page<ProductResponse> allProducts(
             @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam(name = "size", defaultValue = "20") Integer size,
-            @RequestParam(name = "currency", defaultValue = "NGN") String currency
+            @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
         SarreCurrency sc = SarreCurrency.valueOf(currency.toUpperCase());
         return this.clientProductService

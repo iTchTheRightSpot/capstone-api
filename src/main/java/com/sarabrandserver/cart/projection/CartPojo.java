@@ -1,10 +1,17 @@
 package com.sarabrandserver.cart.projection;
 
+import com.sarabrandserver.enumeration.SarreCurrency;
+
+import java.math.BigDecimal;
+
+// Spring Data Projection
 public interface CartPojo {
 
-    String getName();
-    String getSession();
+    String getSession(); // sessionId
     String getKey(); // s3 key
+    String getName(); // product name
+    BigDecimal getPrice();
+    SarreCurrency getCurrency();
     String getSku();
     Integer getQty();
 

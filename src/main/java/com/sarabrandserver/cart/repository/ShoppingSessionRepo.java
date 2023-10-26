@@ -2,6 +2,7 @@ package com.sarabrandserver.cart.repository;
 
 import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.cart.projection.CartPojo;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -29,9 +30,19 @@ public interface ShoppingSessionRepo extends JpaRepository<ShoppingSession, Long
 
     @Query(value = """
     SELECT
-    p.name AS name,
     s.shoppingSessionId AS session,
     p.defaultKey AS key,
+    p.name AS name,
+    (SELECT
+    c.currency
+    FROM PriceCurrency c
+    WHERE p.productId = c.product.productId AND c.currency = :currency
+    ) AS currency,
+    (SELECT
+    c.price
+    FROM PriceCurrency c
+    WHERE p.productId = c.product.productId AND c.currency = :currency
+    ) AS price,
     ps.sku AS sku,
     c.qty AS qty
     FROM ShoppingSession s
@@ -42,6 +53,6 @@ public interface ShoppingSessionRepo extends JpaRepository<ShoppingSession, Long
     INNER JOIN Product p ON d.product.productId = p.productId
     WHERE u.email = :principal
     """)
-    List<CartPojo> cartItemsByPrincipal(String principal);
+    List<CartPojo> cartItemsByPrincipal(SarreCurrency currency, String principal);
 
 }

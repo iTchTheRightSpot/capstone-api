@@ -3,6 +3,7 @@ package com.sarabrandserver.cart.controller;
 import com.sarabrandserver.cart.dto.CartDTO;
 import com.sarabrandserver.cart.response.CartResponse;
 import com.sarabrandserver.cart.service.CartService;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +26,11 @@ public class CartController {
 
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public List<CartResponse> cartItems() {
-        return this.cartService.cartItems();
+    public List<CartResponse> cartItems(
+            @RequestParam(name = "currency", defaultValue = "ngn") String currency
+    ) {
+        var c = SarreCurrency.valueOf(currency.toUpperCase());
+        return this.cartService.cartItems(c);
     }
 
     @ResponseStatus(CREATED)

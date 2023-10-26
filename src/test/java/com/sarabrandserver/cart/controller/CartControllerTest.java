@@ -86,6 +86,15 @@ class CartControllerTest extends AbstractIntegrationTest {
 
     @Test
     @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
+    void listCartItemsUSD() throws Exception {
+        this.MOCKMVC
+                .perform(get(path).param("currency", "usd").with(csrf()))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
     void create_new_shopping_session() throws Exception {
         var sku = productSku();
 

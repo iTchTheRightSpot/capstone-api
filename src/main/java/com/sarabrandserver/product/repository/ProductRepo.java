@@ -18,9 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Native query present
- */
 @Repository
 public interface ProductRepo extends JpaRepository<Product, Long> {
 

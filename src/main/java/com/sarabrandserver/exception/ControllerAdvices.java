@@ -86,7 +86,7 @@ public class ControllerAdvices {
         return new ResponseEntity<>(res, BAD_REQUEST);
     }
 
-    @ExceptionHandler({CustomInvalidFormatException.class, CustomStripeException.class})
+    @ExceptionHandler({CustomInvalidFormatException.class})
     public ResponseEntity<ExceptionResponse> formatException(Exception ex) {
         var res = new ExceptionResponse(ex.getMessage(), BAD_REQUEST);
         return new ResponseEntity<>(res, BAD_REQUEST);

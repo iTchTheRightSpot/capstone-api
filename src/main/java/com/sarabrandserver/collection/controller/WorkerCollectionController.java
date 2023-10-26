@@ -4,6 +4,7 @@ import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
 import com.sarabrandserver.collection.dto.CollectionDTO;
 import com.sarabrandserver.collection.response.CollectionResponse;
 import com.sarabrandserver.collection.service.WorkerCollectionService;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.response.ProductResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -36,11 +37,13 @@ public class WorkerCollectionController {
     @GetMapping(path = "/products", produces = "application/json")
     public Page<ProductResponse> allProductByCollection(
             @NotNull @RequestParam(name = "collection_id") String id,
-            @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size
+            @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @RequestParam(name = "size", defaultValue = "20") Integer size,
+            @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
+        var s =  SarreCurrency.valueOf(currency.toUpperCase());
         return this.collectionService
-                .allProductsByCollection(id, page, Math.min(size, 20));
+                .allProductsByCollection(s, id, page, Math.min(size, 20));
     }
 
     @ResponseStatus(CREATED)

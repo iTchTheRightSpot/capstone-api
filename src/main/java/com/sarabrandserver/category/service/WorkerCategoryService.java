@@ -6,6 +6,7 @@ import com.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.category.response.CategoryResponse;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
@@ -63,11 +64,11 @@ public class WorkerCategoryService {
      * @param size pagination
      * @return Page of ProductResponse
      * */
-    public Page<ProductResponse> allProductsByCategory(String id, int page, int size) {
+    public Page<ProductResponse> allProductsByCategory(SarreCurrency currency, String id, int page, int size) {
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
 
         return this.categoryRepository
-                .allProductsByCategory(id, PageRequest.of(page, size))
+                .allProductsByCategory(currency, id, PageRequest.of(page, size))
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, this.BUCKET, pojo.getKey());
 

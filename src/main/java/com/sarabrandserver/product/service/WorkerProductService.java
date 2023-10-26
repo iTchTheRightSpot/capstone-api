@@ -97,10 +97,9 @@ public class WorkerProductService {
         }
 
         var category = this.categoryService.findByName(dto.category().trim());
-        var _product = this.productRepo.findByProductName(dto.name().trim());
 
         // throw error if product exits
-        if (_product.isPresent()) {
+        if (this.productRepo.findByProductName(dto.name().trim()).isPresent()) {
             throw new DuplicateException(dto.name() + " exists");
         }
 
@@ -109,7 +108,7 @@ public class WorkerProductService {
         var file = this.helperService.customMultiPartFiles(files, defaultImageKey);
 
         // Build Product
-        var product = Product.builder()
+        var p = Product.builder()
                 .productCategory(category)
                 .uuid(UUID.randomUUID().toString())
                 .name(dto.name().trim())
@@ -121,11 +120,11 @@ public class WorkerProductService {
         // Set ProductCollection to Product
         if (!dto.collection().isBlank()) {
             var collection = this.collectionService.findByName(dto.collection().trim());
-            product.setProductCollection(collection);
+            p.setProductCollection(collection);
         }
 
         // Save Product
-        var saved = this.productRepo.save(product);
+        var product = this.productRepo.save(p);
 
         // save ngn & usd price
         BigDecimal ngn = this.customUtil.truncateAmount(dto.priceCurrency(), NGN);
@@ -136,12 +135,12 @@ public class WorkerProductService {
         // Save ProductDetails
         var date = this.customUtil.toUTC(new Date());
         var detail = this.workerProductDetailService.
-                productDetail(saved, dto.colour(), dto.visible(), date);
+                productDetail(product, dto.colour(), dto.visible(), date);
 
         // Save ProductSKUs
         this.productSKUService.save(dto.sizeInventory(), detail);
 
-        // Build ProductImages (save to s3)
+        // build and save ProductImages (save to s3)
         this.helperService.productImages(
                 detail,
                 file,
@@ -160,10 +159,11 @@ public class WorkerProductService {
      */
     @Transactional
     public void update(final UpdateProductDTO dto) {
-        BigDecimal price = dto.price().setScale(2, RoundingMode.FLOOR);
-        if (price.compareTo(BigDecimal.ZERO) < 0) {
+        if (dto.price().compareTo(BigDecimal.ZERO) < 0) {
             throw new CustomInvalidFormatException("price cannot be zero");
         }
+
+        BigDecimal price = dto.price().setScale(2, RoundingMode.FLOOR);
 
         boolean bool = this.productRepo
                 .nameNotAssociatedToUuid(dto.uuid(), dto.name()) > 0;
@@ -199,6 +199,7 @@ public class WorkerProductService {
         this.priceCurrencyRepo.updatePriceByProductUUID(dto.uuid(), price, currency);
     }
 
+    // TODO validate product isn't in user session and it is not in order detail
     /**
      * Permanently deletes a Product db.
      *

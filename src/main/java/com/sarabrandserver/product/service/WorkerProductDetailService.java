@@ -192,7 +192,7 @@ public class WorkerProductDetailService {
      */
     public ProductDetail productDetailByProductSku(final String sku) {
         return this.detailRepo
-                .findDetailBySku(sku)
+                .productDetailByProductSku(sku)
                 .orElseThrow(() -> new CustomNotFoundException("SKU does not exist"));
     }
 

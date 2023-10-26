@@ -16,12 +16,13 @@ import java.util.Optional;
 @Repository
 public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
 
+    /** Returns a ProductDetail based on ProductSku propety sku */
     @Query(value = """
             SELECT d FROM ProductDetail d
             INNER JOIN ProductSku s ON d.productDetailId = s.productDetail.productDetailId
             WHERE s.sku = :sku
             """)
-    Optional<ProductDetail> findDetailBySku(@Param(value = "sku") String sku);
+    Optional<ProductDetail> productDetailByProductSku(@Param(value = "sku") String sku);
 
     /**
      * Update a ProductDetail and ProductSku using native MySQL query as you can update multiple

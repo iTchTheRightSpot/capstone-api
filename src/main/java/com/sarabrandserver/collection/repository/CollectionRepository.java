@@ -2,6 +2,7 @@ package com.sarabrandserver.collection.repository;
 
 import com.sarabrandserver.collection.entity.ProductCollection;
 import com.sarabrandserver.collection.projection.CollectionPojo;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.projection.ProductPojo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -86,6 +87,6 @@ public interface CollectionRepository extends JpaRepository<ProductCollection, L
     INNER JOIN ProductCollection c ON p.productCollection.collectionId = c.collectionId
     WHERE c.uuid = :uuid
     """)
-    Page<ProductPojo> allProductsByCollection(String uuid, Pageable page);
+    Page<ProductPojo> allProductsByCollection(SarreCurrency currency, String uuid, Pageable page);
 
 }

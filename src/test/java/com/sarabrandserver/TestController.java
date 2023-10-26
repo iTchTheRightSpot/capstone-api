@@ -1,4 +1,4 @@
-package com.sarabrandserver.test;
+package com.sarabrandserver;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(path = "test")
-@Profile(value = {"test", "dev"})
+@Profile(value = {"test"})
 public class TestController {
 
     @GetMapping(path = "/client")

@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Optional;
 
@@ -116,13 +115,13 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         // When
         when(this.productRepo.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
         when(this.workerCategoryService.findByUuid(anyString())).thenReturn(category);
-        when(this.collectionService.findByUuid(anyString())).thenReturn(collection);
+        when(this.collectionService.productCollectionByUUID(anyString())).thenReturn(collection);
 
         // Then
         this.workerProductService.update(payload);
-        verify(this.collectionService, times(1)).findByUuid(anyString());
+        verify(this.collectionService, times(1)).productCollectionByUUID(anyString());
         verify(this.productRepo, times(1))
-                .updateProductCategoryCollectionPresent(
+                .update_product_where_category_and_collection_are_present(
                         anyString(),
                         anyString(),
                         anyString(),
@@ -152,9 +151,9 @@ class WorkerProductServiceTest extends AbstractUnitTest {
 
         // Then
         this.workerProductService.update(payload);
-        verify(this.collectionService, times(0)).findByUuid(anyString());
+        verify(this.collectionService, times(0)).productCollectionByUUID(anyString());
         verify(this.productRepo, times(1))
-                .updateProductCollectionNotPresent(
+                .update_product_where_collection_not_present(
                         anyString(),
                         anyString(),
                         anyString(),

@@ -24,6 +24,7 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -155,9 +156,15 @@ public class WorkerProductService {
      * @param dto of type UpdateProductDTO
      * @throws CustomNotFoundException when dto category_id or collection_id does not exist
      * @throws DuplicateException      when new product name exist but not associated to product uuid
+     * @throws CustomInvalidFormatException if price is less than zero
      */
     @Transactional
     public void update(final UpdateProductDTO dto) {
+        BigDecimal price = dto.price().setScale(2, RoundingMode.FLOOR);
+        if (price.compareTo(BigDecimal.ZERO) < 0) {
+            throw new CustomInvalidFormatException("price cannot be zero");
+        }
+
         boolean bool = this.productRepo
                 .nameNotAssociatedToUuid(dto.uuid(), dto.name()) > 0;
 
@@ -167,27 +174,29 @@ public class WorkerProductService {
 
         var category = this.categoryService.findByUuid(dto.categoryId());
 
-        if (!dto.collection().isEmpty()) {
-            // Find ProductCollection by uuid
-            var collection = this.collectionService.findByUuid(dto.collectionId());
+        if (dto.collection().isEmpty()) {
+            this.productRepo.update_product_where_collection_not_present(
+                    dto.uuid(),
+                    dto.name().trim(),
+                    dto.desc().trim(),
+                    category
+            );
 
-            this.productRepo.updateProductCategoryCollectionPresent(
+        } else {
+            var collection = this.collectionService.productCollectionByUUID(dto.collectionId());
+
+            this.productRepo.update_product_where_category_and_collection_are_present(
                     dto.uuid(),
                     dto.name().trim(),
                     dto.desc().trim(),
                     category,
                     collection
             );
-
-            return;
         }
 
-        this.productRepo.updateProductCollectionNotPresent(
-                dto.uuid(),
-                dto.name().trim(),
-                dto.desc().trim(),
-                category
-        );
+        // update price
+        var currency = SarreCurrency.valueOf(dto.currency().toUpperCase());
+        this.priceCurrencyRepo.updatePriceByProductUUID(dto.uuid(), price, currency);
     }
 
     /**

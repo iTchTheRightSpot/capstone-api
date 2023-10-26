@@ -15,7 +15,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -109,7 +108,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             p.productCategory = :category
             WHERE p.uuid = :uuid
             """)
-    void updateProductCollectionNotPresent(
+    void update_product_where_collection_not_present(
             @Param(value = "uuid") String uuid,
             @Param(value = "name") String name,
             @Param(value = "desc") String desc,
@@ -127,7 +126,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             p.productCollection = :collection
             WHERE p.uuid = :uuid
             """)
-    void updateProductCategoryCollectionPresent(
+    void update_product_where_category_and_collection_are_present(
             @Param(value = "uuid") String uuid,
             @Param(value = "name") String name,
             @Param(value = "desc") String desc,

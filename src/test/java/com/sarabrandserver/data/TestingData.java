@@ -170,6 +170,7 @@ public class TestingData {
                 productID,
                 productName,
                 new Faker().lorem().characters(0, 400),
+                "ngn",
                 new BigDecimal(new Faker().number().numberBetween(20, 200)),
                 category,
                 categoryId,

@@ -135,7 +135,7 @@ public class WorkerCollectionService {
      */
     @Transactional
     public void delete(String uuid) {
-        var collection = findByUuid(uuid);
+        var collection = productCollectionByUUID(uuid);
 
         this.collectionRepository.delete(collection);
     }
@@ -146,7 +146,7 @@ public class WorkerCollectionService {
                 .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));
     }
 
-    public ProductCollection findByUuid(String uuid) {
+    public ProductCollection productCollectionByUUID(String uuid) {
         return this.collectionRepository.findByUuid(uuid)
                 .orElseThrow(() -> new CustomNotFoundException("ProductCollection does not exist"));
     }

@@ -15,7 +15,7 @@ import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Objects;
+import java.util.ArrayList;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -38,6 +38,7 @@ public class JwtTokenService {
 
     /**
      * Generates a jwt token
+     *
      * @param authentication of type org.springframework.security.core
      * @return String
      * */
@@ -72,8 +73,14 @@ public class JwtTokenService {
                     .stream() //
                     .filter(map -> map.getKey().equals(claim)) //
                     .anyMatch(map -> {
-                        RoleEnum value = (RoleEnum) map.getValue();
-                        return Objects.equals(value, role);
+                        // TODO come back to when upgraded to java 21
+                        ArrayList<String> list = null;
+
+                        if (map.getValue() instanceof ArrayList) {
+                            list = (ArrayList<String>) map.getValue();
+                        }
+
+                        return list != null && list.contains(role.name());
                     });
         } catch (JwtException | NullPointerException e) {
             return false;

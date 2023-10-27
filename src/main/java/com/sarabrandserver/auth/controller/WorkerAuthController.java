@@ -4,6 +4,7 @@ import com.sarabrandserver.auth.response.ActiveUser;
 import com.sarabrandserver.auth.dto.LoginDTO;
 import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.service.AuthService;
+import com.sarabrandserver.enumeration.RoleEnum;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -36,7 +37,7 @@ public class WorkerAuthController {
             HttpServletRequest request,
             HttpServletResponse response
     ) {
-        this.authService.login(dto, request, response);
+        this.authService.login(RoleEnum.WORKER, dto, request, response);
     }
 
     /** Validates if a user still has a valid session */

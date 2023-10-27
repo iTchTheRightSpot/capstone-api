@@ -31,7 +31,7 @@ class WorkerControllerTest extends AbstractIntegrationTest {
                 "2220003366",
                 "password123"
         );
-        this.authService.clientRegister(dto);
+        this.authService.clientRegister(dto, null);
 
         var dto1 = new RegisterDTO(
                 "SEUY",
@@ -41,7 +41,7 @@ class WorkerControllerTest extends AbstractIntegrationTest {
                 "0000000000",
                 "password123"
         );
-        this.authService.clientRegister(dto1);
+        this.authService.clientRegister(dto1, null);
     }
 
     @AfterEach

@@ -4,10 +4,10 @@ import com.sarabrandserver.AbstractUnitTest;
 import com.sarabrandserver.auth.dto.LoginDTO;
 import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.jwt.JwtTokenService;
+import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.user.entity.SarreBrandUser;
 import com.sarabrandserver.user.repository.UserRepository;
-import com.sarabrandserver.data.TestingData;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,8 +21,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.HashSet;
 import java.util.Optional;
 
+import static com.sarabrandserver.enumeration.RoleEnum.CLIENT;
+import static com.sarabrandserver.enumeration.RoleEnum.WORKER;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -117,16 +120,16 @@ class AuthServiceTest extends AbstractUnitTest {
     void worker_login() {
         // Given
         var dto = new LoginDTO("", TestingData.worker().getPassword());
-        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
-        Authentication authentication = Mockito.mock(Authentication.class);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        Authentication authentication = mock(Authentication.class);
 
         // When
         when(this.authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
 
         // Then
-        this.authService.login(dto, request, response);
+        this.authService.login(WORKER, dto, request, response);
         verify(this.authenticationManager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
     }
 
@@ -134,15 +137,15 @@ class AuthServiceTest extends AbstractUnitTest {
     void worker_login_non_existing_credentials() {
         // Given
         var dto = new LoginDTO("client@client.com", TestingData.worker().getPassword());
-        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
 
         // When
         when(this.authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(BadCredentialsException.class);
 
         // Then
-        assertThrows(BadCredentialsException.class, () -> this.authService.login(dto, request, response));
+        assertThrows(BadCredentialsException.class, () -> this.authService.login(WORKER, dto, request, response));
     }
 
     @Test
@@ -157,12 +160,21 @@ class AuthServiceTest extends AbstractUnitTest {
                 TestingData.client().getPassword()
         );
 
+        var user = SarreBrandUser.builder()
+                .clientId(1L)
+                .email(dto.email())
+                .clientRole(new HashSet<>())
+                .build();
+
+        HttpServletResponse res = mock(HttpServletResponse.class);
+
         // When
         when(this.userRepository.principalExists(anyString())).thenReturn(0);
         when(this.passwordEncoder.encode(anyString())).thenReturn(dto.password());
+        when(this.userRepository.save(any(SarreBrandUser.class))).thenReturn(user);
 
         // Then
-        this.authService.clientRegister(dto);
+        this.authService.clientRegister(dto, res);
         verify(this.userRepository, times(1)).save(any(SarreBrandUser.class));
     }
 
@@ -178,27 +190,29 @@ class AuthServiceTest extends AbstractUnitTest {
                 TestingData.client().getPassword()
         );
 
+        HttpServletResponse res = mock(HttpServletResponse.class);
+
         // When
         when(this.userRepository.principalExists(anyString())).thenReturn(1);
 
         // Then
-        assertThrows(DuplicateException.class, () -> this.authService.clientRegister(dto));
+        assertThrows(DuplicateException.class, () -> this.authService.clientRegister(dto, res));
     }
 
     @Test
     void client_login() {
         // Given
         var dto = new LoginDTO(TestingData.client().getEmail(), TestingData.client().getPassword());
-        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
-        Authentication authentication = Mockito.mock(Authentication.class);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        Authentication authentication = mock(Authentication.class);
 
         // When
         when(this.authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
 
         // Then
-        this.authService.login(dto, request, response);
+        this.authService.login(CLIENT, dto, request, response);
         verify(this.authenticationManager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
     }
 
@@ -206,15 +220,15 @@ class AuthServiceTest extends AbstractUnitTest {
     void client_login_wrong_credentials() {
         // Given
         var dto = new LoginDTO("worker@worker.com", TestingData.client().getPassword());
-        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
 
         // When
         when(this.authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(BadCredentialsException.class);
 
         // Then
-        assertThrows(BadCredentialsException.class, () -> this.authService.login(dto, request, response));
+        assertThrows(BadCredentialsException.class, () -> this.authService.login(CLIENT, dto, request, response));
     }
 
 }

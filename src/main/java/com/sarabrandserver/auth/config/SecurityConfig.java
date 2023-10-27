@@ -93,15 +93,8 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        List<String> allowOrigins = new ArrayList<>(2);
-        allowOrigins.add(this.UIDOMAIN);
-
-        if (this.PROFILE.equals("dev") || this.PROFILE.equals("test")) {
-            allowOrigins.add("http://localhost:4200/");
-        }
-
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(allowOrigins);
+        configuration.setAllowedOrigins(List.of(this.UIDOMAIN));
         configuration.setAllowedMethods(List.of("GET", "PUT", "POST", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(CONTENT_TYPE, ACCEPT, "X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);

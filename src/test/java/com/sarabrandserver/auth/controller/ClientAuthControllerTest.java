@@ -3,14 +3,9 @@ package com.sarabrandserver.auth.controller;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.auth.dto.LoginDTO;
 import com.sarabrandserver.auth.dto.RegisterDTO;
-import com.sarabrandserver.auth.service.AuthService;
-import com.sarabrandserver.user.repository.UserRepository;
-import com.sarabrandserver.user.repository.UserRoleRepository;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -23,18 +18,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class ClientAuthControllerTest extends AbstractIntegrationTest {
 
-    private final String PRINCIPAL = "SEJU@development.com";
-    private final String PASSWORD = "123#-SEJU-Development";
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
 
-    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
+    /* Simulates login with username instead of email */
+    @Test
+    @Order(1)
+    void register_login() throws Exception {
+        String PRINCIPAL = "fresh@prince.com";
+        String PASSWORD = "password123#";
 
-    @Autowired private UserRoleRepository userRoleRepository;
-    @Autowired private UserRepository userRepository;
-    @Autowired private AuthService authService;
-
-    @BeforeEach
-    void setUp() {
-        var dto = new RegisterDTO(
+        var registerDTO = new RegisterDTO(
                 "SEUY",
                 "Development",
                 PRINCIPAL,
@@ -42,18 +36,22 @@ class ClientAuthControllerTest extends AbstractIntegrationTest {
                 "0000000000",
                 PASSWORD
         );
-        this.authService.clientRegister(dto);
-    }
 
-    @AfterEach
-    void tearDown() {
-        this.userRoleRepository.deleteAll();
-        this.userRepository.deleteAll();
-    }
+        String payload = this.MAPPER.writeValueAsString(registerDTO);
 
-    /* Simulates login with username instead of email */
-    @Test @Order(1)
-    void login() throws Exception {
+        MvcResult register = this.MOCKMVC
+                .perform(post("/api/v1/client/auth/register")
+                        .contentType(APPLICATION_JSON)
+                        .content(payload)
+                        .with(csrf())
+                )
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        // assert jwt cookie is present after registration
+        Cookie c = register.getResponse().getCookie(JSESSIONID);
+        assertNotNull(c);
+
         String dto = this.MAPPER.writeValueAsString(new LoginDTO(PRINCIPAL, PASSWORD));
 
         MvcResult login = this.MOCKMVC

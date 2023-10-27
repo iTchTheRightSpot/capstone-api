@@ -1,8 +1,10 @@
 package com.sarabrandserver.auth.jwt;
 
+import com.sarabrandserver.enumeration.RoleEnum;
 import jakarta.servlet.http.Cookie;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -13,30 +15,26 @@ import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Objects;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
-@Service @Getter @Setter
+@Service
+@RequiredArgsConstructor
+@Getter
+@Setter
 public class JwtTokenService {
 
     private static final Logger log = LoggerFactory.getLogger(JwtTokenService.class.getName());
 
-    @Value(value = "${server.servlet.session.cookie.max-age}")
-    private int maxAge; // seconds
-
-    @Value(value = "${jwt.claim}")
-    private String claim;
+    @Value(value = "${server.servlet.session.cookie.max-age}") private int maxAge; // seconds
+    @Value(value = "${jwt.claim}") private String claim;
 
     private int boundToSendRefreshToken = 15; // minutes
 
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
-
-    public JwtTokenService(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder) {
-        this.jwtEncoder = jwtEncoder;
-        this.jwtDecoder = jwtDecoder;
-    }
 
     /**
      * Generates a jwt token
@@ -60,6 +58,26 @@ public class JwtTokenService {
                 .build();
 
         return this.jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+    }
+
+    /**
+     * Validates if jwt token is valid and it matches chosen role
+     * */
+    public boolean matchesRole(@NotNull final Cookie cookie, RoleEnum role) {
+        try {
+            return this.jwtDecoder
+                    .decode(cookie.getValue()) //
+                    .getClaims() //
+                    .entrySet() //
+                    .stream() //
+                    .filter(map -> map.getKey().equals(claim)) //
+                    .anyMatch(map -> {
+                        RoleEnum value = (RoleEnum) map.getValue();
+                        return Objects.equals(value, role);
+                    });
+        } catch (JwtException | NullPointerException e) {
+            return false;
+        }
     }
 
     /** Simply validates if token is expired or not */

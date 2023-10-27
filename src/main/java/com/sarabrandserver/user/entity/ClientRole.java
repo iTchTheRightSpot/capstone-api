@@ -32,4 +32,9 @@ public class ClientRole implements Serializable {
         this.role = roleEnum;
     }
 
+    public ClientRole(RoleEnum role, SarreBrandUser sarreBrandUser) {
+        this.role = role;
+        this.sarreBrandUser = sarreBrandUser;
+    }
+
 }

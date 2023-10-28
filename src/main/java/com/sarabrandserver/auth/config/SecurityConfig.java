@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -48,11 +49,14 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
-    @Value(value = "${server.servlet.session.cookie.secure}") private boolean COOKIESECURE;
-    @Value(value = "${spring.profiles.active}") private String PROFILE;
-    @Value(value = "${server.servlet.session.cookie.same-site}") private String SAMESITE;
-    @Value(value = "${cors.ui.domain}") private String UIDOMAIN;
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
+    @Value(value = "${server.servlet.session.cookie.secure}")
+    private boolean COOKIESECURE;
+    @Value(value = "${server.servlet.session.cookie.same-site}")
+    private String SAMESITE;
+    @Value(value = "${cors.ui.domain}")
+    private String UIDOMAIN;
 
     @Bean
     public AuthenticationProvider provider(
@@ -137,6 +141,9 @@ public class SecurityConfig {
                             "/api/v1/client/category/**",
                             "/api/v1/client/collection/**",
                             "/api/v1/worker/auth/login"
+                    ).permitAll();
+                    auth.requestMatchers(
+                            HttpMethod.POST, "/api/v1/client/cart/**"
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })

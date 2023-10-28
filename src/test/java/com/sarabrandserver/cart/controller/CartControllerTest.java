@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.test.context.support.WithMockUser;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -51,7 +50,7 @@ class CartControllerTest extends AbstractIntegrationTest {
         this.authService.workerRegister(registerDTO);
 
         var sku = productSku();
-        var dto = new CartDTO(null, sku.getSku(), sku.getInventory());
+        var dto = new CartDTO(sku.getSku(), sku.getInventory());
         this.cartService.create(dto);
     }
 
@@ -60,13 +59,6 @@ class CartControllerTest extends AbstractIntegrationTest {
         this.shoppingSessionRepo.deleteAll();
         this.roleRepository.deleteAll();
         this.userRepository.deleteAll();
-    }
-
-    private List<ProductSku> products() {
-        var list = this.productSkuRepo.findAll();
-        assertFalse(list.isEmpty());
-        assertFalse(list.size() < 2);
-        return list;
     }
 
     private ProductSku productSku() {
@@ -98,7 +90,7 @@ class CartControllerTest extends AbstractIntegrationTest {
     void create_new_shopping_session() throws Exception {
         var sku = productSku();
 
-        var dto = new CartDTO(null, sku.getSku(), sku.getInventory());
+        var dto = new CartDTO(sku.getSku(), sku.getInventory());
 
         this.MOCKMVC
                 .perform(post(path)
@@ -113,12 +105,7 @@ class CartControllerTest extends AbstractIntegrationTest {
     @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
     void add_to_existing_shopping_session() throws Exception {
         var sku = productSku();
-        var list = this.shoppingSessionRepo.findAll();
-        assertFalse(list.isEmpty());
-
-        var session = list.get(0);
-
-        var dto = new CartDTO(session.getShoppingSessionId(), sku.getSku(), sku.getInventory());
+        var dto = new CartDTO(sku.getSku(), sku.getInventory());
 
         this.MOCKMVC
                 .perform(post(path)
@@ -132,21 +119,18 @@ class CartControllerTest extends AbstractIntegrationTest {
     @Test
     @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
     void delete_item() throws Exception {
-        var sku = productSku();
-
         var list = this.cartItemRepo.findAll();
         assertFalse(list.isEmpty());
         var cart = list.get(0);
 
         this.MOCKMVC
                 .perform(delete(path)
-                        .param("session_id", String.valueOf(cart.getCartId()))
-                        .param("sku", sku.getSku())
+                        .param("sku", cart.getSku())
                         .with(csrf())
                 )
                 .andExpect(status().isOk());
 
         var find = this.cartItemRepo.findById(cart.getCartId());
-        assertThrows(NoSuchElementException.class, () -> find.get());
+        assertThrows(NoSuchElementException.class, find::get);
     }
 }

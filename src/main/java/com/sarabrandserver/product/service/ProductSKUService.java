@@ -40,7 +40,6 @@ public class ProductSKUService {
     public void delete(final String sku) {
         // TODO validate if it contains in order or user session before deleting
         var obj = productSkuBySKU(sku);
-
         this.productSkuRepo.delete(obj);
     }
 

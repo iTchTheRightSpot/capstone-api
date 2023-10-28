@@ -18,9 +18,12 @@ import java.util.Arrays;
 @Component
 public class RefreshTokenFilter extends OncePerRequestFilter {
 
-    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
-    @Value(value = "${server.servlet.session.cookie.path}") private String PATH;
-    @Value(value = "${server.servlet.session.cookie.max-age}") private int MAXAGE;
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
+    @Value(value = "${server.servlet.session.cookie.path}")
+    private String PATH;
+    @Value(value = "${server.servlet.session.cookie.max-age}")
+    private int MAXAGE;
 
     private final JwtTokenService tokenService;
     private final UserDetailsService userDetailsService;
@@ -65,7 +68,6 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
 
                     var authenticated = UsernamePasswordAuthenticationToken
                             .authenticated(userDetails, null, userDetails.getAuthorities());
-
 
                     String jwt = this.tokenService.generateToken(authenticated);
 

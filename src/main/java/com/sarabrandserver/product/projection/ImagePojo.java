@@ -1,5 +1,5 @@
 package com.sarabrandserver.product.projection;
 
-public interface Imagez {
+public interface ImagePojo {
     String getImage();
 }

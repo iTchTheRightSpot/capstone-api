@@ -16,8 +16,13 @@ import java.util.Optional;
 @Repository
 public interface ShoppingSessionRepo extends JpaRepository<ShoppingSession, Long> {
 
-    @Query("SELECT s FROM ShoppingSession s WHERE s.shoppingSessionId = :id")
-    Optional<ShoppingSession> shoppingSessionById(Long id);
+    @Query("""
+    SELECT s
+    FROM ShoppingSession s
+    INNER JOIN SarreBrandUser u ON s.sarreBrandUser.clientId = u.clientId
+    WHERE u.email = :principal
+    """)
+    Optional<ShoppingSession> shoppingSessionByUserPrincipal(String principal);
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -33,16 +38,10 @@ public interface ShoppingSessionRepo extends JpaRepository<ShoppingSession, Long
     s.shoppingSessionId AS session,
     p.defaultKey AS key,
     p.name AS name,
-    (SELECT
-    c.currency
-    FROM PriceCurrency c
-    WHERE p.productId = c.product.productId AND c.currency = :currency
-    ) AS currency,
-    (SELECT
-    c.price
-    FROM PriceCurrency c
-    WHERE p.productId = c.product.productId AND c.currency = :currency
-    ) AS price,
+    (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
+    (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
+    d.colour AS colour,
+    ps.size AS size,
     ps.sku AS sku,
     c.qty AS qty
     FROM ShoppingSession s

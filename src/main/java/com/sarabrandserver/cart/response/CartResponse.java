@@ -1,13 +1,16 @@
 package com.sarabrandserver.cart.response;
 
+import com.sarabrandserver.enumeration.SarreCurrency;
+
 import java.math.BigDecimal;
 
 public record CartResponse(
-        String sessionId,
         String url,
         String product_name,
         BigDecimal price,
-        String currency,
+        SarreCurrency currency,
+        String colour,
+        String size,
         String sku,
         int qty
 ) { }

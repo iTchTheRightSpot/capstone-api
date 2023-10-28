@@ -6,8 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 
 public record CartDTO (
-        Long session_id, // shopping session id
-
         @NotNull(message = "cannot be not null")
         @NotEmpty(message = "cannot be empty")
         String sku,

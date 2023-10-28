@@ -52,11 +52,12 @@ public class CartService {
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
                     return new CartResponse(
-                            pojo.getSession(),
                             url,
                             pojo.getName(),
                             pojo.getPrice(),
-                            pojo.getCurrency().name(),
+                            pojo.getCurrency(),
+                            pojo.getColour(),
+                            pojo.getSize(),
                             pojo.getSku(),
                             pojo.getQty()
                     );
@@ -78,16 +79,15 @@ public class CartService {
             throw new OutOfStockException("chosen quantity is out of stock");
         }
 
-        boolean find = this.shoppingSessionRepo
-                .shoppingSessionById(dto.session_id())
-                .isPresent();
-
         String principal = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        if (!find) {
+        Optional<ShoppingSession> optional = this.shoppingSessionRepo
+                .shoppingSessionByUserPrincipal(principal);
+
+        if (optional.isEmpty()) {
             create_new_shopping_session(principal, dto);
         } else {
-            add_to_existing_shopping_session(principal, dto);
+            add_to_existing_shopping_session(optional.get(), dto);
         }
     }
 
@@ -119,23 +119,19 @@ public class CartService {
     }
 
     /**
-     * Update existing session
+     * Creates or updates a CartItem
      */
-    public void add_to_existing_shopping_session(String principal, CartDTO dto) {
-        var session = this.shoppingSessionRepo
-                .shoppingSessionById(dto.session_id())
-                .orElseThrow(() -> new CustomNotFoundException("invalid shopping session"));
+    public void add_to_existing_shopping_session(ShoppingSession session, CartDTO dto) {
+        CartItem cart = this.cartItemRepo
+                .cart_item_by_shopping_session_id_and_sku(session.getShoppingSessionId(), dto.sku())
+                .orElse(null);
 
-        Optional<CartItem> cartItem = this.cartItemRepo
-                .cartItemBySKUAndPrincipal(dto.sku(), principal);
-
-        // update quantity if cart is present
-        if (cartItem.isPresent()) {
-            this.cartItemRepo.updateCartQtyByCartId(cartItem.get().getCartId(), dto.qty());
-        } else {
+        if (cart == null) {
             // create new cart
-            var cart = new CartItem(dto.qty(), dto.sku(), session);
-            this.cartItemRepo.save(cart);
+            this.cartItemRepo.save(new CartItem(dto.qty(), dto.sku(), session));
+        } else {
+            // update quantity if cart is present
+            this.cartItemRepo.updateCartQtyByCartId(cart.getCartId(), dto.qty());
         }
 
         // TODO update session expiry date
@@ -144,14 +140,15 @@ public class CartService {
     }
 
     /**
-     * Deletes/Removes an item from shopping session
+     * Deletes a CartItem from ShoppingSession based on
+     * sku and user principal
      *
-     * @param id ShoppingSession primary key
      * @param sku unique ProductSku
      * */
     @Transactional
-    public void remove_from_cart(long id, String sku) {
-        this.cartItemRepo.deleteByCartSku(id, sku);
+    public void remove_from_cart(String sku) {
+        String principal = SecurityContextHolder.getContext().getAuthentication().getName();
+        this.cartItemRepo.deleteByCartSku(principal, sku);
     }
 
 }

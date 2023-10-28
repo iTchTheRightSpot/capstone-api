@@ -28,8 +28,10 @@ public class JwtTokenService {
 
     private static final Logger log = LoggerFactory.getLogger(JwtTokenService.class.getName());
 
-    @Value(value = "${server.servlet.session.cookie.max-age}") private int maxAge; // seconds
-    @Value(value = "${jwt.claim}") private String claim;
+    @Value(value = "${server.servlet.session.cookie.max-age}")
+    private int maxAge; // seconds
+    @Value(value = "${jwt.claim}")
+    private String claim;
 
     private int boundToSendRefreshToken = 15; // minutes
 
@@ -40,7 +42,7 @@ public class JwtTokenService {
      * Generates a jwt token
      *
      * @param authentication of type org.springframework.security.core
-     * @return String
+     * @return String which is jwt
      * */
     public String generateToken(Authentication authentication) {
         Instant now = Instant.now();
@@ -66,8 +68,7 @@ public class JwtTokenService {
      * */
     public boolean matchesRole(@NotNull final Cookie cookie, RoleEnum role) {
         try {
-            return this.jwtDecoder
-                    .decode(cookie.getValue()) //
+            return this.jwtDecoder.decode(cookie.getValue()) //
                     .getClaims() //
                     .entrySet() //
                     .stream() //
@@ -87,7 +88,9 @@ public class JwtTokenService {
         }
     }
 
-    /** Simply validates if token is expired or not */
+    /**
+     * Simply validates if token is expired or not
+     * */
     public boolean _isTokenNoneExpired(@NotNull final Cookie cookie) {
         try {
             this.jwtDecoder.decode(cookie.getValue());
@@ -99,6 +102,7 @@ public class JwtTokenService {
 
     /**
      * Returns true if token is within expiration bound
+     *
      * @param cookie of type jakarta.servlet.http.Cookie
      * @return boolean
      * */

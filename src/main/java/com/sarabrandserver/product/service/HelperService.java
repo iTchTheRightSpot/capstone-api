@@ -8,7 +8,8 @@ import com.sarabrandserver.product.repository.ProductImageRepo;
 import com.sarabrandserver.product.response.CustomMultiPart;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,8 +23,8 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class HelperService {
+    private static final Logger log = LoggerFactory.getLogger(HelperService.class);
 
     private final ProductImageRepo productImageRepo;
     private final S3Service s3Service;
@@ -78,7 +79,7 @@ public class HelperService {
                             // Validate file is an image
                             String contentType = Files.probeContentType(file.toPath());
                             if (!contentType.startsWith("image/")) {
-                                log.warn("File is not an image");
+                                log.error("File is not an image");
                                 throw new CustomAwsException("File is not an image");
                             }
 
@@ -100,7 +101,7 @@ public class HelperService {
                         log.error("Error either writing multipart to file or getting file type. {}", ex.getMessage());
                         throw new CustomAwsException("please verify files are images");
                     }
-                })
+                }) //
                 .toArray(CustomMultiPart[]::new);
     }
 

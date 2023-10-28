@@ -11,7 +11,7 @@ import java.util.UUID;
 record RSAConfig() {
 
     /**
-     * java.security.KeyPair pub & priv key
+     * returns a java.security.KeyPair pub & priv key
      */
     private static KeyPair RSAKEYPAIR() {
         try {

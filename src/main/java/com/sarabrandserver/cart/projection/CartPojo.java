@@ -12,6 +12,8 @@ public interface CartPojo {
     String getName(); // product name
     BigDecimal getPrice();
     SarreCurrency getCurrency();
+    String getColour();
+    String getSize();
     String getSku();
     Integer getQty();
 

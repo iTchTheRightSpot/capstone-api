@@ -4,7 +4,7 @@ import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.collection.entity.ProductCollection;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.entity.Product;
-import com.sarabrandserver.product.projection.Imagez;
+import com.sarabrandserver.product.projection.ImagePojo;
 import com.sarabrandserver.product.projection.ProductPojo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -190,6 +190,6 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             INNER JOIN Product p ON p.productId = pd.product.productId
             WHERE p.uuid = :uuid
             """)
-    List<Imagez> productImagesByProductUUID(@Param(value = "uuid") String uuid);
+    List<ImagePojo> productImagesByProductUUID(@Param(value = "uuid") String uuid);
 
 }

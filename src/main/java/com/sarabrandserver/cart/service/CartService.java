@@ -16,6 +16,7 @@ import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,8 +46,13 @@ public class CartService {
      * Returns a list of CartResponse based on user principal and currency
      */
     public List<CartResponse> cartItems(SarreCurrency currency) {
-        var principal = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!(SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof UserDetails)) {
+            return List.of();
+        }
+
+        String principal = SecurityContextHolder.getContext().getAuthentication().getName();
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
+
         return this.shoppingSessionRepo.cartItemsByPrincipal(currency, principal) //
                 .stream() //
                 .map(pojo -> {

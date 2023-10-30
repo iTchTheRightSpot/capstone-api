@@ -25,7 +25,6 @@ public class CartController {
 
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    @PreAuthorize(value = "hasRole('ROLE_CLIENT')")
     public List<CartResponse> cartItems(
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
@@ -35,6 +34,7 @@ public class CartController {
 
     @ResponseStatus(CREATED)
     @PostMapping(consumes = APPLICATION_JSON_VALUE)
+    @PreAuthorize(value = "hasRole('ROLE_CLIENT')")
     public void create(@Valid @RequestBody CartDTO dto) {
         cartService.create(dto);
     }

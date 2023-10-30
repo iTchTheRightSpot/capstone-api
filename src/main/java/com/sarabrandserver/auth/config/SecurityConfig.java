@@ -31,7 +31,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -143,7 +142,7 @@ public class SecurityConfig {
                             "/api/v1/worker/auth/login"
                     ).permitAll();
                     auth.requestMatchers(
-                            HttpMethod.POST, "/api/v1/client/cart/**"
+                            HttpMethod.GET, "/api/v1/client/cart/**"
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })

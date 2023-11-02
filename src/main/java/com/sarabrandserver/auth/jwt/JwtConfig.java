@@ -29,8 +29,10 @@ import java.util.Arrays;
 public class JwtConfig {
     private static final RSAKey rsaKey = RSAConfig.GENERATERSAKEY();
 
-    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
-    @Value(value = "${jwt.claim}") private String CLAIM;
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
+    @Value(value = "${jwt.claim}")
+    private String CLAIM;
 
     @Bean
     public ObjectMapper objectMapper() {

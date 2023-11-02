@@ -18,6 +18,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
@@ -114,7 +115,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntryPoint,
-            RefreshTokenFilter refreshTokenFilter
+            RefreshTokenFilter refreshTokenFilter,
+            JwtAuthenticationConverter converter
     ) throws Exception {
         var csrfTokenRepository = getCookieCsrfTokenRepository(this.COOKIESECURE, this.SAMESITE);
         return http
@@ -147,15 +149,15 @@ public class SecurityConfig {
                     auth.anyRequest().authenticated();
                 })
 
-                // Jwt
-                // Adding before BearerTokenAuthenticationFilter as jwt is in custom cookie
+                 // Jwt
                 .addFilterBefore(refreshTokenFilter, BearerTokenAuthenticationFilter.class)
-                .oauth2ResourceServer((oauth2) -> oauth2.jwt(withDefaults()))
+                // https://docs.spring.io/spring-security/reference/6.0/servlet/oauth2/resource-server/jwt.html
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)))
 
                 // Session Management
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
 
-                // Exception Handling. Allows ControllerAdvices to take effect
+                // Exception Handling.
                 .exceptionHandling((ex) -> ex.authenticationEntryPoint(authEntryPoint))
 
                 // Logout

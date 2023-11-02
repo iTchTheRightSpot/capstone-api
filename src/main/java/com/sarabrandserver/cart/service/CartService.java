@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,11 +47,16 @@ public class CartService {
      * Returns a list of CartResponse based on user principal and currency
      */
     public List<CartResponse> cartItems(SarreCurrency currency) {
-        if (!(SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof UserDetails)) {
+        Object object = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String principal;
+        if (object instanceof UserDetails) {
+            principal = ((UserDetails) object).getUsername();
+        } else if (object instanceof Jwt) {
+            principal = ((Jwt) object).getClaimAsString("sub");
+        } else {
             return List.of();
         }
 
-        String principal = SecurityContextHolder.getContext().getAuthentication().getName();
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
 
         return this.shoppingSessionRepo.cartItemsByPrincipal(currency, principal) //
@@ -118,9 +124,7 @@ public class CartService {
 
                     var session = this.shoppingSessionRepo.save(shoppingSession);
 
-                    var cartItem = new CartItem(dto.qty(), dto.sku(), session);
-
-                    this.cartItemRepo.save(cartItem);
+                    this.cartItemRepo.save(new CartItem(dto.qty(), dto.sku(), session));
                 });
     }
 

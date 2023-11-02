@@ -51,7 +51,7 @@ class CartControllerTest extends AbstractIntegrationTest {
 
         var sku = productSku();
         var dto = new CartDTO(sku.getSku(), sku.getInventory());
-//        this.cartService.create(dto);
+        this.cartService.create(dto);
     }
 
     @AfterEach
@@ -77,7 +77,8 @@ class CartControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void listCartItemsUSD() throws Exception {
+    @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
+    void list_cart_items_anonymous_user() throws Exception {
         this.MOCKMVC
                 .perform(get(path).param("currency", "usd").with(csrf()))
                 .andDo(print())

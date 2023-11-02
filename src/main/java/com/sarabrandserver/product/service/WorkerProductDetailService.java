@@ -44,7 +44,7 @@ public class WorkerProductDetailService {
      * @param uuid is the uuid of the product
      * @return List of DetailResponse
      */
-    public List<DetailResponse> fetch(String uuid) {
+    public List<DetailResponse> productDetailsByProductUUID(String uuid) {
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
 
         return this.detailRepo

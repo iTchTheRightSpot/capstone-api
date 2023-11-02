@@ -51,7 +51,7 @@ class CartControllerTest extends AbstractIntegrationTest {
 
         var sku = productSku();
         var dto = new CartDTO(sku.getSku(), sku.getInventory());
-        this.cartService.create(dto);
+        this.cartService.create_new_shopping_session(registerDTO.email(), dto);
     }
 
     @AfterEach
@@ -102,6 +102,29 @@ class CartControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void create_new_shopping_session_anonymous_user() throws Exception {
+        var sku = productSku();
+        var dto = new CartDTO(sku.getSku(), sku.getInventory());
+
+        this.MOCKMVC
+                .perform(post(path)
+                        .contentType(APPLICATION_JSON)
+                        .content(this.MAPPER.writeValueAsString(dto))
+                        .with(csrf())
+                )
+                .andExpect(status().isCreated());
+
+        var dto1 = new CartDTO(sku.getSku(), sku.getInventory() - 1);
+        this.MOCKMVC
+                .perform(post(path)
+                        .contentType(APPLICATION_JSON)
+                        .content(this.MAPPER.writeValueAsString(dto1))
+                        .with(csrf())
+                )
+                .andExpect(status().isCreated());
+    }
+
+    @Test
     @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
     void add_to_existing_shopping_session() throws Exception {
         var sku = productSku();
@@ -133,4 +156,5 @@ class CartControllerTest extends AbstractIntegrationTest {
         var find = this.cartItemRepo.findById(cart.getCartId());
         assertThrows(NoSuchElementException.class, find::get);
     }
+
 }

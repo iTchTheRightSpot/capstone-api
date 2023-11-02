@@ -35,4 +35,9 @@ public class CartItem {
         this.shoppingSession = shoppingSession;
     }
 
+    public CartItem(int qty, String sku) {
+        this.qty = qty;
+        this.sku = sku;
+    }
+
 }

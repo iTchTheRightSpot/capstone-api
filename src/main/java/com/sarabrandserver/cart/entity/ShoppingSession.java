@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
+import static jakarta.persistence.CascadeType.MERGE;
 import static jakarta.persistence.FetchType.LAZY;
 import static jakarta.persistence.TemporalType.TIMESTAMP;
 
@@ -33,7 +34,7 @@ public class ShoppingSession {
     @Temporal(TIMESTAMP)
     private Date expireAt;
 
-    @OneToOne(cascade = ALL)
+    @OneToOne(cascade = MERGE)
     @JoinColumn(name = "client_id", referencedColumnName = "client_id")
     private SarreBrandUser sarreBrandUser;
 

@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -141,10 +140,8 @@ public class SecurityConfig {
                             "/api/v1/client/product/**",
                             "/api/v1/client/category/**",
                             "/api/v1/client/collection/**",
-                            "/api/v1/worker/auth/login"
-                    ).permitAll();
-                    auth.requestMatchers(
-                            HttpMethod.GET, "/api/v1/client/cart/**"
+                            "/api/v1/worker/auth/login",
+                            "/api/v1/client/cart/**"
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })

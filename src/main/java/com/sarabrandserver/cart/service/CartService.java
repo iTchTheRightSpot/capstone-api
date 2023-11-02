@@ -13,7 +13,9 @@ import com.sarabrandserver.exception.OutOfStockException;
 import com.sarabrandserver.product.service.ProductSKUService;
 import com.sarabrandserver.user.service.ClientService;
 import com.sarabrandserver.util.CustomUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,15 +28,19 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CartService {
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
     @Value(value = "${spring.profiles.active}")
     private String ACTIVEPROFILE;
+
+    private final ConcurrentHashMap<String, List<CartItem>> map = new ConcurrentHashMap<>();
 
     private final ShoppingSessionRepo shoppingSessionRepo;
     private final CartItemRepo cartItemRepo;
@@ -43,23 +49,28 @@ public class CartService {
     private final CustomUtil customUtil;
     private final S3Service s3Service;
 
+    private String principal() {
+        Object object = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (object instanceof UserDetails) {
+            return ((UserDetails) object).getUsername();
+        } else if (object instanceof Jwt) {
+            return ((Jwt) object).getClaimAsString("sub");
+        }
+
+        return "";
+    }
+
     /**
      * Returns a list of CartResponse based on user principal and currency
      */
-    public List<CartResponse> cartItems(SarreCurrency currency) {
-        Object object = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String principal;
-        if (object instanceof UserDetails) {
-            principal = ((UserDetails) object).getUsername();
-        } else if (object instanceof Jwt) {
-            principal = ((Jwt) object).getClaimAsString("sub");
-        } else {
-            return List.of();
-        }
-
+    public List<CartResponse> cartItems(HttpServletRequest request, SarreCurrency currency) {
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
+        String principal = principal();
 
-        return this.shoppingSessionRepo.cartItemsByPrincipal(currency, principal) //
+        // TODO impl user does not exist
+        return principal.isEmpty()
+                ? List.of()
+                : this.shoppingSessionRepo.cartItemsByPrincipal(currency, principal) //
                 .stream() //
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
@@ -78,20 +89,49 @@ public class CartService {
     }
 
     /**
+     * Creates a shopping session for a user who does not exist
+     *
+     * @param ip is the users IP address
+     */
+    private void anonymous_user(String ip, CartDTO dto) {
+        // user has an existing session based on IP
+        if (this.map.containsKey(ip)) {
+            List<CartItem> list = this.map.get(ip);
+
+            var optional = list.stream()
+                    .filter(cartItem -> cartItem.getSku().equals(dto.sku()))
+                    .findFirst();
+
+            if (optional.isPresent()) {
+                optional.get().setQty(dto.qty());
+            } else {
+                list.add(new CartItem(dto.qty(), dto.sku()));
+            }
+        } else {
+            this.map.put(ip, List.of(new CartItem(dto.qty(), dto.sku())));
+        }
+    }
+
+    /**
      * Creates a new shopping session or persists details into an existing shopping session
      *
      * @throws CustomNotFoundException if dto property sku does not exist
      * @throws OutOfStockException if dto property qty is greater than inventory
      */
     @Transactional
-    public void create(CartDTO dto) {
+    public void create(HttpServletRequest request, CartDTO dto) {
         var productSKU = this.productSKUService.productSkuBySKU(dto.sku());
 
         if (dto.qty() > productSKU.getInventory()) {
             throw new OutOfStockException("chosen quantity is out of stock");
         }
 
-        String principal = SecurityContextHolder.getContext().getAuthentication().getName();
+        String principal = principal();
+
+        if (principal.isEmpty()) {
+            anonymous_user(request.getRemoteAddr(), dto);
+            return;
+        }
 
         Optional<ShoppingSession> optional = this.shoppingSessionRepo
                 .shoppingSessionByUserPrincipal(principal);
@@ -156,9 +196,24 @@ public class CartService {
      * @param sku unique ProductSku
      * */
     @Transactional
-    public void remove_from_cart(String sku) {
-        String principal = SecurityContextHolder.getContext().getAuthentication().getName();
-        this.cartItemRepo.deleteByCartSku(principal, sku);
+    public void remove_from_cart(HttpServletRequest request, String sku) {
+        String principal = principal();
+
+        if (principal.isEmpty()) {
+//            List<CartItem> items = this.map.get(request.getRemoteAddr());
+//            if (items != null) {
+//                items.removeIf(cartItem -> cartItem.getSku().equals(sku));
+//            }
+
+            // commented line above is identical
+            this.map.computeIfPresent(request.getRemoteAddr(), (key, items) -> items
+                    .stream()
+                    .filter(cartItem -> !cartItem.getSku().equals(sku))
+                    .toList()
+            );
+        } else {
+            this.cartItemRepo.deleteByCartSku(principal, sku);
+        }
     }
 
 }

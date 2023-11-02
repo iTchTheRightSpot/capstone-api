@@ -4,6 +4,7 @@ import com.sarabrandserver.cart.dto.CartDTO;
 import com.sarabrandserver.cart.response.CartResponse;
 import com.sarabrandserver.cart.service.CartService;
 import com.sarabrandserver.enumeration.SarreCurrency;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -26,24 +27,26 @@ public class CartController {
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
     public List<CartResponse> cartItems(
-            @RequestParam(name = "currency", defaultValue = "ngn") String currency
+            @RequestParam(name = "currency", defaultValue = "ngn") String currency,
+            HttpServletRequest request
     ) {
         var c = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.cartService.cartItems(c);
+        return this.cartService.cartItems(request, c);
     }
 
     @ResponseStatus(CREATED)
     @PostMapping(consumes = APPLICATION_JSON_VALUE)
-    @PreAuthorize(value = "hasRole('ROLE_CLIENT')")
-    public void create(@Valid @RequestBody CartDTO dto) {
-        cartService.create(dto);
+    public void create(HttpServletRequest request, @Valid @RequestBody CartDTO dto) {
+        cartService.create(request, dto);
     }
 
     @ResponseStatus(OK)
     @DeleteMapping
-    @PreAuthorize(value = "hasRole('ROLE_CLIENT')")
-    public void deleteItem(@NotNull @RequestParam(name = "sku") String sku) {
-        this.cartService.remove_from_cart(sku);
+    public void deleteItem(
+            HttpServletRequest request,
+            @NotNull @RequestParam(name = "sku") String sku
+    ) {
+        this.cartService.remove_from_cart(request, sku);
     }
 
 }

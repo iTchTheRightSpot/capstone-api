@@ -16,13 +16,8 @@ import java.util.Optional;
 @Repository
 public interface ShoppingSessionRepo extends JpaRepository<ShoppingSession, Long> {
 
-    @Query("""
-    SELECT s
-    FROM ShoppingSession s
-    INNER JOIN SarreBrandUser u ON s.sarreBrandUser.clientId = u.clientId
-    WHERE u.email = :principal
-    """)
-    Optional<ShoppingSession> shoppingSessionByUserPrincipal(String principal);
+    @Query("SELECT s FROM ShoppingSession s WHERE s.ipAddress = :ip")
+    Optional<ShoppingSession> shoppingSessionByIPAddress(String ip);
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -45,13 +40,12 @@ public interface ShoppingSessionRepo extends JpaRepository<ShoppingSession, Long
     ps.sku AS sku,
     c.qty AS qty
     FROM ShoppingSession s
-    INNER JOIN SarreBrandUser u ON s.sarreBrandUser.email = u.email
     INNER JOIN CartItem c ON s.shoppingSessionId = c.shoppingSession.shoppingSessionId
     INNER JOIN ProductSku ps ON ps.sku = c.sku
     INNER JOIN ProductDetail d ON ps.productDetail.productDetailId = d.productDetailId
     INNER JOIN Product p ON d.product.productId = p.productId
-    WHERE u.email = :principal
+    WHERE s.ipAddress = :ip
     """)
-    List<CartPojo> cartItemsByPrincipal(SarreCurrency currency, String principal);
+    List<CartPojo> cartItemsByIpAddress(SarreCurrency currency, String ip);
 
 }

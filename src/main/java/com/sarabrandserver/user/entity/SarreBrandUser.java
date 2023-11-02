@@ -50,9 +50,6 @@ public class SarreBrandUser implements Serializable {
     @JoinColumn(name = "reset_id", referencedColumnName = "reset_id")
     private ClientPasswordResetToken token;
 
-    @OneToOne(mappedBy = "sarreBrandUser")
-    private ShoppingSession shoppingSession;
-
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "sarreBrandUser", orphanRemoval = true)
     private Set<ClientRole> clientRole;
 

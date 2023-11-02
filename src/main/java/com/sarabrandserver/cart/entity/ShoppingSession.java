@@ -26,6 +26,9 @@ public class ShoppingSession {
     @Column(name = "session_id", nullable = false, unique = true)
     private Long shoppingSessionId;
 
+    @Column(name = "ip_address", nullable = false, unique = true, length = 39)
+    private String ipAddress;
+
     @Column(name = "created_at", nullable = false)
     @Temporal(TIMESTAMP)
     private Date createAt;
@@ -33,10 +36,6 @@ public class ShoppingSession {
     @Column(name = "expire_at")
     @Temporal(TIMESTAMP)
     private Date expireAt;
-
-    @OneToOne(cascade = MERGE)
-    @JoinColumn(name = "client_id", referencedColumnName = "client_id")
-    private SarreBrandUser sarreBrandUser;
 
     @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "shoppingSession", orphanRemoval = true)
     private Set<CartItem> cartItems;

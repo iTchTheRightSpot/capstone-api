@@ -4,6 +4,7 @@ import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.service.AuthService;
 import com.sarabrandserver.cart.dto.CartDTO;
+import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
 import com.sarabrandserver.cart.service.CartService;
@@ -14,7 +15,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.NoSuchElementException;
 
@@ -68,7 +68,6 @@ class CartControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
     void listCartItems() throws Exception {
         this.MOCKMVC
                 .perform(get(path).with(csrf()))
@@ -77,7 +76,6 @@ class CartControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
     void list_cart_items_anonymous_user() throws Exception {
         this.MOCKMVC
                 .perform(get(path).param("currency", "usd").with(csrf()))
@@ -86,7 +84,6 @@ class CartControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
     void create_new_shopping_session() throws Exception {
         var sku = productSku();
 
@@ -102,30 +99,6 @@ class CartControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void create_new_shopping_session_anonymous_user() throws Exception {
-        var sku = productSku();
-        var dto = new CartDTO(sku.getSku(), sku.getInventory());
-
-        this.MOCKMVC
-                .perform(post(path)
-                        .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(dto))
-                        .with(csrf())
-                )
-                .andExpect(status().isCreated());
-
-        var dto1 = new CartDTO(sku.getSku(), sku.getInventory() - 1);
-        this.MOCKMVC
-                .perform(post(path)
-                        .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(dto1))
-                        .with(csrf())
-                )
-                .andExpect(status().isCreated());
-    }
-
-    @Test
-    @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
     void add_to_existing_shopping_session() throws Exception {
         var sku = productSku();
         var dto = new CartDTO(sku.getSku(), sku.getInventory());
@@ -140,7 +113,6 @@ class CartControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "fart@client.com", password = "password", roles = {"CLIENT"})
     void delete_item() throws Exception {
         var list = this.cartItemRepo.findAll();
         assertFalse(list.isEmpty());

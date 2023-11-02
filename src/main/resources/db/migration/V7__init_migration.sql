@@ -4,6 +4,7 @@ ALTER TABLE client_role CHANGE COLUMN role role VARCHAR(10);
 # drop price and currency columns
 ALTER TABLE product
     DROP COLUMN price;
+
 ALTER TABLE product
     DROP COLUMN currency;
 
@@ -24,6 +25,14 @@ ALTER TABLE product
 
 # drop and rename columns
 ALTER TABLE shopping_session
+    ADD COLUMN ip_address VARCHAR(39) NOT NULL UNIQUE;
+
+ALTER TABLE shopping_session
+    DROP FOREIGN KEY shopping_session_ibfk_1,
+    DROP COLUMN client_id;
+
+ALTER TABLE shopping_session
     DROP COLUMN total_price;
+
 ALTER TABLE shopping_session
     RENAME COLUMN modified_at TO expire_at;

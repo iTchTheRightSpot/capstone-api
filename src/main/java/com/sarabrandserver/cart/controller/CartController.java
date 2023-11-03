@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,13 +30,13 @@ public class CartController {
             HttpServletRequest request
     ) {
         var c = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.cartService.cartItems(request, c);
+        return this.cartService.cartItems(request.getRemoteAddr(), c);
     }
 
     @ResponseStatus(CREATED)
     @PostMapping(consumes = APPLICATION_JSON_VALUE)
     public void create(HttpServletRequest request, @Valid @RequestBody CartDTO dto) {
-        cartService.create(request, dto);
+        cartService.create(request.getRemoteAddr(), dto);
     }
 
     @ResponseStatus(OK)
@@ -46,7 +45,7 @@ public class CartController {
             HttpServletRequest request,
             @NotNull @RequestParam(name = "sku") String sku
     ) {
-        this.cartService.remove_from_cart(request, sku);
+        this.cartService.remove_from_cart(request.getRemoteAddr(), sku);
     }
 
 }

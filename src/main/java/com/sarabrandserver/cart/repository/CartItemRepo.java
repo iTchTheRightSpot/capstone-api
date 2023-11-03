@@ -35,6 +35,6 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     DELETE FROM CartItem c
     WHERE c.shoppingSession.ipAddress = :ip AND c.sku = :sku
     """)
-    void deleteByCartSku(String ip, String sku);
+    void delete_CartItem_by_ip_and_sku(String ip, String sku);
 
 }

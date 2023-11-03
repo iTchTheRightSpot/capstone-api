@@ -12,7 +12,6 @@ import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.OutOfStockException;
 import com.sarabrandserver.product.service.ProductSKUService;
 import com.sarabrandserver.util.CustomUtil;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -42,10 +41,10 @@ public class CartService {
     /**
      * Returns a list of CartResponse based on user principal and currency
      */
-    public List<CartResponse> cartItems(HttpServletRequest request, SarreCurrency currency) {
+    public List<CartResponse> cartItems(String ipAddress, SarreCurrency currency) {
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
         return this.shoppingSessionRepo
-                .cartItemsByIpAddress(currency, request.getRemoteAddr()) //
+                .cartItemsByIpAddress(currency, ipAddress) //
                 .stream() //
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
@@ -70,7 +69,7 @@ public class CartService {
      * @throws OutOfStockException if dto property qty is greater than inventory
      */
     @Transactional
-    public void create(HttpServletRequest request, CartDTO dto) {
+    public void create(String ipAddress, CartDTO dto) {
         var productSKU = this.productSKUService.productSkuBySKU(dto.sku());
 
         if (dto.qty() > productSKU.getInventory()) {
@@ -78,10 +77,10 @@ public class CartService {
         }
 
         Optional<ShoppingSession> optional = this.shoppingSessionRepo
-                .shoppingSessionByIPAddress(request.getRemoteAddr());
+                .shoppingSessionByIPAddress(ipAddress);
 
         if (optional.isEmpty()) {
-            create_new_shopping_session(request.getRemoteAddr(), dto);
+            create_new_shopping_session(ipAddress, dto);
         } else {
             add_to_existing_shopping_session(optional.get(), dto);
         }
@@ -136,8 +135,8 @@ public class CartService {
      * @param sku unique ProductSku
      * */
     @Transactional
-    public void remove_from_cart(HttpServletRequest request, String sku) {
-        this.cartItemRepo.deleteByCartSku(request.getRemoteAddr(), sku);
+    public void remove_from_cart(String ipAddress, String sku) {
+        this.cartItemRepo.delete_CartItem_by_ip_and_sku(ipAddress, sku);
     }
 
 }

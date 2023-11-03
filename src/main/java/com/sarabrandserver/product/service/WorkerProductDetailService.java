@@ -6,7 +6,7 @@ import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.entity.ProductDetail;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductImageRepo;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.dto.ProductDetailDTO;
 import com.sarabrandserver.product.dto.UpdateProductDetailDTO;
@@ -34,7 +34,7 @@ public class WorkerProductDetailService {
     private final ProductDetailRepo detailRepo;
     private final ProductSKUService productSKUService;
     private final ProductImageRepo productImageRepo;
-    private final ProductRepository productRepository;
+    private final ProductRepo productRepo;
     private final CustomUtil customUtil;
     private final HelperService helperService;
 
@@ -44,7 +44,7 @@ public class WorkerProductDetailService {
      * @param uuid is the uuid of the product
      * @return List of DetailResponse
      */
-    public List<DetailResponse> fetch(String uuid) {
+    public List<DetailResponse> productDetailsByProductUUID(String uuid) {
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
 
         return this.detailRepo
@@ -53,7 +53,7 @@ public class WorkerProductDetailService {
                 .map(pojo -> {
                     var urls = Arrays
                             .stream(pojo.getImage().split(","))
-                            .map(key -> this.helperService.generatePreSignedUrl(bool, BUCKET, key))
+                            .map(key -> this.helperService.preSignedURL(bool, BUCKET, key))
                             .toList();
 
                     Variant[] variants = this.customUtil
@@ -78,7 +78,7 @@ public class WorkerProductDetailService {
      */
     @Transactional
     public void create(ProductDetailDTO dto, MultipartFile[] multipartFiles) {
-        var product = this.productRepository
+        var product = this.productRepo
                 .findByProductUuid(dto.uuid())
                 .orElseThrow(() -> new CustomNotFoundException("Product does not exist"));
 
@@ -87,11 +87,11 @@ public class WorkerProductDetailService {
         if (exist.isPresent()) {
             // Create new ProductSKU
             var detail = exist.get();
-            this.productSKUService.saveProductSKUs(dto.sizeInventory(), detail);
+            this.productSKUService.save(dto.sizeInventory(), detail);
             return;
         }
 
-        var date = this.customUtil.toUTC(new Date()).orElse(new Date());
+        var date = this.customUtil.toUTC(new Date());
 
         // Validate MultipartFile[] are all images
         var files = this.helperService.customMultiPartFiles(multipartFiles, new StringBuilder());
@@ -110,7 +110,7 @@ public class WorkerProductDetailService {
         var saved = this.detailRepo.save(detail);
 
         // Save ProductSKUs
-        this.productSKUService.saveProductSKUs(dto.sizeInventory(), saved);
+        this.productSKUService.save(dto.sizeInventory(), saved);
 
         // Save ProductImages (save to s3)
         this.helperService.productImages(
@@ -192,7 +192,7 @@ public class WorkerProductDetailService {
      */
     public ProductDetail productDetailByProductSku(final String sku) {
         return this.detailRepo
-                .findDetailBySku(sku)
+                .productDetailByProductSku(sku)
                 .orElseThrow(() -> new CustomNotFoundException("SKU does not exist"));
     }
 

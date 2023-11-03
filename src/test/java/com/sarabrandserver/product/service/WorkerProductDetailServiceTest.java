@@ -6,9 +6,9 @@ import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.entity.ProductDetail;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductImageRepo;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.util.CustomUtil;
-import com.sarabrandserver.util.TestingData;
+import com.sarabrandserver.data.TestingData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,11 +25,10 @@ import static org.mockito.Mockito.*;
 class WorkerProductDetailServiceTest extends AbstractUnitTest {
 
     @Value(value = "${aws.bucket}") private String BUCKET;
-
     @Value(value = "${spring.profiles.active}") private String ACTIVEPROFILE;
 
     private WorkerProductDetailService productDetailService;
-    @Mock private ProductRepository productRepository;
+    @Mock private ProductRepo productRepo;
     @Mock private ProductSKUService productSKUService;
     @Mock private ProductImageRepo productImageRepo;
     @Mock private ProductDetailRepo detailRepo;
@@ -42,7 +41,7 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
                 this.detailRepo,
                 this.productSKUService,
                 this.productImageRepo,
-                this.productRepository,
+                this.productRepo,
                 this.customUtil,
                 this.helperService
         );
@@ -60,9 +59,9 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
         var dto = TestingData.productDetailDTO(product.getUuid(), "mat-black", dtos);
 
         // When
-        when(productRepository.findByProductUuid(anyString())).thenReturn(Optional.of(product));
+        when(productRepo.findByProductUuid(anyString())).thenReturn(Optional.of(product));
         when(detailRepo.productDetailByColour(anyString())).thenReturn(Optional.empty());
-        when(customUtil.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
+        when(customUtil.toUTC(any(Date.class))).thenReturn(new Date());
 
         // Then
         productDetailService.create(dto, files);
@@ -81,7 +80,7 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
 
 
         // When
-        when(productRepository.findByProductUuid(anyString())).thenReturn(Optional.of(product));
+        when(productRepo.findByProductUuid(anyString())).thenReturn(Optional.of(product));
         when(detailRepo.productDetailByColour(anyString())).thenReturn(Optional.of(detail));
 
         // Then

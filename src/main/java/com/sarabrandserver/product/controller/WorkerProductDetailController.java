@@ -1,5 +1,6 @@
 package com.sarabrandserver.product.controller;
 
+import com.sarabrandserver.product.service.ProductSKUService;
 import com.sarabrandserver.product.service.WorkerProductDetailService;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.dto.ProductDetailDTO;
@@ -24,19 +25,23 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 public class WorkerProductDetailController {
 
     private final WorkerProductDetailService workerProductDetailService;
+    private final ProductSKUService productSKUService;
 
     /**
      * Method returns a list of DetailResponse.
      *
      * @param uuid is the Product UUID
-     * @return ResponseEntity
+     * @return List of DetailResponse
      */
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
     public List<DetailResponse> allDetailsByProductUUID(@NotNull @RequestParam(value = "id") String uuid) {
-        return this.workerProductDetailService.fetch(uuid);
+        return this.workerProductDetailService.productDetailsByProductUUID(uuid);
     }
 
+    /**
+     * Creates a new ProductDetail
+     * */
     @ResponseStatus(CREATED)
     @PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
     public void create(
@@ -49,7 +54,7 @@ public class WorkerProductDetailController {
     /**
      * Update a ProductDetail
      *
-     * @param dto of type DetailDTO
+     * @param dto of type UpdateProductDetailDTO
      */
     @ResponseStatus(NO_CONTENT)
     @PutMapping(consumes = APPLICATION_JSON_VALUE)
@@ -58,14 +63,25 @@ public class WorkerProductDetailController {
     }
 
     /**
-     * Method permanently deletes a ProductDetail
+     * Permanently deletes a ProductDetail
      *
-     * @param sku is a unique String for each ProductDetail
+     * @param sku is a unique String for each ProductSKU
      */
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping(path = "/{sku}")
     public void delete(@NotNull @PathVariable(value = "sku") String sku) {
         this.workerProductDetailService.delete(sku);
+    }
+
+    /**
+     * Permanently deletes a ProductSKU
+     *
+     * @param sku is a unique String for each ProductSKU
+     */
+    @ResponseStatus(NO_CONTENT)
+    @DeleteMapping(path = "/sku")
+    public void deleteProductSKU(@NotNull @RequestParam(value = "sku") String sku) {
+        this.productSKUService.delete(sku);
     }
 
 }

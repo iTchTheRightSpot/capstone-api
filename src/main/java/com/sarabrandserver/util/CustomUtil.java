@@ -2,18 +2,26 @@ package com.sarabrandserver.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.exception.CustomNotFoundException;
+import com.sarabrandserver.product.dto.PriceCurrencyDTO;
 import com.sarabrandserver.product.response.Variant;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Optional;
 import java.util.TimeZone;
 import java.util.function.Function;
+
+import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
+import static com.sarabrandserver.enumeration.SarreCurrency.USD;
+import static java.math.BigDecimal.ZERO;
+import static java.math.RoundingMode.FLOOR;
 
 @Service
 @RequiredArgsConstructor
@@ -40,14 +48,59 @@ public class CustomUtil {
      * @param date of type java.util.date
      * @return Date of type java.util.date
      */
-    public Optional<Date> toUTC(Date date) {
-        if (date == null) {
-            return Optional.empty();
-        }
+    public Date toUTC(Date date) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return Optional.of(calendar.getTime());
+        return calendar.getTime();
+    }
+
+    /**
+     * Validates DTO is in the right format
+     * */
+    public boolean validateContainsCurrencies(PriceCurrencyDTO[] dto) {
+        if (dto.length != 2) {
+            return false;
+        }
+
+        boolean bool = Arrays.stream(dto)
+                .anyMatch(p -> {
+                    int compare = p.price().compareTo(ZERO);
+                    // 1 if compare is greater than BigDecimal.ZERO
+                    // -1 if compare is less than BigDecimal.ZERO
+                    // 0 if compare is equal to BigDecimal.ZERO
+                    return compare < 0;
+                });
+
+        if (bool) {
+            return false;
+        }
+
+        boolean ngn = Arrays.stream(dto)
+                .anyMatch(dto1 -> dto1.currency().toUpperCase().equals(NGN.name()));
+        boolean usd = Arrays.stream(dto)
+                .anyMatch(dto1 -> dto1.currency().toUpperCase().equals(USD.name()));
+
+        return ngn && usd;
+    }
+
+    /**
+     * Retrieves the price based on the currency.
+     *
+     * @param arr dto object gotten from the user
+     * @param currency gets the price in the array
+     * @return BigDecimal
+     * */
+    public BigDecimal truncateAmount(PriceCurrencyDTO[] arr, SarreCurrency currency) {
+        String error = "please enter %s amount".formatted(currency.name());
+
+        PriceCurrencyDTO dto = Arrays
+                .stream(arr)
+                .filter(predicate -> predicate.currency().equals(currency.name()))
+                .findFirst()
+                .orElseThrow(() -> new CustomNotFoundException(error));
+
+        return dto.price().setScale(2, FLOOR);
     }
 
     /**
@@ -59,12 +112,14 @@ public class CustomUtil {
      * @return Variant array
      * */
     public <T> Variant[] toVariantArray(String str, T clazz) {
-        try {
-            MapOut[] mapOuts = this.objectMapper.readValue(str, MapOut[].class);
-            Variant[] variant = new Variant[mapOuts.length];
+        record VariantHelperMapper(String sku, String inventory, String size) { }
 
-            for (int i = 0; i < mapOuts.length; i++) {
-                variant[i] = new Variant(mapOuts[i].sku, mapOuts[i].inventory, mapOuts[i].size);
+        try {
+            VariantHelperMapper[] mapper = this.objectMapper.readValue(str, VariantHelperMapper[].class);
+            Variant[] variant = new Variant[mapper.length];
+
+            for (int i = 0; i < mapper.length; i++) {
+                variant[i] = new Variant(mapper[i].sku, mapper[i].inventory, mapper[i].size);
             }
 
             return variant;
@@ -74,19 +129,55 @@ public class CustomUtil {
         }
     }
 
-    @Getter
-    private static class MapOut {
-        private String sku;
-        private String inventory;
-        private String size;
+    public long toCurrency(PriceCurrencyDTO[] dto, SarreCurrency obj) {
+        String error = "please enter %s amount".formatted(obj.name());
 
-        public MapOut() { }
+        PriceCurrencyDTO currencyDTO = Arrays
+                .stream(dto)
+                .filter(predicate -> predicate.currency().equals(obj.name()))
+                .findFirst()
+                .orElseThrow(() -> new CustomNotFoundException(error));
 
-        public MapOut(String sku, String inventory, String size) {
-            this.sku = sku;
-            this.inventory = inventory;
-            this.size = size;
-        }
+        return convertCurrency(obj, currencyDTO.price());
+    }
+
+    /**
+     * Converts from the amount to the lowest. E.g. converting from USD to cents
+     * would be
+     * 1 cent = 0.01 usd
+     * x cent = 10 usd
+     * after cross multiplication,
+     * x = (10 / 0.01) or 1000 cents
+     */
+    public long convertCurrency(SarreCurrency currency, BigDecimal bigDecimal) {
+        return switch (currency) {
+            case NGN -> {
+                BigDecimal b = bigDecimal.setScale(2, FLOOR);
+                int compare = b.compareTo(ZERO);
+
+                if (compare == 0) {
+                    yield 0;
+                }
+
+                double d = b.doubleValue();
+                yield (long) d;
+
+            }
+            case USD -> {
+                // truncate without rounding and scale 2. meaning leave only 2 nums after .
+                BigDecimal b = bigDecimal.setScale(2, FLOOR);
+                int compare = b.compareTo(ZERO);
+
+                if (compare == 0) {
+                    yield 0;
+                }
+
+                // convert to whole number
+                // look in unit test class
+                double d = b.doubleValue() * 100;
+                yield (long) d;
+            }
+        };
     }
 
 }

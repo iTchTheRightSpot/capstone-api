@@ -1,7 +1,6 @@
 package com.sarabrandserver.user.repository;
 
 import com.sarabrandserver.user.entity.SarreBrandUser;
-import com.sarabrandserver.user.projection.ClientzPojo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +12,7 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<SarreBrandUser, Long> {
+
     @Query(value = "SELECT c FROM SarreBrandUser c WHERE c.email = :principal")
     Optional<SarreBrandUser> findByPrincipal(@Param(value = "principal") String principal);
 
@@ -30,10 +30,7 @@ public interface UserRepository extends JpaRepository<SarreBrandUser, Long> {
     """)
     Optional<SarreBrandUser> workerExists(@Param(value = "email") String email);
 
-    @Query(value = """
-    SELECT c.firstname AS name FROM SarreBrandUser c
-    INNER JOIN ClientRole r ON c.clientId = r.sarreBrandUser.clientId
-    WHERE r.role = :role
-    """)
-    Page<ClientzPojo> fetchAll(@Param(value = "role") String role, Pageable page);
+    @Query(value = "SELECT u FROM SarreBrandUser u")
+    Page<SarreBrandUser> allUsers(Pageable page);
+
 }

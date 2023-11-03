@@ -8,23 +8,24 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-@Component @Profile(value = {"stage", "dev"})
+@Component
+@Profile(value = {"stage"})
 public class PreProductionService {
 
     @Bean
-    public CommandLineRunner commandLineRunner(AuthService aSer, UserRepository cRepo) {
+    public CommandLineRunner commandLineRunner(AuthService service, UserRepository repository) {
         return args -> {
-            if (cRepo.findByPrincipal("admin@admin.com").isPresent()) {
-                return;
+            if (repository.findByPrincipal("admin@admin.com").isEmpty()) {
+                var dto = new RegisterDTO(
+                        "SEJU",
+                        "Development",
+                        "admin@admin.com",
+                        "admin@admin.com",
+                        "0000000000",
+                        "password123"
+                );
+                service.workerRegister(dto);
             }
-            aSer.workerRegister(new RegisterDTO(
-                    "SEJU",
-                    "Development",
-                    "admin@admin.com",
-                    "admin@admin.com",
-                    "0000000000",
-                    "password123"
-            ));
         };
     }
 

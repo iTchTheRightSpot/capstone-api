@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.io.Serializable;
 
+import static jakarta.persistence.FetchType.LAZY;
+
 @Table(name = "product_sku", indexes = @Index(name = "IX_product_sku_sku", columnList = "sku"))
 @Entity
 @NoArgsConstructor
@@ -28,7 +30,7 @@ public class ProductSku implements Serializable {
     @Column(name = "inventory", nullable = false)
     private int inventory;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "detail_id", referencedColumnName = "detail_id", nullable = false)
     private ProductDetail productDetail;
 

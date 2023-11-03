@@ -6,6 +6,7 @@ import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
 import com.sarabrandserver.collection.entity.ProductCollection;
 import com.sarabrandserver.collection.repository.CollectionRepository;
 import com.sarabrandserver.collection.response.CollectionResponse;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.product.response.ProductResponse;
@@ -62,10 +63,10 @@ public class WorkerCollectionService {
                 .toList();
     }
 
-    public Page<ProductResponse> allProductsByCollection(String id, int page, int size) {
+    public Page<ProductResponse> allProductsByCollection(SarreCurrency currency, String id, int page, int size) {
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
         return this.collectionRepository
-                .allProductsByCollection(id, PageRequest.of(page, size))
+                .allProductsByCollection(currency, id, PageRequest.of(page, size))
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, this.BUCKET, pojo.getKey());
 
@@ -90,7 +91,7 @@ public class WorkerCollectionService {
             throw new DuplicateException(dto.name() + " exists");
         }
 
-        var date = this.customUtil.toUTC(new Date()).orElseGet(Date::new);
+        var date = this.customUtil.toUTC(new Date());
         var collection = ProductCollection.builder()
                 .uuid(UUID.randomUUID().toString())
                 .collection(dto.name().trim())
@@ -118,11 +119,9 @@ public class WorkerCollectionService {
             throw new DuplicateException(dto.name() + " is a duplicate");
         }
 
-        var date = this.customUtil.toUTC(new Date()).orElseGet(Date::new);
-
         this.collectionRepository
                 .update(
-                        date,
+                        this.customUtil.toUTC(new Date()),
                         dto.name(),
                         dto.visible(),
                         dto.id().trim()
@@ -137,7 +136,7 @@ public class WorkerCollectionService {
      */
     @Transactional
     public void delete(String uuid) {
-        var collection = findByUuid(uuid);
+        var collection = productCollectionByUUID(uuid);
 
         this.collectionRepository.delete(collection);
     }
@@ -148,7 +147,7 @@ public class WorkerCollectionService {
                 .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));
     }
 
-    public ProductCollection findByUuid(String uuid) {
+    public ProductCollection productCollectionByUUID(String uuid) {
         return this.collectionRepository.findByUuid(uuid)
                 .orElseThrow(() -> new CustomNotFoundException("ProductCollection does not exist"));
     }

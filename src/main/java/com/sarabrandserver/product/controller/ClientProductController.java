@@ -1,5 +1,6 @@
 package com.sarabrandserver.product.controller;
 
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.product.service.ClientProductService;
@@ -25,19 +26,26 @@ public class ClientProductController {
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
     public Page<ProductResponse> allProducts(
-            @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "40") Integer size
+            @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @RequestParam(name = "size", defaultValue = "20") Integer size,
+            @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
-        return this.clientProductService.allProductsByUUID("", "", page, Math.min(size, 40));
+        SarreCurrency sc = SarreCurrency.valueOf(currency.toUpperCase());
+        return this.clientProductService
+                .allProductsByUUID("", sc, "", page, Math.min(size, 20));
     }
 
-    /** Returns a SseEmitter of a list of DetailResponse objects */
+    /**
+     * Returns a list of DetailResponse objects
+     */
     @ResponseStatus(OK)
     @GetMapping(path = "/detail", produces = APPLICATION_JSON_VALUE)
     public List<DetailResponse> productDetailsByProductUUID(
-            @NotNull @RequestParam(value = "product_id") String uuid
+            @NotNull @RequestParam(value = "product_id") String uuid,
+            @RequestParam(value = "currency", defaultValue = "ngn") String currency
     ) {
-        return this.clientProductService.productDetailsByProductUUID(uuid);
+        var c = SarreCurrency.valueOf(currency.toUpperCase());
+        return this.clientProductService.productDetailsByProductUUID(uuid, c);
     }
 
 }

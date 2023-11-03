@@ -17,6 +17,7 @@ import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,19 +25,16 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import static com.sarabrandserver.enumeration.RoleEnum.WORKER;
+
 @Service
 @RequiredArgsConstructor
 @Setter
 public class AuthService {
 
-    @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
-
-    @Value(value = "${server.servlet.session.cookie.secure}")
-    private boolean COOKIESECURE;
-
-    @Value(value = "${server.servlet.session.cookie.max-age}")
-    private int MAXAGE;
+    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
+    @Value(value = "${server.servlet.session.cookie.secure}") private boolean COOKIESECURE;
+    @Value(value = "${server.servlet.session.cookie.max-age}") private int MAXAGE;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -44,8 +42,8 @@ public class AuthService {
     private final JwtTokenService jwtTokenService;
 
     /**
-     * Responsible for registering a new worker. Logic is throw an error if client has a role of Worker or else add
-     * ROLE worker to client.
+     * Responsible for registering a new worker. Logic is throw an error if client
+     * has a role of Worker or else add ROLE worker to client.
      *
      * @param dto of type WorkerRegisterDTO
      * @throws DuplicateException when user principal exists and has a role of worker
@@ -59,29 +57,35 @@ public class AuthService {
         // Note User and Role tables have a relationship fetch type EAGER
         boolean isAdmin = client.getClientRole() //
                 .stream() //
-                .anyMatch(role -> role.getRole().equals(RoleEnum.WORKER));
+                .anyMatch(role -> role.getRole().equals(WORKER));
 
         if (isAdmin) {
             throw new DuplicateException(dto.email() + " exists");
         }
 
-        client.addRole(new ClientRole(RoleEnum.WORKER));
+        client.addRole(new ClientRole(WORKER));
 
         this.userRepository.save(client);
     }
 
     /**
-     * Method is responsible for registering a new user who isn't a worker
+     * Registers and automatically signs in a new user
      *
      * @param dto of type ClientRegisterDTO
      * @throws DuplicateException when user principal exists
      */
     @Transactional
-    public void clientRegister(RegisterDTO dto) {
+    public void clientRegister(RegisterDTO dto, HttpServletResponse response) {
         if (this.userRepository.principalExists(dto.email().trim()) > 0) {
             throw new DuplicateException(dto.email() + " exists");
         }
-        this.userRepository.save(createUser(dto));
+
+        var user = this.userRepository.save(createUser(dto));
+
+        var authenticated = UsernamePasswordAuthenticationToken
+                .authenticated(user.getEmail(), null, user.getAuthorities());
+
+        loginImpl(authenticated, response);
     }
 
     /**
@@ -89,25 +93,35 @@ public class AuthService {
      * instead of authorization header.
      * Look in application properties for cookie config.
      *
+     * @param key performs login details based on controller
      * @param dto      consist of principal and password.
      * @param request  of HttpServletRequest
      * @param response of HttpServletResponse
-     * @throws AuthenticationException is thrown when credentials do not exist, bad credentials account is locked e.t.c.
+     * @throws AuthenticationException is thrown when credentials do not exist,
+     *                          bad credentials account is locked e.t.c.
      */
     @Transactional
-    public void login(LoginDTO dto, HttpServletRequest request, HttpServletResponse response) {
+    public void login(
+            RoleEnum key,
+            LoginDTO dto,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
         // No need to re-authenticate if request contains valid jwt cookie
-        if (_validateRequestContainsValidCookies(request)) {
+        if (_validateRequestContainsValidCookies(request, key)) {
             return;
         }
 
         var unauthenticated = UsernamePasswordAuthenticationToken
                 .unauthenticated(dto.principal().trim(), dto.password());
-
         var authenticated = this.authManager.authenticate(unauthenticated);
+        loginImpl(authenticated, response);
+    }
 
-        // Jwt
-        String token = this.jwtTokenService.generateToken(authenticated);
+    private void loginImpl(Authentication authentication, HttpServletResponse response) {
+        if (response == null) return;
+
+        String token = this.jwtTokenService.generateToken(authentication);
 
         // Jwt cookie
         Cookie cookie = new Cookie(JSESSIONID, token);
@@ -138,20 +152,20 @@ public class AuthService {
     }
 
     /**
-     * Method simply prevents user from signing in again if the request contains a valid jwt and LOGGEDSESSION cookie.
+     * Prevents a user from generating a new jwt only
+     * if a valid jwt cookie contains in the cookie.
      *
      * @param res of HttpServletRequest
      * @return boolean
      */
-    private boolean _validateRequestContainsValidCookies(HttpServletRequest res) {
+    private boolean _validateRequestContainsValidCookies(
+            HttpServletRequest res,
+            RoleEnum role
+    ) {
         Cookie[] cookies = res.getCookies();
-        // Base case
-        if (cookies == null)
-            return false;
-
-        return Arrays.stream(cookies)
+        return cookies != null && Arrays.stream(cookies)
                 .filter(cookie -> cookie.getName().equals(JSESSIONID))
-                .anyMatch(this.jwtTokenService::_isTokenNoneExpired);
+                .anyMatch(cookie -> this.jwtTokenService.matchesRole(cookie, role));
     }
 
 }

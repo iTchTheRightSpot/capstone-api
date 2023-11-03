@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 
 public record CreateProductDTO(
         @NotNull(message = "Please select category as product has to below to a category")
@@ -26,12 +25,8 @@ public record CreateProductDTO(
         @NotEmpty(message = "Please enter product description")
         String desc,
 
-        @NotNull(message = "Please enter product price")
-        BigDecimal price,
-
-        @NotNull(message = "Please enter or choose a product currency")
-        @NotEmpty(message = "Please enter or choose a product currency")
-        String currency,
+        @NotNull(message = "cannot be empty")
+        PriceCurrencyDTO[] priceCurrency,
 
         @NotNull(message = "Please choose if product should be visible")
         Boolean visible,

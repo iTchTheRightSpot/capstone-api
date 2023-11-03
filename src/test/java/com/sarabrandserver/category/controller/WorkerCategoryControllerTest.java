@@ -4,27 +4,13 @@ import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
-import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
-import com.sarabrandserver.product.repository.ProductRepository;
-import com.sarabrandserver.product.service.WorkerProductService;
-import com.sarabrandserver.product.dto.SizeInventoryDTO;
-import com.sarabrandserver.util.Result;
-import com.sarabrandserver.util.TestingData;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.test.context.support.WithMockUser;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -33,47 +19,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
-    @Autowired private WorkerCategoryService workerCategoryService;
-    @Autowired private CategoryRepository categoryRepository;
-    @Autowired private WorkerProductService workerProductService;
-    @Autowired private ProductRepository productRepository;
-
-    private CategoryDTO categoryDTO;
-
     private final String requestMapping = "/api/v1/worker/category";
-    private final StringBuilder category = new StringBuilder();
 
-    @BeforeEach
-    void setUp() {
-        Set<String> set = new HashSet<>();
-        for (int i = 0; i < 10; i++) {
-            set.add(new Faker().commerce().department());
-        }
-
-        set.forEach(str -> {
-            if (this.category.isEmpty()) {
-                this.category.append(str);
-            }
-            this.categoryDTO = new CategoryDTO(str, true, "");
-            this.workerCategoryService.create(this.categoryDTO);
-        });
-
-        // Save Product
-        SizeInventoryDTO[] sizeInventoryDTO1 = TestingData.sizeInventoryDTOArray(2);
-        Result result = TestingData.getResult(
-                sizeInventoryDTO1,
-                new Faker().commerce().productName(),
-                this.category.toString(),
-                new Faker().commerce().color()
-        );
-
-        this.workerProductService.create(result.dto(), result.files());
-    }
-
-    @AfterEach
-    void tearDown() {
-        this.productRepository.deleteAll();
-        this.categoryRepository.deleteAll();
+    private String category() {
+        var list = this.categoryRepository.findAll();
+        assertFalse(list.isEmpty());
+        return list.get(0).getCategoryName();
     }
 
     @Test
@@ -109,7 +60,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void create1() throws Exception {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().productName(), true, this.categoryDTO.name());
+        var dto = new CategoryDTO(new Faker().commerce().productName(), true, category());
 
         // Then
         this.MOCKMVC
@@ -172,7 +123,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
         String uuid = categories.get(0)
                 .getCategoryName()
-                .contentEquals(this.category)
+                .contentEquals(category())
                 ? categories.get(1).getUuid() : categories.get(0).getUuid();
 
         this.MOCKMVC
@@ -186,7 +137,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "delete ProductCategory when it has no Product attached")
     void deleteEx() throws Exception {
-        var category = this.categoryRepository.findByName(this.category.toString()).orElse(null);
+        var category = this.categoryRepository.findByName(category()).orElse(null);
         assertNotNull(category);
 
         this.MOCKMVC

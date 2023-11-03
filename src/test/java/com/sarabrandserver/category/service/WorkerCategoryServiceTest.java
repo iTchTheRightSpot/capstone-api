@@ -54,7 +54,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
                 .build();
 
         // When
-        when(this.customUtil.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
+        when(this.customUtil.toUTC(any(Date.class))).thenReturn(new Date());
         when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.empty());
         when(this.categoryRepository.save(any(ProductCategory.class))).thenReturn(category);
 
@@ -77,7 +77,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
                 .build();
 
         // When
-        when(this.customUtil.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
+        when(this.customUtil.toUTC(any(Date.class))).thenReturn(new Date());
         when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.of(category));
         when(this.categoryRepository.save(any(ProductCategory.class))).thenReturn(category);
 
@@ -127,7 +127,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         // When
         doReturn(0).when(this.categoryRepository)
                 .duplicateCategoryForUpdate(anyString(), anyString());
-        when(this.customUtil.toUTC(any(Date.class))).thenReturn(Optional.of(new Date()));
+        when(this.customUtil.toUTC(any(Date.class))).thenReturn(new Date());
 
         // Then
         this.workerCategoryService.update(dto);

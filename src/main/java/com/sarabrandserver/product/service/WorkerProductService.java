@@ -2,15 +2,15 @@ package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.collection.service.WorkerCollectionService;
-import com.sarabrandserver.exception.CustomAwsException;
-import com.sarabrandserver.exception.CustomNotFoundException;
-import com.sarabrandserver.exception.DuplicateException;
-import com.sarabrandserver.exception.ResourceAttachedException;
-import com.sarabrandserver.product.entity.Product;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.exception.*;
 import com.sarabrandserver.product.dto.CreateProductDTO;
-import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.product.dto.UpdateProductDTO;
+import com.sarabrandserver.product.entity.PriceCurrency;
+import com.sarabrandserver.product.entity.Product;
+import com.sarabrandserver.product.repository.PriceCurrencyRepo;
+import com.sarabrandserver.product.repository.ProductRepo;
+import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -23,10 +23,15 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+
+import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
+import static com.sarabrandserver.enumeration.SarreCurrency.USD;
 
 @Service
 @RequiredArgsConstructor
@@ -35,11 +40,11 @@ public class WorkerProductService {
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
-
     @Value(value = "${spring.profiles.active}")
     private String ACTIVEPROFILE;
 
-    private final ProductRepository productRepository;
+    private final PriceCurrencyRepo priceCurrencyRepo;
+    private final ProductRepo productRepo;
     private final WorkerProductDetailService workerProductDetailService;
     private final ProductSKUService productSKUService;
     private final WorkerCategoryService categoryService;
@@ -48,26 +53,26 @@ public class WorkerProductService {
     private final HelperService helperService;
 
     /**
-     * Method fetches a list of ProductResponse. Note fetchAllProductsWorker query method returns a list of
+     * Method returns a list of ProductResponse. Note fetchAllProductsWorker query method returns a list of
      * ProductPojo using spring jpa projection. It only returns a Product not Including its details.
      *
+     * @param currency is of SarreCurrency
      * @param page is the UI page number
      * @param size is the max amount to be displayed on a page
      * @return Page of ProductResponse
      */
-    public Page<ProductResponse> fetchAll(int page, int size) {
+    public Page<ProductResponse> allProducts(SarreCurrency currency, int page, int size) {
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
-
-        return this.productRepository
-                .fetchAllProductsWorker(PageRequest.of(page, size))
+        return this.productRepo
+                .fetchAllProductsWorker(currency, PageRequest.of(page, size))
                 .map(pojo -> {
-                    var url = this.helperService.generatePreSignedUrl(bool, BUCKET, pojo.getKey());
+                    var url = this.helperService.preSignedURL(bool, BUCKET, pojo.getKey());
                     return ProductResponse.builder()
                             .category(pojo.getCategory())
                             .collection(pojo.getCollection())
                             .id(pojo.getUuid())
                             .name(pojo.getName())
-                            .desc(pojo.getDesc())
+                            .desc(pojo.getDescription())
                             .price(pojo.getPrice())
                             .currency(pojo.getCurrency())
                             .imageUrl(url)
@@ -80,17 +85,21 @@ public class WorkerProductService {
      *
      * @param files of type MultipartFile
      * @param dto   of type CreateProductDTO
-     * @throws CustomNotFoundException is thrown when category or collection name does not exist
+     * @throws CustomNotFoundException is thrown if category or collection name does not exist in database
+     * or currency passed in truncateAmount does not contain in dto property priceCurrency
      * @throws CustomAwsException      is thrown if File is not an image
      * @throws DuplicateException      is thrown if dto image exists in for Product
      */
     @Transactional
     public void create(CreateProductDTO dto, MultipartFile[] files) {
+        if (!this.customUtil.validateContainsCurrencies(dto.priceCurrency())) {
+            throw new CustomInvalidFormatException("please check currencies and prices");
+        }
+
         var category = this.categoryService.findByName(dto.category().trim());
-        var _product = this.productRepository.findByProductName(dto.name().trim());
 
         // throw error if product exits
-        if (_product.isPresent()) {
+        if (this.productRepo.findByProductName(dto.name().trim()).isPresent()) {
             throw new DuplicateException(dto.name() + " exists");
         }
 
@@ -99,35 +108,39 @@ public class WorkerProductService {
         var file = this.helperService.customMultiPartFiles(files, defaultImageKey);
 
         // Build Product
-        var product = Product.builder()
+        var p = Product.builder()
                 .productCategory(category)
                 .uuid(UUID.randomUUID().toString())
                 .name(dto.name().trim())
                 .description(dto.desc().trim())
                 .defaultKey(defaultImageKey.toString())
-                .price(dto.price())
-                .currency(dto.currency()) // default is USD
                 .productDetails(new HashSet<>())
                 .build();
 
         // Set ProductCollection to Product
         if (!dto.collection().isBlank()) {
             var collection = this.collectionService.findByName(dto.collection().trim());
-            product.setProductCollection(collection);
+            p.setProductCollection(collection);
         }
 
         // Save Product
-        var saved = this.productRepository.save(product);
+        var product = this.productRepo.save(p);
+
+        // save ngn & usd price
+        BigDecimal ngn = this.customUtil.truncateAmount(dto.priceCurrency(), NGN);
+        BigDecimal usd = this.customUtil.truncateAmount(dto.priceCurrency(), USD);
+        this.priceCurrencyRepo.save(new PriceCurrency(ngn, NGN, product));
+        this.priceCurrencyRepo.save(new PriceCurrency(usd, USD, product));
 
         // Save ProductDetails
-        var date = this.customUtil.toUTC(new Date()).orElse(new Date());
+        var date = this.customUtil.toUTC(new Date());
         var detail = this.workerProductDetailService.
-                productDetail(saved, dto.colour(), dto.visible(), date);
+                productDetail(product, dto.colour(), dto.visible(), date);
 
         // Save ProductSKUs
-        this.productSKUService.saveProductSKUs(dto.sizeInventory(), detail);
+        this.productSKUService.save(dto.sizeInventory(), detail);
 
-        // Build ProductImages (save to s3)
+        // build and save ProductImages (save to s3)
         this.helperService.productImages(
                 detail,
                 file,
@@ -142,10 +155,17 @@ public class WorkerProductService {
      * @param dto of type UpdateProductDTO
      * @throws CustomNotFoundException when dto category_id or collection_id does not exist
      * @throws DuplicateException      when new product name exist but not associated to product uuid
+     * @throws CustomInvalidFormatException if price is less than zero
      */
     @Transactional
     public void update(final UpdateProductDTO dto) {
-        boolean bool = this.productRepository
+        if (dto.price().compareTo(BigDecimal.ZERO) < 0) {
+            throw new CustomInvalidFormatException("price cannot be zero");
+        }
+
+        BigDecimal price = dto.price().setScale(2, RoundingMode.FLOOR);
+
+        boolean bool = this.productRepo
                 .nameNotAssociatedToUuid(dto.uuid(), dto.name()) > 0;
 
         if (bool) {
@@ -154,31 +174,32 @@ public class WorkerProductService {
 
         var category = this.categoryService.findByUuid(dto.categoryId());
 
-        if (!dto.collection().isEmpty()) {
-            // Find ProductCollection by uuid
-            var collection = this.collectionService.findByUuid(dto.collectionId());
-
-            this.productRepository.updateProductCategoryCollectionPresent(
+        if (dto.collection().isEmpty()) {
+            this.productRepo.update_product_where_collection_not_present(
                     dto.uuid(),
                     dto.name().trim(),
                     dto.desc().trim(),
-                    dto.price(),
+                    category
+            );
+
+        } else {
+            var collection = this.collectionService.productCollectionByUUID(dto.collectionId());
+
+            this.productRepo.update_product_where_category_and_collection_are_present(
+                    dto.uuid(),
+                    dto.name().trim(),
+                    dto.desc().trim(),
                     category,
                     collection
             );
-
-            return;
         }
 
-        this.productRepository.updateProductCollectionNotPresent(
-                dto.uuid(),
-                dto.name().trim(),
-                dto.desc().trim(),
-                dto.price(),
-                category
-        );
+        // update price
+        var currency = SarreCurrency.valueOf(dto.currency().toUpperCase());
+        this.priceCurrencyRepo.updatePriceByProductUUID(dto.uuid(), price, currency);
     }
 
+    // TODO validate product isn't in user session and it is not in order detail
     /**
      * Permanently deletes a Product db.
      *
@@ -189,20 +210,20 @@ public class WorkerProductService {
      */
     @Transactional
     public void delete(final String uuid) {
-        var product = this.productRepository.findByProductUuid(uuid)
+        var product = this.productRepo.findByProductUuid(uuid)
                 .orElseThrow(() -> new CustomNotFoundException(uuid + " does not exist"));
 
-        boolean bool = this.productRepository.productDetailAttach(uuid) > 1;
+        boolean bool = this.productRepo.productDetailAttach(uuid) > 1;
 
         if (bool) {
-            String message = "Cannot delete %s as it has many Variants".formatted(product.getName());
+            String message = "cannot delete %s as it has many variants".formatted(product.getName());
             throw new ResourceAttachedException(message);
         }
 
         // Delete from S3
         if (this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage")) {
             // Get all Images
-            List<ObjectIdentifier> keys = this.productRepository.productImagesByProductUUID(uuid)
+            List<ObjectIdentifier> keys = this.productRepo.productImagesByProductUUID(uuid)
                     .stream() //
                     .map(img -> ObjectIdentifier.builder().key(img.getImage()).build()) //
                     .toList();
@@ -213,7 +234,7 @@ public class WorkerProductService {
         }
 
         // Delete from Database
-        this.productRepository.delete(product);
+        this.productRepo.delete(product);
     }
 
 }

@@ -24,6 +24,10 @@ public record UpdateProductDTO(
         String desc,
 
         @NotNull(message = "cannot be empty")
+        @NotEmpty(message = "cannot be empty")
+        String currency,
+
+        @NotNull(message = "cannot be empty")
         BigDecimal price,
 
         @NotNull(message = "cannot be empty")

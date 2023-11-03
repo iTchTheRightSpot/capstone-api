@@ -4,6 +4,7 @@ import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.category.service.WorkerCategoryService;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.response.ProductResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -34,11 +35,13 @@ public class WorkerCategoryController {
     @GetMapping(path = "/products", produces = "application/json")
     public Page<ProductResponse> allProductByCategory(
             @NotNull @RequestParam(name = "category_id") String id,
-            @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size
+            @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @RequestParam(name = "size", defaultValue = "20") Integer size,
+            @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
+        var s =  SarreCurrency.valueOf(currency.toUpperCase());
         return this.workerCategoryService
-                .allProductsByCategory(id, page, Math.min(size, 20));
+                .allProductsByCategory(s, id, page, Math.min(size, 20));
     }
 
     @ResponseStatus(CREATED)

@@ -1,9 +1,11 @@
 package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.aws.S3Service;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
+import com.sarabrandserver.product.repository.PriceCurrencyRepo;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
-import com.sarabrandserver.product.repository.ProductRepository;
+import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.product.response.Variant;
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
+
 @Service
 @RequiredArgsConstructor
 public class ClientProductService {
@@ -27,8 +31,9 @@ public class ClientProductService {
     @Value(value = "${spring.profiles.active}")
     private String ACTIVEPROFILE;
 
-    private final ProductRepository productRepository;
+    private final ProductRepo productRepo;
     private final ProductDetailRepo productDetailRepo;
+    private final PriceCurrencyRepo priceCurrencyRepo;
     private final S3Service s3Service;
     private final CustomUtil customUtil;
 
@@ -36,16 +41,23 @@ public class ClientProductService {
      * Returns a page of ProductResponse
      *
      * @param key  is based on the controller that called this method
+     * @param currency of type SarreBrandCurrency
      * @param uuid is a unique string attached to either a Collection or Category
      * @param page number
      * @param size number of ProductResponse for each page
      */
-    public Page<ProductResponse> allProductsByUUID(String key, String uuid, int page, int size) {
+    public Page<ProductResponse> allProductsByUUID(
+            String key,
+            SarreCurrency currency,
+            String uuid,
+            int page,
+            int size
+    ) {
         boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
 
         return switch (key) {
-            case "" -> this.productRepository
-                    .fetchAllProductsClient(PageRequest.of(page, size)) //
+            case "" -> this.productRepo
+                    .allProductsByCurrencyClient(currency, PageRequest.of(page, size)) //
                     .map(pojo -> {
                         var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
                         return ProductResponse.builder()
@@ -53,37 +65,37 @@ public class ClientProductService {
                                 .collection(pojo.getCollection())
                                 .id(pojo.getUuid())
                                 .name(pojo.getName())
-                                .desc(pojo.getDesc())
+                                .desc(pojo.getDescription())
                                 .price(pojo.getPrice())
                                 .currency(pojo.getCurrency())
                                 .imageUrl(url)
                                 .build();
                     });
 
-            case "category" -> this.productRepository
-                    .fetchProductByCategoryClient(uuid, PageRequest.of(page, size)) //
+            case "category" -> this.productRepo
+                    .fetchProductByCategoryClient(currency, uuid, PageRequest.of(page, size)) //
                     .map(pojo -> {
                         var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
                         return ProductResponse.builder()
                                 .category(pojo.getCategory())
                                 .id(pojo.getUuid())
                                 .name(pojo.getName())
-                                .desc(pojo.getDesc())
+                                .desc(pojo.getDescription())
                                 .price(pojo.getPrice())
                                 .currency(pojo.getCurrency())
                                 .imageUrl(url)
                                 .build();
                     });
 
-            case "collection" -> this.productRepository
-                    .fetchByProductByCollectionClient(uuid, PageRequest.of(page, size))
+            case "collection" -> this.productRepo
+                    .fetchByProductByCollectionClient(currency, uuid, PageRequest.of(page, size))
                     .map(pojo -> {
                         var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
                         return ProductResponse.builder()
                                 .collection(pojo.getCollection())
                                 .id(pojo.getUuid())
                                 .name(pojo.getName())
-                                .desc(pojo.getDesc())
+                                .desc(pojo.getDescription())
                                 .price(pojo.getPrice())
                                 .currency(pojo.getCurrency())
                                 .imageUrl(url)
@@ -94,13 +106,14 @@ public class ClientProductService {
         };
     }
 
-    /** Returns a list of ProductDetails based on Product UUID */
-    public List<DetailResponse> productDetailsByProductUUID(String uuid) {
+    /** Returns a list of ProductDetails based on Product property UUID */
+    public List<DetailResponse> productDetailsByProductUUID(String uuid, SarreCurrency currency) {
         boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
 
-        var product = this.productRepository.findByProductUuid(uuid).orElse(null);
+        var object = this.priceCurrencyRepo
+                .priceCurrencyByProductUUIDAndCurrency(uuid, currency).orElse(null);
 
-        if (product == null) return null;
+        if (object == null) return null;
 
         return this.productDetailRepo
                 .productDetailsByProductUUIDClient(uuid) //
@@ -114,10 +127,10 @@ public class ClientProductService {
                             .toVariantArray(pojo.getVariants(), ClientProductService.class);
 
                     return DetailResponse.builder()
-                            .name(product.getName())
-                            .currency(product.getCurrency())
-                            .price(product.getPrice())
-                            .desc(product.getDescription())
+                            .name(object.getName())
+                            .currency(object.getCurrency().name())
+                            .price(object.getPrice())
+                            .desc(object.getDescription())
                             .colour(pojo.getColour())
                             .url(urls)
                             .variants(variants)
@@ -125,45 +138,6 @@ public class ClientProductService {
                 }) //
                 .toList();
     }
-
-//    /**
-//     * Returns a List of DetailResponse as a SseEmitter. Note response is sent every
-//     * 10 mins after the initial handshake. Article on SseEmitter
-//     * <a href="https://howtodoinjava.com/spring-boot/spring-async-controller-sseemitter/">...</a>
-//     *
-//     * @param uuid is the uuid of the product
-//     * @return SseEmitter
-//     */
-//    public SseEmitter productDetailsByProductUUID(String uuid) {
-//        boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
-//
-//        var details = this.productDetailRepo
-//                .productDetailsByProductUUIDClient(uuid) //
-//                .stream() //
-//                .map(pojo -> {
-//                    var urls = Arrays.stream(pojo.getImage().split(","))
-//                            .map(key -> this.s3Service.getPreSignedUrl(bool, BUCKET, key))
-//                            .toList();
-//
-//                    Variant[] variants = this.customUtil
-//                            .toVariantArray(pojo.getVariants(), ClientProductService.class);
-//
-//                    return new DetailResponse(pojo.getColour(), urls, variants);
-//                }) //
-//                .toList();
-//
-//        // TODO implement ExecutorService due to returning getPreSignedUrl
-//        SseEmitter sse = new SseEmitter(Duration.ofMinutes(10).toMillis());
-//
-//        try {
-//            sse.send(details);
-//        } catch (IOException e) {
-//            sse.completeWithError(e);
-//            throw new SseException("Error retrieving Product Details. Please try again later");
-//        }
-//
-//        return sse;
-//    }
 
 }
 

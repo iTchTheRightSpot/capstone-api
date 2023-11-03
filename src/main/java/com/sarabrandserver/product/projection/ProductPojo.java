@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 public interface ProductPojo {
     String getUuid();
     String getName();
-    String getDesc();
+    String getDescription();
     BigDecimal getPrice();
     String getCurrency();
     String getKey();

@@ -21,7 +21,7 @@ public class ClientRole implements Serializable {
     private Long roleId;
 
     @Enumerated(value = EnumType.STRING)
-    @Column(name = "role", nullable = false)
+    @Column(name = "role", nullable = false, length = 10)
     private RoleEnum role;
 
     @ManyToOne
@@ -30,6 +30,11 @@ public class ClientRole implements Serializable {
 
     public ClientRole(RoleEnum roleEnum) {
         this.role = roleEnum;
+    }
+
+    public ClientRole(RoleEnum role, SarreBrandUser sarreBrandUser) {
+        this.role = role;
+        this.sarreBrandUser = sarreBrandUser;
     }
 
 }

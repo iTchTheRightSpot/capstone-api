@@ -17,6 +17,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
@@ -30,7 +31,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -48,22 +48,14 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
-    @Value(value = "${server.servlet.session.cookie.secure}") private boolean COOKIESECURE;
-    @Value(value = "${spring.profiles.active}") private String PROFILE;
-    @Value(value = "${server.servlet.session.cookie.same-site}") private String SAMESITE;
-    @Value(value = "${cors.ui.domain}") private String UIDOMAIN;
-
-    private final AuthenticationEntryPoint authEntryPoint;
-    private final RefreshTokenFilter refreshTokenFilter;
-
-    public SecurityConfig(
-            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntry,
-            RefreshTokenFilter refreshTokenFilter
-    ) {
-        this.authEntryPoint = authEntry;
-        this.refreshTokenFilter = refreshTokenFilter;
-    }
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
+    @Value(value = "${server.servlet.session.cookie.secure}")
+    private boolean COOKIESECURE;
+    @Value(value = "${server.servlet.session.cookie.same-site}")
+    private String SAMESITE;
+    @Value(value = "${cors.ui.domain}")
+    private String UIDOMAIN;
 
     @Bean
     public AuthenticationProvider provider(
@@ -104,15 +96,8 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        List<String> allowOrigins = new ArrayList<>(2);
-        allowOrigins.add(this.UIDOMAIN);
-
-        if (this.PROFILE.equals("dev") || this.PROFILE.equals("test")) {
-            allowOrigins.add("http://localhost:4200/");
-        }
-
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(allowOrigins);
+        configuration.setAllowedOrigins(List.of(this.UIDOMAIN));
         configuration.setAllowedMethods(List.of("GET", "PUT", "POST", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(CONTENT_TYPE, ACCEPT, "X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);
@@ -126,9 +111,13 @@ public class SecurityConfig {
      * Security filter chain responsible for upholding app security
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntryPoint,
+            RefreshTokenFilter refreshTokenFilter,
+            JwtAuthenticationConverter converter
+    ) throws Exception {
         var csrfTokenRepository = getCookieCsrfTokenRepository(this.COOKIESECURE, this.SAMESITE);
-
         return http
 
                 // CSRF Config
@@ -145,28 +134,28 @@ public class SecurityConfig {
                 // Public routes
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
-                            "/api/v1/home/**",
                             "/api/v1/auth/csrf",
                             "/api/v1/client/auth/register",
                             "/api/v1/client/auth/login",
                             "/api/v1/client/product/**",
                             "/api/v1/client/category/**",
                             "/api/v1/client/collection/**",
-                            "/api/v1/worker/auth/login"
+                            "/api/v1/worker/auth/login",
+                            "/api/v1/client/cart/**"
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })
 
-                // Jwt
-                // Adding before BearerTokenAuthenticationFilter as jwt is in custom cookie
-                .addFilterBefore(this.refreshTokenFilter, BearerTokenAuthenticationFilter.class)
-                .oauth2ResourceServer((oauth2) -> oauth2.jwt(withDefaults()))
+                 // Jwt
+                .addFilterBefore(refreshTokenFilter, BearerTokenAuthenticationFilter.class)
+                // https://docs.spring.io/spring-security/reference/6.0/servlet/oauth2/resource-server/jwt.html
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)))
 
                 // Session Management
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
 
-                // Exception Handling. Allows ControllerAdvices to take effect
-                .exceptionHandling((ex) -> ex.authenticationEntryPoint(this.authEntryPoint))
+                // Exception Handling.
+                .exceptionHandling((ex) -> ex.authenticationEntryPoint(authEntryPoint))
 
                 // Logout
                 // https://docs.spring.io/spring-security/reference/servlet/authentication/logout.html

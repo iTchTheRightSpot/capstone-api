@@ -27,14 +27,12 @@ import java.util.Arrays;
  */
 @Configuration
 public class JwtConfig {
+    private static final RSAKey rsaKey = RSAConfig.GENERATERSAKEY();
 
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
-
     @Value(value = "${jwt.claim}")
-    private String claim;
-
-    private RSAKey rsaKey;
+    private String CLAIM;
 
     @Bean
     public ObjectMapper objectMapper() {
@@ -43,7 +41,6 @@ public class JwtConfig {
 
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
-        rsaKey = Jwks.generateRsa();
         JWKSet jwkSet = new JWKSet(rsaKey);
         return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
     }
@@ -61,7 +58,7 @@ public class JwtConfig {
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         var authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        authoritiesConverter.setAuthoritiesClaimName(claim);
+        authoritiesConverter.setAuthoritiesClaimName(CLAIM);
         authoritiesConverter.setAuthorityPrefix("ROLE_");
 
         var converter = new JwtAuthenticationConverter();
@@ -77,8 +74,8 @@ public class JwtConfig {
      * <a href="https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/bearer-tokens.html">...</a>
      */
     @Bean
-    public BearerTokenResolver bearerTokenResolver(JwtDecoder decoder, JwtTokenService tokenService) {
-        return new BearerResolver(JSESSIONID, decoder, tokenService);
+    public BearerTokenResolver bearerTokenResolver(JwtDecoder decoder, JwtTokenService service) {
+        return new BearerResolver(JSESSIONID, decoder, service);
     }
 
     private record BearerResolver(
@@ -89,11 +86,9 @@ public class JwtConfig {
         @Override
         public String resolve(HttpServletRequest request) {
             Cookie[] cookies = request.getCookies();
-            if (cookies == null) {
-                return null;
-            }
-
-            return Arrays.stream(cookies)
+            // ternary operator
+            return cookies == null ? null : Arrays
+                    .stream(cookies)
                     .filter(cookie -> cookie.getName().equals(JSESSIONID))
                     .filter(this.service::_isTokenNoneExpired)
                     .map(Cookie::getValue)

@@ -2,6 +2,7 @@ package com.sarabrandserver.category.repository;
 
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.projection.CategoryPojo;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.projection.ProductPojo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -66,8 +67,6 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     @Query("SELECT c FROM ProductCategory c WHERE c.uuid = :uuid")
     Optional<ProductCategory> findByUuid(@Param(value = "uuid") String uuid);
 
-    // Validate if category name exists but is not associated
-    // to @param uuid
     @Query(value = """
     SELECT
     COUNT(pc.categoryId)
@@ -94,13 +93,21 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     SELECT
     p.uuid as uuid,
     p.name as name,
-    p.price as price,
-    p.currency as currency,
+    (SELECT
+    c.currency
+    FROM PriceCurrency c
+    WHERE p.productId = c.product.productId AND c.currency = :currency
+    ) AS currency,
+    (SELECT
+    c.price
+    FROM PriceCurrency c
+    WHERE p.productId = c.product.productId AND c.currency = :currency
+    ) AS price,
     p.defaultKey as key
     FROM Product p
     INNER JOIN ProductCategory c ON p.productCategory.categoryId = c.categoryId
     WHERE c.uuid = :uuid
     """)
-    Page<ProductPojo> allProductsByCategory(String uuid, Pageable page);
+    Page<ProductPojo> allProductsByCategory(SarreCurrency currency, String uuid, Pageable page);
 
 }

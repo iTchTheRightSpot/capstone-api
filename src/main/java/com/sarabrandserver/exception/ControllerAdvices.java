@@ -98,4 +98,10 @@ public class ControllerAdvices {
         return new ResponseEntity<>(res, CONFLICT);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ExceptionResponse> currencyException() {
+        var res = new ExceptionResponse("invalid currency type", BAD_REQUEST);
+        return new ResponseEntity<>(res, BAD_REQUEST);
+    }
+
 }

@@ -2,11 +2,9 @@ package com.sarabrandserver.cart.controller;
 
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.cart.dto.CartDTO;
-import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
 import com.sarabrandserver.cart.service.CartService;
 import com.sarabrandserver.product.entity.ProductSku;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,13 +21,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Slf4j
 class CartControllerTest extends AbstractIntegrationTest {
 
     private final String path = "/api/v1/client/cart";
 
     @Autowired private ShoppingSessionRepo shoppingSessionRepo;
-    @Autowired private CartItemRepo cartItemRepo;
     @Autowired private CartService cartService;
 
     @BeforeEach
@@ -37,7 +33,6 @@ class CartControllerTest extends AbstractIntegrationTest {
         String ip;
         try {
             ip = InetAddress.getLocalHost().getHostAddress();
-            log.info("Custom IP address {}", ip);
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);
         }

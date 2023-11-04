@@ -38,11 +38,11 @@ public class WorkerProductController {
     @GetMapping(produces = APPLICATION_JSON_VALUE)
     public Page<ProductResponse> allProducts(
             @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @RequestParam(name = "size", defaultValue = "30") Integer size,
+            @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
         var c = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.workerProductService.allProducts(c, page, Math.min(size, 30));
+        return this.workerProductService.allProducts(c, page, Math.min(size, 20));
     }
 
     /**

@@ -5,6 +5,7 @@ import com.sarabrandserver.enumeration.SarreCurrency;
 import java.math.BigDecimal;
 
 public record CartResponse(
+        String product_id,
         String url,
         String product_name,
         BigDecimal price,

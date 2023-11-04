@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
+import static java.math.RoundingMode.FLOOR;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +27,6 @@ public class ClientProductService {
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
-
     @Value(value = "${spring.profiles.active}")
     private String ACTIVEPROFILE;
 
@@ -66,7 +65,7 @@ public class ClientProductService {
                                 .id(pojo.getUuid())
                                 .name(pojo.getName())
                                 .desc(pojo.getDescription())
-                                .price(pojo.getPrice())
+                                .price(pojo.getPrice().setScale(2, FLOOR))
                                 .currency(pojo.getCurrency())
                                 .imageUrl(url)
                                 .build();
@@ -81,7 +80,7 @@ public class ClientProductService {
                                 .id(pojo.getUuid())
                                 .name(pojo.getName())
                                 .desc(pojo.getDescription())
-                                .price(pojo.getPrice())
+                                .price(pojo.getPrice().setScale(2, FLOOR))
                                 .currency(pojo.getCurrency())
                                 .imageUrl(url)
                                 .build();
@@ -96,7 +95,7 @@ public class ClientProductService {
                                 .id(pojo.getUuid())
                                 .name(pojo.getName())
                                 .desc(pojo.getDescription())
-                                .price(pojo.getPrice())
+                                .price(pojo.getPrice().setScale(2, FLOOR))
                                 .currency(pojo.getCurrency())
                                 .imageUrl(url)
                                 .build();
@@ -108,13 +107,13 @@ public class ClientProductService {
 
     /** Returns a list of ProductDetails based on Product property UUID */
     public List<DetailResponse> productDetailsByProductUUID(String uuid, SarreCurrency currency) {
-        boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
-
         var object = this.priceCurrencyRepo
-                .priceCurrencyByProductUUIDAndCurrency(uuid, currency).orElse(null);
+                .priceCurrencyByProductUUIDAndCurrency(uuid, currency)
+                .orElse(null);
 
-        if (object == null) return null;
+        if (object == null) return List.of();
 
+        boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
         return this.productDetailRepo
                 .productDetailsByProductUUIDClient(uuid) //
                 .stream() //
@@ -129,7 +128,7 @@ public class ClientProductService {
                     return DetailResponse.builder()
                             .name(object.getName())
                             .currency(object.getCurrency().name())
-                            .price(object.getPrice())
+                            .price(object.getPrice().setScale(2, FLOOR))
                             .desc(object.getDescription())
                             .colour(pojo.getColour())
                             .url(urls)

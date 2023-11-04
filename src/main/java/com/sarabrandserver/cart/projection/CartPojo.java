@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 // Spring Data Projection
 public interface CartPojo {
 
+    String getUuid(); // product uuid
     String getSession(); // sessionId
     String getKey(); // s3 key
     String getName(); // product name

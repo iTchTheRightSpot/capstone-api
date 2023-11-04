@@ -47,16 +47,8 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             p.uuid AS uuid,
             p.name AS name,
             p.description AS description,
-            (SELECT
-            c.currency
-            FROM PriceCurrency c
-            WHERE p.productId = c.product.productId AND c.currency = :currency
-            ) AS currency,
-            (SELECT
-            c.price
-            FROM PriceCurrency c
-            WHERE p.productId = c.product.productId AND c.currency = :currency
-            ) AS price,
+            (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
+            (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
             p.defaultKey AS key,
             cat.categoryName AS category,
             col.collection AS collection
@@ -72,16 +64,8 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     p.uuid AS uuid,
     p.name AS name,
     p.description AS description,
-    (SELECT
-    c.currency
-    FROM PriceCurrency c
-    WHERE p.productId = c.product.productId AND c.currency = :currency
-    ) AS currency,
-    (SELECT
-    c.price
-    FROM PriceCurrency c
-    WHERE p.productId = c.product.productId AND c.currency = :currency
-    ) AS price,
+    (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
+    (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency ) AS price,
     p.defaultKey AS key,
     col.collection AS collection,
     cat.categoryName AS category
@@ -136,16 +120,8 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             p.uuid AS uuid,
             p.name AS name,
             p.description AS description,
-            (SELECT
-            c.currency
-            FROM PriceCurrency c
-            WHERE p.productId = c.product.productId AND c.currency = :currency
-            ) AS currency,
-            (SELECT
-            c.price
-            FROM PriceCurrency c
-            WHERE p.productId = c.product.productId AND c.currency = :currency
-            ) AS price,
+            (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
+            (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
             p.defaultKey AS key,
             pc.categoryName AS category
             FROM Product p
@@ -162,16 +138,8 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             p.uuid AS uuid,
             p.name AS name,
             p.description AS description,
-            (SELECT
-            c.currency
-            FROM PriceCurrency c
-            WHERE p.productId = c.product.productId AND c.currency = :currency
-            ) AS currency,
-            (SELECT
-            c.price
-            FROM PriceCurrency c
-            WHERE p.productId = c.product.productId AND c.currency = :currency
-            ) AS price,
+            (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
+            (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
             p.defaultKey AS key,
             pc.collection AS collection
             FROM Product p

@@ -1,6 +1,5 @@
 package com.sarabrandserver.cart.entity;
 
-import com.sarabrandserver.user.entity.SarreBrandUser;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,7 +7,6 @@ import java.util.Date;
 import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
-import static jakarta.persistence.CascadeType.MERGE;
 import static jakarta.persistence.FetchType.LAZY;
 import static jakarta.persistence.TemporalType.TIMESTAMP;
 

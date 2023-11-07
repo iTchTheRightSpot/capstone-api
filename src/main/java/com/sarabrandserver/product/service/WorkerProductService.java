@@ -32,6 +32,7 @@ import java.util.UUID;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
+import static java.math.RoundingMode.FLOOR;
 
 @Service
 @RequiredArgsConstructor
@@ -73,7 +74,7 @@ public class WorkerProductService {
                             .id(pojo.getUuid())
                             .name(pojo.getName())
                             .desc(pojo.getDescription())
-                            .price(pojo.getPrice())
+                            .price(pojo.getPrice().setScale(2, FLOOR))
                             .currency(pojo.getCurrency())
                             .imageUrl(url)
                             .build();

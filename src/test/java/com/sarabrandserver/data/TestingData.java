@@ -7,7 +7,12 @@ import com.sarabrandserver.user.entity.SarreBrandUser;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.mock.web.MockMultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashSet;
 
 import static com.sarabrandserver.enumeration.RoleEnum.CLIENT;
@@ -119,12 +124,12 @@ public class TestingData {
 
     @NotNull
     public static CreateProductDTO createProductDTOCollectionNotPresent(
-            String product,
+            String productName,
             String category,
             String collection,
             SizeInventoryDTO[] dtos
     ) {
-        return productDTO(category, collection, product, dtos, new Faker().commerce().color());
+        return productDTO(category, collection, productName, dtos, new Faker().commerce().color());
     }
 
     @NotNull
@@ -137,7 +142,7 @@ public class TestingData {
     ) {
         PriceCurrencyDTO[] arr = {
                 new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "USD"),
-                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "NGN"),
+                new PriceCurrencyDTO(new BigDecimal(new Faker().number().numberBetween(10000, 700000)), "NGN"),
         };
 
         return new CreateProductDTO(
@@ -171,7 +176,7 @@ public class TestingData {
                 productName,
                 new Faker().lorem().characters(0, 400),
                 "ngn",
-                new BigDecimal(new Faker().number().numberBetween(20, 200)),
+                new BigDecimal(new Faker().number().numberBetween(1000, 700000)),
                 category,
                 categoryId,
                 collection,

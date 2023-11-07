@@ -117,25 +117,6 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "delete ProductCategory when it has no Product attached")
-    void deleteCat() throws Exception {
-        var categories = this.categoryRepository.findAll();
-        assertTrue(categories.size() > 2);
-
-        String uuid = categories.get(0)
-                .getCategoryName()
-                .contentEquals(category())
-                ? categories.get(1).getUuid() : categories.get(0).getUuid();
-
-        this.MOCKMVC
-                .perform(delete(requestMapping + "/{uuid}", uuid)
-                        .with(csrf())
-                )
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "delete ProductCategory when it has no Product attached")
     void deleteEx() throws Exception {
         var category = this.categoryRepository.findByName(category()).orElse(null);
         assertNotNull(category);

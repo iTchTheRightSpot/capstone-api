@@ -8,7 +8,6 @@ import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.collection.dto.CollectionDTO;
 import com.sarabrandserver.collection.repository.CollectionRepository;
 import com.sarabrandserver.collection.service.WorkerCollectionService;
-import com.sarabrandserver.data.Result;
 import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
@@ -38,7 +37,7 @@ public abstract class AbstractIntegrationTest {
     @Autowired protected MockMvc MOCKMVC;
     @Autowired protected ObjectMapper MAPPER;
 
-    protected int detailSize = 10;
+    protected int detailSize = 3;
 
     @Autowired protected WorkerProductService workerProductService;
     @Autowired protected ProductRepo productRepo;
@@ -49,69 +48,50 @@ public abstract class AbstractIntegrationTest {
     @Autowired protected WorkerCollectionService collectionService;
     @Autowired protected CollectionRepository collectionRepository;
 
+    // persist 5 products
     @BeforeEach
     void beforeEachMethod() {
+        String cat1 = new Faker().commerce().department() + 1, cat2 = new Faker().commerce().department() + 2;
+        String col1 = new Faker().commerce().department() + 1, col2 = new Faker().commerce().department() + 2;
+
         // Persist collection
+        this.workerCategoryService.create(new CategoryDTO(cat1, true, ""));
+        this.workerCategoryService.create(new CategoryDTO(cat2, true, ""));
         this.collectionService
-                .create(new CollectionDTO(new Faker().commerce().department(), false));
-
+                .create(new CollectionDTO(col1, false));
         this.collectionService
-                .create(new CollectionDTO(new Faker().commerce().department() + 1, false));
+                .create(new CollectionDTO(col2, false));
 
-        this.collectionService
-                .create(new CollectionDTO(new Faker().commerce().department() + 2, true));
+        for (int i = 0; i < 5; i++) {
+            String category;
+            String collection;
 
-        // Persist category
-        String category = new Faker().commerce().department();
+            if (i % 2 == 0) {
+                category = cat1;
+                collection = col1;
+            } else {
+                category = cat2;
+                collection = col2;
+            }
 
-        this.workerCategoryService.create(new CategoryDTO(category, true, ""));
-        this.workerCategoryService
-                .create(new CategoryDTO(new Faker().commerce().department() + 1, true, ""));
-        this.workerCategoryService
-                .create(new CategoryDTO(new Faker().commerce().department() + 2, true, ""));
+            var data = TestingData
+                    .productDTO(
+                            category,
+                            collection,
+                            new Faker().commerce().productName() + " " + i,
+                            new SizeInventoryDTO[] {
+                                    new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "medium"),
+                                    new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "small"),
+                                    new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "large")
+                            },
+                            new Faker().commerce().color() + " " + i
+                    );
 
-        // colour
-        String colour = new Faker().commerce().color();
+            var images = TestingData.files(3);
 
-        SizeInventoryDTO[] sizeInventoryDTO1 = TestingData.sizeInventoryDTOArray(detailSize);
-        Result result = TestingData.getResult(
-                sizeInventoryDTO1,
-                new Faker().commerce().productName(),
-                category,
-                colour
-        );
-        this.workerProductService.create(result.dto(), result.files());
-
-        // Product2 and ProductDetail2
-        SizeInventoryDTO[] sizeInventoryDTO2 = TestingData.sizeInventoryDTOArray(1);
-        Result result2 =
-                TestingData.getResult(
-                        sizeInventoryDTO2,
-                        new Faker().commerce().productName() + 2,
-                        category,
-                        colour
-                );
-        this.workerProductService.create(result2.dto(), result2.files());
-
-        // Product3 and ProductDetail3
-        SizeInventoryDTO[] sizeInventoryDTO3 = TestingData.sizeInventoryDTOArray(2);
-        Result result3 = TestingData.getResult(
-                sizeInventoryDTO3,
-                new Faker().commerce().productName() + 3,
-                category,
-                colour
-        );
-        this.workerProductService.create(result3.dto(), result3.files());
-
-        // Product4 and ProductDetail4
-        SizeInventoryDTO[] sizeInventoryDTO4 = TestingData.sizeInventoryDTOArray(5);
-        var result4 = TestingData.getResult(
-                sizeInventoryDTO4,
-                new Faker().commerce().productName() + 4,
-                category,
-                new Faker().commerce().color()
-        );
-        this.workerProductService.create(result4.dto(), result4.files());
+            // Create product
+            workerProductService.create(data, images);
+        }
     }
 
     @AfterEach

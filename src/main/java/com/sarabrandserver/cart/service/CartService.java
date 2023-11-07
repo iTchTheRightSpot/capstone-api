@@ -23,6 +23,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
+import static java.math.RoundingMode.FLOOR;
+
 @Service
 @RequiredArgsConstructor
 public class CartService {
@@ -49,9 +51,10 @@ public class CartService {
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
                     return new CartResponse(
+                            pojo.getUuid(),
                             url,
                             pojo.getName(),
-                            pojo.getPrice(),
+                            pojo.getPrice().setScale(2, FLOOR),
                             pojo.getCurrency(),
                             pojo.getColour(),
                             pojo.getSize(),

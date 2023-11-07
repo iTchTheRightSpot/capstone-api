@@ -23,4 +23,5 @@ public class ProductResponse {
     private String imageUrl;
     private String category;
     private String collection;
+    private String prize;
 }

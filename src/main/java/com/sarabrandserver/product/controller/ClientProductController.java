@@ -14,7 +14,6 @@ import java.util.List;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-/** All public routes */
 @RestController
 @RequestMapping("api/v1/client/product")
 @RequiredArgsConstructor
@@ -22,7 +21,9 @@ public class ClientProductController {
 
     private final ClientProductService clientProductService;
 
-    /** Returns a Page of ProductResponse objects */
+    /**
+     * Returns a Page of ProductResponse objects
+     * */
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
     public Page<ProductResponse> allProducts(
@@ -33,6 +34,19 @@ public class ClientProductController {
         SarreCurrency sc = SarreCurrency.valueOf(currency.toUpperCase());
         return this.clientProductService
                 .allProductsByUUID("", sc, "", page, Math.min(size, 20));
+    }
+
+    /**
+     * Returns a Page of ProductResponse objects
+     * */
+    @ResponseStatus(OK)
+    @GetMapping(path = "/find", produces = APPLICATION_JSON_VALUE)
+    public List<ProductResponse> search(
+            @NotNull @RequestParam(name = "search") String search,
+            @RequestParam(name = "currency", defaultValue = "ngn") String currency
+    ) {
+        SarreCurrency c = SarreCurrency.valueOf(currency.toUpperCase());
+        return this.clientProductService.search(search, c);
     }
 
     /**

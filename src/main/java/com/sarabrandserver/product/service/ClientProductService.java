@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
+import static java.math.RoundingMode.FLOOR;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +27,6 @@ public class ClientProductService {
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
-
     @Value(value = "${spring.profiles.active}")
     private String ACTIVEPROFILE;
 
@@ -54,7 +53,6 @@ public class ClientProductService {
             int size
     ) {
         boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
-
         return switch (key) {
             case "" -> this.productRepo
                     .allProductsByCurrencyClient(currency, PageRequest.of(page, size)) //
@@ -106,15 +104,17 @@ public class ClientProductService {
         };
     }
 
-    /** Returns a list of ProductDetails based on Product property UUID */
+    /**
+     * Returns a list of ProductDetails based on Product property UUID
+     * */
     public List<DetailResponse> productDetailsByProductUUID(String uuid, SarreCurrency currency) {
-        boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
-
         var object = this.priceCurrencyRepo
-                .priceCurrencyByProductUUIDAndCurrency(uuid, currency).orElse(null);
+                .priceCurrencyByProductUUIDAndCurrency(uuid, currency)
+                .orElse(null);
 
-        if (object == null) return null;
+        if (object == null) return List.of();
 
+        boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
         return this.productDetailRepo
                 .productDetailsByProductUUIDClient(uuid) //
                 .stream() //
@@ -129,13 +129,44 @@ public class ClientProductService {
                     return DetailResponse.builder()
                             .name(object.getName())
                             .currency(object.getCurrency().name())
-                            .price(object.getPrice())
+                            .price(object.getPrice().setScale(2, FLOOR))
                             .desc(object.getDescription())
                             .colour(pojo.getColour())
                             .url(urls)
                             .variants(variants)
                             .build();
                 }) //
+                .toList();
+    }
+
+    /**
+     * Returns a list of ProductResponse based on user search param.
+     * Initially a Page of page size 10 is returned to increase efficiency.
+     *
+     * @param param is the user input
+     * @param currency is of type SarreCurrency. default is NGN
+     * @return List of ProductResponse
+     * */
+    public List<ProductResponse> search(String param, SarreCurrency currency) {
+        boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
+        var page = PageRequest.of(0, 10);
+
+        // SQL LIKE Operator
+        // https://www.w3schools.com/sql/sql_like.asp
+        return this.productRepo
+                .productByNameAndCurrency(param + "%", currency, page)
+                .stream()
+                .map(pojo -> {
+                    var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
+                    return ProductResponse.builder()
+                            .category(pojo.getCategory())
+                            .id(pojo.getUuid())
+                            .name(pojo.getName())
+                            .price(pojo.getPrice())
+                            .currency(pojo.getCurrency())
+                            .imageUrl(url)
+                            .build();
+                })
                 .toList();
     }
 

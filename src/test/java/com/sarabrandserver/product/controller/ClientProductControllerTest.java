@@ -3,6 +3,8 @@ package com.sarabrandserver.product.controller;
 import com.sarabrandserver.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
 
+import java.util.Random;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -14,10 +16,22 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
     final String path = "/api/v1/client/product";
 
     @Test
+    void search_functionality() throws Exception {
+        Random rnd = new Random();
+        char c = (char) ('a' + rnd.nextInt(26));
+        this.MOCKMVC
+                .perform(get(path + "/find")
+                        .param("search", String.valueOf(c))
+                        .param("currency", "usd")
+                )
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void list_products_ngn_currency() throws Exception {
         this.MOCKMVC
                 .perform(get(path))
-                .andDo(print())
                 .andExpect(status().isOk());
     }
 
@@ -25,7 +39,6 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
     void list_products_usd_currency() throws Exception {
         this.MOCKMVC
                 .perform(get(path).param("currency", "usd"))
-                .andDo(print())
                 .andExpect(status().isOk());
     }
 
@@ -41,7 +54,6 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
                 )
                 .andExpect(content().contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andDo(print())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[*].variants").isArray())
                 .andExpect(jsonPath("$[*].variants.length()").value(this.detailSize));

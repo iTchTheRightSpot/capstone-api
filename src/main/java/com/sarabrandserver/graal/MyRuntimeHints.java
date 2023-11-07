@@ -10,8 +10,13 @@ import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
 import com.sarabrandserver.product.dto.*;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.Variant;
+import com.sarabrandserver.util.CustomUtil;
+import org.springframework.aot.hint.ExecutableMode;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
+import org.springframework.util.ReflectionUtils;
+
+import java.lang.reflect.Method;
 
 /**
  * As per docs
@@ -24,6 +29,7 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
         // migration
         hints.resources().registerPattern("db/migration/V6__init_migration.sql");
         hints.resources().registerPattern("db/migration/V7__init_migration.sql");
+        hints.resources().registerPattern("db/migration/V8__init_migration.sql");
 
         // shopping session
         hints.serialization().registerType(CartDTO.class);

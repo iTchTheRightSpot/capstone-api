@@ -2,14 +2,14 @@ package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
+import com.sarabrandserver.product.dto.ProductDetailDTO;
+import com.sarabrandserver.product.dto.UpdateProductDetailDTO;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.entity.ProductDetail;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductImageRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.response.DetailResponse;
-import com.sarabrandserver.product.dto.ProductDetailDTO;
-import com.sarabrandserver.product.dto.UpdateProductDetailDTO;
 import com.sarabrandserver.product.response.Variant;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +28,10 @@ import java.util.*;
 @Setter
 public class WorkerProductDetailService {
 
-    @Value(value = "${aws.bucket}") private String BUCKET;
-    @Value(value = "${spring.profiles.active}") private String ACTIVEPROFILE;
+    @Value(value = "${aws.bucket}")
+    private String BUCKET;
+    @Value(value = "${spring.profiles.active}")
+    private String ACTIVEPROFILE;
 
     private final ProductDetailRepo detailRepo;
     private final ProductSKUService productSKUService;

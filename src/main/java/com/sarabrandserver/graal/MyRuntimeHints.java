@@ -10,13 +10,9 @@ import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
 import com.sarabrandserver.product.dto.*;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.Variant;
-import com.sarabrandserver.util.CustomUtil;
-import org.springframework.aot.hint.ExecutableMode;
+import com.sarabrandserver.util.VariantHelperMapper;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
-import org.springframework.util.ReflectionUtils;
-
-import java.lang.reflect.Method;
 
 /**
  * As per docs
@@ -57,6 +53,9 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
         // response
         hints.serialization().registerType(Variant.class);
         hints.serialization().registerType(DetailResponse.class);
+
+        // variant
+        hints.serialization().registerType(VariantHelperMapper.class);
     }
 
 }

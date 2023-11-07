@@ -170,7 +170,10 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     cat.categoryName AS category
     FROM Product p
     INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId
-    WHERE p.name = :name
+    INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
+    INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
+    WHERE p.name LIKE :name AND sku.inventory > 0
+    GROUP BY p.uuid, p.name, p.defaultKey
     """)
     Page<ProductPojo> productByNameAndCurrency(String name, SarreCurrency currency, Pageable page);
 

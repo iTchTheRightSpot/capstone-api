@@ -149,8 +149,12 @@ public class ClientProductService {
      * */
     public List<ProductResponse> search(String param, SarreCurrency currency) {
         boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
+        var page = PageRequest.of(0, 10);
+
+        // SQL LIKE Operator
+        // https://www.w3schools.com/sql/sql_like.asp
         return this.productRepo
-                .productByNameAndCurrency(param, currency, PageRequest.of(0, 10))
+                .productByNameAndCurrency(param + "%", currency, page)
                 .stream()
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());

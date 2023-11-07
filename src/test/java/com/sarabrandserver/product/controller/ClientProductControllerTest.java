@@ -3,6 +3,8 @@ package com.sarabrandserver.product.controller;
 import com.sarabrandserver.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
 
+import java.util.Random;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -15,14 +17,12 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
 
     @Test
     void search_functionality() throws Exception {
-        var list = this.productRepo.findAll();
-        assertFalse(list.isEmpty());
-        String name = list.get(0).getName();
-
+        Random rnd = new Random();
+        char c = (char) ('a' + rnd.nextInt(26));
         this.MOCKMVC
                 .perform(get(path + "/find")
-                        .param("search", name)
-                        .param("currency", "ngn")
+                        .param("search", String.valueOf(c))
+                        .param("currency", "usd")
                 )
                 .andDo(print())
                 .andExpect(status().isOk());

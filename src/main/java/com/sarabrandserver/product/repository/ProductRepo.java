@@ -160,4 +160,18 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             """)
     List<ImagePojo> productImagesByProductUUID(@Param(value = "uuid") String uuid);
 
+    @Query("""
+    SELECT
+    p.uuid AS uuid,
+    p.name AS name,
+    (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
+    (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
+    p.defaultKey AS key,
+    cat.categoryName AS category
+    FROM Product p
+    INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId
+    WHERE p.name = :name
+    """)
+    Page<ProductPojo> productByNameAndCurrency(String name, SarreCurrency currency, Pageable page);
+
 }

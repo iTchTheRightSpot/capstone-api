@@ -14,10 +14,24 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
     final String path = "/api/v1/client/product";
 
     @Test
+    void search_functionality() throws Exception {
+        var list = this.productRepo.findAll();
+        assertFalse(list.isEmpty());
+        String name = list.get(0).getName();
+
+        this.MOCKMVC
+                .perform(get(path + "/find")
+                        .param("search", name)
+                        .param("currency", "ngn")
+                )
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void list_products_ngn_currency() throws Exception {
         this.MOCKMVC
                 .perform(get(path))
-                .andDo(print())
                 .andExpect(status().isOk());
     }
 
@@ -25,7 +39,6 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
     void list_products_usd_currency() throws Exception {
         this.MOCKMVC
                 .perform(get(path).param("currency", "usd"))
-                .andDo(print())
                 .andExpect(status().isOk());
     }
 
@@ -41,7 +54,6 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
                 )
                 .andExpect(content().contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andDo(print())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[*].variants").isArray())
                 .andExpect(jsonPath("$[*].variants.length()").value(this.detailSize));

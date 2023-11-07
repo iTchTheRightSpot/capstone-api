@@ -46,7 +46,7 @@ public class DummyData {
             collectionService.create(new CollectionDTO(summer, true));
             collectionService.create(new CollectionDTO(fall, true));
 
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 500; i++) {
                 String category;
                 String collection;
 
@@ -64,9 +64,9 @@ public class DummyData {
                                 collection,
                                 new Faker().commerce().productName() + " " + i,
                                 new SizeInventoryDTO[] {
-                                        new SizeInventoryDTO(5, "medium"),
-                                        new SizeInventoryDTO(5, "small"),
-                                        new SizeInventoryDTO(5, "large")
+                                        new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "medium"),
+                                        new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "small"),
+                                        new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "large")
                                 },
                                 new Faker().commerce().color() + " " + i
                         );

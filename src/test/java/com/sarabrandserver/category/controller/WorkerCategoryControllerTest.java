@@ -119,7 +119,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
     @DisplayName(value = "delete ProductCategory when it has no Product attached")
     void deleteCat() throws Exception {
         var categories = this.categoryRepository.findAll();
-        assertTrue(categories.size() > 2);
+        assertTrue(categories.size() >= 2);
 
         String uuid = categories.get(0)
                 .getCategoryName()

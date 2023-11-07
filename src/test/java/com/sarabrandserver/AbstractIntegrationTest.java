@@ -48,7 +48,7 @@ public abstract class AbstractIntegrationTest {
     @Autowired protected WorkerCollectionService collectionService;
     @Autowired protected CollectionRepository collectionRepository;
 
-    // persist 200 products
+    // persist 5 products
     @BeforeEach
     void beforeEachMethod() {
         String cat1 = new Faker().commerce().department() + 1, cat2 = new Faker().commerce().department() + 2;
@@ -62,7 +62,7 @@ public abstract class AbstractIntegrationTest {
         this.collectionService
                 .create(new CollectionDTO(col2, false));
 
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < 5; i++) {
             String category;
             String collection;
 

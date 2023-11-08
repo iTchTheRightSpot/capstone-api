@@ -36,7 +36,7 @@ public class JwtConfig {
     private String CLAIM;
 
     @Bean
-    @RegisterReflectionForBinding
+    @RegisterReflectionForBinding(value = ObjectMapper.class)
     public ObjectMapper objectMapper() {
         return new ObjectMapper();
     }

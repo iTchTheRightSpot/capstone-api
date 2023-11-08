@@ -14,8 +14,6 @@ import com.sarabrandserver.product.response.Variant;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,8 +27,6 @@ import java.util.*;
 @RequiredArgsConstructor
 @Setter
 public class WorkerProductDetailService {
-
-    private static final Logger log = LoggerFactory.getLogger(WorkerProductDetailService.class);
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
@@ -61,8 +57,6 @@ public class WorkerProductDetailService {
                             .stream(pojo.getImage().split(","))
                             .map(key -> this.helperService.preSignedURL(bool, BUCKET, key))
                             .toList();
-
-                    log.info("Variants before conversion worker {}", pojo.getVariants());
 
                     Variant[] variants = this.customUtil
                             .toVariantArray(pojo.getVariants(), WorkerProductDetailService.class);

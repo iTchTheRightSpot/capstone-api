@@ -103,7 +103,6 @@ public class CustomUtil {
         return dto.price().setScale(2, FLOOR);
     }
 
-    record VariantHelperMapper(String sku, String inventory, String size) { }
     /**
      * Convert String gotten from DetailPojo getVariant method to
      * a Variant array object
@@ -114,6 +113,8 @@ public class CustomUtil {
      * */
     public <T> Variant[] toVariantArray(String str, T clazz) {
         try {
+            log.info("Variant Mapper before string {}", str);
+
             VariantHelperMapper[] mapper = this.objectMapper
                     .readValue(str, VariantHelperMapper[].class);
 

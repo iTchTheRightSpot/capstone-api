@@ -8,7 +8,6 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,7 +35,6 @@ public class JwtConfig {
     private String CLAIM;
 
     @Bean
-    @RegisterReflectionForBinding(value = ObjectMapper.class)
     public ObjectMapper objectMapper() {
         return new ObjectMapper();
     }

@@ -2,10 +2,11 @@ package com.sarabrandserver.cart.projection;
 
 import com.sarabrandserver.enumeration.SarreCurrency;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 // Spring Data Projection
-public interface CartPojo {
+public interface CartPojo extends Serializable {
 
     String getUuid(); // product uuid
     String getSession(); // sessionId

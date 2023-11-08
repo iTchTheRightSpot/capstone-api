@@ -3,11 +3,18 @@ package com.sarabrandserver.graal;
 import com.sarabrandserver.auth.dto.LoginDTO;
 import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.cart.dto.CartDTO;
+import com.sarabrandserver.cart.projection.CartPojo;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
+import com.sarabrandserver.category.projection.CategoryPojo;
 import com.sarabrandserver.collection.dto.CollectionDTO;
 import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
+import com.sarabrandserver.collection.projection.CollectionPojo;
 import com.sarabrandserver.product.dto.*;
+import com.sarabrandserver.product.projection.DetailPojo;
+import com.sarabrandserver.product.projection.ImagePojo;
+import com.sarabrandserver.product.projection.PriceCurrencyPojo;
+import com.sarabrandserver.product.projection.ProductPojo;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.Variant;
 import com.sarabrandserver.util.VariantHelperMapper;
@@ -56,6 +63,15 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
 
         // variant
         hints.serialization().registerType(VariantHelperMapper.class);
+
+        // spring data projection
+        hints.serialization().registerType(CartPojo.class);
+        hints.serialization().registerType(ProductPojo.class);
+        hints.serialization().registerType(CategoryPojo.class);
+        hints.serialization().registerType(CollectionPojo.class);
+        hints.serialization().registerType(ImagePojo.class);
+        hints.serialization().registerType(DetailPojo.class);
+        hints.serialization().registerType(PriceCurrencyPojo.class);
     }
 
 }

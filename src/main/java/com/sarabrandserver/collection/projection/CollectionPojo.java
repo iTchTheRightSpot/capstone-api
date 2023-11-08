@@ -1,8 +1,9 @@
 package com.sarabrandserver.collection.projection;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public interface CollectionPojo {
+public interface CollectionPojo extends Serializable {
     String getUuid();
     String getCollection();
     Date getCreated();

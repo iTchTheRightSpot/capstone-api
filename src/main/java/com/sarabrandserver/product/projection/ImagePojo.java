@@ -1,5 +1,7 @@
 package com.sarabrandserver.product.projection;
 
-public interface ImagePojo {
+import java.io.Serializable;
+
+public interface ImagePojo extends Serializable {
     String getImage();
 }

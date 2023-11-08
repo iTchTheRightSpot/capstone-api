@@ -1,9 +1,10 @@
 package com.sarabrandserver.product.projection;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 // Spring data projection
-public interface ProductPojo {
+public interface ProductPojo extends Serializable {
     String getUuid();
     String getName();
     String getDescription();

@@ -115,6 +115,9 @@ public class CustomUtil {
         try {
             VariantHelperMapper[] mapper = this.objectMapper
                     .readValue(str, VariantHelperMapper[].class);
+
+            log.info("Variant Mapper hit");
+
             Variant[] variant = new Variant[mapper.length];
 
             for (int i = 0; i < mapper.length; i++) {
@@ -126,18 +129,6 @@ public class CustomUtil {
             log.error("Error converting from ProductSKUs to Variant. " + clazz);
             return null;
         }
-    }
-
-    public long toCurrency(PriceCurrencyDTO[] dto, SarreCurrency obj) {
-        String error = "please enter %s amount".formatted(obj.name());
-
-        PriceCurrencyDTO currencyDTO = Arrays
-                .stream(dto)
-                .filter(predicate -> predicate.currency().equals(obj.name()))
-                .findFirst()
-                .orElseThrow(() -> new CustomNotFoundException(error));
-
-        return convertCurrency(obj, currencyDTO.price());
     }
 
     /**

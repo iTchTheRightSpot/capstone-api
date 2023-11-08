@@ -11,6 +11,8 @@ import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.product.response.Variant;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +26,8 @@ import static java.math.RoundingMode.FLOOR;
 @Service
 @RequiredArgsConstructor
 public class ClientProductService {
+
+    private static final Logger log = LoggerFactory.getLogger(ClientProductService.class);
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
@@ -122,6 +126,8 @@ public class ClientProductService {
                     var urls = Arrays.stream(pojo.getImage().split(","))
                             .map(key -> this.s3Service.getPreSignedUrl(bool, BUCKET, key))
                             .toList();
+
+                    log.info("Variants before conversion client {}", pojo.getVariants());
 
                     Variant[] variants = this.customUtil
                             .toVariantArray(pojo.getVariants(), ClientProductService.class);

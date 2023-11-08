@@ -1,7 +1,9 @@
 package com.sarabrandserver.product.projection;
 
+import java.io.Serializable;
+
 // Spring data projection
-public interface DetailPojo {
+public interface DetailPojo extends Serializable {
     String getColour();
     Boolean getVisible();
     String getImage();

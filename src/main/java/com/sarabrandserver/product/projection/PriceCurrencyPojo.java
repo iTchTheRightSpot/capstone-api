@@ -2,10 +2,9 @@ package com.sarabrandserver.product.projection;
 
 import com.sarabrandserver.enumeration.SarreCurrency;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 
-public interface PriceCurrencyPojo extends Serializable {
+public interface PriceCurrencyPojo {
 
     String getName();
     String getDescription();

@@ -128,10 +128,10 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             INNER JOIN ProductCategory pc ON p.productCategory.categoryId = pc.categoryId
             INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
             INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
-            WHERE pd.isVisible = true AND sku.inventory > 0 AND pc.uuid = :uuid
+            WHERE pd.isVisible = TRUE AND sku.inventory > 0 AND pc.uuid = :uuid
             GROUP BY p.uuid, p.name, p.description, p.defaultKey
             """)
-    Page<ProductPojo> fetchProductByCategoryClient(SarreCurrency currency, String uuid, Pageable page);
+    Page<ProductPojo> productsByCategoryClient(String uuid, SarreCurrency currency, Pageable page);
 
     @Query(value = """
             SELECT
@@ -149,7 +149,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             WHERE pd.isVisible = true AND sku.inventory > 0 AND pc.uuid = :uuid
             GROUP BY p.uuid, p.name, p.description, p.defaultKey
             """)
-    Page<ProductPojo> fetchByProductByCollectionClient(SarreCurrency currency, String uuid, Pageable page);
+    Page<ProductPojo> productsByCollectionClient(SarreCurrency currency, String uuid, Pageable page);
 
     @Query(value = """
             SELECT img.imageKey as image

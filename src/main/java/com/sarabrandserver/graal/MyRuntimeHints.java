@@ -23,9 +23,7 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
         // migration
-        hints.resources().registerPattern("db/migration/V6__init_migration.sql");
-        hints.resources().registerPattern("db/migration/V7__init_migration.sql");
-        hints.resources().registerPattern("db/migration/V8__init_migration.sql");
+        hints.resources().registerPattern("db/migration/*");
 
         // shopping session
         hints.serialization().registerType(CartDTO.class);

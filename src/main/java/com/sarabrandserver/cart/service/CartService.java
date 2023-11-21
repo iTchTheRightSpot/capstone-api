@@ -13,6 +13,8 @@ import com.sarabrandserver.exception.OutOfStockException;
 import com.sarabrandserver.product.service.ProductSKUService;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +25,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
-import static java.math.RoundingMode.FLOOR;
-
 @Service
 @RequiredArgsConstructor
 public class CartService {
+
+    private static final Logger log = LoggerFactory.getLogger(CartService.class);
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
@@ -54,7 +56,7 @@ public class CartService {
                             pojo.getUuid(),
                             url,
                             pojo.getName(),
-                            pojo.getPrice().setScale(2, FLOOR),
+                            pojo.getPrice(),
                             pojo.getCurrency(),
                             pojo.getColour(),
                             pojo.getSize(),
@@ -75,6 +77,8 @@ public class CartService {
     public void create(String ipAddress, CartDTO dto) {
         var productSKU = this.productSKUService.productSkuBySKU(dto.sku());
 
+        log.info("My custom IpAddress {}", ipAddress);
+
         if (dto.qty() > productSKU.getInventory()) {
             throw new OutOfStockException("chosen quantity is out of stock");
         }
@@ -92,6 +96,7 @@ public class CartService {
     /**
      * Creates a new shopping session
      */
+    @Transactional
     public void create_new_shopping_session(String ipAddress, CartDTO dto) {
         var date = new Date();
         // 12 hrs from date

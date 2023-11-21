@@ -113,12 +113,8 @@ public class CustomUtil {
      * */
     public <T> Variant[] toVariantArray(String str, T clazz) {
         try {
-            log.info("Variant Mapper before string {}", str);
-
             VariantHelperMapper[] mapper = this.objectMapper
                     .readValue(str, VariantHelperMapper[].class);
-
-            log.info("Variant Mapper hit");
 
             Variant[] variant = new Variant[mapper.length];
 

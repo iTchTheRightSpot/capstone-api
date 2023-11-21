@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +22,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequestMapping(path = "api/v1/client/cart")
 @RequiredArgsConstructor
 public class CartController {
+
+    private static final Logger log = LoggerFactory.getLogger(CartController.class);
 
     private final CartService cartService;
 
@@ -35,8 +39,10 @@ public class CartController {
 
     @ResponseStatus(CREATED)
     @PostMapping(consumes = APPLICATION_JSON_VALUE)
-    public void create(HttpServletRequest request, @Valid @RequestBody CartDTO dto) {
-        cartService.create(request.getRemoteAddr(), dto);
+    public void create(@Valid @RequestBody CartDTO dto, HttpServletRequest request) {
+        String ip = request.getRemoteAddr();
+        log.info("My custom IpAddress {}", ip);
+        cartService.create(ip, dto);
     }
 
     @ResponseStatus(OK)

@@ -23,8 +23,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
-import static java.math.RoundingMode.FLOOR;
-
 @Service
 @RequiredArgsConstructor
 public class CartService {
@@ -54,7 +52,7 @@ public class CartService {
                             pojo.getUuid(),
                             url,
                             pojo.getName(),
-                            pojo.getPrice().setScale(2, FLOOR),
+                            pojo.getPrice(),
                             pojo.getCurrency(),
                             pojo.getColour(),
                             pojo.getSize(),
@@ -92,6 +90,7 @@ public class CartService {
     /**
      * Creates a new shopping session
      */
+    @Transactional
     public void create_new_shopping_session(String ipAddress, CartDTO dto) {
         var date = new Date();
         // 12 hrs from date

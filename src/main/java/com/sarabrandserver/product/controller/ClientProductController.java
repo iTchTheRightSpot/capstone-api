@@ -31,7 +31,7 @@ public class ClientProductController {
             @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
-        SarreCurrency sc = SarreCurrency.valueOf(currency.toUpperCase());
+        var sc = SarreCurrency.valueOf(currency.toUpperCase());
         return this.clientProductService
                 .allProductsByUUID("", sc, "", page, Math.min(size, 20));
     }
@@ -45,7 +45,7 @@ public class ClientProductController {
             @NotNull @RequestParam(name = "search") String search,
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
-        SarreCurrency c = SarreCurrency.valueOf(currency.toUpperCase());
+        var c = SarreCurrency.valueOf(currency.toUpperCase());
         return this.clientProductService.search(search, c);
     }
 

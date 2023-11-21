@@ -21,14 +21,9 @@ public class ProductSKUService {
      * Save Product sku. Look in db diagram in read me in case of confusion
      */
     @Transactional
-    public void save(SizeInventoryDTO[] dto, ProductDetail detail) {
-        for (SizeInventoryDTO sizeDto : dto) {
-            var sku = ProductSku.builder()
-                    .productDetail(detail)
-                    .sku(UUID.randomUUID().toString())
-                    .size(sizeDto.size())
-                    .inventory(sizeDto.qty())
-                    .build();
+    public void save(SizeInventoryDTO[] arr, ProductDetail detail) {
+        for (SizeInventoryDTO dto : arr) {
+            var sku = new ProductSku(UUID.randomUUID().toString(), dto.size(), dto.qty(), detail);
             this.productSkuRepo.save(sku);
         }
     }

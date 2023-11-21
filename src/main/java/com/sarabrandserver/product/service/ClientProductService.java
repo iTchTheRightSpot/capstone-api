@@ -44,6 +44,7 @@ public class ClientProductService {
      * @param uuid is a unique string attached to either a Collection or Category
      * @param page number
      * @param size number of ProductResponse for each page
+     * @return a Page of ProductResponse
      */
     public Page<ProductResponse> allProductsByUUID(
             String key,
@@ -71,7 +72,7 @@ public class ClientProductService {
                     });
 
             case "category" -> this.productRepo
-                    .fetchProductByCategoryClient(currency, uuid, PageRequest.of(page, size)) //
+                    .productsByCategoryClient(uuid, currency, PageRequest.of(page, size)) //
                     .map(pojo -> {
                         var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
                         return ProductResponse.builder()
@@ -86,7 +87,7 @@ public class ClientProductService {
                     });
 
             case "collection" -> this.productRepo
-                    .fetchByProductByCollectionClient(currency, uuid, PageRequest.of(page, size))
+                    .productsByCollectionClient(currency, uuid, PageRequest.of(page, size))
                     .map(pojo -> {
                         var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
                         return ProductResponse.builder()

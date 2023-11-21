@@ -2,27 +2,38 @@ package com.sarabrandserver.order.entity;
 
 import com.sarabrandserver.enumeration.GlobalStatus;
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Set;
+
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.FetchType.LAZY;
 
 @Table(name = "payment_detail")
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Getter
 @Setter
-@EqualsAndHashCode
 public class PaymentDetail implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_detail_id", nullable = false, unique = true)
     private Long paymentDetailId;
+
+    @Column(name = "customer_name", nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private String email;
+
+    @Column(name = "phone_number", nullable = false)
+    private String phoneNumber;
 
     // Represents the payment ID from payment provider
     @Column(name = "payment_id", nullable = false, unique = true)
@@ -34,7 +45,7 @@ public class PaymentDetail implements Serializable {
     @Column(name = "payment_provider", nullable = false, length = 20)
     private String payment_provider;
 
-    @Column(name = "payment_status", nullable = false, length = 20)
+    @Column(name = "payment_status", nullable = false, length = 10)
     @Enumerated(EnumType.STRING)
     private GlobalStatus globalStatus;
 
@@ -42,11 +53,7 @@ public class PaymentDetail implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createAt;
 
-    @Column(name = "modified_at")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date modifiedAt;
-
-    @OneToOne(mappedBy = "paymentDetail")
-    private OrderDetail orderDetail;
+    @OneToMany(fetch = LAZY, cascade = { PERSIST, MERGE, REFRESH }, mappedBy = "paymentDetail")
+    private Set<OrderDetail> orderDetail;
 
 }

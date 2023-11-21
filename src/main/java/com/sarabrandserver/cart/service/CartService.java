@@ -13,8 +13,6 @@ import com.sarabrandserver.exception.OutOfStockException;
 import com.sarabrandserver.product.service.ProductSKUService;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,8 +26,6 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class CartService {
-
-    private static final Logger log = LoggerFactory.getLogger(CartService.class);
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
@@ -76,8 +72,6 @@ public class CartService {
     @Transactional
     public void create(String ipAddress, CartDTO dto) {
         var productSKU = this.productSKUService.productSkuBySKU(dto.sku());
-
-        log.info("My custom IpAddress {}", ipAddress);
 
         if (dto.qty() > productSKU.getInventory()) {
             throw new OutOfStockException("chosen quantity is out of stock");

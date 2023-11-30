@@ -134,7 +134,7 @@ public class SecurityConfig {
                 // Public routes
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
-                            "/api/v1/auth/csrf",
+                            "/api/v1/csrf",
                             "/api/v1/client/auth/register",
                             "/api/v1/client/auth/login",
                             "/api/v1/client/product/**",

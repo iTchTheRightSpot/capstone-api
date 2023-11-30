@@ -30,7 +30,6 @@ public class WorkerCategoryService {
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
-
     @Value(value = "${spring.profiles.active}")
     private String ACTIVEPROFILE;
 

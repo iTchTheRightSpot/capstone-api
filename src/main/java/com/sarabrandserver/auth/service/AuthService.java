@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import static com.sarabrandserver.enumeration.RoleEnum.CLIENT;
 import static com.sarabrandserver.enumeration.RoleEnum.WORKER;
 
 @Service
@@ -32,9 +33,12 @@ import static com.sarabrandserver.enumeration.RoleEnum.WORKER;
 @Setter
 public class AuthService {
 
-    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
-    @Value(value = "${server.servlet.session.cookie.secure}") private boolean COOKIESECURE;
-    @Value(value = "${server.servlet.session.cookie.max-age}") private int MAXAGE;
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
+    @Value(value = "${server.servlet.session.cookie.secure}")
+    private boolean COOKIESECURE;
+    @Value(value = "${server.servlet.session.cookie.max-age}")
+    private int MAXAGE;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -114,7 +118,9 @@ public class AuthService {
 
         var unauthenticated = UsernamePasswordAuthenticationToken
                 .unauthenticated(dto.principal().trim(), dto.password());
+
         var authenticated = this.authManager.authenticate(unauthenticated);
+
         loginImpl(authenticated, response);
     }
 
@@ -147,7 +153,7 @@ public class AuthService {
                 .enabled(true)
                 .clientRole(new HashSet<>())
                 .build();
-        client.addRole(new ClientRole(RoleEnum.CLIENT));
+        client.addRole(new ClientRole(CLIENT));
         return client;
     }
 

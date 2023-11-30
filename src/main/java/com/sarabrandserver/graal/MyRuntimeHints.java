@@ -11,7 +11,6 @@ import com.sarabrandserver.product.dto.*;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.Variant;
 import com.sarabrandserver.util.VariantHelperMapper;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 
@@ -23,8 +22,6 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
 
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
-        // https://stackoverflow.com/questions/74829933/spring-boot-3-0-0-graavm-for-interface-jakarta-servlet-http-httpservletrequest
-//        hints.proxies().registerJdkProxy(HttpServletRequest.class);
 
         // migration
         hints.resources().registerPattern("db/migration/*");

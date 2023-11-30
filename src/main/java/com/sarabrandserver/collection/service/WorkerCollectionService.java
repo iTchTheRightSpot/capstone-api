@@ -12,6 +12,7 @@ import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,27 +24,17 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class WorkerCollectionService {
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
-
     @Value(value = "${spring.profiles.active}")
     private String ACTIVEPROFILE;
 
     private final CollectionRepository collectionRepository;
     private final CustomUtil customUtil;
     private final S3Service s3Service;
-
-    public WorkerCollectionService(
-            CollectionRepository collectionRepository,
-            CustomUtil customUtil,
-            S3Service s3Service
-    ) {
-        this.collectionRepository = collectionRepository;
-        this.customUtil = customUtil;
-        this.s3Service = s3Service;
-    }
 
     /**
      * Returns a list of CollectionResponse.

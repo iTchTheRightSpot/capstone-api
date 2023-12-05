@@ -23,12 +23,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
 import static java.time.temporal.ChronoUnit.DAYS;
-import static java.time.temporal.ChronoUnit.HOURS;
 
 @Service
 @RequiredArgsConstructor
@@ -62,22 +60,20 @@ public class CartService {
         try {
             String[] arr = cookie.getValue().split("\\s+");
             long d = Long.parseLong(arr[1]);
+            long calc = d + (5 * 3600);
 
-            Duration fiveHrs = Duration.ofSeconds(d)
-                    .plus(5, HOURS);
-
-            Date five = this.customUtil.toUTC(new Date(fiveHrs.toMillis()));
+            Date five = this.customUtil.toUTC(new Date(calc));
             Date now = this.customUtil.toUTC(new Date());
 
             // within 5 hrs of expiration
-            if (five.after(now)) {
+            if (five.before(now)) {
                 Instant instant = Instant.now().plus(this.expire, DAYS);
                 String value = arr[0] + " " + instant.toEpochMilli();
 
                 // update expiration in db
                 Date expiry = this.customUtil.toUTC(new Date(instant.toEpochMilli()));
-                this.shoppingSessionRepo
-                        .updateShoppingSessionExpiry(arr[0], expiry);
+
+                this.shoppingSessionRepo.updateShoppingSessionExpiry(arr[0], expiry);
 
                 // change cookie value
                 cookie.setValue(value);
@@ -229,6 +225,7 @@ public class CartService {
     @Transactional
     public void remove_from_cart(HttpServletRequest req, String sku) {
         Cookie cookie = createCookieValue(req);
+
         if (cookie == null) {
             return;
         }

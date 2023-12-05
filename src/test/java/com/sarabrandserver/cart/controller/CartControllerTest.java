@@ -3,18 +3,15 @@ package com.sarabrandserver.cart.controller;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.cart.dto.CartDTO;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
-import com.sarabrandserver.cart.service.CartService;
 import com.sarabrandserver.product.entity.ProductSku;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Date;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -26,28 +23,11 @@ class CartControllerTest extends AbstractIntegrationTest {
 
     private final String path = "/api/v1/client/cart";
 
-    @Autowired private ShoppingSessionRepo shoppingSessionRepo;
-    @Autowired private CartService cartService;
+    @Value("${cart.cookie.name}")
+    private String CART_COOKIE;
 
-    @BeforeEach
-    void setUp() {
-        String ip;
-        try {
-            ip = InetAddress.getLocalHost().getHostAddress();
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
-
-        var sku = productSku();
-        var dto = new CartDTO(sku.getSku(), sku.getInventory());
-        this.cartService
-                .create_new_shopping_session(ip, new Date(), dto);
-    }
-
-    @AfterEach
-    void tearDown() {
-        this.shoppingSessionRepo.deleteAll();
-    }
+    @Autowired
+    private ShoppingSessionRepo shoppingSessionRepo;
 
     private ProductSku productSku() {
         var list = this.productSkuRepo.findAll();
@@ -56,23 +36,24 @@ class CartControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void listCartItems() throws Exception {
-        this.MOCKMVC
-                .perform(get(path).with(csrf()))
-                .andDo(print())
-                .andExpect(status().isOk());
-    }
-
-    @Test
     void list_cart_items_anonymous_user() throws Exception {
         this.MOCKMVC
-                .perform(get(path).param("currency", "usd").with(csrf()))
-                .andDo(print())
+                .perform(get(path)
+                        .param("currency", "usd")
+                        .with(csrf())
+                )
                 .andExpect(status().isOk());
     }
 
     @Test
     void create_new_shopping_session() throws Exception {
+        MvcResult result = this.MOCKMVC
+                .perform(get(path).with(csrf()))
+                .andReturn();
+
+        Cookie cookie = result.getResponse().getCookie(CART_COOKIE);
+        assertNotNull(cookie);
+
         var sku = productSku();
 
         var dto = new CartDTO(sku.getSku(), sku.getInventory());
@@ -82,12 +63,33 @@ class CartControllerTest extends AbstractIntegrationTest {
                         .contentType(APPLICATION_JSON)
                         .content(this.MAPPER.writeValueAsString(dto))
                         .with(csrf())
+                        .cookie(cookie)
                 )
                 .andExpect(status().isCreated());
+
+        var all = this.shoppingSessionRepo.findAll();
+
+        assertFalse(all.isEmpty());
     }
 
     @Test
     void add_to_existing_shopping_session() throws Exception {
+        MvcResult result1 = this.MOCKMVC
+                .perform(get(path).with(csrf()))
+                .andDo(print())
+                .andReturn();
+
+        Cookie cookie1 = result1.getResponse().getCookie(CART_COOKIE);
+        assertNotNull(cookie1);
+
+        MvcResult result2 = this.MOCKMVC
+                .perform(get(path).with(csrf()).cookie(cookie1))
+                .andReturn();
+
+        // TODO come back to
+        Cookie cookie2 = result2.getResponse().getCookie(CART_COOKIE);
+        assertNotNull(cookie2);
+
         var sku = productSku();
         var dto = new CartDTO(sku.getSku(), sku.getInventory());
 
@@ -96,6 +98,7 @@ class CartControllerTest extends AbstractIntegrationTest {
                         .contentType(APPLICATION_JSON)
                         .content(this.MAPPER.writeValueAsString(dto))
                         .with(csrf())
+                        .cookie(cookie1)
                 )
                 .andExpect(status().isCreated());
     }

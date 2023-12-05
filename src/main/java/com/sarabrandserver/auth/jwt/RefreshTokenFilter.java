@@ -33,20 +33,19 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
      * The objective of this filter is to replace JSESSIONID if jwt is
      * within expiration time.
      * Note: For each request, there can only be one valid jwt as
-     * logic to validate this is done in AuthService class. Also,
-     * pub and priv keys are generated at runtime
+     * logic to validate this is done in AuthService class.
      * */
     @Override
     protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
+            HttpServletRequest req,
+            HttpServletResponse res,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        Cookie[] cookies = request.getCookies();
+        Cookie[] cookies = req.getCookies();
 
         // Base case
-        if (cookies == null || request.getRequestURI().endsWith("logout")) {
-            filterChain.doFilter(request, response);
+        if (cookies == null || req.getRequestURI().endsWith("logout")) {
+            filterChain.doFilter(req, res);
             return;
         }
 
@@ -70,10 +69,10 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
                     cookie.setPath(PATH);
 
                     // add cookie to response
-                    response.addCookie(cookie);
+                    res.addCookie(cookie);
                 });
 
-        filterChain.doFilter(request, response);
+        filterChain.doFilter(req, res);
     }
 
 }

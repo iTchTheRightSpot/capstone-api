@@ -33,8 +33,8 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = """
     DELETE FROM CartItem c
-    WHERE c.shoppingSession.ipAddress = :ip AND c.sku = :sku
+    WHERE c.shoppingSession.cookie = :cookie AND c.sku = :sku
     """)
-    void delete_CartItem_by_ip_and_sku(String ip, String sku);
+    void delete_cartItem_by_cookie_and_sku(String cookie, String sku);
 
 }

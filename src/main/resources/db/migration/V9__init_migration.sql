@@ -1,0 +1,1 @@
+ALTER TABLE shopping_session RENAME COLUMN ip_address TO cookie;

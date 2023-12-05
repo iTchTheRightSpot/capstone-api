@@ -16,17 +16,17 @@ import java.util.Optional;
 @Repository
 public interface ShoppingSessionRepo extends JpaRepository<ShoppingSession, Long> {
 
-    @Query("SELECT s FROM ShoppingSession s WHERE s.ipAddress = :ip")
-    Optional<ShoppingSession> shoppingSessionByIPAddress(String ip);
+    @Query("SELECT s FROM ShoppingSession s WHERE s.cookie = :cookie")
+    Optional<ShoppingSession> shoppingSessionByCookie(String cookie);
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = """
     UPDATE ShoppingSession s
     SET s.expireAt = :d
-    WHERE s.shoppingSessionId = :id
+    WHERE s.cookie = :cookie
     """)
-    void updateSessionExpiry(long id, Date d);
+    void updateShoppingSessionExpiry(String cookie, Date d);
 
     @Query(value = """
     SELECT
@@ -45,8 +45,8 @@ public interface ShoppingSessionRepo extends JpaRepository<ShoppingSession, Long
     INNER JOIN ProductSku ps ON ps.sku = c.sku
     INNER JOIN ProductDetail d ON ps.productDetail.productDetailId = d.productDetailId
     INNER JOIN Product p ON d.product.productId = p.productId
-    WHERE s.ipAddress = :ip
+    WHERE s.cookie = :cookie
     """)
-    List<CartPojo> cartItemsByIpAddress(SarreCurrency currency, String ip);
+    List<CartPojo> cartItemsByCookieValue(SarreCurrency currency, String cookie);
 
 }

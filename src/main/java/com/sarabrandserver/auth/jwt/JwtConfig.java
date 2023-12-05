@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import jakarta.servlet.http.Cookie;
@@ -27,6 +28,7 @@ import java.util.Arrays;
  */
 @Configuration
 public class JwtConfig {
+    
     private static final RSAKey rsaKey = RSAConfig.GENERATERSAKEY();
 
     @Value(value = "${server.servlet.session.cookie.name}")
@@ -40,14 +42,9 @@ public class JwtConfig {
     }
 
     @Bean
-    public JWKSource<SecurityContext> jwkSource() {
-        JWKSet jwkSet = new JWKSet(rsaKey);
-        return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
-    }
-
-    @Bean
-    public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
-        return new NimbusJwtEncoder(jwkSource);
+    public JwtEncoder jwtEncoder() {
+        JWKSource<SecurityContext> source = new ImmutableJWKSet<>(new JWKSet(rsaKey));
+        return new NimbusJwtEncoder(source);
     }
 
     @Bean

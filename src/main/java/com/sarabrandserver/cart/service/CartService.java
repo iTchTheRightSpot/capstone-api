@@ -8,29 +8,44 @@ import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
 import com.sarabrandserver.cart.response.CartResponse;
 import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.exception.CustomInvalidFormatException;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.OutOfStockException;
 import com.sarabrandserver.product.service.ProductSKUService;
 import com.sarabrandserver.util.CustomUtil;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.time.Instant;
+import java.util.*;
+
+import static java.time.temporal.ChronoUnit.DAYS;
+import static java.time.temporal.ChronoUnit.HOURS;
 
 @Service
 @RequiredArgsConstructor
 public class CartService {
 
+    private static final Logger log = LoggerFactory.getLogger(CartService.class);
+
+    private final int expire = 2; // cart expiration
+
     @Value(value = "${aws.bucket}")
     private String BUCKET;
     @Value(value = "${spring.profiles.active}")
     private String ACTIVEPROFILE;
+    @Value("${cart.cookie.name}")
+    private String CART_COOKIE;
+    @Value(value = "${server.servlet.session.cookie.secure}")
+    private boolean COOKIESECURE;
 
     private final ShoppingSessionRepo shoppingSessionRepo;
     private final CartItemRepo cartItemRepo;
@@ -39,12 +54,77 @@ public class CartService {
     private final S3Service s3Service;
 
     /**
-     * Returns a list of CartResponse based on user principal and currency
+     * Updates cookie if it is within expiration
+     *
+     * @throws CustomInvalidFormatException is array is out of bound or parsing of string to a Long
      */
-    public List<CartResponse> cartItems(String ipAddress, SarreCurrency currency) {
+    private void validateCookieExpiration(HttpServletResponse res, Cookie cookie) {
+        try {
+            String[] arr = cookie.getValue().split("\\s+");
+            long d = Long.parseLong(arr[1]);
+
+            Duration fiveHrs = Duration.ofSeconds(d)
+                    .plus(5, HOURS);
+
+            Date five = this.customUtil.toUTC(new Date(fiveHrs.toMillis()));
+            Date now = this.customUtil.toUTC(new Date());
+
+            // within 5 hrs of expiration
+            if (five.after(now)) {
+                Instant instant = Instant.now().plus(this.expire, DAYS);
+                String value = arr[0] + " " + instant.toEpochMilli();
+
+                // update expiration in db
+                Date expiry = this.customUtil.toUTC(new Date(instant.toEpochMilli()));
+                this.shoppingSessionRepo
+                        .updateShoppingSessionExpiry(arr[0], expiry);
+
+                // change cookie value
+                cookie.setValue(value);
+
+                // response
+                res.addCookie(cookie);
+            }
+        } catch (RuntimeException ex) {
+            log.error("validateCookieExpiration method , {}", ex.getMessage());
+            throw new CustomInvalidFormatException("Invalid cookie");
+        }
+    }
+
+    /**
+     * Returns a list of CartResponse based
+     */
+    public List<CartResponse> cartItems(
+            SarreCurrency currency,
+            HttpServletRequest req,
+            HttpServletResponse res
+    ) {
+        Cookie cookie = createCookieValue(req);
+
+        if (cookie == null) {
+            // cookie value
+            String s = UUID.randomUUID().toString();
+            Instant instant = Instant.now().plus(this.expire, DAYS);
+            String value = s + " " + instant.toEpochMilli();
+
+            // cookie
+            Cookie c = new Cookie(CART_COOKIE, value);
+            c.setMaxAge((int) instant.toEpochMilli()); // 2 days
+            c.setHttpOnly(true);
+            c.setPath("/");
+            c.setSecure(COOKIESECURE);
+
+            // add c to res
+            res.addCookie(c);
+
+            return new ArrayList<>();
+        }
+
+        validateCookieExpiration(res, cookie);
+
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
         return this.shoppingSessionRepo
-                .cartItemsByIpAddress(currency, ipAddress) //
+                .cartItemsByCookieValue(currency, cookie.getValue()) //
                 .stream() //
                 .map(pojo -> {
                     var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
@@ -64,24 +144,44 @@ public class CartService {
     }
 
     /**
-     * Creates a new shopping session or persists details into an existing shopping session
+     * Creates a new shopping session or persists details into an existing shopping session.
      *
      * @throws CustomNotFoundException if dto property sku does not exist
      * @throws OutOfStockException if dto property qty is greater than inventory
+     * @throws CustomInvalidFormatException if cookie is in invalid format
      */
     @Transactional
-    public void create(String ipAddress, CartDTO dto) {
+    public void create(CartDTO dto, HttpServletRequest req) {
+        Cookie cookie = createCookieValue(req);
+
+        if (cookie == null) {
+            return;
+        }
+
         var productSKU = this.productSKUService.productSkuBySKU(dto.sku());
 
         if (dto.qty() > productSKU.getInventory()) {
             throw new OutOfStockException("chosen quantity is out of stock");
         }
 
+        String[] arr = cookie.getValue().split("\\s+");
+        String param = arr[0];
+
         Optional<ShoppingSession> optional = this.shoppingSessionRepo
-                .shoppingSessionByIPAddress(ipAddress);
+                .shoppingSessionByCookie(param);
 
         if (optional.isEmpty()) {
-            create_new_shopping_session(ipAddress, dto);
+            Date date;
+
+            try {
+                long d = Long.parseLong(arr[1]);
+                date = new Date(d);
+            } catch (RuntimeException ex) {
+                log.error("create method , {}", ex.getMessage());
+                throw new CustomInvalidFormatException("Invalid cookie");
+            }
+
+            create_new_shopping_session(param, date, dto);
         } else {
             add_to_existing_shopping_session(optional.get(), dto);
         }
@@ -90,21 +190,15 @@ public class CartService {
     /**
      * Creates a new shopping session
      */
-    @Transactional
-    public void create_new_shopping_session(String ipAddress, CartDTO dto) {
-        var date = new Date();
-        // 12 hrs from date
-        var expireAt = Duration.ofMillis(Duration.ofHours(12).toMillis());
+    public void create_new_shopping_session(String uuid, Date expiration, CartDTO dto) {
+        ShoppingSession shoppingSession = new ShoppingSession(
+                uuid,
+                this.customUtil.toUTC(new Date()),
+                this.customUtil.toUTC(expiration),
+                new HashSet<>()
+        );
 
-        var shoppingSession = ShoppingSession
-                .builder()
-                .ipAddress(ipAddress)
-                .createAt(this.customUtil.toUTC(date))
-                .expireAt(this.customUtil.toUTC(new Date(date.getTime() + expireAt.toMillis())))
-                .cartItems(new HashSet<>())
-                .build();
-
-        var session = this.shoppingSessionRepo.save(shoppingSession);
+        ShoppingSession session = this.shoppingSessionRepo.save(shoppingSession);
 
         this.cartItemRepo.save(new CartItem(dto.qty(), dto.sku(), session));
     }
@@ -124,10 +218,6 @@ public class CartService {
             // update quantity if cart is present
             this.cartItemRepo.updateCartQtyByCartId(cart.getCartId(), dto.qty());
         }
-
-        // TODO update session expiry date
-//        this.shoppingSessionRepo
-//                .updateSessionExpiry(session.getShoppingSessionId(), this.customUtil.toUTC(da));
     }
 
     /**
@@ -137,8 +227,28 @@ public class CartService {
      * @param sku unique ProductSku
      * */
     @Transactional
-    public void remove_from_cart(String ipAddress, String sku) {
-        this.cartItemRepo.delete_CartItem_by_ip_and_sku(ipAddress, sku);
+    public void remove_from_cart(HttpServletRequest req, String sku) {
+        Cookie cookie = createCookieValue(req);
+        if (cookie == null) {
+            return;
+        }
+
+        String[] arr = cookie.getValue().split("\\s+");
+
+        this.cartItemRepo.delete_cartItem_by_cookie_and_sku(arr[0], sku);
+    }
+
+    /**
+     * Retrieves cookie value from request
+     */
+    private Cookie createCookieValue(HttpServletRequest req) {
+        Cookie[] cookies = req.getCookies();
+        return cookies == null
+                ? null
+                : Arrays.stream(cookies)
+                .filter(cookie -> cookie.getName().equals(CART_COOKIE))
+                .findFirst()
+                .orElse(null);
     }
 
 }

@@ -18,7 +18,7 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(path = "api/v1/client/auth")
+@RequestMapping(path = "${api.endpoint.baseurl}client/auth")
 @RequiredArgsConstructor
 public class ClientAuthController {
 

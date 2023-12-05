@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -40,7 +41,7 @@ class CartControllerTest extends AbstractIntegrationTest {
         var sku = productSku();
         var dto = new CartDTO(sku.getSku(), sku.getInventory());
         this.cartService
-                .create_new_shopping_session(ip, dto);
+                .create_new_shopping_session(ip, new Date(), dto);
     }
 
     @AfterEach

@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class CartControllerTest extends AbstractIntegrationTest {
 
-    private final String path = "/api/v1/client/cart";
+    private final String path = "/api/v1/cart";
 
     @Value("${cart.cookie.name}")
     private String CART_COOKIE;
@@ -82,17 +82,19 @@ class CartControllerTest extends AbstractIntegrationTest {
         Cookie cookie1 = result1.getResponse().getCookie(CART_COOKIE);
         assertNotNull(cookie1);
 
-        MvcResult result2 = this.MOCKMVC
-                .perform(get(path).with(csrf()).cookie(cookie1))
-                .andReturn();
-
-        // TODO come back to
-        Cookie cookie2 = result2.getResponse().getCookie(CART_COOKIE);
-        assertNotNull(cookie2);
-
         var sku = productSku();
         var dto = new CartDTO(sku.getSku(), sku.getInventory());
 
+        this.MOCKMVC
+                .perform(post(path)
+                        .contentType(APPLICATION_JSON)
+                        .content(this.MAPPER.writeValueAsString(dto))
+                        .with(csrf())
+                        .cookie(cookie1)
+                )
+                .andExpect(status().isCreated());
+
+        // method add_to_existing_shopping_session
         this.MOCKMVC
                 .perform(post(path)
                         .contentType(APPLICATION_JSON)

@@ -142,7 +142,7 @@ public class SecurityConfig {
                             "/" + this.BASEURL + "client/category/**",
                             "/" + this.BASEURL + "client/collection/**",
                             "/" + this.BASEURL + "worker/auth/login",
-                            "/" + this.BASEURL + "client/cart/**"
+                            "/" + this.BASEURL + "cart/**"
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })

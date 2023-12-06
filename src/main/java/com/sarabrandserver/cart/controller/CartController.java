@@ -18,7 +18,7 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(path = "${api.endpoint.baseurl}client/cart")
+@RequestMapping(path = "${api.endpoint.baseurl}cart")
 @RequiredArgsConstructor
 public class CartController {
 
@@ -31,8 +31,8 @@ public class CartController {
             HttpServletRequest req,
             HttpServletResponse res
     ) {
-        var c = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.cartService.cartItems(c, req, res);
+        SarreCurrency s = SarreCurrency.valueOf(currency.toUpperCase());
+        return this.cartService.cartItems(s, req, res);
     }
 
     @ResponseStatus(CREATED)

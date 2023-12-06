@@ -35,6 +35,7 @@ public class CartService {
     private static final Logger log = LoggerFactory.getLogger(CartService.class);
 
     private final int expire = 2; // cart expiration
+    private final String split = "%";
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
@@ -58,7 +59,7 @@ public class CartService {
      */
     private void validateCookieExpiration(HttpServletResponse res, Cookie cookie) {
         try {
-            String[] arr = cookie.getValue().split("\\s+");
+            String[] arr = cookie.getValue().split(this.split);
             long d = Long.parseLong(arr[1]);
             long calc = d + (5 * 3600);
 
@@ -68,7 +69,7 @@ public class CartService {
             // within 5 hrs of expiration
             if (five.before(now)) {
                 Instant instant = Instant.now().plus(this.expire, DAYS);
-                String value = arr[0] + " " + instant.toEpochMilli();
+                String value = arr[0] + this.split + instant.toEpochMilli();
 
                 // update expiration in db
                 Date expiry = this.customUtil.toUTC(new Date(instant.toEpochMilli()));
@@ -88,7 +89,7 @@ public class CartService {
     }
 
     /**
-     * Returns a list of CartResponse based
+     * Returns a list of CartResponse
      */
     public List<CartResponse> cartItems(
             SarreCurrency currency,
@@ -101,7 +102,7 @@ public class CartService {
             // cookie value
             String s = UUID.randomUUID().toString();
             Instant instant = Instant.now().plus(this.expire, DAYS);
-            String value = s + " " + instant.toEpochMilli();
+            String value = s + this.split + instant.toEpochMilli();
 
             // cookie
             Cookie c = new Cookie(CART_COOKIE, value);
@@ -119,11 +120,13 @@ public class CartService {
         validateCookieExpiration(res, cookie);
 
         boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
+        String[] arr = cookie.getValue().split(this.split);
+
         return this.shoppingSessionRepo
-                .cartItemsByCookieValue(currency, cookie.getValue()) //
+                .cartItemsByCookieValue(currency, arr[0]) //
                 .stream() //
                 .map(pojo -> {
-                    var url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
+                    String url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
                     return new CartResponse(
                             pojo.getUuid(),
                             url,
@@ -160,7 +163,7 @@ public class CartService {
             throw new OutOfStockException("chosen quantity is out of stock");
         }
 
-        String[] arr = cookie.getValue().split("\\s+");
+        String[] arr = cookie.getValue().split(this.split);
         String param = arr[0];
 
         Optional<ShoppingSession> optional = this.shoppingSessionRepo
@@ -230,7 +233,7 @@ public class CartService {
             return;
         }
 
-        String[] arr = cookie.getValue().split("\\s+");
+        String[] arr = cookie.getValue().split(this.split);
 
         this.cartItemRepo.delete_cartItem_by_cookie_and_sku(arr[0], sku);
     }

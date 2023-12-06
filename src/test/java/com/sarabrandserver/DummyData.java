@@ -31,7 +31,7 @@ public class DummyData {
     private String image2;
 
     @Bean
-    CommandLineRunner commandLineRunner(
+    public CommandLineRunner commandLineRunner(
             AuthService service,
             WorkerCategoryService categoryService,
             WorkerCollectionService collectionService,

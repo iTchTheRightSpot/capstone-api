@@ -33,7 +33,8 @@ import static org.mockito.Mockito.*;
 
 class AuthServiceTest extends AbstractUnitTest {
 
-    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
 
     private AuthService authService;
 

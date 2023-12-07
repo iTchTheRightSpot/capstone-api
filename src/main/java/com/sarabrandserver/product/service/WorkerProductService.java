@@ -41,8 +41,6 @@ public class WorkerProductService {
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
-    @Value(value = "${spring.profiles.active}")
-    private String ACTIVEPROFILE;
 
     private final PriceCurrencyRepo priceCurrencyRepo;
     private final ProductRepo productRepo;
@@ -63,7 +61,6 @@ public class WorkerProductService {
      * @return Page of ProductResponse
      */
     public Page<ProductResponse> allProducts(SarreCurrency currency, int page, int size) {
-        boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
         return this.productRepo
                 .fetchAllProductsWorker(currency, PageRequest.of(page, size))
                 .map(pojo -> {
@@ -221,16 +218,13 @@ public class WorkerProductService {
         }
 
         // Delete from S3
-        if (this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage")) {
-            // Get all Images
-            List<ObjectIdentifier> keys = this.productRepo.productImagesByProductUUID(uuid)
-                    .stream() //
-                    .map(img -> ObjectIdentifier.builder().key(img.getImage()).build()) //
-                    .toList();
+        List<ObjectIdentifier> keys = this.productRepo.productImagesByProductUUID(uuid)
+                .stream() //
+                .map(img -> ObjectIdentifier.builder().key(img.getImage()).build()) //
+                .toList();
 
-            if (!keys.isEmpty()) {
-                this.helperService.deleteFromS3(keys, BUCKET);
-            }
+        if (!keys.isEmpty()) {
+            this.helperService.deleteFromS3(keys, BUCKET);
         }
 
         // Delete from Database

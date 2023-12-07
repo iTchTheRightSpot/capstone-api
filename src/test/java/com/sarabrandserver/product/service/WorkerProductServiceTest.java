@@ -27,8 +27,8 @@ import static org.mockito.Mockito.*;
 
 class WorkerProductServiceTest extends AbstractUnitTest {
 
-    @Value(value = "${aws.bucket}") private String BUCKET;
-    @Value(value = "${spring.profiles.active}") private String ACTIVEPROFILE;
+    @Value(value = "${aws.bucket}")
+    private String BUCKET;
 
     private WorkerProductService workerProductService;
 
@@ -53,7 +53,6 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                 this.customUtil,
                 this.helperService
         );
-        this.workerProductService.setACTIVEPROFILE(ACTIVEPROFILE);
         this.workerProductService.setBUCKET(BUCKET);
     }
 

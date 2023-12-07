@@ -30,7 +30,7 @@ public class WorkerProductController {
      *
      * @param page is the UI page number
      * @param size is the amount in the list
-     * @return ResponseEntity
+     * @return Page<ProductResponse>
      */
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
@@ -39,7 +39,7 @@ public class WorkerProductController {
             @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
-        var c = SarreCurrency.valueOf(currency.toUpperCase());
+        SarreCurrency c = SarreCurrency.valueOf(currency.toUpperCase());
         return this.workerProductService.allProducts(c, page, Math.min(size, 20));
     }
 

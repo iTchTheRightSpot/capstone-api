@@ -20,7 +20,7 @@ public record CreateProductDTO(
         @Size(max = 80, message = "Max of 80")
         String name, // product_name
 
-        @Size(max = 700, message = "Max of 1000")
+        @Size(max = 1000, message = "max of 1000 words")
         @NotNull(message = "Please enter product description")
         @NotEmpty(message = "Please enter product description")
         String desc,

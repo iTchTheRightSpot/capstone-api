@@ -30,8 +30,6 @@ public class WorkerProductDetailService {
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
-    @Value(value = "${spring.profiles.active}")
-    private String ACTIVEPROFILE;
 
     private final ProductDetailRepo detailRepo;
     private final ProductSKUService productSKUService;
@@ -47,15 +45,13 @@ public class WorkerProductDetailService {
      * @return List of DetailResponse
      */
     public List<DetailResponse> productDetailsByProductUUID(String uuid) {
-        boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
-
         return this.detailRepo
                 .findProductDetailsByProductUuidWorker(uuid) //
                 .stream() //
                 .map(pojo -> {
                     var urls = Arrays
                             .stream(pojo.getImage().split(","))
-                            .map(key -> this.helperService.preSignedURL(bool, BUCKET, key))
+                            .map(key -> this.helperService.preSignedURL(BUCKET, key))
                             .toList();
 
                     Variant[] variants = this.customUtil
@@ -118,7 +114,6 @@ public class WorkerProductDetailService {
         this.helperService.productImages(
                 detail,
                 files,
-                this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage"),
                 BUCKET
         );
     }
@@ -150,17 +145,15 @@ public class WorkerProductDetailService {
     public void delete(final String sku) {
         var detail = productDetailByProductSku(sku);
 
-        if (this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage")) {
-            var images = this.productImageRepo.imagesByProductDetailID(detail.getProductDetailId());
+        var images = this.productImageRepo.imagesByProductDetailID(detail.getProductDetailId());
 
-            List<ObjectIdentifier> keys = images //
-                    .stream() //
-                    .map(image -> ObjectIdentifier.builder().key(image.getImageKey()).build())
-                    .toList();
+        List<ObjectIdentifier> keys = images //
+                .stream() //
+                .map(image -> ObjectIdentifier.builder().key(image.getImageKey()).build())
+                .toList();
 
-            if (!keys.isEmpty()) {
-                this.helperService.deleteFromS3(keys, BUCKET);
-            }
+        if (!keys.isEmpty()) {
+            this.helperService.deleteFromS3(keys, BUCKET);
         }
 
         // Remove detail from Product and Save Product

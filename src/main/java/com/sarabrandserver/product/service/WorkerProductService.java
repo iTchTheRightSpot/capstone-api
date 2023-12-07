@@ -67,7 +67,7 @@ public class WorkerProductService {
         return this.productRepo
                 .fetchAllProductsWorker(currency, PageRequest.of(page, size))
                 .map(pojo -> {
-                    var url = this.helperService.preSignedURL(bool, BUCKET, pojo.getKey());
+                    var url = this.helperService.preSignedURL(BUCKET, pojo.getKey());
                     return ProductResponse.builder()
                             .category(pojo.getCategory())
                             .collection(pojo.getCollection())
@@ -145,7 +145,6 @@ public class WorkerProductService {
         this.helperService.productImages(
                 detail,
                 file,
-                this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage"),
                 BUCKET
         );
     }

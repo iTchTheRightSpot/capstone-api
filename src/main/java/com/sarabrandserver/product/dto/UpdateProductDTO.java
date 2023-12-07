@@ -18,7 +18,7 @@ public record UpdateProductDTO(
         @NotEmpty(message = "cannot be empty")
         String name,
 
-        @Size(max = 700, message = "Max of 700")
+        @Size(max = 1000, message = "max letter should be 1000")
         @NotNull(message = "cannot be empty")
         @NotEmpty(message = "cannot be empty")
         String desc,

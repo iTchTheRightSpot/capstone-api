@@ -23,7 +23,7 @@ public class S3Config {
 
         REGION = Region.CA_CENTRAL_1;
 
-        PROVIDER = profile.equals("dev") || profile.equals("test")
+        PROVIDER = profile.equals("test")
                 ? EnvironmentVariableCredentialsProvider.create()
                 : InstanceProfileCredentialsProvider.builder().build();
     }

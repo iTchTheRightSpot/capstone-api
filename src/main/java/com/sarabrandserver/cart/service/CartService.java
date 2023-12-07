@@ -16,7 +16,9 @@ import com.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,11 +32,13 @@ import static java.time.temporal.ChronoUnit.DAYS;
 
 @Service
 @RequiredArgsConstructor
+@Setter @Getter
 public class CartService {
 
     private static final Logger log = LoggerFactory.getLogger(CartService.class);
 
     private final int expire = 2; // cart expiration
+    private final int expirationBound = 5;
     private final String split = "%";
 
     @Value(value = "${aws.bucket}")
@@ -57,16 +61,16 @@ public class CartService {
      *
      * @throws CustomInvalidFormatException is array is out of bound or parsing of string to a Long
      */
-    private void validateCookieExpiration(HttpServletResponse res, Cookie cookie) {
+    public void validateCookieExpiration(HttpServletResponse res, Cookie cookie) {
         try {
             String[] arr = cookie.getValue().split(this.split);
             long d = Long.parseLong(arr[1]);
-            long calc = d + (5 * 3600);
+            long calc = d + (this.expirationBound * 3600);
 
             Date five = this.customUtil.toUTC(new Date(calc));
             Date now = this.customUtil.toUTC(new Date());
 
-            // within 5 hrs of expiration
+            // within expiration bound
             if (five.before(now)) {
                 Instant instant = Instant.now().plus(this.expire, DAYS);
                 String value = arr[0] + this.split + instant.toEpochMilli();
@@ -83,7 +87,7 @@ public class CartService {
                 res.addCookie(cookie);
             }
         } catch (RuntimeException ex) {
-            log.error("validateCookieExpiration method , {}", ex.getMessage());
+            log.error("validateCookieExpiration method, {}", ex.getMessage());
             throw new CustomInvalidFormatException("Invalid cookie");
         }
     }
@@ -126,7 +130,7 @@ public class CartService {
                 .cartItemsByCookieValue(currency, arr[0]) //
                 .stream() //
                 .map(pojo -> {
-                    String url = this.s3Service.getPreSignedUrl(bool, BUCKET, pojo.getKey());
+                    String url = this.s3Service.getPreSignedUrl(BUCKET, pojo.getKey());
                     return new CartResponse(
                             pojo.getUuid(),
                             url,

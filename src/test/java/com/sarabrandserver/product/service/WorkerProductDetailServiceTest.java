@@ -2,13 +2,13 @@ package com.sarabrandserver.product.service;
 
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractUnitTest;
+import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.entity.ProductDetail;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductImageRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.util.CustomUtil;
-import com.sarabrandserver.data.TestingData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,8 +24,8 @@ import static org.mockito.Mockito.*;
 
 class WorkerProductDetailServiceTest extends AbstractUnitTest {
 
-    @Value(value = "${aws.bucket}") private String BUCKET;
-    @Value(value = "${spring.profiles.active}") private String ACTIVEPROFILE;
+    @Value(value = "${aws.bucket}")
+    private String BUCKET;
 
     private WorkerProductDetailService productDetailService;
     @Mock private ProductRepo productRepo;
@@ -45,7 +45,6 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
                 this.customUtil,
                 this.helperService
         );
-        this.productDetailService.setACTIVEPROFILE(ACTIVEPROFILE);
         this.productDetailService.setBUCKET(BUCKET);
     }
 

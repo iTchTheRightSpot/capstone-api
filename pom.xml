@@ -146,121 +146,15 @@
     </dependencies>
 
     <profiles>
-        <!-- development profile -->
+        <!-- default profile -->
         <profile>
-            <id>dev</id>
+            <id>default</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
 
             <properties>
-                <spring.profiles.active>dev</spring.profiles.active>
-            </properties>
-
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.graalvm.buildtools</groupId>
-                        <artifactId>native-maven-plugin</artifactId>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-maven-plugin</artifactId>
-
-                        <configuration>
-                            <excludes>
-                                <exclude>
-                                    <groupId>org.projectlombok</groupId>
-                                    <artifactId>lombok</artifactId>
-                                </exclude>
-                            </excludes>
-                            <image>
-                                <name>docker.io/emmanuelu17/${project.artifactId}:latest</name>
-                            </image>
-                        </configuration>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.hibernate.orm.tooling</groupId>
-                        <artifactId>hibernate-enhance-maven-plugin</artifactId>
-                        <version>6.2.7.Final</version>
-                        <executions>
-                            <execution>
-                                <configuration>
-                                    <failOnError>true</failOnError>
-                                    <enableLazyInitialization>true</enableLazyInitialization>
-                                </configuration>
-                                <goals>
-                                    <goal>enhance</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                </plugins>
-            </build>
-
-        </profile>
-
-        <!-- Production profile -->
-        <profile>
-            <id>prod</id>
-            <properties>
-                <spring.profiles.active>prod</spring.profiles.active>
-            </properties>
-
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.graalvm.buildtools</groupId>
-                        <artifactId>native-maven-plugin</artifactId>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-maven-plugin</artifactId>
-
-                        <configuration>
-                            <excludes>
-                                <exclude>
-                                    <groupId>org.projectlombok</groupId>
-                                    <artifactId>lombok</artifactId>
-                                </exclude>
-                            </excludes>
-                            <image>
-                                <name>docker.io/emmanuelu17/${project.artifactId}:latest</name>
-                            </image>
-                        </configuration>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.hibernate.orm.tooling</groupId>
-                        <artifactId>hibernate-enhance-maven-plugin</artifactId>
-                        <version>6.2.7.Final</version>
-                        <executions>
-                            <execution>
-                                <configuration>
-                                    <failOnError>true</failOnError>
-                                    <enableLazyInitialization>true</enableLazyInitialization>
-                                </configuration>
-                                <goals>
-                                    <goal>enhance</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                </plugins>
-            </build>
-
-        </profile>
-
-        <!-- Stage profile -->
-        <profile>
-            <id>stage</id>
-            <properties>
-                <spring.profiles.active>stage</spring.profiles.active>
+                <spring.profiles.active>default</spring.profiles.active>
             </properties>
 
             <build>
@@ -329,9 +223,6 @@
                                     <artifactId>lombok</artifactId>
                                 </exclude>
                             </excludes>
-                            <image>
-                                <name>docker.io/emmanuelu17/${project.artifactId}:latest</name>
-                            </image>
                         </configuration>
                     </plugin>
                 </plugins>

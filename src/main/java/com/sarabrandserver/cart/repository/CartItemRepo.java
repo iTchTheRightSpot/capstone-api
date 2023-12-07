@@ -38,4 +38,12 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     """)
     void delete_cartItem_by_cookie_and_sku(String cookie, String sku);
 
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(value = """
+    DELETE FROM CartItem c
+    WHERE c.shoppingSession.shoppingSessionId = :id
+    """)
+    void deleteByParentID(long id);
+
 }

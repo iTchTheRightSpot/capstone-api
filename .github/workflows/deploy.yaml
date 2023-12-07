@@ -30,7 +30,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build image
-        run: mvn spring-boot:build-image -Pstage -DskipTests
+        run: mvn spring-boot:build-image -DskipTests
 
       - name: Set up docker build
         uses: docker/setup-buildx-action@v3
@@ -61,7 +61,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build native image
-        run: mvn -Pnative spring-boot:build-image -Pstage -DskipTests
+        run: mvn -Pnative spring-boot:build-image -DskipTests
 
       - name: Set up docker build
         uses: docker/setup-buildx-action@v3

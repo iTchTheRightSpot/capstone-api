@@ -247,8 +247,21 @@ public class CartService {
      * */
     @Scheduled(fixedRate = 10, timeUnit = TimeUnit.MINUTES, zone = "UTC")
     public void schedule() {
+        delete();
+    }
+
+    public void delete() {
         Date date = this.customUtil.toUTC(new Date());
-        this.shoppingSessionRepo.deleteIfExpired(date);
+        var list = this.shoppingSessionRepo.allByExpiry(date);
+
+        // delete children
+        for (ShoppingSession s : list) {
+            this.cartItemRepo.deleteByParentID(s.getShoppingSessionId());
+        }
+
+        for (ShoppingSession s : list) {
+            this.shoppingSessionRepo.deleteById(s.getShoppingSessionId());
+        }
     }
 
     /**

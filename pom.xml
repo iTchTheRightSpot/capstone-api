@@ -19,6 +19,8 @@
     <properties>
         <aws.java.sdk.version>2.20.101</aws.java.sdk.version>
         <java.version>17</java.version>
+        <awaitility.version>3.1.2</awaitility.version>
+        <hibernate.orm.tooling.version>6.2.7.Final</hibernate.orm.tooling.version>
     </properties>
 
     <dependencyManagement>
@@ -71,6 +73,14 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
+        </dependency>
+
+        <!-- In other to enable @Scheduling -->
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>${awaitility.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- Fly Way -->
@@ -184,7 +194,7 @@
                     <plugin>
                         <groupId>org.hibernate.orm.tooling</groupId>
                         <artifactId>hibernate-enhance-maven-plugin</artifactId>
-                        <version>6.2.7.Final</version>
+                        <version>${hibernate.orm.tooling.version}</version>
                         <executions>
                             <execution>
                                 <configuration>

@@ -49,4 +49,12 @@ public interface ShoppingSessionRepo extends JpaRepository<ShoppingSession, Long
     """)
     List<CartPojo> cartItemsByCookieValue(SarreCurrency currency, String cookie);
 
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+    DELETE FROM ShoppingSession s
+    WHERE s.expireAt <= :d
+    """)
+    void deleteIfExpired(Date d);
+
 }

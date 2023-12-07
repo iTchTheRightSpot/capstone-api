@@ -22,11 +22,13 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
@@ -43,8 +45,6 @@ public class CartService {
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
-    @Value(value = "${spring.profiles.active}")
-    private String ACTIVEPROFILE;
     @Value("${cart.cookie.name}")
     private String CART_COOKIE;
     @Value(value = "${server.servlet.session.cookie.secure}")
@@ -123,7 +123,6 @@ public class CartService {
 
         validateCookieExpiration(res, cookie);
 
-        boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
         String[] arr = cookie.getValue().split(this.split);
 
         return this.shoppingSessionRepo
@@ -240,6 +239,16 @@ public class CartService {
         String[] arr = cookie.getValue().split(this.split);
 
         this.cartItemRepo.delete_cartItem_by_cookie_and_sku(arr[0], sku);
+    }
+
+    /**
+     * Schedule deletion for expired ShoppingSession every 10 mins
+     * <a href="https://docs.spring.io/spring-framework/reference/integration/scheduling.html">...</a>
+     * */
+    @Scheduled(fixedRate = 10, timeUnit = TimeUnit.MINUTES, zone = "UTC")
+    public void schedule() {
+        Date date = this.customUtil.toUTC(new Date());
+        this.shoppingSessionRepo.deleteIfExpired(date);
     }
 
     /**

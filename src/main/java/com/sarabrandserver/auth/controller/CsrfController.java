@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
  * <a href="https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html#servlet-opt-in-defer-loading-csrf-token">...</a>
  * */
 @RestController
-@RequestMapping(path = "api/v1/csrf")
+@RequestMapping(path = "${api.endpoint.baseurl}csrf")
 public class CsrfController {
 
     @GetMapping

@@ -15,7 +15,7 @@ import java.util.List;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
-@RequestMapping(path = "api/v1/client/collection")
+@RequestMapping(path = "${api.endpoint.baseurl}client/collection")
 @RequiredArgsConstructor
 public class ClientCollectionController {
 

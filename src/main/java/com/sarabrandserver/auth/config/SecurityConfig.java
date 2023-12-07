@@ -1,6 +1,7 @@
 package com.sarabrandserver.auth.config;
 
 import com.sarabrandserver.auth.jwt.RefreshTokenFilter;
+import com.sarabrandserver.auth.service.UserDetailService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -14,12 +15,10 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
@@ -56,10 +55,12 @@ public class SecurityConfig {
     private String SAMESITE;
     @Value(value = "${cors.ui.domain}")
     private String UIDOMAIN;
+    @Value("${api.endpoint.baseurl}")
+    private String BASEURL;
 
     @Bean
     public AuthenticationProvider provider(
-            @Qualifier(value = "userDetailService") UserDetailsService detailsService,
+            UserDetailService detailsService,
             PasswordEncoder passwordEncoder
     ) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -113,7 +114,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(
             HttpSecurity http,
-            @Qualifier(value = "authEntryPoint") AuthenticationEntryPoint authEntryPoint,
+            AuthEntryPoint authEntryPoint,
             RefreshTokenFilter refreshTokenFilter,
             JwtAuthenticationConverter converter
     ) throws Exception {
@@ -134,14 +135,14 @@ public class SecurityConfig {
                 // Public routes
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
-                            "/api/v1/csrf",
-                            "/api/v1/client/auth/register",
-                            "/api/v1/client/auth/login",
-                            "/api/v1/client/product/**",
-                            "/api/v1/client/category/**",
-                            "/api/v1/client/collection/**",
-                            "/api/v1/worker/auth/login",
-                            "/api/v1/client/cart/**"
+                            "/" + this.BASEURL + "csrf",
+                            "/" + this.BASEURL + "client/auth/register",
+                            "/" + this.BASEURL + "client/auth/login",
+                            "/" + this.BASEURL + "client/product/**",
+                            "/" + this.BASEURL + "client/category/**",
+                            "/" + this.BASEURL + "client/collection/**",
+                            "/" + this.BASEURL + "worker/auth/login",
+                            "/" + this.BASEURL + "cart/**"
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })
@@ -160,7 +161,7 @@ public class SecurityConfig {
                 // Logout
                 // https://docs.spring.io/spring-security/reference/servlet/authentication/logout.html
                 .logout((logoutConfig) -> logoutConfig
-                        .logoutUrl("/api/v1/logout")
+                        .logoutUrl("/" + this.BASEURL + "logout")
                         .deleteCookies(this.JSESSIONID)
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(OK))
                 )
@@ -173,14 +174,15 @@ public class SecurityConfig {
      * <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">...</a>
      */
     private static CookieCsrfTokenRepository getCookieCsrfTokenRepository(boolean secure, String sameSite) {
-        CookieCsrfTokenRepository csrfTokenRepository = new CookieCsrfTokenRepository();
-        Consumer<ResponseCookie.ResponseCookieBuilder> csrfCookieCustomizer = (cookie) -> cookie
+        Consumer<ResponseCookie.ResponseCookieBuilder> consumer = (cookie) -> cookie
                 .httpOnly(false)
                 .secure(secure)
                 .path("/")
                 .sameSite(sameSite)
                 .maxAge(-1);
-        csrfTokenRepository.setCookieCustomizer(csrfCookieCustomizer);
+
+        CookieCsrfTokenRepository csrfTokenRepository = new CookieCsrfTokenRepository();
+        csrfTokenRepository.setCookieCustomizer(consumer);
         return csrfTokenRepository;
     }
 

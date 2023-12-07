@@ -18,7 +18,7 @@ import java.util.List;
 import static org.springframework.http.HttpStatus.*;
 
 @RestController
-@RequestMapping(path = "api/v1/worker/category")
+@RequestMapping(path = "${api.endpoint.baseurl}worker/category")
 @PreAuthorize(value = "hasRole('ROLE_WORKER')")
 @RequiredArgsConstructor
 public class WorkerCategoryController {

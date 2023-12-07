@@ -26,11 +26,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class WorkerAuthControllerTest extends AbstractIntegrationTest {
+
     private final String PRINCIPAL = "SEJU@development.com";
     private final String PASSWORD = "123#-SEJU-Development";
     private final String requestMapping = "/api/v1/worker/auth/";
 
-    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
 
     @Autowired private AuthService authService;
     @Autowired private UserRoleRepository userRoleRepository;

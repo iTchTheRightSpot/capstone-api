@@ -17,7 +17,7 @@ import java.util.List;
 import static org.springframework.http.HttpStatus.*;
 
 @RestController
-@RequestMapping(path = "api/v1/worker/collection")
+@RequestMapping(path = "${api.endpoint.baseurl}worker/collection")
 @PreAuthorize(value = "hasRole('ROLE_WORKER')")
 public class WorkerCollectionController {
 

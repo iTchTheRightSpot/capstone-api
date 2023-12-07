@@ -49,7 +49,7 @@ public class JwtTokenService {
 
         String[] role = authentication.getAuthorities() //
                 .stream() //
-                .map(grantedAuthority -> StringUtils.substringAfter(grantedAuthority.getAuthority(), "ROLE_"))
+                .map(authority -> StringUtils.substringAfter(authority.getAuthority(), "ROLE_"))
                 .toArray(String[]::new);
 
         JwtClaimsSet claims = JwtClaimsSet.builder()

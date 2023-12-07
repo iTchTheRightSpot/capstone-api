@@ -1,7 +1,9 @@
 package com.sarabrandserver.cart.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Date;
 import java.util.Set;
@@ -13,8 +15,6 @@ import static jakarta.persistence.TemporalType.TIMESTAMP;
 @Table(name = "shopping_session")
 @Entity
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Getter
 @Setter
 public class ShoppingSession {
@@ -24,8 +24,8 @@ public class ShoppingSession {
     @Column(name = "session_id", nullable = false, unique = true)
     private Long shoppingSessionId;
 
-    @Column(name = "ip_address", nullable = false, unique = true, length = 39)
-    private String ipAddress;
+    @Column(name = "cookie", nullable = false, unique = true, length = 39)
+    private String cookie;
 
     @Column(name = "created_at", nullable = false)
     @Temporal(TIMESTAMP)
@@ -37,5 +37,12 @@ public class ShoppingSession {
 
     @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "shoppingSession", orphanRemoval = true)
     private Set<CartItem> cartItems;
+
+    public ShoppingSession(String cookie, Date createAt, Date expireAt, Set<CartItem> cartItems) {
+        this.cookie = cookie;
+        this.createAt = createAt;
+        this.expireAt = expireAt;
+        this.cartItems = cartItems;
+    }
 
 }

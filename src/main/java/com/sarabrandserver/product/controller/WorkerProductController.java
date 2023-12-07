@@ -18,7 +18,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
-@RequestMapping("api/v1/worker/product")
+@RequestMapping("${api.endpoint.baseurl}worker/product")
 @PreAuthorize(value = "hasRole('ROLE_WORKER')")
 @RequiredArgsConstructor
 public class WorkerProductController {
@@ -30,7 +30,7 @@ public class WorkerProductController {
      *
      * @param page is the UI page number
      * @param size is the amount in the list
-     * @return ResponseEntity
+     * @return Page<ProductResponse>
      */
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
@@ -39,7 +39,7 @@ public class WorkerProductController {
             @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
-        var c = SarreCurrency.valueOf(currency.toUpperCase());
+        SarreCurrency c = SarreCurrency.valueOf(currency.toUpperCase());
         return this.workerProductService.allProducts(c, page, Math.min(size, 20));
     }
 

@@ -2,9 +2,9 @@ package com.sarabrandserver.aws;
 
 import com.sarabrandserver.exception.CustomAwsException;
 import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -19,19 +19,34 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class S3Service {
 
     private static final Logger log = LoggerFactory.getLogger(S3Service.class.getName());
+    private static boolean PROFILE;
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
+
+    public S3Service(Environment env, S3Client s3Client, S3Presigner s3Presigner) {
+        this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
+
+        String activeProfile = env.getProperty("spring.profiles.active", "");
+        PROFILE = activeProfile.equals("test");
+    }
+
+    public void uploadToS3(File file, Map<String, String> metadata, String bucket, String key) {
+        if (PROFILE) {
+            return;
+        }
+        this.uploadToS3Impl(file, metadata, bucket, key);
+    }
 
     /**
      * Upload image to s3. As per docs
      * <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/PutObject.java">...</a>
      * */
-    public void uploadToS3(File file, Map<String, String> metadata, String bucket, String key) {
+    private void uploadToS3Impl(File file, Map<String, String> metadata, String bucket, String key) {
         try {
             // Create put request
             PutObjectRequest request = PutObjectRequest.builder()
@@ -47,11 +62,18 @@ public class S3Service {
         }
     }
 
+    public void deleteFromS3(List<ObjectIdentifier> keys, String bucket) {
+        if (PROFILE) {
+            return;
+        }
+        this.deleteFromS3Impl(keys, bucket);
+    }
+
     /**
      * Delete image(s) from s3. As per docs
      * <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/DeleteObjects.java">...</a>
      * */
-    public void deleteFromS3(List<ObjectIdentifier> keys, String bucketName) {
+    public void deleteFromS3Impl(List<ObjectIdentifier> keys, String bucketName) {
         Delete del = Delete.builder()
                 .objects(keys)
                 .build();
@@ -70,13 +92,12 @@ public class S3Service {
     /**
      * Returns a pre-signed url from s3
      *
-     * @param profile is to verify what profile spring app running on
      * @param bucket is the bucket name
      * @param key is the object key
      * @return String
      * */
-    public String getPreSignedUrl(boolean profile, @NotNull String bucket, @NotNull String key) {
-        if (!profile) {
+    public String getPreSignedUrl(@NotNull String bucket, @NotNull String key) {
+        if (PROFILE) {
             return "";
         }
         return getPreSignedUrlImpl(bucket, key);

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(path = "api/v1/worker/user")
+@RequestMapping(path = "${api.endpoint.baseurl}worker/user")
 @RequiredArgsConstructor
 @PreAuthorize(value = "hasRole('ROLE_WORKER')")
 public class WorkerController {

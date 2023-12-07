@@ -94,7 +94,7 @@ public class ControllerAdvices {
 
     @ExceptionHandler({SQLIntegrityConstraintViolationException.class})
     public ResponseEntity<ExceptionResponse> sqlDuplicateException() {
-        var res = new ExceptionResponse("Duplicate entry(s)", CONFLICT);
+        var res = new ExceptionResponse("duplicate entry(s)", CONFLICT);
         return new ResponseEntity<>(res, CONFLICT);
     }
 

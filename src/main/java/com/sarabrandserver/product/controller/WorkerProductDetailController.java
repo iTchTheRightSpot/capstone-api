@@ -19,7 +19,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
-@RequestMapping("api/v1/worker/product/detail")
+@RequestMapping("${api.endpoint.baseurl}worker/product/detail")
 @PreAuthorize(value = "hasRole('ROLE_WORKER')")
 @RequiredArgsConstructor
 public class WorkerProductDetailController {

@@ -6,8 +6,10 @@ import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ImportRuntimeHints;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling
 @ImportRuntimeHints(value = {MyRuntimeHints.class})
 @RegisterReflectionForBinding(value = VariantHelperMapper.class)
 public class Application {

@@ -17,7 +17,7 @@ import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
-@RequestMapping(path = "api/v1/worker/auth")
+@RequestMapping(path = "${api.endpoint.baseurl}worker/auth")
 @RequiredArgsConstructor
 public class WorkerAuthController {
 

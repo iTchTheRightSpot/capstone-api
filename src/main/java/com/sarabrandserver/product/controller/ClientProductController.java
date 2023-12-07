@@ -15,7 +15,7 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping("api/v1/client/product")
+@RequestMapping("${api.endpoint.baseurl}client/product")
 @RequiredArgsConstructor
 public class ClientProductController {
 

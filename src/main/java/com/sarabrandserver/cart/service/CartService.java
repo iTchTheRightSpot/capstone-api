@@ -104,13 +104,12 @@ public class CartService {
 
         if (cookie == null) {
             // cookie value
-            String s = UUID.randomUUID().toString();
             Instant instant = Instant.now().plus(this.expire, DAYS);
-            String value = s + this.split + instant.toEpochMilli();
+            String value = UUID.randomUUID() + this.split + instant.toEpochMilli();
 
             // cookie
             Cookie c = new Cookie(CART_COOKIE, value);
-            c.setMaxAge((int) instant.toEpochMilli()); // 2 days
+            c.setMaxAge((int) instant.toEpochMilli());
             c.setHttpOnly(true);
             c.setPath("/");
             c.setSecure(COOKIESECURE);

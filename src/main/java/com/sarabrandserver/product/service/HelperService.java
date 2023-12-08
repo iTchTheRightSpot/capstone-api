@@ -66,36 +66,40 @@ public class HelperService {
     public CustomMultiPart[] customMultiPartFiles(MultipartFile[] multipartFiles, StringBuilder defaultKey) {
         return Arrays.stream(multipartFiles)
                 .map(multipartFile -> {
-                    try {
-                        String originalFileName = Objects.requireNonNull(multipartFile.getOriginalFilename());
+                    String originalFileName = Objects.requireNonNull(multipartFile.getOriginalFilename());
 
-                        File file = new File(originalFileName);
+                    File file = new File(originalFileName);
 
-                        try (FileOutputStream outputStream = new FileOutputStream(file)) {
-                            // write MultipartFile to file
-                            outputStream.write(multipartFile.getBytes());
+                    try (FileOutputStream stream = new FileOutputStream(file)) {
+                        // write MultipartFile to file
+                        stream.write(multipartFile.getBytes());
 
-                            // Validate file is an image
-                            String contentType = Files.probeContentType(file.toPath());
-                            if (!contentType.startsWith("image/")) {
-                                log.error("File is not an image");
-                                throw new CustomAwsException("File is not an image");
-                            }
-
-                            // Create image metadata for storing in AWS
-                            Map<String, String> metadata = new HashMap<>();
-                            metadata.put("Content-Type", contentType);
-                            metadata.put("Title", originalFileName);
-                            metadata.put("Type", StringUtils.getFilenameExtension(originalFileName));
-
-                            // Default key
-                            String key = UUID.randomUUID().toString();
-                            if (defaultKey.isEmpty()) {
-                                defaultKey.append(key);
-                            }
-
-                            return new CustomMultiPart(file, metadata, key);
+                        // Validate file is an image
+                        String contentType = Files.probeContentType(file.toPath());
+                        if (!contentType.startsWith("image/")) {
+                            log.error("File is not an image");
+                            throw new CustomAwsException("File is not an image");
                         }
+
+                        // Create image metadata for storing in AWS
+                        Map<String, String> metadata = new HashMap<>();
+                        metadata.put("Content-Type", contentType);
+                        metadata.put("Title", originalFileName);
+                        metadata.put("Type", StringUtils.getFilenameExtension(originalFileName));
+
+                        // Default key
+                        String key = UUID.randomUUID().toString();
+                        if (defaultKey.isEmpty()) {
+                            defaultKey.append(key);
+                        }
+
+                        CustomMultiPart result = new CustomMultiPart(file, metadata, key);
+
+                        stream.close();
+                        // prevents spring from saving files to root folder
+                        file.delete();
+
+                        return result;
                     } catch (IOException ex) {
                         log.error("Error either writing multipart to file or getting file type. {}", ex.getMessage());
                         throw new CustomAwsException("please verify files are images");

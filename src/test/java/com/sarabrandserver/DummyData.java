@@ -96,8 +96,12 @@ public class DummyData {
                     try {
                         String originalFilename = path.getFileName().toString();
                         String contentType = Files.probeContentType(path);
-                        byte[] content = Files.readAllBytes(path);
-                        return new MockMultipartFile("files", originalFilename, contentType, content);
+                        return new MockMultipartFile(
+                                "files",
+                                originalFilename,
+                                contentType,
+                                Files.readAllBytes(path)
+                        );
                     } catch (IOException e) {
                         return null;
                     }

@@ -112,7 +112,7 @@ public class AuthService {
             HttpServletResponse response
     ) {
         // No need to re-authenticate if request contains valid jwt cookie
-        if (_validateRequestContainsValidCookies(request, key)) {
+        if (_validateCookies(request, key)) {
             return;
         }
 
@@ -158,16 +158,13 @@ public class AuthService {
     }
 
     /**
-     * Prevents a user from generating a new jwt only
-     * if a valid jwt cookie contains in the cookie.
+     * Validates if requests contains a valid jwt cookie.
+     * Prevents a generating unnecessary jwt.
      *
      * @param res of HttpServletRequest
      * @return boolean
      */
-    private boolean _validateRequestContainsValidCookies(
-            HttpServletRequest res,
-            RoleEnum role
-    ) {
+    private boolean _validateCookies(HttpServletRequest res, RoleEnum role) {
         Cookie[] cookies = res.getCookies();
         return cookies != null && Arrays.stream(cookies)
                 .filter(cookie -> cookie.getName().equals(JSESSIONID))

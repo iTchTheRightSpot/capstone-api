@@ -54,18 +54,15 @@ public class SecurityConfig {
     @Value(value = "${server.servlet.session.cookie.same-site}")
     private String SAMESITE;
     @Value(value = "${cors.ui.domain}")
-    private String UIDOMAIN;
+    private String CORSDOMAIN;
     @Value("${api.endpoint.baseurl}")
     private String BASEURL;
 
     @Bean
-    public AuthenticationProvider provider(
-            UserDetailService detailsService,
-            PasswordEncoder passwordEncoder
-    ) {
+    public AuthenticationProvider provider(UserDetailService service, PasswordEncoder encoder) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(detailsService);
-        provider.setPasswordEncoder(passwordEncoder);
+        provider.setUserDetailsService(service);
+        provider.setPasswordEncoder(encoder);
         return provider;
     }
 
@@ -98,7 +95,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(this.UIDOMAIN));
+        configuration.setAllowedOrigins(List.of(this.CORSDOMAIN));
         configuration.setAllowedMethods(List.of("GET", "PUT", "POST", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(CONTENT_TYPE, ACCEPT, "X-XSRF-TOKEN"));
         configuration.setAllowCredentials(true);

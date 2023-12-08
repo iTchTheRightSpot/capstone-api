@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -61,8 +62,6 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         category();
 
         // payload
-        MockMultipartFile[] files = TestingData.files(2);
-
         SizeInventoryDTO[] dtos = {
                 new SizeInventoryDTO(10, "small"),
                 new SizeInventoryDTO(3, "medium"),
@@ -77,22 +76,22 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                         dtos
                 );
 
-        var json = new MockMultipartFile(
+        var payload = new MockMultipartFile(
                 "dto",
                 null,
                 "application/json",
                 this.MAPPER.writeValueAsString(dto).getBytes()
         );
 
-        // Then
+        // request
+        MockMultipartHttpServletRequestBuilder requestBuilder = multipart(requestMapping).file(payload);
+
+        for (MockMultipartFile file : TestingData.files("")) {
+            requestBuilder.file(file);
+        }
+
         this.MOCKMVC
-                .perform(multipart(requestMapping)
-                        .file(files[0])
-                        .file(files[1])
-                        .file(json)
-                        .contentType(MULTIPART_FORM_DATA)
-                        .with(csrf())
-                )
+                .perform(requestBuilder.contentType(MULTIPART_FORM_DATA).with(csrf()))
                 .andExpect(status().isCreated());
     }
 
@@ -100,31 +99,31 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Validate SizeInventoryDTO[] size is 1")
     void val() throws Exception {
-        // Then
-        SizeInventoryDTO[] dtos = { new SizeInventoryDTO(10, "small") };
-
-        MockMultipartFile[] files = TestingData.files(2);
-
+        // given
         var dto = TestingData
                 .createProductDTOCollectionNotPresent(
                         new Faker().commerce().productName(),
                         category(),
                         "",
-                        dtos
+                        new SizeInventoryDTO[]{ new SizeInventoryDTO(10, "small") }
                 );
 
-        var json = new MockMultipartFile(
+        var payload = new MockMultipartFile(
                 "dto",
                 null,
                 "application/json",
                 this.MAPPER.writeValueAsString(dto).getBytes()
         );
 
+        // request
+        MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
+
+        for (MockMultipartFile file : TestingData.files("")) {
+            builder.file(file);
+        }
+
         this.MOCKMVC
-                .perform(multipart(requestMapping)
-                        .file(files[0])
-                        .file(files[1])
-                        .file(json)
+                .perform(builder
                         .contentType(MULTIPART_FORM_DATA)
                         .with(csrf())
                 )
@@ -134,13 +133,11 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = """
-            Validates duplicate exception is thrown on creation of a new product.
-            Exception is cause from duplicate product colour
-            """)
+    Validates duplicate exception is thrown on creation of a new product.
+    Exception is cause from duplicate product colour
+    """)
     void ex() throws Exception {
         // Given
-        MockMultipartFile[] files = TestingData.files(2);
-
         SizeInventoryDTO[] dtos = {
                 new SizeInventoryDTO(10, "small"),
                 new SizeInventoryDTO(3, "medium"),
@@ -156,7 +153,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                         colour()
                 );
 
-        var json = new MockMultipartFile(
+        var payload = new MockMultipartFile(
                 "dto",
                 null,
                 "application/json",
@@ -164,22 +161,24 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         );
 
         // Then
+        MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
+
+        for (MockMultipartFile file : TestingData.files("")) {
+            builder.file(file);
+        }
+
         this.MOCKMVC
-                .perform(multipart(requestMapping)
-                        .file(files[0])
-                        .file(files[1])
-                        .file(json)
+                .perform(builder
+                        .contentType(MULTIPART_FORM_DATA)
                         .with(csrf())
                 )
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException));
+                .andExpect(result -> assertInstanceOf(DuplicateException.class, result.getResolvedException()));
     }
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Validates bad request because sizeInventory JsonProperty is not present")
     void exThrown() throws Exception {
-        MockMultipartFile[] files = TestingData.files(2);
-
         var dto = TestingData
                 .productDTO(
                         category(),
@@ -189,7 +188,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                         colour()
                 );
 
-        var json = new MockMultipartFile(
+        var payload = new MockMultipartFile(
                 "dto",
                 null,
                 "application/json",
@@ -197,11 +196,15 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         );
 
         // Then
+        MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
+
+        for (MockMultipartFile file : TestingData.files("")) {
+            builder.file(file);
+        }
+
         this.MOCKMVC
-                .perform(multipart(requestMapping)
-                        .file(files[0])
-                        .file(files[1])
-                        .file(json)
+                .perform(builder
+                        .contentType(MULTIPART_FORM_DATA)
                         .with(csrf())
                 )
                 .andExpect(status().isBadRequest());
@@ -238,7 +241,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                         .with(csrf())
                 )
                 .andExpect(status().isConflict())
-                .andDo(result -> assertTrue(result.getResolvedException() instanceof DuplicateException));
+                .andDo(result -> assertInstanceOf(DuplicateException.class, result.getResolvedException()));
     }
 
     @Test

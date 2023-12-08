@@ -5,15 +5,18 @@ import com.sarabrandserver.product.dto.*;
 import com.sarabrandserver.user.entity.ClientRole;
 import com.sarabrandserver.user.entity.SarreBrandUser;
 import jakarta.validation.constraints.NotNull;
+import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.mock.web.MockMultipartFile;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.stream.Stream;
 
 import static com.sarabrandserver.enumeration.RoleEnum.CLIENT;
 import static com.sarabrandserver.enumeration.RoleEnum.WORKER;
@@ -59,56 +62,30 @@ public class TestingData {
         return dto;
     }
 
-    /** Collection is an empty string */
+    /**
+     * Converts all files from uploads directory into a MockMultipartFile
+     * */
     @NotNull
-    public static Result getResult(SizeInventoryDTO[] sizeDto, String prodName, String category, String colour) {
-        var dto = productDTO(
-                category,
-                "",
-                prodName,
-                sizeDto,
-                colour
-        );
-
-        MockMultipartFile[] files = files(3);
-
-        return new Result(dto, files);
-    }
-
-    /** Collection is not an empty string */
-    @NotNull
-    public static Result getResultCollection(
-            String collection,
-            SizeInventoryDTO[] dtos,
-            String prodName,
-            String category,
-            String colour
-    ) {
-        var dto = productDTO(
-                category,
-                collection,
-                prodName,
-                dtos,
-                colour
-        );
-
-        MockMultipartFile[] files = files(3);
-
-        return new Result(dto, files);
-    }
-
-    @NotNull
-    public static MockMultipartFile[] files(int num) {
-        MockMultipartFile[] files = new MockMultipartFile[num];
-        for (int i = 0; i < num; i++) {
-            files[i] = new MockMultipartFile(
-                    "files",
-                    "uploads/image%s.jpeg".formatted(i + 1),
-                    "image/jpeg",
-                    "Test image content".getBytes()
-            );
+    public static MockMultipartFile[] files(String dir) {
+        String p = dir.isEmpty() ? "uploads/" : "";
+        try (Stream<Path> files = Files.list(Paths.get("uploads/"))) {
+            return files.map(path -> {
+                        File file = path.toFile();
+                        try {
+                            return new MockMultipartFile(
+                                    "files",
+                                    file.getName(),
+                                    Files.probeContentType(file.toPath()),
+                                    IOUtils.toByteArray(new FileInputStream(file))
+                            );
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
+                    .toArray(MockMultipartFile[]::new);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return files;
     }
 
     @NotNull
@@ -149,7 +126,7 @@ public class TestingData {
                 category,
                 collection,
                 productName,
-                new Faker().lorem().characters(0, 255),
+                new Faker().lorem().fixedString(1000),
                 arr,
                 true,
                 dtos,

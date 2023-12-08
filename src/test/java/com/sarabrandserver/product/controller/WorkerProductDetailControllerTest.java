@@ -8,9 +8,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -56,7 +58,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
         String productID = list.get(0).getUuid();
         var dto = TestingData.productDetailDTO(productID, "exon-mobile-colour", dtos);
 
-        var json = new MockMultipartFile(
+        var payload = new MockMultipartFile(
                 "dto",
                 null,
                 "application/json",
@@ -64,14 +66,14 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
         );
 
         // request
+        MockMultipartHttpServletRequestBuilder requestBuilder = multipart(requestMapping).file(payload);
+
+        for (MockMultipartFile file : TestingData.files("")) {
+            requestBuilder.file(file);
+        }
+
         this.MOCKMVC
-                .perform(multipart(requestMapping)
-                        .file(files[0])
-                        .file(files[1])
-                        .file(files[2])
-                        .file(json)
-                        .with(csrf())
-                )
+                .perform(requestBuilder.contentType(MULTIPART_FORM_DATA).with(csrf()))
                 .andExpect(status().isCreated());
     }
 

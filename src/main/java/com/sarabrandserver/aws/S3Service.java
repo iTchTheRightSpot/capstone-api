@@ -27,12 +27,15 @@ public class S3Service {
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
 
+    /**
+     * Constructor
+     * */
     public S3Service(Environment env, S3Client s3Client, S3Presigner s3Presigner) {
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
 
-        String activeProfile = env.getProperty("spring.profiles.active", "");
-        PROFILE = activeProfile.equals("test");
+        PROFILE = env.getProperty("spring.profiles.active", "")
+                .equals("test");
     }
 
     public void uploadToS3(File file, Map<String, String> metadata, String bucket, String key) {
@@ -74,9 +77,7 @@ public class S3Service {
      * <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/DeleteObjects.java">...</a>
      * */
     public void deleteFromS3Impl(List<ObjectIdentifier> keys, String bucketName) {
-        Delete del = Delete.builder()
-                .objects(keys)
-                .build();
+        Delete del = Delete.builder().objects(keys).build();
         try {
             DeleteObjectsRequest multiObjectDeleteRequest = DeleteObjectsRequest.builder()
                     .bucket(bucketName)
@@ -96,11 +97,11 @@ public class S3Service {
      * @param key is the object key
      * @return String
      * */
-    public String getPreSignedUrl(@NotNull String bucket, @NotNull String key) {
+    public String preSignedUrl(@NotNull String bucket, @NotNull String key) {
         if (PROFILE) {
             return "";
         }
-        return getPreSignedUrlImpl(bucket, key);
+        return preSignedUrlImpl(bucket, key);
     }
 
     /**
@@ -111,7 +112,7 @@ public class S3Service {
      * @param key is the object key
      * @return String
      * */
-    private String getPreSignedUrlImpl(String bucket, String key) {
+    private String preSignedUrlImpl(String bucket, String key) {
         try {
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                     .bucket(bucket)

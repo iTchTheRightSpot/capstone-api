@@ -87,7 +87,7 @@ public abstract class AbstractIntegrationTest {
                             new Faker().commerce().color() + " " + i
                     );
 
-            var images = TestingData.files("");
+            var images = TestingData.files();
 
             // Create product
             workerProductService.create(data, images);

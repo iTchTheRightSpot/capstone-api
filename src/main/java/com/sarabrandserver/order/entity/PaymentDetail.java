@@ -1,6 +1,8 @@
 package com.sarabrandserver.order.entity;
 
+import com.sarabrandserver.address.entity.Address;
 import com.sarabrandserver.enumeration.GlobalStatus;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -39,6 +41,10 @@ public class PaymentDetail implements Serializable {
     @Column(name = "payment_id", nullable = false, unique = true)
     private String payment_id;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private SarreCurrency currency;
+
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
@@ -52,6 +58,10 @@ public class PaymentDetail implements Serializable {
     @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createAt;
+
+    @OneToOne(cascade = ALL)
+    @JoinColumn(name = "address_id", referencedColumnName = "address_id", nullable = false)
+    private Address address;
 
     @OneToMany(fetch = LAZY, cascade = { PERSIST, MERGE, REFRESH }, mappedBy = "paymentDetail")
     private Set<OrderDetail> orderDetail;

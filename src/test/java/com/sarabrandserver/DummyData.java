@@ -90,8 +90,8 @@ public class DummyData {
     }
 
     private MockMultipartFile[] IMAGES() {
-        var p = new Path[] { Paths.get(this.image1), Paths.get(this.image2) };
-        return Arrays.stream(p)
+        return Arrays
+                .stream(new Path[] { Paths.get(this.image1), Paths.get(this.image2) })
                 .map(path -> {
                     try {
                         String originalFilename = path.getFileName().toString();

@@ -1,6 +1,6 @@
 package com.sarabrandserver.address.entity;
 
-import com.sarabrandserver.order.entity.OrderDetail;
+import com.sarabrandserver.order.entity.PaymentDetail;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -47,17 +47,10 @@ public class Address implements Serializable {
     @JoinColumn(name = "country_id", referencedColumnName = "country_id", nullable = false)
     private Country country;
 
+//    @OneToOne(mappedBy = "address")
+//    private OrderDetail orderDetail;
+
     @OneToOne(mappedBy = "address")
-    private OrderDetail orderDetail;
-
-    public void setCountry(Country country) {
-        this.country = country;
-        country.setAddress(this);
-    }
-
-    public void setOrderDetail(OrderDetail detail) {
-        this.orderDetail = detail;
-        detail.setAddress(this);
-    }
+    private PaymentDetail paymentDetail;
 
 }

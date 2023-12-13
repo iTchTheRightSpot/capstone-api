@@ -82,9 +82,9 @@ public class SecurityConfig {
      */
     @Bean
     public CookieSerializer cookieSerializer() {
-        DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
-        cookieSerializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
-        return cookieSerializer;
+        var serializer = new DefaultCookieSerializer();
+        serializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
+        return serializer;
     }
 
     @Bean

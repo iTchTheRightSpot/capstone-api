@@ -86,7 +86,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         // request
         MockMultipartHttpServletRequestBuilder requestBuilder = multipart(requestMapping).file(payload);
 
-        for (MockMultipartFile file : TestingData.files("")) {
+        for (MockMultipartFile file : TestingData.files()) {
             requestBuilder.file(file);
         }
 
@@ -118,7 +118,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         // request
         MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
 
-        for (MockMultipartFile file : TestingData.files("")) {
+        for (MockMultipartFile file : TestingData.files()) {
             builder.file(file);
         }
 
@@ -163,7 +163,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         // Then
         MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
 
-        for (MockMultipartFile file : TestingData.files("")) {
+        for (MockMultipartFile file : TestingData.files()) {
             builder.file(file);
         }
 
@@ -198,7 +198,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         // Then
         MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
 
-        for (MockMultipartFile file : TestingData.files("")) {
+        for (MockMultipartFile file : TestingData.files()) {
             builder.file(file);
         }
 

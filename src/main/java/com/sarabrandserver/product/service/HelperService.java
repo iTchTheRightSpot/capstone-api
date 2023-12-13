@@ -31,7 +31,7 @@ public class HelperService {
     private final S3Service s3Service;
 
     public String preSignedURL(@NotNull String bucket, @NotNull String key) {
-        return this.s3Service.getPreSignedUrl(bucket, key);
+        return this.s3Service.preSignedUrl(bucket, key);
     }
 
     public void deleteFromS3(List<ObjectIdentifier> keys, String bucket) {

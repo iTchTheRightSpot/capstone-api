@@ -7,10 +7,12 @@ import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.sarabrandserver.collection.dto.CollectionDTO;
 import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
+import com.sarabrandserver.order.dto.OrderDTO;
+import com.sarabrandserver.order.dto.OrderHistoryDTO;
 import com.sarabrandserver.product.dto.*;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.Variant;
-import com.sarabrandserver.util.VariantHelperMapper;
+import com.sarabrandserver.product.dto.VariantMapper;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 
@@ -51,8 +53,12 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
 
         // response
         hints.serialization().registerType(Variant.class);
-        hints.serialization().registerType(VariantHelperMapper.class);
+        hints.serialization().registerType(VariantMapper.class);
         hints.serialization().registerType(DetailResponse.class);
+
+        // Order
+        hints.serialization().registerType(OrderDTO.class);
+        hints.serialization().registerType(OrderHistoryDTO.class);
     }
 
 }

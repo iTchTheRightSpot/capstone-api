@@ -1,5 +1,6 @@
 package com.sarabrandserver;
 
+import org.springframework.boot.devtools.restart.RestartScope;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +12,7 @@ public class TestConfig {
 
     @Bean
     @ServiceConnection
+    @RestartScope
     static MySQLContainer<?> mySQLContainer() {
         return new MySQLContainer<>("mysql:8.0")
                 .withDatabaseName("sara_brand_db")

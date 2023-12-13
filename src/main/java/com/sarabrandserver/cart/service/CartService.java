@@ -82,6 +82,7 @@ public class CartService {
 
                 // change cookie value
                 cookie.setValue(value);
+                cookie.setPath("/");
 
                 // response
                 res.addCookie(cookie);
@@ -128,7 +129,7 @@ public class CartService {
                 .cartItemsByCookieValue(currency, arr[0]) //
                 .stream() //
                 .map(pojo -> {
-                    String url = this.s3Service.getPreSignedUrl(BUCKET, pojo.getKey());
+                    String url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());
                     return new CartResponse(
                             pojo.getUuid(),
                             url,
@@ -192,7 +193,7 @@ public class CartService {
      * Creates a new shopping session
      */
     public void create_new_shopping_session(String uuid, Date expiration, CartDTO dto) {
-        ShoppingSession shoppingSession = new ShoppingSession(
+        var shoppingSession = new ShoppingSession(
                 uuid,
                 this.customUtil.toUTC(new Date()),
                 this.customUtil.toUTC(expiration),

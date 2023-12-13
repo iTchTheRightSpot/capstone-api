@@ -61,7 +61,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     void create() {
         // Given
         var sizeDtoArray = TestingData.sizeInventoryDTOArray(3);
-        var files = TestingData.files("");
+        var files = TestingData.files();
         var dto = TestingData.createProductDTO(sizeDtoArray);
         var category = ProductCategory.builder().categoryName(dto.category()).build();
 
@@ -81,7 +81,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     void createE() {
         // Given
         var sizeDtoArray = TestingData.sizeInventoryDTOArray(3);
-        var files = TestingData.files("");
+        var files = TestingData.files();
         var dto = TestingData.createProductDTO(sizeDtoArray);
         var category = ProductCategory.builder().categoryName(dto.category()).build();
         var product = Product.builder().name(dto.name()).uuid("uuid").build();

@@ -12,16 +12,18 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-/** Contains native query */
+/**
+ * Contains native query
+ * */
 @Repository
 public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
 
-    /** Returns a ProductDetail based on ProductSku propety sku */
+    /** Returns a ProductDetail based on ProductSku property sku */
     @Query(value = """
-            SELECT d FROM ProductDetail d
-            INNER JOIN ProductSku s ON d.productDetailId = s.productDetail.productDetailId
-            WHERE s.sku = :sku
-            """)
+    SELECT d FROM ProductDetail d
+    INNER JOIN ProductSku s ON d.productDetailId = s.productDetail.productDetailId
+    WHERE s.sku = :sku
+    """)
     Optional<ProductDetail> productDetailByProductSku(@Param(value = "sku") String sku);
 
     /**
@@ -31,12 +33,11 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(nativeQuery = true, value = """
-            UPDATE product_sku s
-            INNER JOIN product_detail d ON d.detail_id = s.detail_id
-            SET d.colour = :colour, d.is_visible = :visible, s.inventory = :qty, s.size = :s
-            WHERE s.sku = :sku
-            """
-    )
+    UPDATE product_sku s
+    INNER JOIN product_detail d ON d.detail_id = s.detail_id
+    SET d.colour = :colour, d.is_visible = :visible, s.inventory = :qty, s.size = :s
+    WHERE s.sku = :sku
+    """)
     void updateProductDetail(
             @Param(value = "sku") String sku,
             String colour,
@@ -56,44 +57,44 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
      * filters by ProductDetail being visible
      */
     @Query(nativeQuery = true, value = """
-            SELECT
-            d.is_visible AS visible,
-            d.colour AS colour,
-            GROUP_CONCAT(DISTINCT i.image_key) AS image,
-            CONCAT('[',
-                GROUP_CONCAT(DISTINCT JSON_OBJECT('sku', s.sku, 'inventory', s.inventory, 'size', s.size)),
-            ']') AS variants
-            FROM product_detail d
-            INNER JOIN product_image i ON d.detail_id = i.detail_id
-            INNER JOIN product p ON d.product_id = p.product_id
-            INNER JOIN product_sku s ON d.detail_id = s.detail_id
-            WHERE p.uuid = :uuid AND d.is_visible = true
-            GROUP BY d.colour
-            """)
+    SELECT
+    d.is_visible AS visible,
+    d.colour AS colour,
+    GROUP_CONCAT(DISTINCT i.image_key) AS image,
+    CONCAT('[',
+        GROUP_CONCAT(DISTINCT JSON_OBJECT('sku', s.sku, 'inventory', s.inventory, 'size', s.size)),
+    ']') AS variants
+    FROM product_detail d
+    INNER JOIN product_image i ON d.detail_id = i.detail_id
+    INNER JOIN product p ON d.product_id = p.product_id
+    INNER JOIN product_sku s ON d.detail_id = s.detail_id
+    WHERE p.uuid = :uuid AND d.is_visible = true
+    GROUP BY d.colour
+    """)
     List<DetailPojo> productDetailsByProductUUIDClient(@Param(value = "uuid") String uuid);
 
     @Query(value = """
-            SELECT d
-            FROM ProductDetail d
-            WHERE d.colour = :colour
-            """)
+    SELECT d
+    FROM ProductDetail d
+    WHERE d.colour = :colour
+    """)
     Optional<ProductDetail> productDetailByColour(String colour);
 
     @Query(nativeQuery = true, value = """
-            SELECT
-            d.is_visible AS visible,
-            d.colour AS colour,
-            GROUP_CONCAT(DISTINCT i.image_key) AS image,
-            CONCAT('[',
-                GROUP_CONCAT(DISTINCT JSON_OBJECT('sku', s.sku, 'inventory', s.inventory, 'size', s.size)),
-            ']') AS variants
-            FROM product_detail d
-            INNER JOIN product_image i ON d.detail_id = i.detail_id
-            INNER JOIN product p ON d.product_id = p.product_id
-            INNER JOIN product_sku s ON d.detail_id = s.detail_id
-            WHERE p.uuid = :uuid
-            GROUP BY d.is_visible, d.colour
-            """)
+    SELECT
+    d.is_visible AS visible,
+    d.colour AS colour,
+    GROUP_CONCAT(DISTINCT i.image_key) AS image,
+    CONCAT('[',
+        GROUP_CONCAT(DISTINCT JSON_OBJECT('sku', s.sku, 'inventory', s.inventory, 'size', s.size)),
+    ']') AS variants
+    FROM product_detail d
+    INNER JOIN product_image i ON d.detail_id = i.detail_id
+    INNER JOIN product p ON d.product_id = p.product_id
+    INNER JOIN product_sku s ON d.detail_id = s.detail_id
+    WHERE p.uuid = :uuid
+    GROUP BY d.is_visible, d.colour
+    """)
     List<DetailPojo> findProductDetailsByProductUuidWorker(@Param(value = "uuid") String uuid);
 
 }

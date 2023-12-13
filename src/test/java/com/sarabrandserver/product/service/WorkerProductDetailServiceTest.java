@@ -53,7 +53,7 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
     void create() {
         // Given
         var dtos = TestingData.sizeInventoryDTOArray(4);
-        var files = TestingData.files("");
+        var files = TestingData.files();
         var product = Product.builder().uuid("product uuid").build();
         var dto = TestingData.productDetailDTO(product.getUuid(), "mat-black", dtos);
 
@@ -72,7 +72,7 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
     void createE() {
         // Given
         var dtos = TestingData.sizeInventoryDTOArray(4);
-        var files = TestingData.files("");
+        var files = TestingData.files();
         var product = Product.builder().uuid("product uuid").build();
         var detail = ProductDetail.builder().colour(new Faker().commerce().color()).build();
         var dto = TestingData.productDetailDTO(product.getUuid(), detail.getColour(), dtos);

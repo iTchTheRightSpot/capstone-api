@@ -66,8 +66,7 @@ public class TestingData {
      * Converts all files from uploads directory into a MockMultipartFile
      * */
     @NotNull
-    public static MockMultipartFile[] files(String dir) {
-        String p = dir.isEmpty() ? "uploads/" : "";
+    public static MockMultipartFile[] files() {
         try (Stream<Path> files = Files.list(Paths.get("uploads/"))) {
             return files.map(path -> {
                         File file = path.toFile();

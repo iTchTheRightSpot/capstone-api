@@ -124,10 +124,10 @@ public class AuthService {
         loginImpl(authenticated, response);
     }
 
-    private void loginImpl(Authentication authentication, HttpServletResponse response) {
+    private void loginImpl(Authentication auth, HttpServletResponse response) {
         if (response == null) return;
 
-        String token = this.jwtTokenService.generateToken(authentication);
+        String token = this.jwtTokenService.generateToken(auth);
 
         // Jwt cookie
         Cookie cookie = new Cookie(JSESSIONID, token);

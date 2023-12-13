@@ -58,7 +58,7 @@ public class ClientProductService {
             case "" -> this.productRepo
                     .allProductsByCurrencyClient(currency, PageRequest.of(page, size)) //
                     .map(pojo -> {
-                        var url = this.s3Service.getPreSignedUrl(BUCKET, pojo.getKey());
+                        var url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());
                         return ProductResponse.builder()
                                 .category(pojo.getCategory())
                                 .collection(pojo.getCollection())
@@ -74,7 +74,7 @@ public class ClientProductService {
             case "category" -> this.productRepo
                     .productsByCategoryClient(uuid, currency, PageRequest.of(page, size)) //
                     .map(pojo -> {
-                        var url = this.s3Service.getPreSignedUrl(BUCKET, pojo.getKey());
+                        var url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());
                         return ProductResponse.builder()
                                 .category(pojo.getCategory())
                                 .id(pojo.getUuid())
@@ -89,7 +89,7 @@ public class ClientProductService {
             case "collection" -> this.productRepo
                     .productsByCollectionClient(currency, uuid, PageRequest.of(page, size))
                     .map(pojo -> {
-                        var url = this.s3Service.getPreSignedUrl(BUCKET, pojo.getKey());
+                        var url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());
                         return ProductResponse.builder()
                                 .collection(pojo.getCollection())
                                 .id(pojo.getUuid())
@@ -121,7 +121,7 @@ public class ClientProductService {
                 .stream() //
                 .map(pojo -> {
                     var urls = Arrays.stream(pojo.getImage().split(","))
-                            .map(key -> this.s3Service.getPreSignedUrl(BUCKET, key))
+                            .map(key -> this.s3Service.preSignedUrl(BUCKET, key))
                             .toList();
 
                     Variant[] variants = this.customUtil
@@ -158,7 +158,7 @@ public class ClientProductService {
                 .productByNameAndCurrency(param + "%", currency, page)
                 .stream()
                 .map(pojo -> {
-                    var url = this.s3Service.getPreSignedUrl(BUCKET, pojo.getKey());
+                    var url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());
                     return ProductResponse.builder()
                             .category(pojo.getCategory())
                             .id(pojo.getUuid())

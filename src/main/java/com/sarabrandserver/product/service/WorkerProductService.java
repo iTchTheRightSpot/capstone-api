@@ -210,11 +210,10 @@ public class WorkerProductService {
         var product = this.productRepo.findByProductUuid(uuid)
                 .orElseThrow(() -> new CustomNotFoundException(uuid + " does not exist"));
 
-        boolean bool = this.productRepo.productDetailAttach(uuid) > 1;
-
-        if (bool) {
-            String message = "cannot delete %s as it has many variants".formatted(product.getName());
-            throw new ResourceAttachedException(message);
+        if (this.productRepo.productDetailAttach(uuid) > 1 || this.productSKUService.itemBeenBought(uuid) > 0) {
+            throw new ResourceAttachedException(
+                    "cannot delete %s as it has many variants".formatted(product.getName())
+            );
         }
 
         // Delete from S3

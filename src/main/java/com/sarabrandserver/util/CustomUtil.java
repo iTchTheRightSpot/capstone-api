@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.product.dto.PriceCurrencyDTO;
+import com.sarabrandserver.product.dto.VariantMapper;
 import com.sarabrandserver.product.response.Variant;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -108,21 +109,15 @@ public class CustomUtil {
      * a Variant array object
      *
      * @param str is String method getVariants in DetailPojo
-     * @param clazz is the class that cause the error
+     * @param clazz is the class that calls this method
      * @return Variant array
      * */
     public <T> Variant[] toVariantArray(String str, T clazz) {
         try {
-            VariantHelperMapper[] mapper = this.objectMapper
-                    .readValue(str, VariantHelperMapper[].class);
-
-            Variant[] variant = new Variant[mapper.length];
-
-            for (int i = 0; i < mapper.length; i++) {
-                variant[i] = new Variant(mapper[i].sku(), mapper[i].inventory(), mapper[i].size());
-            }
-
-            return variant;
+            VariantMapper[] arr = this.objectMapper.readValue(str, VariantMapper[].class);
+            return Arrays.stream(arr)
+                    .map(m -> new Variant(m.sku(), m.inventory(), m.size()))
+                    .toArray(Variant[]::new);
         } catch (JsonProcessingException e) {
             log.error("Error converting from ProductSKUs to Variant. " + clazz);
             return null;

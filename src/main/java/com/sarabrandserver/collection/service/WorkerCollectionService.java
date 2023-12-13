@@ -59,7 +59,7 @@ public class WorkerCollectionService {
         return this.collectionRepository
                 .allProductsByCollection(currency, id, PageRequest.of(page, size))
                 .map(pojo -> {
-                    var url = this.s3Service.getPreSignedUrl(this.BUCKET, pojo.getKey());
+                    var url = this.s3Service.preSignedUrl(this.BUCKET, pojo.getKey());
 
                     return ProductResponse.builder()
                             .id(pojo.getUuid())

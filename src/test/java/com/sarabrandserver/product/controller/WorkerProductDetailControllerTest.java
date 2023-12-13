@@ -51,7 +51,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
         assertFalse(list.isEmpty());
 
         // payload
-        MockMultipartFile[] files = TestingData.files("");
+        MockMultipartFile[] files = TestingData.files();
 
         var dtos = TestingData.sizeInventoryDTOArray(5);
 
@@ -68,7 +68,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
         // request
         MockMultipartHttpServletRequestBuilder requestBuilder = multipart(requestMapping).file(payload);
 
-        for (MockMultipartFile file : TestingData.files("")) {
+        for (MockMultipartFile file : TestingData.files()) {
             requestBuilder.file(file);
         }
 

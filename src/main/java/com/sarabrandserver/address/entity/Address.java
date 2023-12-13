@@ -2,55 +2,50 @@ package com.sarabrandserver.address.entity;
 
 import com.sarabrandserver.order.entity.PaymentDetail;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
-
-import static jakarta.persistence.CascadeType.ALL;
 
 @Table(name = "address")
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Getter
 @Setter
 public class Address implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "address_id", nullable = false, unique = true)
     private Long addressId;
 
     @Column(name = "unit_number")
     private long unitNumber;
 
-    @Column(name = "street_number")
-    private long street_number;
+    @Column(name = "street_number", nullable = false)
+    private long streetNumber;
 
-    @Column(name = "address_line1")
+    @Column(name = "address_1", nullable = false)
     private String address1;
 
-    @Column(name = "address_line2")
+    @Column(name = "address_2")
     private String address2;
 
-    @Column(name = "city")
+    @Column(nullable = false)
     private String city;
 
-    @Column(name = "region")
-    private String region;
+    @Column(name = "state_or_province", nullable = false)
+    private String stateOrProvince;
 
-    @Column(name = "postal_code")
-    private String postalCode;
+    @Column(name = "postal_zip_code")
+    private String postalZipCode;
 
-    @OneToOne(cascade = ALL)
-    @JoinColumn(name = "country_id", referencedColumnName = "country_id", nullable = false)
-    private Country country;
+    @Column(name = "country", nullable = false)
+    private String country;
 
-//    @OneToOne(mappedBy = "address")
-//    private OrderDetail orderDetail;
-
-    @OneToOne(mappedBy = "address")
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "address_id")
     private PaymentDetail paymentDetail;
 
 }

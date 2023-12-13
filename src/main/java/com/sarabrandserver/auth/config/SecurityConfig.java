@@ -35,6 +35,7 @@ import java.util.function.Consumer;
 
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
@@ -141,6 +142,7 @@ public class SecurityConfig {
                             "/" + this.BASEURL + "worker/auth/login",
                             "/" + this.BASEURL + "cart/**"
                     ).permitAll();
+                    auth.requestMatchers(POST, "/" + this.BASEURL + "payment");
                     auth.anyRequest().authenticated();
                 })
 

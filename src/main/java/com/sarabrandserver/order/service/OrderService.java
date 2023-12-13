@@ -35,8 +35,14 @@ public class OrderService {
                 .orderHistoryByPrincipal(principal)
                 .stream()
                 .map(p -> {
-                    var m = transform(p.getDetail());
-                    return new OrderHistoryDTO(p.getTime().getTime(), p.getTotal(), p.getPaymentId(), m);
+                    var detail = transform(p.getDetail());
+                    return new OrderHistoryDTO(
+                            p.getTime().getTime(),
+                            p.getCurrency(),
+                            p.getTotal(),
+                            p.getPaymentId(),
+                            detail
+                    );
                 })
                 .toList();
     }
@@ -51,7 +57,7 @@ public class OrderService {
             return Arrays.stream(arr)
                     .map(m -> {
                         String url = this.s3Service.preSignedUrl(this.BUCKET, m.key());
-                        return new PayloadMapper(m.name(), url, m.colour(), m.qty());
+                        return new PayloadMapper(m.name(), url, m.colour());
                     })
                     .toArray(PayloadMapper[]::new);
         } catch (JsonProcessingException e) {

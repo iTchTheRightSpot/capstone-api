@@ -1,7 +1,7 @@
 package com.sarabrandserver.order.entity;
 
 import com.sarabrandserver.address.entity.Address;
-import com.sarabrandserver.enumeration.GlobalStatus;
+import com.sarabrandserver.enumeration.PaymentStatus;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,7 +28,7 @@ public class PaymentDetail implements Serializable {
     @Column(name = "payment_detail_id", nullable = false, unique = true)
     private Long paymentDetailId;
 
-    @Column(name = "customer_name", nullable = false)
+    @Column(name = "firstname_lastname", nullable = false)
     private String name;
 
     @Column(nullable = false)
@@ -37,30 +37,29 @@ public class PaymentDetail implements Serializable {
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
-    // Represents the payment ID from payment provider
-    @Column(name = "payment_id", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     private String payment_id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private SarreCurrency currency;
 
-    @Column(name = "amount", nullable = false)
+    @Column(nullable = false)
     private BigDecimal amount;
 
-    @Column(name = "payment_provider", nullable = false, length = 20)
+    @Column(name = "payment_provider", nullable = false, length = 30)
     private String payment_provider;
 
     @Column(name = "payment_status", nullable = false, length = 10)
     @Enumerated(EnumType.STRING)
-    private GlobalStatus globalStatus;
+    private PaymentStatus paymentStatus;
 
     @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createAt;
 
-    @OneToOne(cascade = ALL)
-    @JoinColumn(name = "address_id", referencedColumnName = "address_id", nullable = false)
+    @OneToOne(mappedBy = "paymentDetail", cascade = ALL)
+    @PrimaryKeyJoinColumn
     private Address address;
 
     @OneToMany(fetch = LAZY, cascade = { PERSIST, MERGE, REFRESH }, mappedBy = "paymentDetail")

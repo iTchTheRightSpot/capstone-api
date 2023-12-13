@@ -17,6 +17,7 @@ public interface OrderRepository extends JpaRepository<OrderDetail, Long> {
     @Query(nativeQuery = true, value = """
     SELECT
     p.created_at AS time,
+    p.currency as currency,
     p.amount as total,
     p.payment_id AS paymentId,
     CONCAT('[',
@@ -25,13 +26,12 @@ public interface OrderRepository extends JpaRepository<OrderDetail, Long> {
                 'name', prod.name,
                 'key', prod.default_image_key,
                 'colour', d.colour,
-                'qty', o.qty
             )
         ),
     ']') AS detail
     FROM order_detail o
     INNER JOIN payment_detail p ON o.payment_detail_id = p.payment_detail_id
-    INNER JOIN product_sku s ON s.sku = o.product_sku
+    INNER JOIN product_sku s ON o.product_sku = s.sku
     INNER JOIN product_detail d ON s.detail_id = d.detail_id
     INNER JOIN product prod ON d.product_id = prod.product_id
     WHERE p.email = :principal

@@ -25,7 +25,7 @@ public interface OrderRepository extends JpaRepository<OrderDetail, Long> {
             JSON_OBJECT(
                 'name', prod.name,
                 'key', prod.default_image_key,
-                'colour', d.colour,
+                'colour', d.colour
             )
         ),
     ']') AS detail

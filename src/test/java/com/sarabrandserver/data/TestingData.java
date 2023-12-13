@@ -1,6 +1,10 @@
 package com.sarabrandserver.data;
 
 import com.github.javafaker.Faker;
+import com.sarabrandserver.address.AddressDTO;
+import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.order.dto.PaymentDTO;
+import com.sarabrandserver.order.dto.SkuQtyDTO;
 import com.sarabrandserver.product.dto.*;
 import com.sarabrandserver.user.entity.ClientRole;
 import com.sarabrandserver.user.entity.SarreBrandUser;
@@ -157,6 +161,35 @@ public class TestingData {
                 categoryId,
                 collection,
                 collectionId
+        );
+    }
+
+    @NotNull
+    public static PaymentDTO paymentDTO(String email, SarreCurrency currency, SkuQtyDTO[] arr) {
+        return new PaymentDTO(
+                new Faker().name().firstName(),
+                new Faker().name().lastName(),
+                email,
+                new Faker().phoneNumber().phoneNumber(),
+                currency.name(),
+                new BigDecimal(new Faker().number().numberBetween(100, 500000)),
+                "Flutterwave",
+                arr,
+                addressDTO()
+        );
+    }
+
+    @NotNull
+    public static AddressDTO addressDTO() {
+        return new AddressDTO(
+                new Faker().address().buildingNumber(),
+                new Faker().address().streetAddressNumber(),
+                new Faker().address().streetAddress(),
+                new Faker().address().secondaryAddress(),
+                new Faker().address().city(),
+                new Faker().address().state(),
+                new Faker().address().zipCode(),
+                new Faker().address().country()
         );
     }
 

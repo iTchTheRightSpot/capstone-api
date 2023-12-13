@@ -1,14 +1,15 @@
 package com.sarabrandserver.order.controller;
 
+import com.sarabrandserver.address.AddressDTO;
 import com.sarabrandserver.order.dto.PaymentDTO;
 import com.sarabrandserver.order.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -22,7 +23,7 @@ public class PaymentController {
      * Returns a Page
      * */
     @PreAuthorize(value = "hasRole('WORKER')")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
     public Page<?> orders(
             @RequestParam(name = "page", defaultValue = "0") Integer page,
@@ -34,10 +35,10 @@ public class PaymentController {
     /**
      * Api called when a client purchases an item.
      * */
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(OK)
     @PostMapping(consumes = APPLICATION_JSON_VALUE)
-    public void order(@Valid @RequestBody PaymentDTO[] dto) {
-        this.paymentService.order(dto);
+    public void order(@Valid @RequestBody PaymentDTO dto) {
+        this.paymentService.order(dto, dto.address());
     }
 
 }

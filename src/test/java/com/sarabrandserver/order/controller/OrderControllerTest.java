@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class OrderControllerTest extends AbstractIntegrationTest {
 
-    @Value(value = "/${api.endpoint.baseurl}/order")
+    @Value(value = "/${api.endpoint.baseurl}order")
     private String path;
 
     @Test

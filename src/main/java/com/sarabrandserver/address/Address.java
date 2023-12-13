@@ -1,4 +1,4 @@
-package com.sarabrandserver.address.entity;
+package com.sarabrandserver.address;
 
 import com.sarabrandserver.order.entity.PaymentDetail;
 import jakarta.persistence.*;
@@ -19,11 +19,11 @@ public class Address implements Serializable {
     @Column(name = "address_id", nullable = false, unique = true)
     private Long addressId;
 
-    @Column(name = "unit_number")
-    private long unitNumber;
+    @Column(name = "unit_number", length = 20)
+    private String unitNumber;
 
-    @Column(name = "street_number", nullable = false)
-    private long streetNumber;
+    @Column(name = "street_number", nullable = false, length = 20)
+    private String streetNumber;
 
     @Column(name = "address_1", nullable = false)
     private String address1;
@@ -40,7 +40,7 @@ public class Address implements Serializable {
     @Column(name = "postal_zip_code")
     private String postalZipCode;
 
-    @Column(name = "country", nullable = false)
+    @Column(nullable = false)
     private String country;
 
     @OneToOne

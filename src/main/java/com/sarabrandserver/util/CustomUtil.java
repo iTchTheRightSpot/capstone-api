@@ -17,7 +17,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.function.Function;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
@@ -31,17 +30,6 @@ public class CustomUtil {
     private static final Logger log = LoggerFactory.getLogger(CustomUtil.class.getName());
 
     private final ObjectMapper objectMapper;
-
-    /**
-     * A custom mapper to reduce boilerplate code
-     *
-     * @param x is the object received
-     * @param function converts from T to S
-     * @return S is the return type
-     * */
-    public <T, S> S customMapper(T x, Function<T, S> function) {
-        return function.apply(x);
-    }
 
     /**
      * Converts date to UTC Date

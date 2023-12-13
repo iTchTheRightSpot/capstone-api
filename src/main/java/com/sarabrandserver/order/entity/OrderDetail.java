@@ -7,8 +7,6 @@ import lombok.Setter;
 
 import java.io.Serializable;
 
-import static jakarta.persistence.CascadeType.ALL;
-
 @Table(name = "order_detail")
 @Entity
 @NoArgsConstructor
@@ -27,8 +25,14 @@ public class OrderDetail implements Serializable {
     @Column(nullable = false)
     private int qty;
 
-    @ManyToOne(cascade = ALL)
+    @ManyToOne
     @JoinColumn(name = "payment_detail_id", referencedColumnName = "payment_detail_id")
     private PaymentDetail paymentDetail;
+
+    public OrderDetail(String sku, int qty, PaymentDetail paymentDetail) {
+        this.sku = sku;
+        this.qty = qty;
+        this.paymentDetail = paymentDetail;
+    }
 
 }

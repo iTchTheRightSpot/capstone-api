@@ -45,8 +45,8 @@ ALTER TABLE order_detail
 CREATE TABLE IF NOT EXISTS address
 (
     address_id        BIGINT       NOT NULL UNIQUE,
-    unit_number       BIGINT,
-    street_number     BIGINT       NOT NULL,
+    unit_number   VARCHAR(20),
+    street_number VARCHAR(20) NOT NULL,
     address_1         VARCHAR(255) NOT NULL,
     address_2         VARCHAR(255),
     city              VARCHAR(255) NOT NULL,

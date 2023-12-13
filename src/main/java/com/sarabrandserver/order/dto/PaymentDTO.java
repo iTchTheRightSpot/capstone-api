@@ -1,14 +1,20 @@
 package com.sarabrandserver.order.dto;
 
+import com.sarabrandserver.address.AddressDTO;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 public record PaymentDTO(
         @NotNull
         @NotEmpty
-        String name,
+        String firstname,
+
+        @NotNull
+        @NotEmpty
+        String lastname,
 
         @NotNull
         @NotEmpty
@@ -23,13 +29,15 @@ public record PaymentDTO(
         String currency,
 
         @NotNull
+        BigDecimal total,
+
+        @NotNull
         @NotEmpty
         String paymentProvider,
 
         @NotNull
-        @NotEmpty
-        String skus,
+        SkuQtyDTO[] dto,
 
         @NotNull
-        Integer qty
+        AddressDTO address
 ) implements Serializable {}

@@ -2,8 +2,10 @@ package com.sarabrandserver.product.repository;
 
 import com.sarabrandserver.product.entity.ProductSku;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -28,5 +30,15 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     WHERE s.sku = :sku
     """)
     int itemContainsCart(String sku);
+
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+    UPDATE ProductSku s
+    SET
+    s.inventory = (s.inventory - :inv)
+    WHERE s.sku = :sku
+    """)
+    void updateInventory(String sku, int inv);
 
 }

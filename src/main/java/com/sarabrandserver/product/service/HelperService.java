@@ -23,7 +23,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class HelperService {
+class HelperService {
 
     private static final Logger log = LoggerFactory.getLogger(HelperService.class);
 
@@ -44,14 +44,12 @@ public class HelperService {
      * @throws CustomAwsException if there is an error uploading to S3
      */
     public void productImages(ProductDetail detail, CustomMultiPart[] files, String bucket) {
-        for (CustomMultiPart file : files) {
-            var obj = new ProductImage(file.key(), file.file().getAbsolutePath(), detail);
-
+        for (var file : files) {
             // Upload image to S3 if in desired profile
             this.s3Service.uploadToS3(file.file(), file.metadata(), bucket, file.key());
 
             // Save ProductImage
-            this.productImageRepo.save(obj);
+            this.productImageRepo.save(new ProductImage(file.key(), file.file().getAbsolutePath(), detail));
         }
     }
 

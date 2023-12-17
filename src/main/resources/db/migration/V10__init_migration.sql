@@ -27,9 +27,9 @@ DROP TABLE IF EXISTS payment_detail;
 CREATE TABLE IF NOT EXISTS payment_detail
 (
     payment_detail_id  BIGINT         NOT NULL UNIQUE AUTO_INCREMENT,
-    firstname_lastname VARCHAR(255)   NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
     email              VARCHAR(255)   NOT NULL,
-    phone_number       VARCHAR(255)   NOT NULL,
+    phone     VARCHAR(16)  NOT NULL,
     payment_id         VARCHAR(255)   NOT NULL UNIQUE,
     currency           VARCHAR(20)    NOT NULL,
     amount             DECIMAL(20, 2) NOT NULL,
@@ -45,14 +45,12 @@ ALTER TABLE order_detail
 CREATE TABLE IF NOT EXISTS address
 (
     address_id        BIGINT       NOT NULL UNIQUE,
-    unit_number   VARCHAR(20),
-    street_number VARCHAR(20) NOT NULL,
-    address_1         VARCHAR(255) NOT NULL,
-    address_2         VARCHAR(255),
-    city              VARCHAR(255) NOT NULL,
-    state_or_province VARCHAR(255) NOT NULL,
-    postal_zip_code   VARCHAR(255),
-    country           VARCHAR(255) NOT NULL,
+    address       VARCHAR(255) NOT NULL,
+    city          VARCHAR(100) NOT NULL,
+    state         VARCHAR(100) NOT NULL,
+    postcode      VARCHAR(10),
+    country       VARCHAR(100) NOT NULL,
+    delivery_info VARCHAR(1000),
     PRIMARY KEY (address_id),
     FOREIGN KEY (address_id) REFERENCES payment_detail (payment_detail_id)
 );

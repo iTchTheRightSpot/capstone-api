@@ -52,9 +52,9 @@ public class PaymentService {
 
         // save PaymentDetail
         var payment = PaymentDetail.builder()
-                .name(dto.firstname() + "_" + dto.lastname())
                 .email(dto.email())
-                .phoneNumber(dto.phoneNumber())
+                .name(dto.name())
+                .phone(dto.phone())
                 .payment_id(UUID.randomUUID().toString())
                 .currency(currency)
                 .amount(dto.total())
@@ -73,14 +73,12 @@ public class PaymentService {
 
         // save Address
         var address = Address.builder()
-                .unitNumber(dto1.unitNumber())
-                .streetNumber(dto1.streetNumber())
-                .address1(dto1.address1())
-                .address2(dto1.address2())
+                .address(dto1.address())
                 .city(dto1.city())
-                .stateOrProvince(dto1.stateOrProvince())
-                .postalZipCode(dto1.postalZipCode())
+                .state(dto1.state())
+                .postcode(dto1.postcode())
                 .country(dto1.country())
+                .deliveryInfo(dto1.deliveryInfo())
                 .paymentDetail(savedPayment)
                 .build();
 

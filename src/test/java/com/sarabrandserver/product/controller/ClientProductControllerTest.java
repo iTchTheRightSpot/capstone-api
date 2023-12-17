@@ -53,7 +53,6 @@ class ClientProductControllerTest extends AbstractIntegrationTest {
         this.MOCKMVC
                 .perform(get(path + "/detail").param("product_id", id))
                 .andExpect(content().contentType(APPLICATION_JSON))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[*].variants").isArray())

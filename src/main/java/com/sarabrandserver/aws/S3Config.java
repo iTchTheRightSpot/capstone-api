@@ -17,12 +17,17 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 public class S3Config {
 
     private static final Logger log = LoggerFactory.getLogger(S3Config.class.getName());
-    private final static Region REGION = Region.CA_CENTRAL_1;
+    private static final Region REGION;
     private static final AwsCredentialsProvider PROVIDER;
 
     static {
-        String profile = new StandardEnvironment()
-                .getProperty("spring.profiles.active", "");
+        var env = new StandardEnvironment();
+
+        String region = env.getProperty("aws.region", "ca-central-1");
+
+        REGION = Region.of(region);
+
+        String profile = env.getProperty("spring.profiles.active", "");
 
         log.info("S3Config current active profile {}", profile);
 

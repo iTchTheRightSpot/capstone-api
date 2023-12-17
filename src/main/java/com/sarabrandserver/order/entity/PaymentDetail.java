@@ -28,14 +28,14 @@ public class PaymentDetail implements Serializable {
     @Column(name = "payment_detail_id", nullable = false, unique = true)
     private Long paymentDetailId;
 
-    @Column(name = "firstname_lastname", nullable = false)
+    @Column(name = "full_name", nullable = false)
     private String name;
 
     @Column(nullable = false)
     private String email;
 
-    @Column(name = "phone_number", nullable = false)
-    private String phoneNumber;
+    @Column(nullable = false, length = 16)
+    private String phone;
 
     @Column(nullable = false, unique = true)
     private String payment_id;

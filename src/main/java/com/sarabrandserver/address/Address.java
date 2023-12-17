@@ -19,29 +19,23 @@ public class Address implements Serializable {
     @Column(name = "address_id", nullable = false, unique = true)
     private Long addressId;
 
-    @Column(name = "unit_number", length = 20)
-    private String unitNumber;
-
-    @Column(name = "street_number", nullable = false, length = 20)
-    private String streetNumber;
-
-    @Column(name = "address_1", nullable = false)
-    private String address1;
-
-    @Column(name = "address_2")
-    private String address2;
-
     @Column(nullable = false)
+    private String address;
+
+    @Column(nullable = false, length = 100)
     private String city;
 
-    @Column(name = "state_or_province", nullable = false)
-    private String stateOrProvince;
+    @Column(name = "state", nullable = false, length = 100)
+    private String state;
 
-    @Column(name = "postal_zip_code")
-    private String postalZipCode;
+    @Column(name = "postcode", length = 10)
+    private String postcode;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String country;
+
+    @Column(name = "delivery_info", nullable = false, length = 1000)
+    private String deliveryInfo;
 
     @OneToOne
     @MapsId

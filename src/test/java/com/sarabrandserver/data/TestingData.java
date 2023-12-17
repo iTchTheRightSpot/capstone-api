@@ -154,7 +154,7 @@ public class TestingData {
         return new UpdateProductDTO(
                 productID,
                 productName,
-                new Faker().lorem().characters(0, 400),
+                new Faker().lorem().fixedString(1000),
                 "ngn",
                 new BigDecimal(new Faker().number().numberBetween(1000, 700000)),
                 category,
@@ -167,9 +167,8 @@ public class TestingData {
     @NotNull
     public static PaymentDTO paymentDTO(String email, SarreCurrency currency, SkuQtyDTO[] arr) {
         return new PaymentDTO(
-                new Faker().name().firstName(),
-                new Faker().name().lastName(),
                 email,
+                new Faker().name().fullName(),
                 new Faker().phoneNumber().phoneNumber(),
                 currency.name(),
                 new BigDecimal(new Faker().number().numberBetween(100, 500000)),
@@ -182,14 +181,12 @@ public class TestingData {
     @NotNull
     public static AddressDTO addressDTO() {
         return new AddressDTO(
-                new Faker().address().buildingNumber(),
-                new Faker().address().streetAddressNumber(),
-                new Faker().address().streetAddress(),
-                new Faker().address().secondaryAddress(),
+                new Faker().address().fullAddress(),
                 new Faker().address().city(),
                 new Faker().address().state(),
                 new Faker().address().zipCode(),
-                new Faker().address().country()
+                new Faker().address().country(),
+                new Faker().lorem().fixedString(1000)
         );
     }
 

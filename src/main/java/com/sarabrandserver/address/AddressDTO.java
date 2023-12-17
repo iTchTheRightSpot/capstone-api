@@ -7,18 +7,8 @@ import java.io.Serializable;
 
 public record AddressDTO(
         @NotNull
-        String unitNumber,
-
-        @NotNull
         @NotEmpty
-        String streetNumber,
-
-        @NotNull
-        @NotEmpty
-        String address1,
-
-        @NotNull
-        String address2,
+        String address,
 
         @NotNull
         @NotEmpty
@@ -26,12 +16,15 @@ public record AddressDTO(
 
         @NotNull
         @NotEmpty
-        String stateOrProvince,
+        String state,
 
         @NotNull
-        String postalZipCode,
+        String postcode,
 
         @NotNull
         @NotEmpty
-        String country
+        String country,
+
+        @NotNull
+        String deliveryInfo
 ) implements Serializable {}

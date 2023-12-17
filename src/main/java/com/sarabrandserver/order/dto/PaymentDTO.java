@@ -10,19 +10,15 @@ import java.math.BigDecimal;
 public record PaymentDTO(
         @NotNull
         @NotEmpty
-        String firstname,
-
-        @NotNull
-        @NotEmpty
-        String lastname,
-
-        @NotNull
-        @NotEmpty
         String email,
 
         @NotNull
         @NotEmpty
-        String phoneNumber,
+        String name,
+
+        @NotNull
+        @NotEmpty
+        String phone,
 
         @NotNull
         @NotEmpty

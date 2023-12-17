@@ -160,10 +160,12 @@ public class CartService {
             return;
         }
 
-        var productSKU = this.productSKUService.productSkuBySKU(dto.sku());
+        var qty = this.productSKUService
+                .productSkuBySKU(dto.sku())
+                .getInventory();
 
-        if (dto.qty() > productSKU.getInventory()) {
-            throw new OutOfStockException("chosen quantity is out of stock");
+        if (qty <= 0 || dto.qty() > qty) {
+            throw new OutOfStockException("Product or selected quantity is out of stock.");
         }
 
         String[] arr = cookie.getValue().split(this.split);
@@ -180,7 +182,7 @@ public class CartService {
                 date = new Date(d);
             } catch (RuntimeException ex) {
                 log.error("create method , {}", ex.getMessage());
-                throw new CustomInvalidFormatException("Invalid cookie");
+                throw new CustomInvalidFormatException("invalid cookie");
             }
 
             create_new_shopping_session(param, date, dto);

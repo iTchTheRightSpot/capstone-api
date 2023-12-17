@@ -27,8 +27,7 @@ import static org.mockito.Mockito.*;
 
 class WorkerProductServiceTest extends AbstractUnitTest {
 
-    @Value(value = "${aws.bucket}")
-    private String BUCKET;
+    @Value(value = "${aws.bucket}") private String BUCKET;
 
     private WorkerProductService workerProductService;
 

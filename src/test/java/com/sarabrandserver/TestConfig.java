@@ -1,5 +1,7 @@
 package com.sarabrandserver;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.devtools.restart.RestartScope;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -10,14 +12,20 @@ import org.testcontainers.containers.MySQLContainer;
 @TestConfiguration(proxyBeanMethods = false)
 public class TestConfig {
 
+    static final Logger log = LoggerFactory.getLogger(TestConfig.class);
+
     @Bean
     @ServiceConnection
     @RestartScope
     static MySQLContainer<?> mySQLContainer() {
-        return new MySQLContainer<>("mysql:8.0")
-                .withDatabaseName("sara_brand_db")
-                .withUsername("sara")
-                .withPassword("sara");
+        try (var container = new MySQLContainer<>("mysql:8.0")) {
+            return container.withDatabaseName("sara_brand_db")
+                    .withUsername("sara")
+                    .withPassword("sara");
+        } catch (RuntimeException ex) {
+            log.error("failed to start up MySQL in test/dev mode");
+            throw new RuntimeException();
+        }
     }
 
 }

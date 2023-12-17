@@ -64,7 +64,13 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     d.colour AS colour,
     GROUP_CONCAT(DISTINCT i.image_key) AS image,
     CONCAT('[',
-        GROUP_CONCAT(DISTINCT JSON_OBJECT('sku', s.sku, 'inventory', s.inventory, 'size', s.size)),
+        GROUP_CONCAT(
+            DISTINCT JSON_OBJECT(
+                'sku', s.sku,
+                'inventory', IF(s.inventory > 0, 0, -1),
+                'size', s.size
+            )
+        ),
     ']') AS variants
     FROM product_detail d
     INNER JOIN product_image i ON d.detail_id = i.detail_id
@@ -88,7 +94,7 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
             DISTINCT JSON_OBJECT(
                 'sku', s.sku,
                 'inventory', s.inventory,
-                'size', IF(s.size > 0, 0, -1)
+                'size', s.size
             )
         ),
     ']') AS variants

@@ -16,18 +16,10 @@ public interface UserRepository extends JpaRepository<SarreBrandUser, Long> {
     @Query(value = "SELECT c FROM SarreBrandUser c WHERE c.email = :principal")
     Optional<SarreBrandUser> findByPrincipal(@Param(value = "principal") String principal);
 
-    @Query(value = """
-    SELECT COUNT (c.clientId)
-    FROM SarreBrandUser c
-    WHERE c.email = :email
-    """)
+    @Query(value = "SELECT COUNT (c.clientId) FROM SarreBrandUser c WHERE c.email = :email ")
     int principalExists(@Param(value = "email") String email);
 
-    @Query(value = """
-    SELECT c
-    FROM SarreBrandUser c
-    WHERE c.email = :email
-    """)
+    @Query(value = " SELECT c FROM SarreBrandUser c WHERE c.email = :email")
     Optional<SarreBrandUser> workerExists(@Param(value = "email") String email);
 
     @Query(value = "SELECT u FROM SarreBrandUser u")

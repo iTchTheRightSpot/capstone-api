@@ -9,6 +9,7 @@ import com.sarabrandserver.collection.dto.CollectionDTO;
 import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
 import com.sarabrandserver.order.dto.PaymentDTO;
 import com.sarabrandserver.order.dto.OrderHistoryDTO;
+import com.sarabrandserver.order.dto.SkuQtyDTO;
 import com.sarabrandserver.product.dto.*;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.Variant;
@@ -59,6 +60,7 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
         // Order
         hints.serialization().registerType(PaymentDTO.class);
         hints.serialization().registerType(OrderHistoryDTO.class);
+        hints.serialization().registerType(SkuQtyDTO.class);
     }
 
 }

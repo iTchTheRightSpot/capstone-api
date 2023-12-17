@@ -53,7 +53,6 @@ public class ClientProductService {
             int page,
             int size
     ) {
-        boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
         return switch (key) {
             case "" -> this.productRepo
                     .allProductsByCurrencyClient(currency, PageRequest.of(page, size)) //
@@ -115,7 +114,6 @@ public class ClientProductService {
 
         if (object == null) return List.of();
 
-        boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
         return this.productDetailRepo
                 .productDetailsByProductUUIDClient(uuid) //
                 .stream() //
@@ -149,13 +147,10 @@ public class ClientProductService {
      * @return List of ProductResponse
      * */
     public List<ProductResponse> search(String param, SarreCurrency currency) {
-        boolean bool = ACTIVEPROFILE.equals("prod") || ACTIVEPROFILE.equals("stage");
-        var page = PageRequest.of(0, 10);
-
         // SQL LIKE Operator
         // https://www.w3schools.com/sql/sql_like.asp
         return this.productRepo
-                .productByNameAndCurrency(param + "%", currency, page)
+                .productByNameAndCurrency(param + "%", currency, PageRequest.of(0, 10))
                 .stream()
                 .map(pojo -> {
                     var url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());

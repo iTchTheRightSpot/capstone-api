@@ -18,7 +18,9 @@ import java.util.Optional;
 @Repository
 public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
 
-    /** Returns a ProductDetail based on ProductSku property sku */
+    /**
+     * Returns a ProductDetail based on ProductSku property sku
+     * */
     @Query(value = """
     SELECT d FROM ProductDetail d
     INNER JOIN ProductSku s ON d.productDetailId = s.productDetail.productDetailId
@@ -73,11 +75,7 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     """)
     List<DetailPojo> productDetailsByProductUUIDClient(@Param(value = "uuid") String uuid);
 
-    @Query(value = """
-    SELECT d
-    FROM ProductDetail d
-    WHERE d.colour = :colour
-    """)
+    @Query(value = "SELECT d FROM ProductDetail d WHERE d.colour = :colour")
     Optional<ProductDetail> productDetailByColour(String colour);
 
     @Query(nativeQuery = true, value = """
@@ -86,7 +84,13 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     d.colour AS colour,
     GROUP_CONCAT(DISTINCT i.image_key) AS image,
     CONCAT('[',
-        GROUP_CONCAT(DISTINCT JSON_OBJECT('sku', s.sku, 'inventory', s.inventory, 'size', s.size)),
+        GROUP_CONCAT(
+            DISTINCT JSON_OBJECT(
+                'sku', s.sku,
+                'inventory', s.inventory,
+                'size', IF(s.size > 0, 0, -1)
+            )
+        ),
     ']') AS variants
     FROM product_detail d
     INNER JOIN product_image i ON d.detail_id = i.detail_id

@@ -23,7 +23,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 
 @TestConfiguration(proxyBeanMethods = false)
-public class DummyData {
+class DummyData {
 
     @Value(value = "${image.one}")
     private String image1;

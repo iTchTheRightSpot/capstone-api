@@ -53,4 +53,12 @@ public class S3Config {
                 .build();
     }
 
+//    @Bean
+//    public static SesV2Client _sesV2Client() {
+//        return SesV2Client.builder()
+//                .region(REGION)
+//                .credentialsProvider(PROVIDER)
+//                .build();
+//    }
+
 }

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "test")
 @Profile(value = {"test"})
-public class TestController {
+class TestController {
 
     @GetMapping(path = "/client")
     @PreAuthorize(value = "hasRole('ROLE_CLIENT')")

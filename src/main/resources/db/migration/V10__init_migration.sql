@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS payment_detail
     payment_detail_id  BIGINT         NOT NULL UNIQUE AUTO_INCREMENT,
     full_name VARCHAR(255) NOT NULL,
     email              VARCHAR(255)   NOT NULL,
-    phone     VARCHAR(16)  NOT NULL,
+    phone VARCHAR(20) NOT NULL,
     payment_id         VARCHAR(255)   NOT NULL UNIQUE,
     currency           VARCHAR(20)    NOT NULL,
     amount             DECIMAL(20, 2) NOT NULL,

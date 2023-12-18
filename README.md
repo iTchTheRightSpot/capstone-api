@@ -1,7 +1,7 @@
-# Sarre Brand Server
-Server side code for Sarre Brand.
+# Sarre The Brand Server
+Server side code for Sarre The Brand.
 
-### Technologies Thus Far
+### Technologies
 * Java 17
 * Spring Boot
 * Flyway Migration
@@ -21,5 +21,5 @@ Link for the most up-to-date schema.
 &
 [Admin front](https://server.emmanueluluabuike.com/admin)
 
-### Development info
+### Development information
 * [naming index convention](https://www.quora.com/What-naming-convention-do-you-use-for-SQL-indexes)

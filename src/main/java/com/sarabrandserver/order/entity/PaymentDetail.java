@@ -34,7 +34,7 @@ public class PaymentDetail implements Serializable {
     @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false, length = 16)
+    @Column(nullable = false, length = 20)
     private String phone;
 
     @Column(nullable = false, unique = true)

@@ -9,6 +9,8 @@ import com.sarabrandserver.enumeration.PaymentStatus;
 import com.sarabrandserver.enumeration.ReservationStatus;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
+import com.sarabrandserver.flutterwave.FlutterWaveResponse;
+import com.sarabrandserver.flutterwave.FlutterwaveService;
 import com.sarabrandserver.order.dto.PaymentDTO;
 import com.sarabrandserver.order.dto.SkuQtyDTO;
 import com.sarabrandserver.order.entity.OrderDetail;
@@ -48,6 +50,7 @@ public class PaymentService {
     private final OrderRepository orderRepo;
     private final CartItemRepo cartItemRepo;
     private final OrderReservationRepo reservationRepo;
+    private final FlutterwaveService flutterwaveService;
     private final CustomUtil customUtil;
 
     /**
@@ -55,7 +58,7 @@ public class PaymentService {
      * what is in the users cart with ProductSKU inventory.
      * */
     @Transactional
-    public void validate(HttpServletRequest req) {
+    public FlutterWaveResponse validate(HttpServletRequest req) {
         Cookie cookie = this.customUtil.cookie.apply(req, CART_COOKIE);
 
         if (cookie == null) {
@@ -69,14 +72,17 @@ public class PaymentService {
             throw new CustomNotFoundException("invalid shopping session");
         }
 
-        var toExpire = Instant.now().plus(bound, ChronoUnit.MINUTES);
-        var date = this.customUtil.toUTC(new Date(toExpire.toEpochMilli()));
+        long toExpire = Instant.now().plus(bound, ChronoUnit.MINUTES).toEpochMilli();
+        Date date = this.customUtil.toUTC(new Date(toExpire));
 
         for (CartItem c : list) {
             this.productSkuRepo.updateInventory(c.getSku(), c.getQty());
             this.reservationRepo
                     .save(new OrderReservation(c.getSku(), c.getQty(), ReservationStatus.PENDING, date));
         }
+
+        var secret = this.flutterwaveService.flutterWaveCredentials();
+        return new FlutterWaveResponse(secret.pubKey());
     }
 
     /**

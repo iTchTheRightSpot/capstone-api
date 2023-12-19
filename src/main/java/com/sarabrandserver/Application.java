@@ -1,5 +1,6 @@
 package com.sarabrandserver;
 
+import com.sarabrandserver.flutterwave.FlutterWaveCredentialObj;
 import com.sarabrandserver.graal.MyRuntimeHints;
 import com.sarabrandserver.order.dto.PayloadMapper;
 import com.sarabrandserver.product.dto.VariantMapper;
@@ -12,7 +13,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 @ImportRuntimeHints(value = {MyRuntimeHints.class})
-@RegisterReflectionForBinding(value = {VariantMapper.class, PayloadMapper.class})
+@RegisterReflectionForBinding(value = {VariantMapper.class, PayloadMapper.class, FlutterWaveCredentialObj.class})
 public class Application {
 
     public static void main(String[] args) {

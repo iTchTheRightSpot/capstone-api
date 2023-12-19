@@ -13,8 +13,8 @@
     <groupId>com.example</groupId>
     <artifactId>sara-brand-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>sara-brand-server</name>
-    <description>sara-brand-server</description>
+    <name>SarreTheBrand</name>
+    <description>Sarre The Brand is an e-commerce application</description>
 
     <properties>
         <aws.java.sdk.version>2.20.101</aws.java.sdk.version>

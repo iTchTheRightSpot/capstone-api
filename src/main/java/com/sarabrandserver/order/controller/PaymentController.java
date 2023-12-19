@@ -1,5 +1,6 @@
 package com.sarabrandserver.order.controller;
 
+import com.sarabrandserver.flutterwave.FlutterWaveResponse;
 import com.sarabrandserver.order.dto.PaymentDTO;
 import com.sarabrandserver.order.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,8 +23,8 @@ public class PaymentController {
      * */
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public void validate(HttpServletRequest req) {
-        this.paymentService.validate(req);
+    public FlutterWaveResponse validate(HttpServletRequest req) {
+        return this.paymentService.validate(req);
     }
 
     /**
@@ -34,7 +35,6 @@ public class PaymentController {
     public void test(@Valid @RequestBody PaymentDTO dto) {
         this.paymentService.test(dto, dto.address());
     }
-
 
     /**
      * Called via Flutterwave webhook

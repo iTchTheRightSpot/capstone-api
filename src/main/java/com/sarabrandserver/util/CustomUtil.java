@@ -3,7 +3,6 @@ package com.sarabrandserver.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.enumeration.SarreCurrency;
-import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.product.dto.PriceCurrencyDTO;
 import com.sarabrandserver.product.dto.VariantMapper;
 import com.sarabrandserver.product.response.Variant;
@@ -71,25 +70,6 @@ public class CustomUtil {
                 .anyMatch(d -> d.currency().toUpperCase().equals(USD.name()));
 
         return ngn && usd;
-    }
-
-    /**
-     * Retrieves the price based on the currency.
-     *
-     * @param arr dto object gotten from the user
-     * @param currency gets the price in the array
-     * @return BigDecimal
-     * */
-    public BigDecimal truncateAmount(PriceCurrencyDTO[] arr, SarreCurrency currency) {
-        String error = "please enter %s amount".formatted(currency.name());
-
-        PriceCurrencyDTO dto = Arrays
-                .stream(arr)
-                .filter(predicate -> predicate.currency().equals(currency.name()))
-                .findFirst()
-                .orElseThrow(() -> new CustomNotFoundException(error));
-
-        return dto.price().setScale(2, FLOOR);
     }
 
     /**
@@ -164,7 +144,7 @@ public class CustomUtil {
         return cookies == null
                 ? null
                 : Arrays.stream(cookies)
-                .filter(cookie -> cookie.getName().equals(name))
+                .filter(c -> c.getName().equals(name))
                 .findFirst()
                 .orElse(null);
     };

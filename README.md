@@ -1,5 +1,5 @@
-# Sarre The Brand Server
-Server side code for Sarre The Brand.
+# Sarre The Brand
+Backend of Sarre The Brand.
 
 ### Technologies
 * Java 17

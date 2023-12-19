@@ -5,6 +5,7 @@ import com.sarabrandserver.collection.service.WorkerCollectionService;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.*;
 import com.sarabrandserver.product.dto.CreateProductDTO;
+import com.sarabrandserver.product.dto.PriceCurrencyDTO;
 import com.sarabrandserver.product.dto.UpdateProductDTO;
 import com.sarabrandserver.product.entity.PriceCurrency;
 import com.sarabrandserver.product.entity.Product;
@@ -25,10 +26,8 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.BiFunction;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
@@ -71,7 +70,7 @@ public class WorkerProductService {
                             .id(pojo.getUuid())
                             .name(pojo.getName())
                             .desc(pojo.getDescription())
-                            .price(pojo.getPrice().setScale(2, FLOOR))
+                            .price(pojo.getPrice())
                             .currency(pojo.getCurrency())
                             .imageUrl(url)
                             .build();
@@ -125,8 +124,8 @@ public class WorkerProductService {
         var product = this.productRepo.save(p);
 
         // save ngn & usd price
-        BigDecimal ngn = this.customUtil.truncateAmount(dto.priceCurrency(), NGN);
-        BigDecimal usd = this.customUtil.truncateAmount(dto.priceCurrency(), USD);
+        BigDecimal ngn = truncateAmount.apply(dto.priceCurrency(), NGN);
+        BigDecimal usd = truncateAmount.apply(dto.priceCurrency(), USD);
         this.priceCurrencyRepo.save(new PriceCurrency(ngn, NGN, product));
         this.priceCurrencyRepo.save(new PriceCurrency(usd, USD, product));
 
@@ -230,4 +229,17 @@ public class WorkerProductService {
         this.productRepo.delete(product);
     }
 
+    /**
+     * Retrieves the price based on the currency.
+     *
+     * @param arr dto object gotten from the user
+     * @param currency gets the price in the array
+     * @return BigDecimal
+     * */
+    final BiFunction<PriceCurrencyDTO[], SarreCurrency, BigDecimal> truncateAmount = (arr, curr) -> Arrays
+                    .stream(arr)
+                    .filter(priceCurrencyDTO -> priceCurrencyDTO.currency().equals(curr.name()))
+                    .map(obj -> obj.price().setScale(2, FLOOR))
+                    .findFirst()
+                    .orElseThrow(() -> new CustomNotFoundException("please enter %s amount".formatted(curr.name())));
 }

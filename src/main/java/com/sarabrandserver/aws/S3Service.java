@@ -23,7 +23,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class S3Service {
 
-    private static final Logger log = LoggerFactory.getLogger(S3Service.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(S3Service.class);
     private static final boolean PROFILE;
 
     static {

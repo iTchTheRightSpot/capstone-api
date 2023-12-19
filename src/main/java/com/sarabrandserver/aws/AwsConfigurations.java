@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.StandardEnvironment;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
@@ -12,11 +13,12 @@ import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 
 @Configuration
-public class S3Config {
+public class AwsConfigurations {
 
-    private static final Logger log = LoggerFactory.getLogger(S3Config.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(AwsConfigurations.class.getName());
     private static final Region REGION;
     private static final AwsCredentialsProvider PROVIDER;
 
@@ -50,6 +52,16 @@ public class S3Config {
         return S3Presigner.builder()
                 .region(REGION)
                 .credentialsProvider(PROVIDER)
+                .build();
+    }
+
+    @Lazy
+    @Bean
+    public static SecretsManagerClient secretsManagerClient() {
+        return SecretsManagerClient.builder()
+                .region(REGION)
+                .credentialsProvider(PROVIDER)
+                .httpClient(UrlConnectionHttpClient.builder().build())
                 .build();
     }
 

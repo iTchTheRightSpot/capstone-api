@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -45,5 +46,8 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     WHERE c.shoppingSession.shoppingSessionId = :id
     """)
     void deleteByParentID(long id);
+
+    @Query("SELECT c FROM CartItem c WHERE c.shoppingSession.cookie = :uuid")
+    List<CartItem> cart_items_by_shopping_session_cookie(String uuid);
 
 }

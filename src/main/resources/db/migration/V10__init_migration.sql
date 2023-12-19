@@ -54,3 +54,16 @@ CREATE TABLE IF NOT EXISTS address
     PRIMARY KEY (address_id),
     FOREIGN KEY (address_id) REFERENCES payment_detail (payment_detail_id)
 );
+
+ALTER TABLE product_sku
+    ADD CONSTRAINT chk_inventory_is_always_greater_than_zero CHECK ( inventory >= 0 );
+
+CREATE TABLE IF NOT EXISTS order_reservation
+(
+    reservation_id BIGINT      NOT NULL UNIQUE AUTO_INCREMENT,
+    sku            VARCHAR(36) NOT NULL,
+    qty            INTEGER     NOT NULL,
+    status         VARCHAR(10) NOT NULL,
+    expire_at      DATETIME    NOT NULL,
+    PRIMARY KEY (reservation_id)
+);

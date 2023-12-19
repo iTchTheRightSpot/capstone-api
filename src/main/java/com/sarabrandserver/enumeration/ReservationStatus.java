@@ -7,6 +7,6 @@ package com.sarabrandserver.enumeration;
  * 3. Order is pending shipping
  * 4. Order has been sent out for shipping
  * */
-public enum GlobalStatus {
-    CONFIRMED, FAILED, REFUND, PENDING, EMPTY,
+public enum ReservationStatus {
+    CONFIRMED, PENDING
 }

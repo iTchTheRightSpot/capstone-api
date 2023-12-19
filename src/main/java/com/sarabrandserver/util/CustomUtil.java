@@ -7,6 +7,8 @@ import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.product.dto.PriceCurrencyDTO;
 import com.sarabrandserver.product.dto.VariantMapper;
 import com.sarabrandserver.product.response.Variant;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +19,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.function.BiFunction;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
@@ -52,23 +55,20 @@ public class CustomUtil {
             return false;
         }
 
+        // 1 if compare is greater than BigDecimal.ZERO
+        // -1 if compare is less than BigDecimal.ZERO
+        // 0 if compare is equal to BigDecimal.ZERO
         boolean bool = Arrays.stream(dto)
-                .anyMatch(p -> {
-                    int compare = p.price().compareTo(ZERO);
-                    // 1 if compare is greater than BigDecimal.ZERO
-                    // -1 if compare is less than BigDecimal.ZERO
-                    // 0 if compare is equal to BigDecimal.ZERO
-                    return compare < 0;
-                });
+                .anyMatch(p -> p.price().compareTo(ZERO) < 0);
 
         if (bool) {
             return false;
         }
 
         boolean ngn = Arrays.stream(dto)
-                .anyMatch(dto1 -> dto1.currency().toUpperCase().equals(NGN.name()));
+                .anyMatch(d -> d.currency().toUpperCase().equals(NGN.name()));
         boolean usd = Arrays.stream(dto)
-                .anyMatch(dto1 -> dto1.currency().toUpperCase().equals(USD.name()));
+                .anyMatch(d -> d.currency().toUpperCase().equals(USD.name()));
 
         return ngn && usd;
     }
@@ -150,5 +150,23 @@ public class CustomUtil {
             }
         };
     }
+
+    /**
+     * Returns jakarta.servlet.http.cookie based on cookie value passed.
+     * Note if response is null, its is either HttpServletRequest contains
+     * no cookies or name is not present in request cookies.
+     * @param req is of HttpServletRequest
+     * @param name is the cookie name to filter
+     * @return BiFunction of cookie
+     * */
+    public final BiFunction<HttpServletRequest, String, Cookie> cookie = (req, name) -> {
+        Cookie[] cookies = req.getCookies();
+        return cookies == null
+                ? null
+                : Arrays.stream(cookies)
+                .filter(cookie -> cookie.getName().equals(name))
+                .findFirst()
+                .orElse(null);
+    };
 
 }

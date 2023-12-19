@@ -35,7 +35,6 @@ import java.util.function.Consumer;
 
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
-import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
@@ -61,7 +60,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider provider(UserDetailService service, PasswordEncoder encoder) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        var provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(service);
         provider.setPasswordEncoder(encoder);
         return provider;
@@ -72,10 +71,10 @@ public class SecurityConfig {
             AuthenticationProvider provider,
             @Qualifier(value = "authenticationEventPublisher") AuthenticationEventPublisher publisher
     ) {
-        ProviderManager providerManager = new ProviderManager(provider);
-        providerManager.setAuthenticationEventPublisher(publisher);
-        providerManager.setEraseCredentialsAfterAuthentication(true);
-        return providerManager;
+        var manager = new ProviderManager(provider);
+        manager.setAuthenticationEventPublisher(publisher);
+        manager.setEraseCredentialsAfterAuthentication(true);
+        return manager;
     }
 
     /**
@@ -95,14 +94,14 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(this.CORSDOMAIN));
-        configuration.setAllowedMethods(List.of("GET", "PUT", "POST", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of(CONTENT_TYPE, ACCEPT, "X-XSRF-TOKEN"));
-        configuration.setAllowCredentials(true);
+        var config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(this.CORSDOMAIN));
+        config.setAllowedMethods(List.of("GET", "PUT", "POST", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of(CONTENT_TYPE, ACCEPT, "X-XSRF-TOKEN"));
+        config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        var source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 
@@ -140,10 +139,11 @@ public class SecurityConfig {
                             "/" + this.BASEURL + "client/category/**",
                             "/" + this.BASEURL + "client/collection/**",
                             "/" + this.BASEURL + "worker/auth/login",
-                            "/" + this.BASEURL + "cart/**"
+                            "/" + this.BASEURL + "cart/**",
+                            "/" + this.BASEURL + "payment/**"
                     ).permitAll();
-                    auth.requestMatchers(POST, "/" + this.BASEURL + "payment")
-                            .permitAll();
+//                    auth.requestMatchers(POST, "/" + this.BASEURL + "payment")
+//                            .permitAll();
                     auth.anyRequest().authenticated();
                 })
 
@@ -181,7 +181,7 @@ public class SecurityConfig {
                 .sameSite(sameSite)
                 .maxAge(-1);
 
-        CookieCsrfTokenRepository csrfTokenRepository = new CookieCsrfTokenRepository();
+        var csrfTokenRepository = new CookieCsrfTokenRepository();
         csrfTokenRepository.setCookieCustomizer(consumer);
         return csrfTokenRepository;
     }

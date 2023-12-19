@@ -33,7 +33,7 @@ class PaymentControllerTest extends AbstractIntegrationTest {
 
         // request
         this.MOCKMVC
-                .perform(post(this.path)
+                .perform(post(this.path + "/test")
                         .content(this.MAPPER.writeValueAsString(payment))
                         .contentType(MediaType.APPLICATION_JSON)
                         .with(csrf())

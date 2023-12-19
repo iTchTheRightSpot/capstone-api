@@ -101,7 +101,7 @@ public class CartService {
             HttpServletRequest req,
             HttpServletResponse res
     ) {
-        Cookie cookie = createCookieValue(req);
+        Cookie cookie = this.customUtil.cookie.apply(req, CART_COOKIE);
 
         if (cookie == null) {
             // cookie value
@@ -154,10 +154,10 @@ public class CartService {
      */
     @Transactional
     public void create(CartDTO dto, HttpServletRequest req) {
-        Cookie cookie = createCookieValue(req);
+        Cookie cookie = this.customUtil.cookie.apply(req, CART_COOKIE);
 
         if (cookie == null) {
-            return;
+            throw new CustomNotFoundException("No cookie found. Kindly refresh window");
         }
 
         var qty = this.productSKUService
@@ -232,7 +232,7 @@ public class CartService {
      * */
     @Transactional
     public void remove_from_cart(HttpServletRequest req, String sku) {
-        Cookie cookie = createCookieValue(req);
+        Cookie cookie = this.customUtil.cookie.apply(req, CART_COOKIE);
 
         if (cookie == null) {
             return;
@@ -264,19 +264,6 @@ public class CartService {
         for (ShoppingSession s : list) {
             this.shoppingSessionRepo.deleteById(s.getShoppingSessionId());
         }
-    }
-
-    /**
-     * Retrieves cookie value from request
-     */
-    private Cookie createCookieValue(HttpServletRequest req) {
-        Cookie[] cookies = req.getCookies();
-        return cookies == null
-                ? null
-                : Arrays.stream(cookies)
-                .filter(cookie -> cookie.getName().equals(CART_COOKIE))
-                .findFirst()
-                .orElse(null);
     }
 
 }

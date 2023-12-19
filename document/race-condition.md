@@ -4,7 +4,7 @@
 * On click of continue to payment (UI), make call to server to reserve items temporarily. Note for Flutterwave payment.
 * UI to display or to move past checkout page, backend has to respond with status OK.
 
-## Backend (payload_table)
+## Backend (order_reservation)
 1. Since payload contains each item sku and user choice of qty, we need to validate payload qty is not greater than
 that in db.
 2. Temporarily subtract inventory in db with payload qty.

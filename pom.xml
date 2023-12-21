@@ -20,6 +20,7 @@
         <aws.java.sdk.version>2.20.101</aws.java.sdk.version>
         <java.version>17</java.version>
         <awaitility.version>3.1.2</awaitility.version>
+        <thymeleaf.version>3.1.2.RELEASE</thymeleaf.version>
         <hibernate.orm.tooling.version>6.2.7.Final</hibernate.orm.tooling.version>
         <testcontainers.localstack.version>1.19.3</testcontainers.localstack.version>
     </properties>
@@ -76,6 +77,17 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Thymeleaf -->
+<!--        <dependency>-->
+<!--            <groupId>org.thymeleaf</groupId>-->
+<!--            <artifactId>thymeleaf-spring6</artifactId>-->
+<!--            <version>${thymeleaf.version}</version>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
         <!-- In other to enable @Scheduling -->
         <dependency>
             <groupId>org.awaitility</groupId>
@@ -84,7 +96,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Fly Way -->
+        <!-- Flyway -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-mysql</artifactId>

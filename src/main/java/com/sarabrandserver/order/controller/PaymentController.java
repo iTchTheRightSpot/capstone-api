@@ -1,8 +1,8 @@
 package com.sarabrandserver.order.controller;
 
-import com.sarabrandserver.flutterwave.FlutterWaveResponse;
 import com.sarabrandserver.order.dto.PaymentDTO;
 import com.sarabrandserver.order.service.PaymentService;
+import com.sarabrandserver.thirdparty.PaymentCredentialObj;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ public class PaymentController {
      * */
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public FlutterWaveResponse validate(HttpServletRequest req) {
+    public PaymentCredentialObj validate(HttpServletRequest req) {
         return this.paymentService.validate(req);
     }
 

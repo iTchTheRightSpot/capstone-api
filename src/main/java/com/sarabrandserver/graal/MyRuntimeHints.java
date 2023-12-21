@@ -7,14 +7,12 @@ import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.sarabrandserver.collection.dto.CollectionDTO;
 import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
-import com.sarabrandserver.flutterwave.FlutterWaveResponse;
-import com.sarabrandserver.order.dto.PaymentDTO;
 import com.sarabrandserver.order.dto.OrderHistoryDTO;
+import com.sarabrandserver.order.dto.PaymentDTO;
 import com.sarabrandserver.order.dto.SkuQtyDTO;
 import com.sarabrandserver.product.dto.*;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.Variant;
-import com.sarabrandserver.product.dto.VariantMapper;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 
@@ -57,7 +55,6 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
         hints.serialization().registerType(Variant.class);
         hints.serialization().registerType(VariantMapper.class);
         hints.serialization().registerType(DetailResponse.class);
-        hints.serialization().registerType(FlutterWaveResponse.class);
 
         // Order
         hints.serialization().registerType(PaymentDTO.class);

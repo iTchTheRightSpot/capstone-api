@@ -140,10 +140,9 @@ public class SecurityConfig {
                             "/" + this.BASEURL + "client/collection/**",
                             "/" + this.BASEURL + "worker/auth/login",
                             "/" + this.BASEURL + "cart/**",
-                            "/" + this.BASEURL + "payment/**"
+                            "/" + this.BASEURL + "payment/**",
+                             "/index"
                     ).permitAll();
-//                    auth.requestMatchers(POST, "/" + this.BASEURL + "payment")
-//                            .permitAll();
                     auth.anyRequest().authenticated();
                 })
 

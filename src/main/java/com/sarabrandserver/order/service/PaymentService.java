@@ -9,8 +9,6 @@ import com.sarabrandserver.enumeration.PaymentStatus;
 import com.sarabrandserver.enumeration.ReservationStatus;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
-import com.sarabrandserver.flutterwave.FlutterWaveResponse;
-import com.sarabrandserver.flutterwave.FlutterwaveService;
 import com.sarabrandserver.order.dto.PaymentDTO;
 import com.sarabrandserver.order.dto.SkuQtyDTO;
 import com.sarabrandserver.order.entity.OrderDetail;
@@ -20,14 +18,19 @@ import com.sarabrandserver.order.repository.OrderRepository;
 import com.sarabrandserver.order.repository.OrderReservationRepo;
 import com.sarabrandserver.order.repository.PaymentRepo;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
+import com.sarabrandserver.thirdparty.PaymentCredentialObj;
+import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -39,6 +42,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PaymentService {
 
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
     private static final long bound = 15;
 
     @Value("${cart.cookie.name}")
@@ -50,7 +54,7 @@ public class PaymentService {
     private final OrderRepository orderRepo;
     private final CartItemRepo cartItemRepo;
     private final OrderReservationRepo reservationRepo;
-    private final FlutterwaveService flutterwaveService;
+    private final ThirdPartyPaymentService thirdPartyService;
     private final CustomUtil customUtil;
 
     /**
@@ -58,7 +62,7 @@ public class PaymentService {
      * what is in the users cart with ProductSKU inventory.
      * */
     @Transactional
-    public FlutterWaveResponse validate(HttpServletRequest req) {
+    public PaymentCredentialObj validate(HttpServletRequest req) {
         Cookie cookie = this.customUtil.cookie.apply(req, CART_COOKIE);
 
         if (cookie == null) {
@@ -81,8 +85,8 @@ public class PaymentService {
                     .save(new OrderReservation(c.getSku(), c.getQty(), ReservationStatus.PENDING, date));
         }
 
-        var secret = this.flutterwaveService.flutterWaveCredentials();
-        return new FlutterWaveResponse(secret.pubKey());
+        var secret = this.thirdPartyService.payStackCredentials();
+        return new PaymentCredentialObj(secret.pubKey());
     }
 
     /**
@@ -90,8 +94,8 @@ public class PaymentService {
      * */
     @Transactional
     public void order(HttpServletRequest req) {
-        try {
-            req.getReader();
+        try (BufferedReader reader = req.getReader()) {
+            reader.lines().forEach(e -> log.info("Buffer reader stream {}", e));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

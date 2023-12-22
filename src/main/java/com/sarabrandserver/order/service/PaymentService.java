@@ -1,22 +1,10 @@
 package com.sarabrandserver.order.service;
 
-import com.sarabrandserver.address.Address;
-import com.sarabrandserver.address.AddressDTO;
-import com.sarabrandserver.address.AddressRepo;
 import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.cart.repository.CartItemRepo;
-import com.sarabrandserver.enumeration.PaymentStatus;
-import com.sarabrandserver.enumeration.ReservationStatus;
-import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
-import com.sarabrandserver.order.dto.PaymentDTO;
-import com.sarabrandserver.order.dto.SkuQtyDTO;
-import com.sarabrandserver.order.entity.OrderDetail;
 import com.sarabrandserver.order.entity.OrderReservation;
-import com.sarabrandserver.order.entity.PaymentDetail;
-import com.sarabrandserver.order.repository.OrderRepository;
 import com.sarabrandserver.order.repository.OrderReservationRepo;
-import com.sarabrandserver.order.repository.PaymentRepo;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.thirdparty.PaymentCredentialObj;
 import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
@@ -27,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,8 +24,12 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.UUID;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
 
 @Service
 @RequiredArgsConstructor
@@ -49,9 +42,6 @@ public class PaymentService {
     private String CART_COOKIE;
 
     private final ProductSkuRepo productSkuRepo;
-    private final AddressRepo addressRepo;
-    private final PaymentRepo paymentRepo;
-    private final OrderRepository orderRepo;
     private final CartItemRepo cartItemRepo;
     private final OrderReservationRepo reservationRepo;
     private final ThirdPartyPaymentService thirdPartyService;
@@ -60,6 +50,8 @@ public class PaymentService {
     /**
      * Method helps prevent race condition or overselling by temporarily deducting
      * what is in the users cart with ProductSKU inventory.
+     * @param req is passed from the controller
+     * @throws java.sql.SQLException if ProductSku inventory is negative
      * */
     @Transactional
     public PaymentCredentialObj validate(HttpServletRequest req) {
@@ -69,20 +61,30 @@ public class PaymentService {
             throw new CustomNotFoundException("No cookie found. Kindly refresh window");
         }
 
-        var list = this.cartItemRepo
-                .cart_items_by_shopping_session_cookie(cookie.getValue());
+        String sessionId = cookie.getValue();
 
-        if (list.isEmpty()) {
+        var cartItems = this.cartItemRepo
+                .cart_items_by_shopping_session_cookie(sessionId);
+
+        if (cartItems.isEmpty()) {
             throw new CustomNotFoundException("invalid shopping session");
         }
+
+        // retrieve all pending OrderReservation
+        var reservations = this.reservationRepo
+                .orderReservationByCookie(sessionId, PENDING);
 
         long toExpire = Instant.now().plus(bound, ChronoUnit.MINUTES).toEpochMilli();
         Date date = this.customUtil.toUTC(new Date(toExpire));
 
-        for (CartItem c : list) {
-            this.productSkuRepo.updateInventory(c.getSku(), c.getQty());
-            this.reservationRepo
-                    .save(new OrderReservation(c.getSku(), c.getQty(), ReservationStatus.PENDING, date));
+        if (reservations.isEmpty()) {
+            for (CartItem c : cartItems) {
+                this.productSkuRepo.updateInventory(c.getSku(), c.getQty());
+                this.reservationRepo
+                        .save(new OrderReservation(sessionId, c.getSku(), c.getQty(), PENDING, date));
+            }
+        } else {
+            onPendingReservationsNotEmpty(date, reservations, cartItems, sessionId);
         }
 
         var secret = this.thirdPartyService.payStackCredentials();
@@ -90,10 +92,75 @@ public class PaymentService {
     }
 
     /**
+     * The implementation below eliminates race condition for a situation where a user is indecisive about
+     * the number of items to purchase.
+     * 1. We convert reservations into a map of OrderReservation.sku to the object.
+     *    Think map: { key: "OrderReservation.sku", value: the object }.
+     * 2. Iterate cartItems for find CartItem.sku that contains in the map.
+     * 3. Now that we have the items we want, we update ProductSku inventory and OrderReservation qty if
+     *    we have a situation where the items in our CartItem qty is greater or less than OrderReservation qty.
+     * 4. For cart.getQty() > reservation.getQty(), we subtract (cart.getQty() - reservation.getQty()) from
+     *    ProductSku inv since the reservation already exists.
+     * 5. For cart.getQty() < reservation.getQty(), we add (reservation.getQty() - cart.getQty()) from
+     *    ProductSku inv since the reservation already exists.
+     * 6. For step 4 and 5, we update OrderReservation qty to CartItem qty
+     * 7. Final step in the iteration of cartItems is to remove the sku that contain from the map
+     * 8. Finally, after the current data have been purged, we delete unassociated data.
+     *
+     * @param date The current date.
+     * @param reservations List of {@code OrderReservation} objects representing pending reservations.
+     * @param cartItems List of {@code CartItem} objects representing items in the shopping cart.
+     * @param sessionId The ShoppingSession cookie associated with the cart items.
+     * */
+    private void onPendingReservationsNotEmpty(
+            Date date,
+            List<OrderReservation> reservations,
+            List<CartItem> cartItems,
+            String sessionId
+    ) {
+        Map<String, OrderReservation> map = reservations.stream()
+                .collect(Collectors.toMap(OrderReservation::getSku, orderReservation -> orderReservation));
+
+        for (CartItem cart : cartItems) {
+            if (map.containsKey(cart.getSku())) {
+                OrderReservation reservation = map.get(cart.getSku());
+
+                if (cart.getQty() > reservation.getQty()) {
+                    this.reservationRepo
+                            .onSub(
+                                    cart.getQty() - reservation.getQty(),
+                                    cart.getQty(),
+                                    date,
+                                    sessionId,
+                                    cart.getSku(),
+                                    PENDING
+                            );
+
+                } else if (cart.getQty() < reservation.getQty()) {
+                    this.reservationRepo
+                            .onAdd(
+                                    reservation.getQty() - cart.getQty(),
+                                    cart.getQty(),
+                                    date,
+                                    sessionId,
+                                    cart.getSku(),
+                                    PENDING
+                            );
+                }
+
+                map.remove(cart.getSku());
+            }
+        }
+
+        for (String key : map.keySet()) this.reservationRepo.deleteBySku(sessionId, key, PENDING);
+    }
+
+    /**
      * Method retrieves info sent from Flutterwave via webhook
      * */
     @Transactional
     public void order(HttpServletRequest req) {
+        // TODO deduct inventory
         try (BufferedReader reader = req.getReader()) {
             reader.lines().forEach(e -> log.info("Buffer reader stream {}", e));
         } catch (IOException e) {
@@ -101,53 +168,9 @@ public class PaymentService {
         }
     }
 
-    /**
-     * Test implementation for purchasing a product
-     * */
-    @Transactional
-    public void test(final PaymentDTO dto, final AddressDTO dto1) {
-        for (SkuQtyDTO obj : dto.dto()) {
-            this.productSkuRepo.updateInventory(obj.sku(), obj.qty());
-        }
-
-        Date date = this.customUtil.toUTC(new Date());
-
-        // currency
-        var currency = SarreCurrency.valueOf(dto.currency());
-
-        // save PaymentDetail
-        var payment = PaymentDetail.builder()
-                .email(dto.email())
-                .name(dto.name())
-                .phone(dto.phone())
-                .payment_id(UUID.randomUUID().toString())
-                .currency(currency)
-                .amount(dto.total())
-                .paymentProvider(dto.paymentProvider())
-                .paymentStatus(PaymentStatus.CONFIRMED)
-                .createAt(date)
-                .orderDetail(new HashSet<>())
-                .build();
-
-        var savedPayment = this.paymentRepo.save(payment);
-
-        // save OrderDetail
-        for (SkuQtyDTO obj : dto.dto()) {
-            this.orderRepo.save(new OrderDetail(obj.sku(), obj.qty(), savedPayment));
-        }
-
-        // save Address
-        var address = Address.builder()
-                .address(dto1.address())
-                .city(dto1.city())
-                .state(dto1.state())
-                .postcode(dto1.postcode())
-                .country(dto1.country())
-                .deliveryInfo(dto1.deliveryInfo())
-                .paymentDetail(savedPayment)
-                .build();
-
-        this.addressRepo.save(address);
+    @Scheduled(fixedRate = bound, timeUnit = TimeUnit.MINUTES, zone = "UTC")
+    public void schedule() {
+        // TODO call delete logic
     }
 
 }

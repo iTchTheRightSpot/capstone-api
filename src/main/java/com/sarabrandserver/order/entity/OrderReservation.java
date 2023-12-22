@@ -21,6 +21,9 @@ public class OrderReservation {
     private Long reservationId;
 
     @Column(nullable = false, length = 36)
+    private String cookie; // translates to ShoppingSession cookie table
+
+    @Column(nullable = false, length = 36)
     private String sku; // translates to product_sku table
 
     @Column(nullable = false)
@@ -33,7 +36,8 @@ public class OrderReservation {
     @Column(name = "expire_at", nullable = false)
     private Date expireAt;
 
-    public OrderReservation(String sku, int qty, ReservationStatus status, Date expireAt) {
+    public OrderReservation(String cookie, String sku, int qty, ReservationStatus status, Date expireAt) {
+        this.cookie = cookie;
         this.sku = sku;
         this.qty = qty;
         this.status = status;

@@ -61,6 +61,7 @@ ALTER TABLE product_sku
 CREATE TABLE IF NOT EXISTS order_reservation
 (
     reservation_id BIGINT      NOT NULL UNIQUE AUTO_INCREMENT,
+    cookie VARCHAR(36) NOT NULL,
     sku            VARCHAR(36) NOT NULL,
     qty            INTEGER     NOT NULL,
     status         VARCHAR(10) NOT NULL,

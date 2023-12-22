@@ -31,6 +31,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import static org.springframework.http.HttpHeaders.ACCEPT;
@@ -115,7 +116,7 @@ public class SecurityConfig {
             RefreshTokenFilter refreshTokenFilter,
             JwtAuthenticationConverter converter
     ) throws Exception {
-        var csrfTokenRepository = getCookieCsrfTokenRepository(this.COOKIESECURE, this.SAMESITE);
+        var csrfTokenRepository = csrfRepo.apply(this.COOKIESECURE, this.SAMESITE);
         return http
 
                 // CSRF Config
@@ -140,8 +141,7 @@ public class SecurityConfig {
                             "/" + this.BASEURL + "client/collection/**",
                             "/" + this.BASEURL + "worker/auth/login",
                             "/" + this.BASEURL + "cart/**",
-                            "/" + this.BASEURL + "payment/**",
-                             "/index"
+                            "/" + this.BASEURL + "payment/**"
                     ).permitAll();
                     auth.anyRequest().authenticated();
                 })
@@ -172,7 +172,7 @@ public class SecurityConfig {
      * As per docs
      * <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">...</a>
      */
-    private static CookieCsrfTokenRepository getCookieCsrfTokenRepository(boolean secure, String sameSite) {
+    static final BiFunction<Boolean, String, CookieCsrfTokenRepository> csrfRepo = (secure, sameSite) -> {
         Consumer<ResponseCookie.ResponseCookieBuilder> consumer = (cookie) -> cookie
                 .httpOnly(false)
                 .secure(secure)
@@ -180,9 +180,9 @@ public class SecurityConfig {
                 .sameSite(sameSite)
                 .maxAge(-1);
 
-        var csrfTokenRepository = new CookieCsrfTokenRepository();
-        csrfTokenRepository.setCookieCustomizer(consumer);
-        return csrfTokenRepository;
-    }
+        var csrf = new CookieCsrfTokenRepository();
+        csrf.setCookieCustomizer(consumer);
+        return csrf;
+    };
 
 }

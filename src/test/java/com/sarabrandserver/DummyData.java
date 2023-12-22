@@ -10,6 +10,7 @@ import com.sarabrandserver.collection.service.WorkerCollectionService;
 import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.product.service.WorkerProductService;
+import com.sarabrandserver.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -31,8 +32,9 @@ class DummyData {
     private String image2;
 
     @Bean
-    public CommandLineRunner commandLineRunner(
+    public CommandLineRunner runner(
             AuthService service,
+            UserRepository repository,
             WorkerCategoryService categoryService,
             WorkerCollectionService collectionService,
             WorkerProductService productService
@@ -77,15 +79,17 @@ class DummyData {
                 productService.create(data, images);
             }
 
-            var dto = new RegisterDTO(
-                    "SEJU",
-                    "Development",
-                    "admin@admin.com",
-                    "admin@admin.com",
-                    "0000000000",
-                    "password123"
-            );
-            service.workerRegister(dto);
+            if (repository.findByPrincipal("admin@admin.com").isEmpty()) {
+                var dto = new RegisterDTO(
+                        "SEJU",
+                        "Development",
+                        "admin@admin.com",
+                        "admin@admin.com",
+                        "0000000000",
+                        "password123"
+                );
+                service.workerRegister(dto);
+            }
         };
     }
 

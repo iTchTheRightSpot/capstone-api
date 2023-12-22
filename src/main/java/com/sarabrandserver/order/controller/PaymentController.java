@@ -1,10 +1,8 @@
 package com.sarabrandserver.order.controller;
 
-import com.sarabrandserver.order.dto.PaymentDTO;
 import com.sarabrandserver.order.service.PaymentService;
 import com.sarabrandserver.thirdparty.PaymentCredentialObj;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,15 +23,6 @@ public class PaymentController {
     @GetMapping(produces = APPLICATION_JSON_VALUE)
     public PaymentCredentialObj validate(HttpServletRequest req) {
         return this.paymentService.validate(req);
-    }
-
-    /**
-     * Api called when a client purchases an item test
-     * */
-    @ResponseStatus(OK)
-    @PostMapping(path = "/test", consumes = APPLICATION_JSON_VALUE)
-    public void test(@Valid @RequestBody PaymentDTO dto) {
-        this.paymentService.test(dto, dto.address());
     }
 
     /**

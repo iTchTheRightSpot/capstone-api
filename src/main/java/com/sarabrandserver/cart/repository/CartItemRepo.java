@@ -24,27 +24,17 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query(value = """
-    UPDATE CartItem c
-    SET c.qty = :qty
-    WHERE c.cartId = :id
-    """)
+    @Query("UPDATE CartItem c SET c.qty = :qty WHERE c.cartId = :id")
     void updateCartQtyByCartId(long id, int qty);
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query(value = """
-    DELETE FROM CartItem c
-    WHERE c.shoppingSession.cookie = :cookie AND c.sku = :sku
-    """)
+    @Query("DELETE FROM CartItem c WHERE c.shoppingSession.cookie = :cookie AND c.sku = :sku")
     void delete_cartItem_by_cookie_and_sku(String cookie, String sku);
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query(value = """
-    DELETE FROM CartItem c
-    WHERE c.shoppingSession.shoppingSessionId = :id
-    """)
+    @Query("DELETE FROM CartItem c WHERE c.shoppingSession.shoppingSessionId = :id")
     void deleteByParentID(long id);
 
     @Query("SELECT c FROM CartItem c WHERE c.shoppingSession.cookie = :uuid")

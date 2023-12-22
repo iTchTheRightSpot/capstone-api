@@ -2,11 +2,12 @@ package com.sarabrandserver.order.service;
 
 import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.cart.repository.CartItemRepo;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.order.entity.OrderReservation;
 import com.sarabrandserver.order.repository.OrderReservationRepo;
+import com.sarabrandserver.order.response.PaymentResponse;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
-import com.sarabrandserver.thirdparty.PaymentCredentialObj;
 import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -47,14 +49,15 @@ public class PaymentService {
     private final ThirdPartyPaymentService thirdPartyService;
     private final CustomUtil customUtil;
 
-    /**
+    /** TODO add shipping and taxes
      * Method helps prevent race condition or overselling by temporarily deducting
      * what is in the users cart with ProductSKU inventory.
      * @param req is passed from the controller
+     * @param currency is currency customer wants to pay with
      * @throws java.sql.SQLException if ProductSku inventory is negative
      * */
     @Transactional
-    public PaymentCredentialObj validate(HttpServletRequest req) {
+    public PaymentResponse raceCondition(HttpServletRequest req, SarreCurrency currency) {
         Cookie cookie = this.customUtil.cookie.apply(req, CART_COOKIE);
 
         if (cookie == null) {
@@ -65,6 +68,8 @@ public class PaymentService {
 
         var cartItems = this.cartItemRepo
                 .cart_items_by_shopping_session_cookie(sessionId);
+
+//        var cartItems = this.cartItemRepo.findAll();
 
         if (cartItems.isEmpty()) {
             throw new CustomNotFoundException("invalid shopping session");
@@ -87,8 +92,17 @@ public class PaymentService {
             onPendingReservationsNotEmpty(sessionId, date, reservations, cartItems);
         }
 
+        BigDecimal total = cartItemsTotal(sessionId, currency);
         var secret = this.thirdPartyService.payStackCredentials();
-        return new PaymentCredentialObj(secret.pubKey());
+        return new PaymentResponse(secret.pubKey(), total);
+    }
+
+    private BigDecimal cartItemsTotal(String sessionId, SarreCurrency currency) {
+        return this.cartItemRepo
+                .total_amount_in_default_currency(sessionId, currency)
+                .stream()
+                .map(pojo -> pojo.getPrice().multiply(BigDecimal.valueOf(pojo.getQty())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     /**

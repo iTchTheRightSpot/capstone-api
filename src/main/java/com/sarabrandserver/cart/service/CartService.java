@@ -195,16 +195,16 @@ public class CartService {
      * Creates a new shopping session
      */
     public void create_new_shopping_session(String uuid, Date expiration, CartDTO dto) {
-        var shoppingSession = new ShoppingSession(
+        var temp = new ShoppingSession(
                 uuid,
                 this.customUtil.toUTC(new Date()),
                 this.customUtil.toUTC(expiration),
                 new HashSet<>()
         );
 
-        ShoppingSession session = this.shoppingSessionRepo.save(shoppingSession);
+        var shoppingSession = this.shoppingSessionRepo.save(temp);
 
-        this.cartItemRepo.save(new CartItem(dto.qty(), dto.sku(), session));
+        this.cartItemRepo.save(new CartItem(dto.qty(), dto.sku(), shoppingSession));
     }
 
     /**

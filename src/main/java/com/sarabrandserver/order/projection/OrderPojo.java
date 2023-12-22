@@ -6,7 +6,7 @@ public interface OrderPojo {
 
     Date getTime();
     String getCurrency();
-    int getTotal();
+    Integer getTotal();
     String getPaymentId();
     String getDetail(); // json object
 

@@ -21,8 +21,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class CartControllerTest extends AbstractIntegrationTest {
 
-    private final String path = "/api/v1/cart";
-
+    @Value(value = "/${api.endpoint.baseurl}cart")
+    private String path;
     @Value("${cart.cookie.name}")
     private String CART_COOKIE;
 

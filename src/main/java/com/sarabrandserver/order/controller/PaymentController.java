@@ -1,7 +1,8 @@
 package com.sarabrandserver.order.controller;
 
+import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.order.response.PaymentResponse;
 import com.sarabrandserver.order.service.PaymentService;
-import com.sarabrandserver.thirdparty.PaymentCredentialObj;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +22,12 @@ public class PaymentController {
      * */
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public PaymentCredentialObj validate(HttpServletRequest req) {
-        return this.paymentService.validate(req);
+    public PaymentResponse raceCondition(
+            @RequestParam(name = "currency") String currency,
+            HttpServletRequest req
+    ) {
+        var sc = SarreCurrency.valueOf(currency.toUpperCase());
+        return this.paymentService.raceCondition(req, sc);
     }
 
     /**

@@ -60,7 +60,7 @@ class WorkerControllerTest extends AbstractIntegrationTest {
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("content.length()").value(2));
+                .andExpect(jsonPath("content.length()").value(3));
     }
 
 }

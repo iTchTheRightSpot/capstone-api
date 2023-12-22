@@ -36,9 +36,9 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     @Query("""
     UPDATE ProductSku s
     SET
-    s.inventory = (s.inventory - :inv)
+    s.inventory = (s.inventory - :qty)
     WHERE s.sku = :sku
     """)
-    void updateInventory(String sku, int inv);
+    void updateInventory(String sku, int qty);
 
 }

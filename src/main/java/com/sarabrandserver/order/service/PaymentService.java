@@ -84,7 +84,7 @@ public class PaymentService {
                         .save(new OrderReservation(sessionId, c.getSku(), c.getQty(), PENDING, date));
             }
         } else {
-            onPendingReservationsNotEmpty(date, reservations, cartItems, sessionId);
+            onPendingReservationsNotEmpty(sessionId, date, reservations, cartItems);
         }
 
         var secret = this.thirdPartyService.payStackCredentials();
@@ -113,10 +113,10 @@ public class PaymentService {
      * @param sessionId The ShoppingSession cookie associated with the cart items.
      * */
     private void onPendingReservationsNotEmpty(
+            String sessionId,
             Date date,
             List<OrderReservation> reservations,
-            List<CartItem> cartItems,
-            String sessionId
+            List<CartItem> cartItems
     ) {
         Map<String, OrderReservation> map = reservations.stream()
                 .collect(Collectors.toMap(OrderReservation::getSku, orderReservation -> orderReservation));

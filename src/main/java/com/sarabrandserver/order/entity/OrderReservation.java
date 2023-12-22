@@ -36,7 +36,13 @@ public class OrderReservation {
     @Column(name = "expire_at", nullable = false)
     private Date expireAt;
 
-    public OrderReservation(String cookie, String sku, int qty, ReservationStatus status, Date expireAt) {
+    public OrderReservation(
+            String cookie,
+            String sku,
+            int qty,
+            ReservationStatus status,
+            Date expireAt
+    ) {
         this.cookie = cookie;
         this.sku = sku;
         this.qty = qty;

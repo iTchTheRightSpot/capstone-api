@@ -24,11 +24,15 @@ public class ThirdPartyPaymentService {
      * Returns PayStack pub and secret keys
      * */
     public final PaymentCredentialObj payStackCredentials() {
-        if (this.env.getProperty("spring.profiles.active", "").equals("test")) {
-            String pubKey = this.env.getProperty("paystack.pub.key", "");
-            String secretKey = this.env.getProperty("paystack.secret.key", "");
+        String profile = this.env.getProperty("spring.profiles.active", "");
+        String pubKey = this.env.getProperty("paystack.pub.key", "");
+        String secretKey = this.env.getProperty("paystack.secret.key", "");
+
+        if (profile.equals("test") || (!pubKey.isBlank() && !secretKey.isBlank())) {
             return new PaymentCredentialObj(pubKey, secretKey);
         }
+
+        // TODO find out how to set credentials as an env variable not system variable
         return impl("paystack-credentials", PaymentCredentialObj.class);
     }
 

@@ -48,6 +48,8 @@ class CartServiceTest extends AbstractUnitTest {
                 this.customUtil,
                 this.s3Service
         );
+
+        this.cartService.setSplit("%");
     }
 
     /**

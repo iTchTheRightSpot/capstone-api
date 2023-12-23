@@ -90,7 +90,7 @@ public class CartService {
             }
         } catch (RuntimeException ex) {
             log.error("validateCookieExpiration method, {}", ex.getMessage());
-            throw new CustomInvalidFormatException("Invalid cookie");
+            throw new CustomInvalidFormatException("invalid cookie");
         }
     }
 

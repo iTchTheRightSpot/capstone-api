@@ -149,7 +149,6 @@ public class PaymentService {
                                     cart.getSku(),
                                     PENDING
                             );
-
                 } else if (cart.getQty() < reservation.getQty()) {
                     this.reservationRepo
                             .onAdd(

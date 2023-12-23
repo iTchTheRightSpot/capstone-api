@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
+import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 
 import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
@@ -69,11 +70,10 @@ public class ControllerAdvices {
         return new ResponseEntity<>(res, INTERNAL_SERVER_ERROR);
     }
 
-    /** Displays custom exception */
     @ExceptionHandler({MethodArgumentNotValidException.class})
     public ResponseEntity<ExceptionResponse> validationException(MethodArgumentNotValidException ex) {
         StringBuilder sb = new StringBuilder();
-        String lineSeparator = System.getProperty("line.separator");
+        String lineSeparator = System.lineSeparator();
 
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
@@ -95,6 +95,12 @@ public class ControllerAdvices {
     @ExceptionHandler({SQLIntegrityConstraintViolationException.class})
     public ResponseEntity<ExceptionResponse> sqlDuplicateException() {
         var res = new ExceptionResponse("duplicate entry(s)", CONFLICT);
+        return new ResponseEntity<>(res, CONFLICT);
+    }
+
+    @ExceptionHandler({SQLException.class})
+    public ResponseEntity<ExceptionResponse> sqlRaceConditionException() {
+        var res = new ExceptionResponse("an item in your cart is sold out.", CONFLICT);
         return new ResponseEntity<>(res, CONFLICT);
     }
 

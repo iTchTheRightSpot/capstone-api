@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.web.servlet.MvcResult;
 
+import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -71,6 +72,140 @@ class PaymentControllerTest extends AbstractIntegrationTest {
                         .cookie(cookie)
                 )
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("""
+    Tests against race condition. User being indecisive with the qty.
+    Basically a keeps switching from payment page back to adding new items to cart
+    """)
+    void valid() throws Exception {
+        var list = this.productSkuRepo.findAll();
+
+        MvcResult result = this.MOCKMVC
+                .perform(get(cartPath).with(csrf()))
+                .andReturn();
+
+        Cookie cookie = result.getResponse().getCookie(CART_COOKIE);
+        assertNotNull(cookie);
+
+        var sku = list.get(0);
+
+        // simulate adding to cart
+        this.MOCKMVC
+                .perform(post(cartPath)
+                        .contentType(APPLICATION_JSON)
+                        .content(this.MAPPER
+                                .writeValueAsString(new CartDTO(sku.getSku(), sku.getInventory() - 1))
+                        )
+                        .with(csrf())
+                        .cookie(cookie)
+                )
+                .andExpect(status().isCreated());
+
+        // simulate going to checkout view
+        this.MOCKMVC
+                .perform(get(this.path)
+                        .param("currency", USD.getCurrency())
+                        .with(csrf())
+                        .cookie(cookie)
+                )
+                .andExpect(status().isOk());
+
+        // simulate deducting item in cart qty
+        this.MOCKMVC
+                .perform(post(cartPath)
+                        .contentType(APPLICATION_JSON)
+                        .content(this.MAPPER
+                                .writeValueAsString(new CartDTO(sku.getSku(), 1))
+                        )
+                        .with(csrf())
+                        .cookie(cookie)
+                )
+                .andExpect(status().isCreated());
+
+        // simulate add
+        for (int i = 1; i < list.size(); i++) {
+            ProductSku s = list.get(i);
+            this.MOCKMVC
+                    .perform(post(cartPath)
+                            .contentType(APPLICATION_JSON)
+                            .content(this.MAPPER
+                                    .writeValueAsString(new CartDTO(s.getSku(), s.getInventory()))
+                            )
+                            .with(csrf())
+                            .cookie(cookie)
+                    )
+                    .andExpect(status().isCreated());
+        }
+
+        // simulate user switching to pay in ngn
+        this.MOCKMVC
+                .perform(get(this.path)
+                        .param("currency", NGN.getCurrency())
+                        .with(csrf())
+                        .cookie(cookie)
+                )
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("""
+    Tests against race condition. Final check before payment page
+    is shown when Product is out of stock.
+    """)
+    void va() throws Exception {
+        Cookie cookie = this.MOCKMVC
+                .perform(get(cartPath).with(csrf()))
+                .andReturn()
+                .getResponse()
+                .getCookie(CART_COOKIE);
+
+        Cookie cookie2 = this.MOCKMVC
+                .perform(get(cartPath).with(csrf()))
+                .andReturn()
+                .getResponse()
+                .getCookie(CART_COOKIE);
+
+        assertNotNull(cookie);
+        assertNotNull(cookie2);
+
+        var list = this.productSkuRepo.findAll();
+
+        var sku = list.get(0);
+
+        // simulate adding to cart
+        this.MOCKMVC
+                .perform(post(cartPath)
+                        .contentType(APPLICATION_JSON)
+                        .content(this.MAPPER
+                                .writeValueAsString(new CartDTO(sku.getSku(), sku.getInventory() - 1))
+                        )
+                        .with(csrf())
+                        .cookie(cookie)
+                )
+                .andExpect(status().isCreated());
+
+        // simulate going to checkout view
+        this.MOCKMVC
+                .perform(get(this.path)
+                        .param("currency", USD.getCurrency())
+                        .with(csrf())
+                        .cookie(cookie)
+                )
+                .andExpect(status().isOk());
+
+        // simulate adding to cart
+        this.MOCKMVC
+                .perform(post(cartPath)
+                        .contentType(APPLICATION_JSON)
+                        .content(this.MAPPER
+                                .writeValueAsString(new CartDTO(sku.getSku(), 1))
+                        )
+                        .with(csrf())
+                        .cookie(cookie)
+                )
+                .andExpect(status().isConflict());
     }
 
 }

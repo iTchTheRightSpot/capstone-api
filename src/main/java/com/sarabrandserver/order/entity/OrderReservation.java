@@ -20,7 +20,7 @@ public class OrderReservation {
     @Column(name = "reservation_id", nullable = false, unique = true)
     private Long reservationId;
 
-    @Column(nullable = false, length = 36)
+    @Column(nullable = false, length = 39)
     private String cookie; // translates to ShoppingSession cookie table
 
     @Column(nullable = false, length = 36)

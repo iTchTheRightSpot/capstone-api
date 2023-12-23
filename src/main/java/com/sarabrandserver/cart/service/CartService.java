@@ -41,8 +41,9 @@ public class CartService {
 
     private final int expire = 2; // cart expiration
     private final int expirationBound = 5;
-    private final String split = "%";
 
+    @Value(value = "${cart.split}")
+    private String split;
     @Value(value = "${aws.bucket}")
     private String BUCKET;
     @Value("${cart.cookie.name}")
@@ -169,10 +170,9 @@ public class CartService {
         }
 
         String[] arr = cookie.getValue().split(this.split);
-        String param = arr[0];
 
         Optional<ShoppingSession> optional = this.shoppingSessionRepo
-                .shoppingSessionByCookie(param);
+                .shoppingSessionByCookie(arr[0]);
 
         if (optional.isEmpty()) {
             Date date;
@@ -185,7 +185,7 @@ public class CartService {
                 throw new CustomInvalidFormatException("invalid cookie");
             }
 
-            create_new_shopping_session(param, date, dto);
+            create_new_shopping_session(arr[0], date, dto);
         } else {
             add_to_existing_shopping_session(optional.get(), dto);
         }

@@ -5,6 +5,7 @@ import com.sarabrandserver.order.entity.OrderReservation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +38,7 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     s.inventory = (s.inventory - :productSkuQty),
     o.qty = :reservationQty,
     o.expire_at = :expire
-    WHERE s.sku = :sku AND o.cookie = :cookie AND o.status = :status
+    WHERE s.sku = :sku AND o.cookie = :cookie AND o.status = :#{#status.name()}
     """)
     void onSub(
             int productSkuQty,
@@ -45,7 +46,7 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
             Date expire,
             String cookie,
             String sku,
-            ReservationStatus status
+            @Param(value = "status") ReservationStatus status
     );
 
     @Transactional
@@ -57,7 +58,7 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     s.inventory = (s.inventory + :productSkuQty),
     o.qty = :reservationQty,
     o.expire_at = :expire
-    WHERE s.sku = :sku AND o.cookie = :cookie AND o.status = :status
+    WHERE s.sku = :sku AND o.cookie = :cookie AND o.status = :#{#status.name()}
     """)
     void onAdd(
             int productSkuQty,
@@ -65,7 +66,7 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
             Date expire,
             String cookie,
             String sku,
-            ReservationStatus status
+            @Param(value = "status") ReservationStatus status
     );
 
 }

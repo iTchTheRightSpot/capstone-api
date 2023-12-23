@@ -25,6 +25,8 @@ public class ThirdPartyPaymentService {
      * */
     public final PaymentCredentialObj payStackCredentials() {
         String profile = this.env.getProperty("spring.profiles.active", "");
+        String awsSecretId = this.env
+                .getProperty("aws.paystack.secret.id", "paystack-credentials");
         String pubKey = this.env.getProperty("paystack.pub.key", "");
         String secretKey = this.env.getProperty("paystack.secret.key", "");
 
@@ -33,7 +35,7 @@ public class ThirdPartyPaymentService {
         }
 
         // TODO find out how to set credentials as an env variable not system variable
-        return impl("paystack-credentials", PaymentCredentialObj.class);
+        return impl(awsSecretId, PaymentCredentialObj.class);
     }
 
     /**

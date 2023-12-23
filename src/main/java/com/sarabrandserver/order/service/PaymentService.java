@@ -42,6 +42,8 @@ public class PaymentService {
 
     @Value("${cart.cookie.name}")
     private String CART_COOKIE;
+    @Value(value = "${cart.split}")
+    private String SPLIT;
 
     private final ProductSkuRepo productSkuRepo;
     private final CartItemRepo cartItemRepo;
@@ -64,12 +66,10 @@ public class PaymentService {
             throw new CustomNotFoundException("No cookie found. Kindly refresh window");
         }
 
-        String sessionId = cookie.getValue();
+        String sessionId = cookie.getValue().split(this.SPLIT)[0];
 
         var cartItems = this.cartItemRepo
                 .cart_items_by_shopping_session_cookie(sessionId);
-
-//        var cartItems = this.cartItemRepo.findAll();
 
         if (cartItems.isEmpty()) {
             throw new CustomNotFoundException("invalid shopping session");
@@ -163,6 +163,10 @@ public class PaymentService {
                 }
 
                 map.remove(cart.getSku());
+            } else {
+                this.productSkuRepo.updateInventory(cart.getSku(), cart.getQty());
+                this.reservationRepo
+                        .save(new OrderReservation(sessionId, cart.getSku(), cart.getQty(), PENDING, date));
             }
         }
 

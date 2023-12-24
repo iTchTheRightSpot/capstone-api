@@ -95,7 +95,7 @@ public class PaymentService {
 
         BigDecimal total = cartItemsTotal(sessionId, currency);
         var secret = this.thirdPartyService.payStackCredentials();
-        return new PaymentResponse(secret.pubKey(), total);
+        return new PaymentResponse(secret.pubKey(), currency, total);
     }
 
     private BigDecimal cartItemsTotal(String sessionId, SarreCurrency currency) {

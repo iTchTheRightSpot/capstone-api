@@ -23,14 +23,6 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query("""
-    DELETE FROM OrderReservation o
-    WHERE o.cookie = :cookie AND o.sku = :sku AND o.status = :status
-    """)
-    void deleteBySku(String cookie, String sku, ReservationStatus status);
-
-    @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(nativeQuery = true, value = """
     UPDATE product_sku s
     INNER JOIN order_reservation o ON s.sku = o.sku

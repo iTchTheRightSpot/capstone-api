@@ -171,7 +171,12 @@ public class PaymentService {
             }
         }
 
-        for (String key : map.keySet()) this.reservationRepo.deleteBySku(sessionId, key, PENDING);
+        for (Map.Entry<String, OrderReservation> entry : map.entrySet()) {
+            OrderReservation r = entry.getValue();
+            this.productSkuRepo
+                    .updateInventory(r.getSku(), r.getQty());
+            this.reservationRepo.deleteOrderReservationByReservationId(r.getReservationId());
+        }
     }
 
     /**
@@ -204,7 +209,7 @@ public class PaymentService {
 
         for (OrderReservation r : list) {
             this.productSkuRepo
-                    .updateInventoryOnPendingExpiredReservation(r.getSku(), r.getQty());
+                    .updateInventory(r.getSku(), r.getQty());
             this.reservationRepo
                     .deleteOrderReservationByReservationId(r.getReservationId());
         }

@@ -41,6 +41,13 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     """)
     void updateInventoryOnMakingReservation(String sku, int qty);
 
+    /**
+     * Update ProductSku inventory based on ProductSku.sku.
+     * Achieves this by adding qty passed in the parameter.
+     * Note this method is only called in PaymentService when
+     * reserved ProductSku has either expired or user no longer
+     * wants to purchase item.
+     * */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
@@ -49,6 +56,6 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     s.inventory = (s.inventory + :qty)
     WHERE s.sku = :sku
     """)
-    void updateInventoryOnPendingExpiredReservation(String sku, int qty);
+    void updateInventory(String sku, int qty);
 
 }

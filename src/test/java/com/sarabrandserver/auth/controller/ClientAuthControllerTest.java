@@ -3,15 +3,9 @@ package com.sarabrandserver.auth.controller;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.auth.dto.LoginDTO;
 import com.sarabrandserver.auth.dto.RegisterDTO;
-import com.sarabrandserver.auth.service.AuthService;
-import com.sarabrandserver.user.repository.UserRepository;
-import com.sarabrandserver.user.repository.UserRoleRepository;
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -24,37 +18,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class ClientAuthControllerTest extends AbstractIntegrationTest {
 
-    private final String ADMIN = "admin@admin.com";
-    private final String PASSWORD = "password123";
-
-    @Value(value = "${server.servlet.session.cookie.name}") private String JSESSIONID;
-
-    @Autowired private AuthService authService;
-    @Autowired private UserRoleRepository userRoleRepository;
-    @Autowired private UserRepository userRepository;
-
-    @BeforeEach
-    void setUp() {
-        var dto = new RegisterDTO(
-                "SEJU",
-                "Development",
-                ADMIN,
-                "",
-                "000-000-0000",
-                PASSWORD
-        );
-        this.authService.workerRegister(dto);
-    }
-
-    @AfterEach
-    void tearDown() {
-        this.userRoleRepository.deleteAll();
-        this.userRepository.deleteAll();
-    }
+    @Value(value = "${server.servlet.session.cookie.name}")
+    private String JSESSIONID;
+    @Value(value = "/${api.endpoint.baseurl}client/auth/")
+    private String path;
 
     Cookie cookie(String principal, String password) throws Exception {
-
-        var registerDTO = new RegisterDTO(
+        var dto = new RegisterDTO(
                 "SEUY",
                 "Development",
                 principal,
@@ -63,24 +33,22 @@ class ClientAuthControllerTest extends AbstractIntegrationTest {
                 password
         );
 
-        String payload = this.MAPPER.writeValueAsString(registerDTO);
-
-        MvcResult register = this.MOCKMVC
-                .perform(post("/api/v1/client/auth/register")
+        // assert jwt cookie is present after registration
+        return this.MOCKMVC
+                .perform(post(this.path + "register")
                         .contentType(APPLICATION_JSON)
-                        .content(payload)
+                        .content(this.MAPPER.writeValueAsString(dto))
                         .with(csrf())
                 )
                 .andExpect(status().isCreated())
-                .andReturn();
-
-        // assert jwt cookie is present after registration
-        return register.getResponse().getCookie(JSESSIONID);
+                .andReturn()
+                .getResponse()
+                .getCookie(JSESSIONID);
     }
 
     @Test
     @Order(1)
-    void register_login() throws Exception {
+    void register_and_login() throws Exception {
         String principal = "fresh@prince.com";
         String password = "password123#";
 
@@ -90,7 +58,7 @@ class ClientAuthControllerTest extends AbstractIntegrationTest {
         String dto = this.MAPPER.writeValueAsString(new LoginDTO(principal, password));
 
         MvcResult login = this.MOCKMVC
-                .perform(post("/api/v1/client/auth/login")
+                .perform(post(this.path + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(dto)
@@ -109,19 +77,45 @@ class ClientAuthControllerTest extends AbstractIntegrationTest {
 
     @Test
     @Order(2)
-    void simulate_logging_in_with_jwt_cookie_present() throws Exception {
-        Cookie c = cookie("fresh@prince.com", "password123#");
-
-        String dto = this.MAPPER.writeValueAsString(new LoginDTO(ADMIN, PASSWORD));
-
+    void simulate_logging_in_with_none_existent_user() throws Exception {
+        String dto = this.MAPPER
+                .writeValueAsString(new LoginDTO("admin@admin.com", "password123"));
         this.MOCKMVC
-                .perform(post("/api/v1/worker/auth/login")
+                .perform(post(this.path + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(dto)
-                        .cookie(c)
                 )
-                .andExpect(status().isOk());
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @Order(3)
+    void client_trying_to_access_worker_route() throws Exception {
+        String principal = "freshprince@prince.com";
+        String password = "password123#";
+
+        Cookie c = cookie(principal, password);
+        assertNotNull(c);
+
+        String dto = this.MAPPER.writeValueAsString(new LoginDTO(principal, password));
+
+        MvcResult login = this.MOCKMVC
+                .perform(post(this.path + "login")
+                        .with(csrf())
+                        .contentType(APPLICATION_JSON)
+                        .content(dto)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        var cookie = login.getResponse().getCookie(JSESSIONID);
+
+        assertNotNull(cookie);
+
+        this.MOCKMVC
+                .perform(get("/test/worker").cookie(cookie))
+                .andExpect(status().isForbidden());
     }
 
 }

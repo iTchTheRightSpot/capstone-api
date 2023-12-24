@@ -99,8 +99,8 @@ public class AuthService {
      *
      * @param key performs login details based on controller
      * @param dto      consist of principal and password.
-     * @param request  of HttpServletRequest
-     * @param response of HttpServletResponse
+     * @param req  of HttpServletRequest
+     * @param res of HttpServletResponse
      * @throws AuthenticationException is thrown when credentials do not exist,
      *                          bad credentials account is locked e.t.c.
      */
@@ -108,11 +108,11 @@ public class AuthService {
     public void login(
             RoleEnum key,
             LoginDTO dto,
-            HttpServletRequest request,
-            HttpServletResponse response
+            HttpServletRequest req,
+            HttpServletResponse res
     ) {
         // No need to re-authenticate if request contains valid jwt cookie
-        if (_validateCookies(request, key)) {
+        if (_validateCookies(req, key)) {
             return;
         }
 
@@ -121,7 +121,7 @@ public class AuthService {
 
         var authenticated = this.authManager.authenticate(unauthenticated);
 
-        loginImpl(authenticated, response);
+        loginImpl(authenticated, res);
     }
 
     private void loginImpl(Authentication auth, HttpServletResponse response) {

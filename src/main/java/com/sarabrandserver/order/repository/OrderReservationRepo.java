@@ -69,4 +69,17 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
             @Param(value = "status") ReservationStatus status
     );
 
+    @Query("SELECT o FROM OrderReservation o WHERE o.expireAt <= :date AND o.status = :status")
+    List<OrderReservation> allPendingExpiredReservations(Date date, ReservationStatus status);
+
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM OrderReservation o WHERE o.reservationId = :id")
+    void deleteOrderReservationByReservationId(long id);
+
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM OrderReservation o WHERE o.expireAt <= :date")
+    void deleteExpired(Date date);
+
 }

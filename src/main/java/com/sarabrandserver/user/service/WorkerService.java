@@ -18,7 +18,7 @@ public class WorkerService {
      *
      * @param page number in the UI
      * @param size max amount of json pulled at one
-     * @return Page of ClientzPojo
+     * @return Page of UserResponse
      * */
     public Page<UserResponse> allUsers(int page, int size) {
         return this.userRepository

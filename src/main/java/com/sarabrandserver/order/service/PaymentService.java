@@ -84,7 +84,8 @@ public class PaymentService {
 
         if (reservations.isEmpty()) {
             for (CartItem c : cartItems) {
-                this.productSkuRepo.updateInventory(c.getSku(), c.getQty());
+                this.productSkuRepo
+                        .updateInventoryOnMakingReservation(c.getSku(), c.getQty());
                 this.reservationRepo
                         .save(new OrderReservation(sessionId, c.getSku(), c.getQty(), PENDING, date));
             }
@@ -163,7 +164,8 @@ public class PaymentService {
 
                 map.remove(cart.getSku());
             } else {
-                this.productSkuRepo.updateInventory(cart.getSku(), cart.getQty());
+                this.productSkuRepo
+                        .updateInventoryOnMakingReservation(cart.getSku(), cart.getQty());
                 this.reservationRepo
                         .save(new OrderReservation(sessionId, cart.getSku(), cart.getQty(), PENDING, date));
             }
@@ -177,17 +179,36 @@ public class PaymentService {
      * */
     @Transactional
     public void order(HttpServletRequest req) {
-        // TODO deduct inventory
         try (BufferedReader reader = req.getReader()) {
             reader.lines().forEach(e -> log.info("Buffer reader stream {}", e));
         } catch (IOException e) {
+            // TODO handle this better
             throw new RuntimeException(e);
         }
     }
 
-    @Scheduled(fixedRate = bound, timeUnit = TimeUnit.MINUTES, zone = "UTC")
+    /**
+     * Returning pending order reservation back to stock.
+     * Note we are making the interval to be 20 mins
+     * for extra breathing space from payment provider webhook
+     * */
+    @Scheduled(fixedRate = bound + 5, timeUnit = TimeUnit.MINUTES, zone = "UTC")
     public void schedule() {
-        // TODO call delete logic
+        scheduledDelete();
+    }
+
+    void scheduledDelete() {
+        Date date = this.customUtil.toUTC(new Date());
+        var list = this.reservationRepo
+                .allPendingExpiredReservations(date, PENDING);
+
+        for (OrderReservation r : list) {
+            this.productSkuRepo
+                    .updateInventoryOnPendingExpiredReservation(r.getSku(), r.getQty());
+            this.reservationRepo
+                    .deleteOrderReservationByReservationId(r.getReservationId());
+        }
+        this.reservationRepo.deleteExpired(date);
     }
 
 }

@@ -31,10 +31,10 @@ public class PaymentController {
     }
 
     /**
-     * Called via Flutterwave webhook
+     * Api called by third party service
      * */
     @ResponseStatus(OK)
-    @PostMapping(consumes = APPLICATION_JSON_VALUE)
+    @PostMapping
     public void order(HttpServletRequest req) {
         this.paymentService.order(req);
     }

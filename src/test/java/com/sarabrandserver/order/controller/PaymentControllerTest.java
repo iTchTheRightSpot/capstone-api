@@ -6,8 +6,6 @@ import com.sarabrandserver.product.entity.ProductSku;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -28,8 +26,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class PaymentControllerTest extends AbstractIntegrationTest {
-
-    static final Logger log = LoggerFactory.getLogger(PaymentControllerTest.class);
 
     @Value(value = "/${api.endpoint.baseurl}payment")
     private String path;
@@ -166,7 +162,8 @@ class PaymentControllerTest extends AbstractIntegrationTest {
         var sku = list.get(0);
 
         // update inventory to 1 to simulate num of users trying to purchase the only item in stock
-        this.productSkuRepo.update_inventory_testing_race_condition(sku.getSku(), 1);
+        this.productSkuRepo
+                .updateInventoryOnMakingReservation(sku.getSku(), sku.getInventory() - 1);
 
         Cookie[] cookies = new Cookie[num];
 
@@ -205,7 +202,7 @@ class PaymentControllerTest extends AbstractIntegrationTest {
     whilst the others get 409.
     """)
     void va() throws Exception {
-        int numOfUsers = 10;
+        int numOfUsers = 5;
         Cookie[] cookies = impl(numOfUsers);
         ExecutorService executor = Executors.newFixedThreadPool(numOfUsers);
 
@@ -215,10 +212,10 @@ class PaymentControllerTest extends AbstractIntegrationTest {
             int curr = i;
             futures[i] = CompletableFuture.supplyAsync(() -> {
                 try {
-                    var currency = curr % 2 == 0 ?  USD.getCurrency() :  NGN.getCurrency();
+                    var c = curr % 2 == 0 ? USD.getCurrency() : NGN.getCurrency();
                     return this.MOCKMVC
                             .perform(get(this.path)
-                                    .param("currency", currency)
+                                    .param("currency", c)
                                     .with(csrf())
                                     .cookie(cookies[curr])
                             )

@@ -39,19 +39,16 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     s.inventory = (s.inventory - :qty)
     WHERE s.sku = :sku
     """)
-    void updateInventory(String sku, int qty);
+    void updateInventoryOnMakingReservation(String sku, int qty);
 
-    /**
-     * Method is only using in integration testing
-     * */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
     UPDATE ProductSku s
     SET
-    s.inventory = :qty
+    s.inventory = (s.inventory + :qty)
     WHERE s.sku = :sku
     """)
-    void update_inventory_testing_race_condition(String sku, int qty);
+    void updateInventoryOnPendingExpiredReservation(String sku, int qty);
 
 }

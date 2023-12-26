@@ -41,7 +41,7 @@ public class ThirdPartyPaymentService {
     /**
      * Returns Flutterwave pub, secret and encryption keys
      * */
-    public final PaymentCredentialObj flutterWaveCredentials() {
+    final PaymentCredentialObj flutterWaveCredentials() {
         if (this.env.getProperty("spring.profiles.active", "").equals("test")) {
             String pubKey = this.env.getProperty("flutter.pub.key", "");
             String secretKey = this.env.getProperty("flutter.secret.key", "");

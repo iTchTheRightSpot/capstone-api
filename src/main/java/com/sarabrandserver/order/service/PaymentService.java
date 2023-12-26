@@ -1,5 +1,7 @@
 package com.sarabrandserver.order.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.enumeration.SarreCurrency;
@@ -12,6 +14,7 @@ import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.xml.bind.DatatypeConverter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +23,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.BufferedReader;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -32,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +52,7 @@ public class PaymentService {
     private String SPLIT;
 
     private final ProductSkuRepo productSkuRepo;
+    private final ObjectMapper objectMapper;
     private final CartItemRepo cartItemRepo;
     private final OrderReservationRepo reservationRepo;
     private final ThirdPartyPaymentService thirdPartyService;
@@ -56,7 +63,7 @@ public class PaymentService {
      * what is in the users cart with ProductSKU inventory.
      * @param req is passed from the controller
      * @param currency is currency customer wants to pay with
-     * @throws java.sql.SQLException if ProductSku inventory is negative
+     * @throws SQLException if ProductSku inventory is negative
      * */
     @Transactional
     public PaymentResponse raceCondition(HttpServletRequest req, SarreCurrency currency) {
@@ -184,11 +191,55 @@ public class PaymentService {
      * */
     @Transactional
     public void order(HttpServletRequest req) {
-        try (BufferedReader reader = req.getReader()) {
-            reader.lines().forEach(e -> log.info("Buffer reader stream {}", e));
+        String body = null;
+        try {
+            body = requestBody(req);
         } catch (IOException e) {
-            // TODO handle this better
-            throw new RuntimeException(e);
+            log.error("Error retrieving body from HttpServletRequest {}", e.getMessage());
+        }
+
+        if (body == null) return;
+
+        var secret = this.thirdPartyService.payStackCredentials();
+        String header = req.getHeader("x-paystack-signature");
+        String validate = validateRequestFromPayStack(secret.secretKey(), body);
+
+        if (!validate.toLowerCase().equals(header)) {
+            return;
+        }
+
+        // TODO verify payment came from paystack
+        // https://paystack.com/docs/payments/verify-payments/
+        // TODO update order reservation table
+        // TODO save to PaymentDetail, OrderDetail and Address
+    }
+
+    /**
+     * Transforms request body into a string
+     * */
+    private String requestBody(HttpServletRequest req) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = req.getReader().readLine()) != null) {
+            sb.append(line);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Validates if request came from paystack
+     * <a href="https://paystack.com/docs/payments/webhooks/">...</a>
+     * */
+    private String validateRequestFromPayStack(String secretKey, String body) {
+        String hmac = "HmacSHA512";
+        try {
+            JsonNode node = this.objectMapper.readValue(body, JsonNode.class);
+            Mac sha512_HMAC = Mac.getInstance(hmac);
+            sha512_HMAC.init(new SecretKeySpec(secretKey.getBytes(UTF_8), hmac));
+            return DatatypeConverter
+                    .printHexBinary(sha512_HMAC.doFinal(node.toString().getBytes(UTF_8)));
+        } catch (Exception e) {
+            return "";
         }
     }
 

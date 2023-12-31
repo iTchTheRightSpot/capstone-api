@@ -166,10 +166,31 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                    <image>
+                        <name>docker.io/emmanuelu17/${project.artifactId}:latest</name>
+                    </image>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <profiles>
-        <!-- default profile -->
+        <!-- native profile -->
         <profile>
-            <id>default</id>
+            <id>native</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -183,23 +204,6 @@
                     <plugin>
                         <groupId>org.graalvm.buildtools</groupId>
                         <artifactId>native-maven-plugin</artifactId>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-maven-plugin</artifactId>
-
-                        <configuration>
-                            <excludes>
-                                <exclude>
-                                    <groupId>org.projectlombok</groupId>
-                                    <artifactId>lombok</artifactId>
-                                </exclude>
-                            </excludes>
-                            <image>
-                                <name>docker.io/emmanuelu17/${project.artifactId}:latest</name>
-                            </image>
-                        </configuration>
                     </plugin>
 
                     <plugin>
@@ -221,35 +225,7 @@
 
                 </plugins>
             </build>
-
         </profile>
-
-        <!-- Test profile -->
-        <profile>
-            <id>test</id>
-            <properties>
-                <spring.profiles.active>test</spring.profiles.active>
-            </properties>
-
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-maven-plugin</artifactId>
-
-                        <configuration>
-                            <excludes>
-                                <exclude>
-                                    <groupId>org.projectlombok</groupId>
-                                    <artifactId>lombok</artifactId>
-                                </exclude>
-                            </excludes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
     </profiles>
 
 </project>

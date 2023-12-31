@@ -194,6 +194,7 @@ public class PaymentService {
         String body = null;
         try {
             body = requestBody(req);
+            log.info("Request body Paystack {}", body);
         } catch (IOException e) {
             log.error("Error retrieving body from HttpServletRequest {}", e.getMessage());
         }
@@ -203,6 +204,8 @@ public class PaymentService {
         var secret = this.thirdPartyService.payStackCredentials();
         String header = req.getHeader("x-paystack-signature");
         String validate = validateRequestFromPayStack(secret.secretKey(), body);
+
+        log.info("Validate request came from Paystack {}", validate);
 
         if (!validate.toLowerCase().equals(header)) {
             return;
@@ -239,6 +242,7 @@ public class PaymentService {
             return DatatypeConverter
                     .printHexBinary(sha512_HMAC.doFinal(node.toString().getBytes(UTF_8)));
         } catch (Exception e) {
+            log.info("Error validating request from paystack {}", e.getMessage());
             return "";
         }
     }

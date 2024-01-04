@@ -75,7 +75,7 @@ class DummyData {
 
                 var images = IMAGES();
 
-                // Create product
+                // Create products
                 productService.create(data, images);
             }
 

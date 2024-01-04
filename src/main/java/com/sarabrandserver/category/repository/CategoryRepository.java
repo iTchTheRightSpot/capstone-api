@@ -17,8 +17,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * contains native query
+ * */
 @Repository
 public interface CategoryRepository extends JpaRepository<ProductCategory, Long> {
+
     @Query(value = """
     SELECT
     c.uuid AS uuid,
@@ -30,21 +34,6 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     """)
     List<CategoryPojo> fetchCategoriesWorker();
 
-    /** Equivalent sql statement because jpa can be confusing at times haha
-     * select parent.category_name, group_concat(child.category_name)
-     * from product_category parent
-     * left join product_category child on parent.category_id = child.parent_category_id
-     * where parent.parent_category_id is null
-     * group by parent.category_name, parent.created_at
-     * order by parent.created_at
-     * JPA
-     * SELECT parent.categoryName AS category, GROUP_CONCAT(child.categoryName) AS sub
-     * FROM ProductCategory parent
-     * LEFT JOIN ProductCategory child ON parent.categoryId = child.productCategory.categoryId
-     * WHERE parent.productCategory.categoryId IS NULL AND parent.isVisible = true
-     * GROUP BY parent.categoryName
-     * ORDER BY parent.createAt
-     * */
     @Query(value = """
     SELECT
     c.categoryName AS category,
@@ -54,14 +43,10 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     """)
     List<CategoryPojo> fetchCategoriesClient();
 
-    @Query("SELECT pc FROM ProductCategory pc WHERE pc.categoryName = :name")
+    @Query("SELECT c FROM ProductCategory c WHERE c.categoryName = :name")
     Optional<ProductCategory> findByName(@Param(value = "name") String name);
 
-    @Query(value = """
-    SELECT COUNT(p.productId)
-    FROM Product p
-    WHERE p.productCategory.uuid = :uuid
-    """)
+    @Query(value = "SELECT COUNT(p.productId) FROM Product p WHERE p.productCategory.uuid = :uuid")
     int productsAttached(String uuid);
 
     @Query("SELECT c FROM ProductCategory c WHERE c.uuid = :uuid")
@@ -93,21 +78,28 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     SELECT
     p.uuid as uuid,
     p.name as name,
-    (SELECT
-    c.currency
-    FROM PriceCurrency c
-    WHERE p.productId = c.product.productId AND c.currency = :currency
-    ) AS currency,
-    (SELECT
-    c.price
-    FROM PriceCurrency c
-    WHERE p.productId = c.product.productId AND c.currency = :currency
-    ) AS price,
+    (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
+    (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
     p.defaultKey as key
     FROM Product p
     INNER JOIN ProductCategory c ON p.productCategory.categoryId = c.categoryId
     WHERE c.uuid = :uuid
     """)
     Page<ProductPojo> allProductsByCategory(SarreCurrency currency, String uuid, Pageable page);
+
+//    @Query(nativeQuery = true, value = """
+//    WITH RECURSIVE category (id, name, parent) AS
+//    (
+//      SELECT id, name, CAST(id AS CHAR(200))
+//      FROM employees
+//      WHERE manager_id IS NULL
+//      UNION ALL
+//      SELECT e.id, e.name, CONCAT(ep.path, ',', e.id)
+//      FROM employee_paths AS ep JOIN employees AS e
+//      ON ep.id = e.manager_id
+//    )
+//    SELECT * FROM employee_paths ORDER BY path;
+//    """)
+//    List<Object> allCategories();
 
 }

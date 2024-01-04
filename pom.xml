@@ -14,7 +14,7 @@
     <artifactId>sara-brand-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>SarreTheBrand</name>
-    <description>Sarre The Brand is an e-commerce application</description>
+    <description>Backend for Sarre The Brand e-commerce application</description>
 
     <properties>
         <aws.java.sdk.version>2.20.101</aws.java.sdk.version>
@@ -124,7 +124,6 @@
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>sesv2</artifactId>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/secretsmanager -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>secretsmanager</artifactId>
@@ -188,7 +187,6 @@
     </build>
 
     <profiles>
-        <!-- native profile -->
         <profile>
             <id>native</id>
             <activation>
@@ -222,7 +220,6 @@
                             </execution>
                         </executions>
                     </plugin>
-
                 </plugins>
             </build>
         </profile>

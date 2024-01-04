@@ -1,5 +1,6 @@
 package com.sarabrandserver.category.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -15,6 +16,7 @@ public record CategoryDTO(
         @NotNull(message = "visible cannot be null")
         Boolean visible,
 
+        @JsonProperty(value = "parent_name")
         @NotNull(message = "parent cannot be null")
         String parent
 ) implements Serializable { }

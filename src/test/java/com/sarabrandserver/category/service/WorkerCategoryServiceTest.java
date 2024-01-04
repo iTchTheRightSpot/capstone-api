@@ -49,7 +49,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         var category = ProductCategory.builder()
                 .categoryName(dto.name().trim())
                 .createAt(new Date())
-                .productCategories(new HashSet<>())
+                .categories(new HashSet<>())
                 .product(new HashSet<>())
                 .build();
 
@@ -72,7 +72,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         var category = ProductCategory.builder()
                 .categoryName(new Faker().commerce().department())
                 .createAt(new Date())
-                .productCategories(new HashSet<>())
+                .categories(new HashSet<>())
                 .product(new HashSet<>())
                 .build();
 
@@ -108,7 +108,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         var category = ProductCategory.builder()
                 .categoryName(new Faker().commerce().department())
                 .createAt(new Date())
-                .productCategories(new HashSet<>())
+                .categories(new HashSet<>())
                 .product(new HashSet<>())
                 .build();
 

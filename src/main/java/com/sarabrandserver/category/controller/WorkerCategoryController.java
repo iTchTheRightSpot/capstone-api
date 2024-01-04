@@ -28,7 +28,7 @@ public class WorkerCategoryController {
     @ResponseStatus(OK)
     @GetMapping(produces = "application/json")
     public List<CategoryResponse> allCategories() {
-        return this.workerCategoryService.fetchAllCategories();
+        return this.workerCategoryService.allCategories();
     }
 
     @ResponseStatus(OK)

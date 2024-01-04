@@ -1,6 +1,5 @@
 package com.sarabrandserver.auth.controller;
 
-import com.sarabrandserver.auth.response.ActiveUser;
 import com.sarabrandserver.auth.dto.LoginDTO;
 import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.service.AuthService;
@@ -10,7 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import static org.springframework.http.HttpStatus.CREATED;
@@ -38,15 +36,6 @@ public class WorkerAuthController {
             HttpServletResponse response
     ) {
         this.authService.login(RoleEnum.WORKER, dto, request, response);
-    }
-
-    /** Validates if a user still has a valid session */
-    @ResponseStatus(OK)
-    @GetMapping(produces = "application/json")
-    @PreAuthorize(value = "hasRole('ROLE_WORKER')")
-    public ActiveUser getUser() {
-        String name = SecurityContextHolder.getContext().getAuthentication().getName();
-        return new ActiveUser(name);
     }
 
 }

@@ -18,8 +18,8 @@ class TestConfig {
     @ServiceConnection
     @RestartScope
     static MySQLContainer<?> mySQLContainer() {
-        try (var container = new MySQLContainer<>("mysql:8.0")) {
-            return container.withDatabaseName("sara_brand_db")
+        try (var sql = new MySQLContainer<>("mysql:8.0")) {
+            return sql.withDatabaseName("sara_brand_db")
                     .withUsername("sara")
                     .withPassword("sara");
         } catch (RuntimeException ex) {

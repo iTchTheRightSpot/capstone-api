@@ -140,11 +140,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
                             "/" + this.BASEURL + "csrf",
-                            "/" + this.BASEURL + "client/auth/register",
-                            "/" + this.BASEURL + "client/auth/login",
-                            "/" + this.BASEURL + "client/product/**",
-                            "/" + this.BASEURL + "client/category/**",
-                            "/" + this.BASEURL + "client/collection/**",
+                            "/" + this.BASEURL + "client/**",
                             "/" + this.BASEURL + "worker/auth/login",
                             "/" + this.BASEURL + "cart/**",
                             "/" + this.BASEURL + "payment/**"

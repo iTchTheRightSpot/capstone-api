@@ -11,16 +11,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ClientCategoryService {
 
-    private final CategoryRepository categoryRepository;
+    private final CategoryRepository repository;
 
     /**
      * Returns a list of parent and child categories.
      * @return List of CategoryResponse
      * */
-    public List<CategoryResponse> fetchAll() {
-        return this.categoryRepository.fetchCategoriesClient()
+    public List<CategoryResponse> allCategories() {
+        return this.repository
+                .fetchCategoriesClient()
                 .stream() //
-                .map(pojo -> new CategoryResponse(pojo.getUuid(), pojo.getCategory())) //
+                .map(p -> new CategoryResponse(p.getUuid(), p.getCategory())) //
                 .toList();
     }
 

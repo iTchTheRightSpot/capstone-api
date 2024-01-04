@@ -9,18 +9,15 @@ import com.sarabrandserver.product.dto.*;
 import com.sarabrandserver.user.entity.ClientRole;
 import com.sarabrandserver.user.entity.SarreBrandUser;
 import jakarta.validation.constraints.NotNull;
-import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.mock.web.MockMultipartFile;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashSet;
-import java.util.stream.Stream;
 
 import static com.sarabrandserver.enumeration.RoleEnum.CLIENT;
 import static com.sarabrandserver.enumeration.RoleEnum.WORKER;
@@ -66,29 +63,53 @@ public class TestingData {
         return dto;
     }
 
+
+//    public static MockMultipartFile[] files() {
+//        try (Stream<Path> files = Files.list(Paths.get("src/test/resources/uploads/"))) {
+//            return files.map(path -> {
+//                        File file = path.toFile();
+//                        try {
+//                            return new MockMultipartFile(
+//                                    "files",
+//                                    file.getName(),
+//                                    Files.probeContentType(file.toPath()),
+//                                    IOUtils.toByteArray(new FileInputStream(file))
+//                            );
+//                        } catch (IOException e) {
+//                            throw new RuntimeException(e);
+//                        }
+//                    })
+//                    .toArray(MockMultipartFile[]::new);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
     /**
      * Converts all files from uploads directory into a MockMultipartFile
      * */
     @NotNull
     public static MockMultipartFile[] files() {
-        try (Stream<Path> files = Files.list(Paths.get("uploads/"))) {
-            return files.map(path -> {
-                        File file = path.toFile();
-                        try {
-                            return new MockMultipartFile(
-                                    "files",
-                                    file.getName(),
-                                    Files.probeContentType(file.toPath()),
-                                    IOUtils.toByteArray(new FileInputStream(file))
-                            );
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
-                    .toArray(MockMultipartFile[]::new);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return Arrays.stream(new Path[]{Paths.get("src/test/resources/uploads/benzema.JPG")})
+                .map(path -> {
+                    String contentType;
+                    byte[] content;
+                    try {
+                        contentType = Files.probeContentType(path);
+                        content = Files.readAllBytes(path);
+                    } catch (IOException ignored) {
+                        contentType = "text/plain";
+                        content = new byte[3];
+                    }
+
+                    return new MockMultipartFile(
+                            "files",
+                            path.getFileName().toString(),
+                            contentType,
+                            content
+                    );
+                })
+                .toArray(MockMultipartFile[]::new);
     }
 
     @NotNull

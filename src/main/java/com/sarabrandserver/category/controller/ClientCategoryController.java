@@ -26,7 +26,7 @@ public class ClientCategoryController {
     @ResponseStatus(OK)
     @GetMapping(produces = "application/json")
     public List<CategoryResponse> allCategories() {
-        return this.clientCategoryService.fetchAll();
+        return this.clientCategoryService.allCategories();
     }
 
     /** Returns a list of ProductResponse objects based on category uuid */

@@ -30,8 +30,6 @@ public class WorkerCategoryService {
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
-    @Value(value = "${spring.profiles.active}")
-    private String ACTIVEPROFILE;
 
     private final CategoryRepository categoryRepository;
     private final CustomUtil customUtil;
@@ -41,7 +39,7 @@ public class WorkerCategoryService {
      * Returns a lis of ProductCategory parameters.
      * @return List of CategoryResponse
      * */
-    public List<CategoryResponse> fetchAllCategories() {
+    public List<CategoryResponse> allCategories() {
         return this.categoryRepository
                 .fetchCategoriesWorker() //
                 .stream() //
@@ -64,8 +62,6 @@ public class WorkerCategoryService {
      * @return Page of ProductResponse
      * */
     public Page<ProductResponse> allProductsByCategory(SarreCurrency currency, String id, int page, int size) {
-        boolean bool = this.ACTIVEPROFILE.equals("prod") || this.ACTIVEPROFILE.equals("stage");
-
         return this.categoryRepository
                 .allProductsByCategory(currency, id, PageRequest.of(page, size))
                 .map(pojo -> {
@@ -93,8 +89,9 @@ public class WorkerCategoryService {
         var date = this.customUtil.toUTC(new Date());
 
         // Handle cases based on the logic explained above.
-        var category = dto.parent().isBlank() ?
-                parentCategoryIsBlank(dto, date) : parentCategoryNotBlank(dto, date);
+        var category = dto.parent().isBlank()
+                ? parentCategoryIsBlank(dto, date)
+                : parentCategoryNotBlank(dto, date);
 
         this.categoryRepository.save(category);
     }
@@ -109,31 +106,25 @@ public class WorkerCategoryService {
                 .categoryName(dto.name().trim())
                 .isVisible(dto.visible())
                 .createAt(date)
-                .modifiedAt(null)
-                .productCategories(new HashSet<>())
+                .categories(new HashSet<>())
                 .product(new HashSet<>())
                 .build();
     }
 
+    /**
+     * Throws CustomNotFoundException if parent uuid does not exist
+     * */
     private ProductCategory parentCategoryNotBlank(CategoryDTO dto, Date date) {
-        var parentCategory = findByName(dto.parent().trim());
-        parentCategory.setModifiedAt(date);
-
-        var childCategory = ProductCategory.builder()
+        var parent = findByName(dto.parent().trim());
+        return ProductCategory.builder()
                 .uuid(UUID.randomUUID().toString())
                 .categoryName(dto.name().trim())
                 .isVisible(dto.visible())
+                .parentCategory(parent)
                 .createAt(date)
-                .modifiedAt(null)
-                .productCategories(new HashSet<>())
+                .categories(new HashSet<>())
                 .product(new HashSet<>())
                 .build();
-
-        // Add child category to parent
-        // addCategory automatically persists child to the database
-        parentCategory.addCategory(childCategory);
-
-        return parentCategory;
     }
 
     /**

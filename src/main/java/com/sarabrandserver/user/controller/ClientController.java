@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(path = "${api.endpoint.baseurl}client/user")
+@RequestMapping(path = "${api.endpoint.baseurl}account")
 @RequiredArgsConstructor
 @PreAuthorize(value = "hasRole('ROLE_CLIENT')")
 public class ClientController { }

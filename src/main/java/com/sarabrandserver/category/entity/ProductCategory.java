@@ -10,6 +10,7 @@ import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.LAZY;
+import static jakarta.persistence.TemporalType.TIMESTAMP;
 
 @Table(name = "product_category", indexes = @Index(name = "IX_product_category_uuid", columnList = "uuid"))
 @Entity
@@ -32,11 +33,11 @@ public class ProductCategory implements Serializable {
     private String categoryName;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
+    @Temporal(TIMESTAMP)
     private Date createAt;
 
     @Column(name = "modified_at")
-    @Temporal(TemporalType.TIMESTAMP)
+    @Temporal(TIMESTAMP)
     private Date modifiedAt;
 
     @Column(name = "is_visible")
@@ -44,17 +45,12 @@ public class ProductCategory implements Serializable {
 
     @ManyToOne
     @JoinColumn(name = "parent_category_id", referencedColumnName = "category_id")
-    private ProductCategory productCategory;
+    private ProductCategory parentCategory;
 
-    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "productCategory", orphanRemoval = true)
-    private Set<ProductCategory> productCategories;
+    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "parentCategory", orphanRemoval = true)
+    private Set<ProductCategory> categories;
 
     @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "productCategory")
     private Set<Product> product;
-
-    public void addCategory(ProductCategory category) {
-        this.productCategories.add(category);
-        category.setProductCategory(this);
-    }
 
 }

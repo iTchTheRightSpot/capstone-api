@@ -9,7 +9,7 @@ import org.testcontainers.containers.MySQLContainer;
 
 // https://spring.io/blog/2023/06/23/improved-testcontainers-support-in-spring-boot-3-1
 @TestConfiguration(proxyBeanMethods = false)
-class TestConfig {
+public class TestConfig {
 
     static final Logger log = LoggerFactory.getLogger(TestConfig.class);
 

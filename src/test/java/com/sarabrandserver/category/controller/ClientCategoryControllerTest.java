@@ -35,7 +35,7 @@ class ClientCategoryControllerTest extends AbstractIntegrationTest {
 
         this.MOCKMVC
                 .perform(get(requestParam + "/products")
-                        .param("category_id", String.valueOf(list.get(0).getCategoryId()))
+                        .param("category_id", String.valueOf(list.getFirst().getCategoryId()))
                         .contentType(APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())

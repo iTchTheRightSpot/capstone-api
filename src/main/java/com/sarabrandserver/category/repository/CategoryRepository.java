@@ -46,7 +46,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
         UNION ALL
         SELECT
         pc.category_id,
-        cat.parent
+        pc.parent_category_id
         FROM category cat
         INNER JOIN product_category pc
         ON cat.id = pc.parent_category_id
@@ -56,7 +56,27 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     INNER JOIN product p
     ON c1.id = p.category_id
     """)
-    int validateOnDelete(long id);
+    int validateProductAttached(long id);
+
+    @Query(nativeQuery = true, value = """
+    WITH RECURSIVE category (id, parent) AS
+    (
+        SELECT
+            c.category_id,
+            c.parent_category_id
+        FROM product_category c
+        WHERE c.category_id = :id
+        UNION ALL
+        SELECT
+        pc.category_id,
+        pc.parent_category_id
+        FROM category cat
+        INNER JOIN product_category pc
+        ON cat.id = pc.parent_category_id
+    )
+    SELECT COUNT(c1.id) FROM category c1
+    """)
+    int validateContainsSubCategory(long id);
 
     @Query(value = """
     SELECT

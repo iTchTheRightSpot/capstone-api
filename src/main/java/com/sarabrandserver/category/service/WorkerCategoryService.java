@@ -137,11 +137,11 @@ public class WorkerCategoryService {
      * */
     @Transactional
     public void delete(long id) {
-        // TODO validate query
-        int count = this.categoryRepo.validateOnDelete(id);
+        int c = this.categoryRepo.validateContainsSubCategory(id);
+        int d = this.categoryRepo.validateProductAttached(id);
 
-        if (count > 0) {
-            throw new ResourceAttachedException("Cannot delete category because it is attached to 1 or many products");
+        if (c > 0 || d > 0) {
+            throw new ResourceAttachedException("Category has 1 or many products or sub-category attached");
         }
 
         var category = findById(id);

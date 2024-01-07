@@ -18,11 +18,9 @@
 
     <properties>
         <aws.java.sdk.version>2.20.101</aws.java.sdk.version>
-        <java.version>17</java.version>
+        <java.version>21</java.version>
         <awaitility.version>3.1.2</awaitility.version>
-        <thymeleaf.version>3.1.2.RELEASE</thymeleaf.version>
         <hibernate.orm.tooling.version>6.2.7.Final</hibernate.orm.tooling.version>
-        <testcontainers.localstack.version>1.19.3</testcontainers.localstack.version>
         <jakarta.xml.bind.version>4.0.1</jakarta.xml.bind.version>
     </properties>
 
@@ -156,7 +154,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Dummy Data For Testing -->
+        <!-- for creating dummy data for testing -->
         <!-- https://mvnrepository.com/artifact/com.github.javafaker/javafaker -->
         <dependency>
             <groupId>com.github.javafaker</groupId>

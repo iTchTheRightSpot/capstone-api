@@ -24,19 +24,19 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 @RequiredArgsConstructor
 public class WorkerProductDetailController {
 
-    private final WorkerProductDetailService workerProductDetailService;
-    private final ProductSKUService productSKUService;
+    private final WorkerProductDetailService detailService;
+    private final ProductSKUService skuService;
 
     /**
-     * Method returns a list of DetailResponse.
+     * Returns a list of DetailResponse.
      *
      * @param uuid is the Product UUID
      * @return List of DetailResponse
      */
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public List<DetailResponse> allDetailsByProductUUID(@NotNull @RequestParam(value = "id") String uuid) {
-        return this.workerProductDetailService.productDetailsByProductUUID(uuid);
+    public List<DetailResponse> get(@NotNull @RequestParam(value = "id") String uuid) {
+        return this.detailService.productDetailsByProductUUID(uuid);
     }
 
     /**
@@ -48,7 +48,7 @@ public class WorkerProductDetailController {
             @Valid @RequestPart ProductDetailDTO dto,
             @RequestParam(required = false) MultipartFile[] files
     ) {
-        workerProductDetailService.create(dto, files);
+        detailService.create(dto, files);
     }
 
     /**
@@ -59,7 +59,7 @@ public class WorkerProductDetailController {
     @ResponseStatus(NO_CONTENT)
     @PutMapping(consumes = APPLICATION_JSON_VALUE)
     public void update(@Valid @RequestBody UpdateProductDetailDTO dto) {
-        this.workerProductDetailService.update(dto);
+        this.detailService.update(dto);
     }
 
     /**
@@ -70,7 +70,7 @@ public class WorkerProductDetailController {
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping(path = "/{sku}")
     public void delete(@NotNull @PathVariable(value = "sku") String sku) {
-        this.workerProductDetailService.delete(sku);
+        this.detailService.delete(sku);
     }
 
     /**
@@ -81,7 +81,7 @@ public class WorkerProductDetailController {
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping(path = "/sku")
     public void deleteProductSKU(@NotNull @RequestParam(value = "sku") String sku) {
-        this.productSKUService.delete(sku);
+        this.skuService.delete(sku);
     }
 
 }

@@ -14,14 +14,17 @@ public class ClientCategoryService {
     private final CategoryRepository repository;
 
     /**
-     * Returns a list of parent and child categories.
-     * @return List of CategoryResponse
+     * Returns a list of {@code CategoryResponse}
      * */
     public List<CategoryResponse> allCategories() {
         return this.repository
-                .fetchCategoriesClient()
-                .stream() //
-                .map(p -> new CategoryResponse(p.getUuid(), p.getCategory())) //
+                .superCategories()
+                .stream()
+                .flatMap(cat -> this.repository
+                        .all_categories_store_front(cat.getCategoryId())
+                        .stream()
+                        .map(p -> new CategoryResponse(p.getId(), p.getParent(), p.getName()))
+                )
                 .toList();
     }
 

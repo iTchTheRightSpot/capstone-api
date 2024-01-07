@@ -1,33 +1,18 @@
 package com.sarabrandserver.category.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-import java.util.List;
+public record CategoryResponse(
+        @JsonProperty(value = "category_id")
+        long id,
+        @JsonProperty(value = "parent_id")
+        long parent,
+        String name,
+        boolean visible
+) {
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-@Data
-public class CategoryResponse {
-
-    @JsonProperty(value = "created_at")
-    private long created;
-    @JsonProperty(value = "modified_at")
-    private long modified;
-
-    @JsonProperty(value = "category_id")
-    private String id;
-    private String category;
-    private boolean visible;
-    private List<String> child;
-
-    public CategoryResponse(String id, String category) {
-        this.id = id;
-        this.category = category;
+    public CategoryResponse(long id, long parent, String name) {
+        this(id, parent, name, false);
     }
 
 }

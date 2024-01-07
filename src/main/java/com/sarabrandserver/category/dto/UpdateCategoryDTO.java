@@ -9,9 +9,8 @@ import java.io.Serializable;
 
 public record UpdateCategoryDTO(
         @NotNull(message = "cannot be empty")
-        @NotEmpty(message = "cannot not empty")
         @JsonProperty(value = "category_id")
-        String id,
+        Long id,
 
         @NotNull(message = "cannot be empty")
         @NotEmpty(message = "cannot be empty")

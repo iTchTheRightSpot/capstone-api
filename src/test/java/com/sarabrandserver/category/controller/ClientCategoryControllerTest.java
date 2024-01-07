@@ -1,9 +1,9 @@
 package com.sarabrandserver.category.controller;
 
 import com.sarabrandserver.AbstractIntegrationTest;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Value;
 
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -12,10 +12,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Slf4j
 class ClientCategoryControllerTest extends AbstractIntegrationTest {
 
-    private final String requestParam = "/api/v1/client/category";
+    @Value(value = "/${api.endpoint.baseurl}client/category")
+    private String requestParam;
 
     @Test
     void allCategories() throws Exception {
@@ -28,14 +28,14 @@ class ClientCategoryControllerTest extends AbstractIntegrationTest {
 
     @Test
     @DisplayName(value = "All Products by category id")
-    void fetchProductByCategory() throws Exception {
+    void productByCategory() throws Exception {
         // Given
         var list = this.categoryRepository.findAll();
         assertFalse(list.isEmpty());
 
         this.MOCKMVC
                 .perform(get(requestParam + "/products")
-                        .param("category_id", list.get(0).getUuid())
+                        .param("category_id", String.valueOf(list.get(0).getCategoryId()))
                         .contentType(APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())

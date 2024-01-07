@@ -40,7 +40,7 @@ class AuthServiceTest extends AbstractUnitTest {
 
     @Mock private UserRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
-    @Mock private AuthenticationManager authenticationManager;
+    @Mock private AuthenticationManager manager;
     @Mock private JwtTokenService jwtTokenService;
 
     @BeforeEach
@@ -48,7 +48,7 @@ class AuthServiceTest extends AbstractUnitTest {
         this.authService = new AuthService(
                 this.userRepository,
                 this.passwordEncoder,
-                this.authenticationManager,
+                this.manager,
                 this.jwtTokenService
         );
         this.authService.setJSESSIONID(JSESSIONID);
@@ -67,7 +67,8 @@ class AuthServiceTest extends AbstractUnitTest {
         );
 
         // When
-        when(this.userRepository.workerExists(anyString())).thenReturn(Optional.empty());
+        when(this.userRepository.workerExists(anyString()))
+                .thenReturn(Optional.empty());
 
         // Then
         this.authService.workerRegister(dto);
@@ -126,12 +127,12 @@ class AuthServiceTest extends AbstractUnitTest {
         Authentication authentication = mock(Authentication.class);
 
         // When
-        when(this.authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+        when(this.manager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
 
         // Then
         this.authService.login(WORKER, dto, request, response);
-        verify(this.authenticationManager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
+        verify(this.manager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
     }
 
     @Test
@@ -142,7 +143,7 @@ class AuthServiceTest extends AbstractUnitTest {
         HttpServletResponse response = mock(HttpServletResponse.class);
 
         // When
-        when(this.authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+        when(this.manager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(BadCredentialsException.class);
 
         // Then
@@ -209,12 +210,12 @@ class AuthServiceTest extends AbstractUnitTest {
         Authentication authentication = mock(Authentication.class);
 
         // When
-        when(this.authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+        when(this.manager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
 
         // Then
         this.authService.login(CLIENT, dto, request, response);
-        verify(this.authenticationManager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
+        verify(this.manager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
     }
 
     @Test
@@ -225,7 +226,7 @@ class AuthServiceTest extends AbstractUnitTest {
         HttpServletResponse response = mock(HttpServletResponse.class);
 
         // When
-        when(this.authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+        when(this.manager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(BadCredentialsException.class);
 
         // Then

@@ -63,28 +63,6 @@ public class TestingData {
         return dto;
     }
 
-
-//    public static MockMultipartFile[] files() {
-//        try (Stream<Path> files = Files.list(Paths.get("src/test/resources/uploads/"))) {
-//            return files.map(path -> {
-//                        File file = path.toFile();
-//                        try {
-//                            return new MockMultipartFile(
-//                                    "files",
-//                                    file.getName(),
-//                                    Files.probeContentType(file.toPath()),
-//                                    IOUtils.toByteArray(new FileInputStream(file))
-//                            );
-//                        } catch (IOException e) {
-//                            throw new RuntimeException(e);
-//                        }
-//                    })
-//                    .toArray(MockMultipartFile[]::new);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-
     /**
      * Converts all files from uploads directory into a MockMultipartFile
      * */
@@ -168,7 +146,7 @@ public class TestingData {
             String productID,
             String productName,
             String category,
-            String categoryId,
+            long categoryId,
             String collection,
             String collectionId
     ) {

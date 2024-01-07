@@ -13,7 +13,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,55 +22,61 @@ import java.util.Optional;
 @Repository
 public interface CategoryRepository extends JpaRepository<ProductCategory, Long> {
 
-    @Query(value = """
-    SELECT
-    c.uuid AS uuid,
-    c.categoryName AS category,
-    c.createAt AS created,
-    c.modifiedAt AS modified,
-    c.isVisible AS visible
-    FROM ProductCategory c
-    """)
-    List<CategoryPojo> fetchCategoriesWorker();
-
-    @Query(value = """
-    SELECT
-    c.categoryName AS category,
-    c.uuid AS uuid
-    FROM ProductCategory c
-    WHERE c.isVisible = true
-    """)
-    List<CategoryPojo> fetchCategoriesClient();
-
-    @Query("SELECT c FROM ProductCategory c WHERE c.categoryName = :name")
+    @Query("SELECT c FROM ProductCategory c WHERE c.name = :name")
     Optional<ProductCategory> findByName(@Param(value = "name") String name);
 
-    @Query(value = "SELECT COUNT(p.productId) FROM Product p WHERE p.productCategory.uuid = :uuid")
-    int productsAttached(String uuid);
-
-    @Query("SELECT c FROM ProductCategory c WHERE c.uuid = :uuid")
-    Optional<ProductCategory> findByUuid(@Param(value = "uuid") String uuid);
+    /**
+     * Using native sql query, method allows deleting a {@code ProductCategory}
+     * only after validating if {@param id} has no nested
+     * {@code ProductCategory}/children attached and no {@code Product} is
+     * attached to {@param id} or its children.
+     *
+     * @param id is {@code ProductCategory} to be deleted
+     * @return if return value is 0, then none of the conditions apply else if
+     * greater than zero, all the conditions in the description applies.
+     * */
+    @Query(nativeQuery = true, value = """
+    WITH RECURSIVE category (id, parent) AS
+    (
+        SELECT
+            c.category_id,
+            c.parent_category_id
+        FROM product_category c
+        WHERE c.category_id = :id
+        UNION ALL
+        SELECT
+        pc.category_id,
+        cat.parent
+        FROM category cat
+        INNER JOIN product_category pc
+        ON cat.id = pc.parent_category_id
+    )
+    SELECT COUNT(p.product_id)
+    FROM category c1
+    INNER JOIN product p
+    ON c1.id = p.category_id
+    """)
+    int validateOnDelete(long id);
 
     @Query(value = """
     SELECT
     COUNT(pc.categoryId)
     FROM ProductCategory pc
-    WHERE pc.categoryName = :name AND pc.uuid != :uuid
+    WHERE pc.name = :name AND pc.categoryId != :id
     """)
-    int duplicateCategoryForUpdate(String uuid, String name);
+    int onDuplicateCategoryName(long id, String name);
 
     @Modifying(clearAutomatically = true)
     @Transactional
     @Query("""
         UPDATE ProductCategory pc
-        SET pc.modifiedAt = :date, pc.categoryName = :name, pc.isVisible = :visible
-        WHERE pc.uuid = :uuid
+        SET  pc.name = :name, pc.isVisible = :visible
+        WHERE pc.categoryId = :id
     """)
     void update(
-            @Param(value = "date") Date date,
             @Param(value = "name") String name,
             @Param(value = "visible") boolean visible,
-            @Param(value = "uuid") String id
+            @Param(value = "id") long id
     );
 
     @Query(value = """
@@ -83,23 +88,89 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     p.defaultKey as key
     FROM Product p
     INNER JOIN ProductCategory c ON p.productCategory.categoryId = c.categoryId
-    WHERE c.uuid = :uuid
+    WHERE c.categoryId = :id
     """)
-    Page<ProductPojo> allProductsByCategory(SarreCurrency currency, String uuid, Pageable page);
+    Page<ProductPojo> allProductsByCategory(SarreCurrency currency, long id, Pageable page);
 
-//    @Query(nativeQuery = true, value = """
-//    WITH RECURSIVE category (id, name, parent) AS
-//    (
-//      SELECT id, name, CAST(id AS CHAR(200))
-//      FROM employees
-//      WHERE manager_id IS NULL
-//      UNION ALL
-//      SELECT e.id, e.name, CONCAT(ep.path, ',', e.id)
-//      FROM employee_paths AS ep JOIN employees AS e
-//      ON ep.id = e.manager_id
-//    )
-//    SELECT * FROM employee_paths ORDER BY path;
-//    """)
-//    List<Object> allCategories();
+    /**
+     * Selects all {@code ProductCategory} objects that have a parent category id null.
+     *
+     * @return a list of {@code ProductCategory}
+     * */
+    @Query("SELECT c FROM ProductCategory c WHERE c.parentCategory.categoryId IS NULL")
+    List<ProductCategory> superCategories();
+
+    /**
+     * Using native sql query and Spring Data projection, method returns all
+     * children of specified {@code ProductCategory} {@code id}.
+     * For more about using common table expression CTE visit
+     * <a href="https://dev.mysql.com/doc/refman/8.0/en/with.html#common-table-expressions-recursive">...</a>
+     *
+     * @param id would be a {@code ProductCategory}
+     * @return a list of {@code CategoryPojo} object
+     * */
+    @Query(nativeQuery = true, value = """
+    WITH RECURSIVE category (id, name, parent) AS
+    (
+        SELECT
+            c.category_id,
+            c.name,
+            c.parent_category_id
+        FROM product_category c
+        WHERE c.parent_category_id = :id AND c.is_visible = TRUE
+        UNION ALL
+        SELECT
+            pc.category_id,
+            pc.name,
+            pc.parent_category_id
+        FROM category cat
+        INNER JOIN product_category pc
+        ON cat.id = pc.parent_category_id
+    )
+    SELECT
+        c.id AS id,
+        c.name AS name,
+        c.parent AS parent
+    FROM category c;
+    """)
+    List<CategoryPojo> all_categories_store_front(long id);
+
+    /**
+     * Using native sql query and Spring Data projection, method returns all
+     * children of specified {@code ProductCategory} {@code id}.
+     * For more about using common table expression CTE visit
+     * <a href="https://dev.mysql.com/doc/refman/8.0/en/with.html#common-table-expressions-recursive">...</a>
+     *
+     * @param id would be a {@code ProductCategory}
+     * @return a list of {@code CategoryPojo} object
+     * */
+    @Query(nativeQuery = true, value = """
+    WITH RECURSIVE category (id, name, status, parent) AS
+    (
+        SELECT
+            c.category_id,
+            c.name,
+            c.is_visible,
+            c.parent_category_id
+        FROM product_category c
+        WHERE c.parent_category_id = :id
+        UNION ALL
+        SELECT
+            pc.category_id,
+            pc.name,
+            pc.is_visible,
+            pc.parent_category_id
+        FROM category cat
+        INNER JOIN product_category pc
+        ON cat.id = pc.parent_category_id
+    )
+    SELECT
+        c.id AS id,
+        c.name AS name,
+        c.status AS visible,
+        c.parent AS parent
+    FROM category c;
+    """)
+    List<CategoryPojo> all_categories_admin_front(long id);
 
 }

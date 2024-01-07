@@ -18,7 +18,6 @@ public class ActiveUserController {
 
     @ResponseStatus(OK)
     @GetMapping(path = "/client", produces = APPLICATION_JSON_VALUE)
-    @PreAuthorize(value = "hasRole('ROLE_CLIENT')")
     public ActiveUser client() {
         String name = SecurityContextHolder.getContext().getAuthentication().getName();
         return new ActiveUser(name);

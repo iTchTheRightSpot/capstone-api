@@ -31,7 +31,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     private String category() {
         var list = this.categoryRepository.findAll();
         assertFalse(list.isEmpty());
-        return list.get(0).getCategoryName();
+        return list.get(0).getName();
     }
 
     private String colour() {
@@ -227,8 +227,8 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                 .updateProductDTO(
                         product.get(0).getUuid(),
                         product.get(1).getName(),
-                        category.get(0).getCategoryName(),
-                        category.get(0).getUuid(),
+                        category.get(0).getName(),
+                        category.get(0).getCategoryId(),
                         "",
                         ""
                 );
@@ -263,8 +263,8 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                 .updateProductDTO(
                         product.get(0).getUuid(),
                         "SEJU Development",
-                        category.get(0).getCategoryName(),
-                        category.get(0).getUuid(),
+                        category.get(0).getName(),
+                        category.get(0).getCategoryId(),
                         collection.get(0).getCollection(),
                         collection.get(0).getUuid()
                 );
@@ -295,8 +295,8 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                 .updateProductDTO(
                         product.get(0).getUuid(),
                         "SEJU Development",
-                        category.get(0).getCategoryName(),
-                        category.get(0).getUuid(),
+                        category.get(0).getName(),
+                        category.get(0).getCategoryId(),
                         "",
                         ""
                 );

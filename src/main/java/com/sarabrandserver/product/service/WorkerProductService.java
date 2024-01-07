@@ -168,7 +168,7 @@ public class WorkerProductService {
             throw new DuplicateException(dto.name() + " exists");
         }
 
-        var category = this.categoryService.findByUuid(dto.categoryId());
+        var category = this.categoryService.findById(dto.categoryId());
 
         if (dto.collection().isEmpty()) {
             this.productRepo.update_product_where_collection_not_present(

@@ -8,6 +8,7 @@ import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.test.context.support.WithMockUser;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,17 +20,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
-    private final String requestMapping = "/api/v1/worker/category";
+    @Value(value = "/${api.endpoint.baseurl}worker/category")
+    private String requestMapping;
 
     private String category() {
         var list = this.categoryRepository.findAll();
         assertFalse(list.isEmpty());
-        return list.get(0).getCategoryName();
+        return list.get(0).getName();
     }
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    void fetchCategories() throws Exception {
+    void allCategories() throws Exception {
         // Then
         this.MOCKMVC
                 .perform(get(requestMapping).contentType(APPLICATION_JSON))
@@ -74,11 +76,11 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "validates updating a ProductCategory")
+    @DisplayName(value = "Testing updating a ProductCategory")
     void update() throws Exception {
         // Given
         var category = this.categoryRepository.findAll().get(0);
-        var dto = new UpdateCategoryDTO(category.getUuid(), "Updated", category.isVisible());
+        var dto = new UpdateCategoryDTO(category.getCategoryId(), "Updated", category.isVisible());
 
         // Then
         this.MOCKMVC
@@ -101,7 +103,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
         // second category
         var second = category.get(1);
         // dto
-        var dto = new UpdateCategoryDTO(first.getUuid(), second.getCategoryName(), first.isVisible());
+        var dto = new UpdateCategoryDTO(first.getCategoryId(), second.getName(), first.isVisible());
 
         // Then
         this.MOCKMVC
@@ -111,7 +113,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
                         .content(this.MAPPER.writeValueAsString(dto))
                 )
                 .andExpect(status().isConflict())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException));
+                .andExpect(result -> assertInstanceOf(DuplicateException.class, result.getResolvedException()));
     }
 
     @Test
@@ -122,11 +124,11 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
         assertNotNull(category);
 
         this.MOCKMVC
-                .perform(delete(requestMapping + "/{uuid}", category.getUuid())
+                .perform(delete(requestMapping + "/{id}", category.getCategoryId())
                         .with(csrf())
                 )
                 .andExpect(status().isConflict())
-                .andDo(result -> assertTrue(result.getResolvedException() instanceof ResourceAttachedException));
+                .andDo(result -> assertInstanceOf(ResourceAttachedException.class, result.getResolvedException()));
     }
 
 }

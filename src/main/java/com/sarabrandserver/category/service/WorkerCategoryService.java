@@ -11,7 +11,6 @@ import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
 import com.sarabrandserver.product.response.ProductResponse;
-import com.sarabrandserver.util.CustomUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,10 +18,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -31,38 +28,33 @@ public class WorkerCategoryService {
     @Value(value = "${aws.bucket}")
     private String BUCKET;
 
-    private final CategoryRepository categoryRepository;
-    private final CustomUtil customUtil;
+    private final CategoryRepository categoryRepo;
     private final S3Service s3Service;
 
     /**
-     * Returns a lis of ProductCategory parameters.
-     * @return List of CategoryResponse
+     * Returns a list of {@code CategoryResponse}
      * */
     public List<CategoryResponse> allCategories() {
-        return this.categoryRepository
-                .fetchCategoriesWorker() //
-                .stream() //
-                .map(pojo -> CategoryResponse.builder()
-                        .id(pojo.getUuid())
-                        .category(pojo.getCategory())
-                        .created(pojo.getCreated().getTime())
-                        .modified(pojo.getModified() == null ? 0L : pojo.getModified().getTime())
-                        .visible(pojo.getVisible())
-                        .build()
+        return this.categoryRepo
+                .superCategories()
+                .stream()
+                .flatMap(cat -> this.categoryRepo
+                        .all_categories_admin_front(cat.getCategoryId())
+                        .stream()
+                        .map(p -> new CategoryResponse(p.getId(), p.getParent(), p.getName(), p.getVisible()))
                 )
                 .toList();
     }
 
     /**
      * Returns a page of ProductResponse based on category uuid
-     * @param id category uuid
+     * @param id {@code ProductCategory} categoryId
      * @param page pagination
      * @param size pagination
      * @return Page of ProductResponse
      * */
-    public Page<ProductResponse> allProductsByCategory(SarreCurrency currency, String id, int page, int size) {
-        return this.categoryRepository
+    public Page<ProductResponse> allProductsByCategory(SarreCurrency currency, long id, int page, int size) {
+        return this.categoryRepo
                 .allProductsByCategory(currency, id, PageRequest.of(page, size))
                 .map(pojo -> {
                     var url = this.s3Service.preSignedUrl(this.BUCKET, pojo.getKey());
@@ -86,26 +78,21 @@ public class WorkerCategoryService {
      * */
     @Transactional
     public void create(CategoryDTO dto) {
-        var date = this.customUtil.toUTC(new Date());
-
         // Handle cases based on the logic explained above.
         var category = dto.parent().isBlank()
-                ? parentCategoryIsBlank(dto, date)
-                : parentCategoryNotBlank(dto, date);
+                ? parentCategoryIsBlank(dto)
+                : parentCategoryNotBlank(dto);
 
-        this.categoryRepository.save(category);
+        this.categoryRepo.save(category);
     }
 
-    private ProductCategory parentCategoryIsBlank(CategoryDTO dto, Date date) {
-        if (this.categoryRepository.findByName(dto.name().trim()).isPresent()) {
+    private ProductCategory parentCategoryIsBlank(CategoryDTO dto) {
+        if (this.categoryRepo.findByName(dto.name().trim()).isPresent()) {
             throw new DuplicateException(dto.name() + " exists");
         }
-
         return ProductCategory.builder()
-                .uuid(UUID.randomUUID().toString())
-                .categoryName(dto.name().trim())
+                .name(dto.name().trim())
                 .isVisible(dto.visible())
-                .createAt(date)
                 .categories(new HashSet<>())
                 .product(new HashSet<>())
                 .build();
@@ -114,14 +101,12 @@ public class WorkerCategoryService {
     /**
      * Throws CustomNotFoundException if parent uuid does not exist
      * */
-    private ProductCategory parentCategoryNotBlank(CategoryDTO dto, Date date) {
+    private ProductCategory parentCategoryNotBlank(CategoryDTO dto) {
         var parent = findByName(dto.parent().trim());
         return ProductCategory.builder()
-                .uuid(UUID.randomUUID().toString())
-                .categoryName(dto.name().trim())
+                .name(dto.name().trim())
                 .isVisible(dto.visible())
                 .parentCategory(parent)
-                .createAt(date)
                 .categories(new HashSet<>())
                 .product(new HashSet<>())
                 .build();
@@ -134,43 +119,42 @@ public class WorkerCategoryService {
      * */
     @Transactional
     public void update(UpdateCategoryDTO dto) {
-        boolean bool = this.categoryRepository
-                .duplicateCategoryForUpdate(dto.id().trim(), dto.name().trim()) > 0;
+        boolean bool = this.categoryRepo
+                .onDuplicateCategoryName(dto.id(), dto.name().trim()) > 0;
 
         if (bool) {
-            throw new DuplicateException(dto.name() + " cannot be created. It is a duplicate");
+            throw new DuplicateException(dto.name() + " is a duplicate");
         }
 
-        var date = this.customUtil.toUTC(new Date());
-
-        this.categoryRepository
-                .update(date, dto.name().trim(), dto.visible(), dto.id());
+        this.categoryRepo
+                .update(dto.name().trim(), dto.visible(), dto.id());
     }
 
     /**
-     * Method permanently deletes a ProductCategory and its children.
-     * @param uuid is the ProductCategory uuid
+     * Permanently deletes a ProductCategory and its children.
+     * @param id is the ProductCategory uuid
      * @throws CustomNotFoundException is thrown if category node does not exist
      * */
     @Transactional
-    public void delete(String uuid) {
-        int count = this.categoryRepository.productsAttached(uuid);
+    public void delete(long id) {
+        // TODO validate query
+        int count = this.categoryRepo.validateOnDelete(id);
 
         if (count > 0) {
             throw new ResourceAttachedException("Cannot delete category because it is attached to 1 or many products");
         }
 
-        var category = findByUuid(uuid);
-        this.categoryRepository.delete(category);
+        var category = findById(id);
+        this.categoryRepo.delete(category);
     }
 
     public ProductCategory findByName(String name) {
-        return this.categoryRepository.findByName(name)
+        return this.categoryRepo.findByName(name)
                 .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));
     }
 
-    public ProductCategory findByUuid(String uuid) {
-        return this.categoryRepository.findByUuid(uuid)
+    public ProductCategory findById(long id) {
+        return this.categoryRepo.findById(id)
                 .orElseThrow(() -> new CustomNotFoundException("Product Category does not exist"));
     }
 

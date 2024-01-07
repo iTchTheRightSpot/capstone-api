@@ -129,14 +129,14 @@ public class AuthService {
 
         String token = this.jwtTokenService.generateToken(auth);
 
-        // Jwt cookie
+        // wt cookie
         Cookie cookie = new Cookie(JSESSIONID, token);
         cookie.setMaxAge(MAXAGE);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setSecure(COOKIESECURE);
 
-        // Add token to response
+        // add token to response
         response.addCookie(cookie);
     }
 

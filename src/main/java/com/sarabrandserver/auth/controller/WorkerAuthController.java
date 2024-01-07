@@ -32,10 +32,10 @@ public class WorkerAuthController {
     @PostMapping(path = "/login", consumes = "application/json")
     public void login(
             @Valid @RequestBody LoginDTO dto,
-            HttpServletRequest request,
-            HttpServletResponse response
+            HttpServletRequest req,
+            HttpServletResponse res
     ) {
-        this.authService.login(RoleEnum.WORKER, dto, request, response);
+        this.authService.login(RoleEnum.WORKER, dto, req, res);
     }
 
 }

@@ -36,7 +36,7 @@ public record UpdateProductDTO(
         @JsonProperty(value = "category_id")
         @NotNull(message = "cannot be empty")
         @NotEmpty(message = "cannot be empty")
-        String categoryId,
+        Long categoryId,
 
         @NotNull(message = "cannot be empty")
         String collection,

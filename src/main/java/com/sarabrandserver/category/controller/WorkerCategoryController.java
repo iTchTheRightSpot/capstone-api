@@ -34,7 +34,7 @@ public class WorkerCategoryController {
     @ResponseStatus(OK)
     @GetMapping(path = "/products", produces = "application/json")
     public Page<ProductResponse> allProductByCategory(
-            @NotNull @RequestParam(name = "category_id") String id,
+            @NotNull @RequestParam(name = "category_id") Long id,
             @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
@@ -58,8 +58,8 @@ public class WorkerCategoryController {
 
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping(path = "/{id}")
-    public void delete(@PathVariable(value = "id") String uuid) {
-        this.workerCategoryService.delete(uuid);
+    public void delete(@PathVariable(value = "id") Long id) {
+        this.workerCategoryService.delete(id);
     }
 
 }

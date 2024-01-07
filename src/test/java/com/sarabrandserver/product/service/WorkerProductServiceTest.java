@@ -62,7 +62,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         var sizeDtoArray = TestingData.sizeInventoryDTOArray(3);
         var files = TestingData.files();
         var dto = TestingData.createProductDTO(sizeDtoArray);
-        var category = ProductCategory.builder().categoryName(dto.category()).build();
+        var category = ProductCategory.builder().name(dto.category()).build();
 
         // When
         when(this.customUtil.validateContainsCurrencies(dto.priceCurrency())).thenReturn(true);
@@ -82,7 +82,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         var sizeDtoArray = TestingData.sizeInventoryDTOArray(3);
         var files = TestingData.files();
         var dto = TestingData.createProductDTO(sizeDtoArray);
-        var category = ProductCategory.builder().categoryName(dto.category()).build();
+        var category = ProductCategory.builder().name(dto.category()).build();
         var product = Product.builder().name(dto.name()).uuid("uuid").build();
 
         // When
@@ -103,16 +103,16 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                         "",
                         "",
                         "",
-                        "",
+                        -1,
                         "collection",
                         "collectionId"
                 );
-        var category = ProductCategory.builder().categoryName(payload.category()).build();
+        var category = ProductCategory.builder().name(payload.category()).build();
         var collection = ProductCollection.builder().collection("collection").build();
 
         // When
         when(this.productRepo.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
-        when(this.workerCategoryService.findByUuid(anyString())).thenReturn(category);
+        when(this.workerCategoryService.findById(anyLong())).thenReturn(category);
         when(this.collectionService.productCollectionByUUID(anyString())).thenReturn(collection);
 
         // Then
@@ -136,16 +136,15 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                 .updateProductDTO(
                         "",
                         "",
-                        "",
-                        "",
+                        "", -1,
                         "",
                         ""
                 );
-        var category = ProductCategory.builder().categoryName(payload.category()).build();
+        var category = ProductCategory.builder().name(payload.category()).build();
 
         // When
         when(this.productRepo.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
-        when(this.workerCategoryService.findByUuid(anyString())).thenReturn(category);
+        when(this.workerCategoryService.findById(anyLong())).thenReturn(category);
 
         // Then
         this.workerProductService.update(payload);

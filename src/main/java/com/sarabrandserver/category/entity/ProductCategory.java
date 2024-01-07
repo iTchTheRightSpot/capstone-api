@@ -5,14 +5,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.LAZY;
-import static jakarta.persistence.TemporalType.TIMESTAMP;
 
-@Table(name = "product_category", indexes = @Index(name = "IX_product_category_uuid", columnList = "uuid"))
+@Table(name = "product_category")
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,19 +24,8 @@ public class ProductCategory implements Serializable {
     @Column(name = "category_id", nullable = false, unique = true)
     private Long categoryId;
 
-    @Column(name = "uuid", length = 36, nullable = false, unique = true, updatable = false)
-    private String uuid;
-
-    @Column(name = "category_name", nullable = false, unique = true, length = 50)
-    private String categoryName;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    @Temporal(TIMESTAMP)
-    private Date createAt;
-
-    @Column(name = "modified_at")
-    @Temporal(TIMESTAMP)
-    private Date modifiedAt;
+    @Column(name = "name", nullable = false, unique = true, length = 50)
+    private String name;
 
     @Column(name = "is_visible")
     private boolean isVisible;

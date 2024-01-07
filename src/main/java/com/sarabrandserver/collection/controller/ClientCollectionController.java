@@ -38,7 +38,7 @@ public class ClientCollectionController {
             @NotNull @RequestParam(name = "currency", defaultValue = "NGN") String currency
     ) {
         return this.productService
-                .allProductsByUUID("collection", SarreCurrency.valueOf(currency), uuid, page, Math.min(size, 20));
+                .allProductsByUUID("collection", SarreCurrency.valueOf(currency), uuid, 0, page, Math.min(size, 20));
     }
     
 }

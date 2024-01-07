@@ -1,13 +1,11 @@
 package com.sarabrandserver;
 
 import com.github.javafaker.Faker;
-import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.service.AuthService;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.category.service.WorkerCategoryService;
-import com.sarabrandserver.collection.dto.CollectionDTO;
 import com.sarabrandserver.collection.service.WorkerCollectionService;
 import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
@@ -35,26 +33,26 @@ class DummyData {
             String top = "top", bottom = "bottom";
             String summer = "summer 2023", fall = "fall 2023";
 
-            categoryService.create(new CategoryDTO(top, true, ""));
-            categoryService.create(new CategoryDTO(bottom, true, ""));
-            collectionService.create(new CollectionDTO(summer, true));
-            collectionService.create(new CollectionDTO(fall, true));
-
-            dummyProducts(top, summer, bottom, fall, productService);
-
-            if (repository.findByPrincipal("admin@admin.com").isEmpty()) {
-                var dto = new RegisterDTO(
-                        "SEJU",
-                        "Development",
-                        "admin@admin.com",
-                        "admin@admin.com",
-                        "0000000000",
-                        "password123"
-                );
-                service.workerRegister(dto);
-            }
-
-            dummySubCategories(categoryService, categoryRepository);
+//            categoryService.create(new CategoryDTO(top, true, ""));
+//            categoryService.create(new CategoryDTO(bottom, true, ""));
+//            collectionService.create(new CollectionDTO(summer, true));
+//            collectionService.create(new CollectionDTO(fall, true));
+//
+//            dummyProducts(top, summer, bottom, fall, productService);
+//
+//            if (repository.findByPrincipal("admin@admin.com").isEmpty()) {
+//                var dto = new RegisterDTO(
+//                        "SEJU",
+//                        "Development",
+//                        "admin@admin.com",
+//                        "admin@admin.com",
+//                        "0000000000",
+//                        "password123"
+//                );
+//                service.workerRegister(dto);
+//            }
+//
+//            dummySubCategories(categoryService, categoryRepository);
         };
     }
 
@@ -107,7 +105,7 @@ class DummyData {
             var dto = new CategoryDTO(
                     name,
                     true,
-                    categories.get(i).getCategoryName()
+                    categories.get(i).getName()
             );
 
             names[i] = name;
@@ -121,7 +119,7 @@ class DummyData {
                         new CategoryDTO(
                                 new Faker().commerce().department() + ((i + 1) * categories.size()),
                                 true,
-                                category.getCategoryName()
+                                category.getName()
                         )
                 );
             }

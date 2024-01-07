@@ -27,8 +27,6 @@ public class ClientProductService {
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
-    @Value(value = "${spring.profiles.active}")
-    private String ACTIVEPROFILE;
 
     private final ProductRepo productRepo;
     private final ProductDetailRepo productDetailRepo;
@@ -41,7 +39,8 @@ public class ClientProductService {
      *
      * @param key  is based on the controller that called this method
      * @param currency of type SarreBrandCurrency
-     * @param uuid is a unique string attached to either a Collection or Category
+     * @param catId is {@code ProductCategory} category_id
+     * @param uuid is a unique string attached to a Collection
      * @param page number
      * @param size number of ProductResponse for each page
      * @return a Page of ProductResponse
@@ -50,6 +49,7 @@ public class ClientProductService {
             String key,
             SarreCurrency currency,
             String uuid,
+            long catId,
             int page,
             int size
     ) {
@@ -71,7 +71,7 @@ public class ClientProductService {
                     });
 
             case "category" -> this.productRepo
-                    .productsByCategoryClient(uuid, currency, PageRequest.of(page, size)) //
+                    .productsByCategoryClient(catId, currency, PageRequest.of(page, size)) //
                     .map(pojo -> {
                         var url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());
                         return ProductResponse.builder()

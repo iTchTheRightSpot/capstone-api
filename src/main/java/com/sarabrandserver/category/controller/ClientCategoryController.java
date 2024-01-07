@@ -33,13 +33,13 @@ public class ClientCategoryController {
     @ResponseStatus(OK)
     @GetMapping(path = "/products", produces = "application/json")
     public Page<ProductResponse> fetchProductByCategory(
-            @NotNull @RequestParam(name = "category_id") String id,
+            @NotNull @RequestParam(name = "category_id") Long id,
             @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "NGN") String currency
     ) {
         return this.productService
-                .allProductsByUUID("category", SarreCurrency.valueOf(currency), id, page, Math.min(size, 20));
+                .allProductsByUUID("category", SarreCurrency.valueOf(currency), "", id, page, Math.min(size, 20));
     }
 
 }

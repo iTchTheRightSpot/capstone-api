@@ -33,7 +33,7 @@ public class ClientProductController {
     ) {
         var sc = SarreCurrency.valueOf(currency.toUpperCase());
         return this.clientProductService
-                .allProductsByUUID("", sc, "", page, Math.min(size, 20));
+                .allProductsByUUID("", sc, "", 0, page, Math.min(size, 20));
     }
 
     /**

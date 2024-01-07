@@ -50,7 +50,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
             (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
             p.defaultKey AS key,
-            cat.categoryName AS category,
+            cat.name AS category,
             col.collection AS collection
             FROM Product p
             INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId
@@ -68,7 +68,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency ) AS price,
     p.defaultKey AS key,
     col.collection AS collection,
-    cat.categoryName AS category
+    cat.name AS category
     FROM Product p
     LEFT JOIN ProductCollection col ON col.collectionId = p.productCollection.collectionId
     INNER JOIN ProductCategory cat ON cat.categoryId = p.productCategory.categoryId
@@ -123,15 +123,15 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
             (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
             p.defaultKey AS key,
-            pc.categoryName AS category
+            pc.name AS category
             FROM Product p
             INNER JOIN ProductCategory pc ON p.productCategory.categoryId = pc.categoryId
             INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
             INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
-            WHERE pd.isVisible = TRUE AND sku.inventory > 0 AND pc.uuid = :uuid
+            WHERE pd.isVisible = TRUE AND sku.inventory > 0 AND pc.categoryId = :id
             GROUP BY p.uuid, p.name, p.description, p.defaultKey
             """)
-    Page<ProductPojo> productsByCategoryClient(String uuid, SarreCurrency currency, Pageable page);
+    Page<ProductPojo> productsByCategoryClient(long id, SarreCurrency currency, Pageable page);
 
     @Query(value = """
             SELECT
@@ -167,7 +167,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
     (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
     p.defaultKey AS key,
-    cat.categoryName AS category
+    cat.name AS category
     FROM Product p
     INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId
     INNER JOIN ProductDetail pd ON p.productId = pd.product.productId

@@ -94,24 +94,6 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     );
 
     @Query(value = """
-    SELECT
-    p.uuid AS uuid,
-    p.name AS name,
-    p.description AS description,
-    (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
-    (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
-    p.defaultKey AS key,
-    pc.name AS category
-    FROM Product p
-    INNER JOIN ProductCategory pc ON p.productCategory.categoryId = pc.categoryId
-    INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
-    INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
-    WHERE pd.isVisible = TRUE AND sku.inventory > 0 AND pc.categoryId = :id
-    GROUP BY p.uuid, p.name, p.description, p.defaultKey
-    """)
-    Page<ProductPojo> productsByCategoryClient(long id, SarreCurrency currency, Pageable page);
-
-    @Query(value = """
     SELECT img.imageKey as image
     FROM ProductImage img
     INNER JOIN ProductDetail pd ON img.productDetails.productDetailId = pd.productDetailId

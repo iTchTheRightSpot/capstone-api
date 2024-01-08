@@ -2,7 +2,6 @@ package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.enumeration.SarreCurrency;
-import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.product.repository.PriceCurrencyRepo;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
@@ -37,54 +36,27 @@ public class ClientProductService {
     /**
      * Returns a page of ProductResponse
      *
-     * @param key  is based on the controller that called this method
      * @param currency of type {@code SarreBrandCurrency}
-     * @param id is {@code ProductCategory} category_id
      * @param page number
      * @param size number of ProductResponse for each page
      * @return a Page of {@code ProductResponse}
      */
-    public Page<ProductResponse> allProductsByUUID(
-            String key,
-            SarreCurrency currency,
-            long id,
-            int page,
-            int size
-    ) {
-        return switch (key) {
-            case "" -> this.productRepo
-                    .allProductsByCurrencyClient(currency, PageRequest.of(page, size)) //
-                    .map(pojo -> {
-                        var url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());
-                        return ProductResponse.builder()
-                                .category(pojo.getCategory())
-                                .collection(pojo.getCollection())
-                                .id(pojo.getUuid())
-                                .name(pojo.getName())
-                                .desc(pojo.getDescription())
-                                .price(pojo.getPrice())
-                                .currency(pojo.getCurrency())
-                                .imageUrl(url)
-                                .build();
-                    });
-
-            case "category" -> this.productRepo
-                    .productsByCategoryClient(id, currency, PageRequest.of(page, size)) //
-                    .map(pojo -> {
-                        var url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());
-                        return ProductResponse.builder()
-                                .category(pojo.getCategory())
-                                .id(pojo.getUuid())
-                                .name(pojo.getName())
-                                .desc(pojo.getDescription())
-                                .price(pojo.getPrice())
-                                .currency(pojo.getCurrency())
-                                .imageUrl(url)
-                                .build();
-                    });
-
-            default -> throw new CustomNotFoundException("Invalid key: " + key);
-        };
+    public Page<ProductResponse> allProductsByUUID(SarreCurrency currency, int page, int size) {
+        return this.productRepo
+                .allProductsByCurrencyClient(currency, PageRequest.of(page, size)) //
+                .map(pojo -> {
+                    var url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());
+                    return ProductResponse.builder()
+                            .category(pojo.getCategory())
+                            .collection(pojo.getCollection())
+                            .id(pojo.getUuid())
+                            .name(pojo.getName())
+                            .desc(pojo.getDescription())
+                            .price(pojo.getPrice())
+                            .currency(pojo.getCurrency())
+                            .imageUrl(url)
+                            .build();
+                });
     }
 
     /**

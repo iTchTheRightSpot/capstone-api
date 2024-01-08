@@ -19,7 +19,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequiredArgsConstructor
 public class ClientProductController {
 
-    private final ClientProductService clientProductService;
+    private final ClientProductService service
+            ;
 
     /**
      * Returns a Page of ProductResponse objects
@@ -32,8 +33,7 @@ public class ClientProductController {
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
         var sc = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.clientProductService
-                .allProductsByUUID("", sc, 0, page, Math.min(size, 20));
+        return this.service.allProductsByUUID(sc, page, Math.min(size, 20));
     }
 
     /**
@@ -46,7 +46,7 @@ public class ClientProductController {
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
         var c = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.clientProductService.search(search, c);
+        return this.service.search(search, c);
     }
 
     /**
@@ -59,7 +59,7 @@ public class ClientProductController {
             @RequestParam(value = "currency", defaultValue = "ngn") String currency
     ) {
         var c = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.clientProductService.productDetailsByProductUUID(uuid, c);
+        return this.service.productDetailsByProductUUID(uuid, c);
     }
 
 }

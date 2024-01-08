@@ -4,7 +4,6 @@ import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.category.service.ClientCategoryService;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.response.ProductResponse;
-import com.sarabrandserver.product.service.ClientProductService;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,7 +19,6 @@ import static org.springframework.http.HttpStatus.OK;
 public class ClientCategoryController {
 
     private final ClientCategoryService clientCategoryService;
-    private final ClientProductService productService;
 
     /** Returns a list of parent and child categories. */
     @ResponseStatus(OK)
@@ -38,8 +36,8 @@ public class ClientCategoryController {
             @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "NGN") String currency
     ) {
-        return this.productService
-                .allProductsByUUID("category", SarreCurrency.valueOf(currency), id, page, Math.min(size, 20));
+        return this.clientCategoryService
+                .allProductsByUUID(SarreCurrency.valueOf(currency), id, page, Math.min(size, 20));
     }
 
 }

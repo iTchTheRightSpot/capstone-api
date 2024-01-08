@@ -3,8 +3,6 @@ package com.sarabrandserver.product.service;
 import com.sarabrandserver.AbstractUnitTest;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.service.WorkerCategoryService;
-import com.sarabrandserver.collection.entity.ProductCollection;
-import com.sarabrandserver.collection.service.WorkerCollectionService;
 import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.product.entity.Product;
@@ -27,7 +25,8 @@ import static org.mockito.Mockito.*;
 
 class WorkerProductServiceTest extends AbstractUnitTest {
 
-    @Value(value = "${aws.bucket}") private String BUCKET;
+    @Value(value = "${aws.bucket}")
+    private String BUCKET;
 
     private WorkerProductService workerProductService;
 
@@ -38,7 +37,6 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     @Mock private ProductSKUService productSKUService;
     @Mock private WorkerCategoryService workerCategoryService;
     @Mock private CustomUtil customUtil;
-    @Mock private WorkerCollectionService collectionService;
 
     @BeforeEach
     void setUp() {
@@ -48,7 +46,6 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                 this.workerProductDetailService,
                 this.productSKUService,
                 this.workerCategoryService,
-                this.collectionService,
                 this.customUtil,
                 this.helperService
         );
@@ -103,28 +100,22 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                         "",
                         "",
                         "",
-                        -1,
-                        "collection",
-                        "collectionId"
+                        -1
                 );
         var category = ProductCategory.builder().name(payload.category()).build();
-        var collection = ProductCollection.builder().collection("collection").build();
 
         // When
         when(this.productRepo.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
         when(this.workerCategoryService.findById(anyLong())).thenReturn(category);
-        when(this.collectionService.productCollectionByUUID(anyString())).thenReturn(collection);
 
         // Then
         this.workerProductService.update(payload);
-        verify(this.collectionService, times(1)).productCollectionByUUID(anyString());
         verify(this.productRepo, times(1))
-                .update_product_where_category_and_collection_are_present(
+                .updateProduct(
                         anyString(),
                         anyString(),
                         anyString(),
-                        any(ProductCategory.class),
-                        any(ProductCollection.class)
+                        any(ProductCategory.class)
                 );
     }
 
@@ -136,9 +127,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                 .updateProductDTO(
                         "",
                         "",
-                        "", -1,
-                        "",
-                        ""
+                        "", -1
                 );
         var category = ProductCategory.builder().name(payload.category()).build();
 
@@ -148,9 +137,8 @@ class WorkerProductServiceTest extends AbstractUnitTest {
 
         // Then
         this.workerProductService.update(payload);
-        verify(this.collectionService, times(0)).productCollectionByUUID(anyString());
         verify(this.productRepo, times(1))
-                .update_product_where_collection_not_present(
+                .updateProduct(
                         anyString(),
                         anyString(),
                         anyString(),

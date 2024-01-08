@@ -5,8 +5,6 @@ import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.cart.dto.CartDTO;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
-import com.sarabrandserver.collection.dto.CollectionDTO;
-import com.sarabrandserver.collection.dto.UpdateCollectionDTO;
 import com.sarabrandserver.order.dto.OrderHistoryDTO;
 import com.sarabrandserver.order.dto.PaymentDTO;
 import com.sarabrandserver.order.dto.SkuQtyDTO;
@@ -38,10 +36,6 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
         // Category
         hints.serialization().registerType(CategoryDTO.class);
         hints.serialization().registerType(UpdateCategoryDTO.class);
-
-        // Collection
-        hints.serialization().registerType(CollectionDTO.class);
-        hints.serialization().registerType(UpdateCollectionDTO.class);
 
         // Product
         hints.serialization().registerType(CreateProductDTO.class);

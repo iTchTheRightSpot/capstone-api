@@ -38,18 +38,16 @@ public class ClientProductService {
      * Returns a page of ProductResponse
      *
      * @param key  is based on the controller that called this method
-     * @param currency of type SarreBrandCurrency
-     * @param catId is {@code ProductCategory} category_id
-     * @param uuid is a unique string attached to a Collection
+     * @param currency of type {@code SarreBrandCurrency}
+     * @param id is {@code ProductCategory} category_id
      * @param page number
      * @param size number of ProductResponse for each page
-     * @return a Page of ProductResponse
+     * @return a Page of {@code ProductResponse}
      */
     public Page<ProductResponse> allProductsByUUID(
             String key,
             SarreCurrency currency,
-            String uuid,
-            long catId,
+            long id,
             int page,
             int size
     ) {
@@ -71,26 +69,11 @@ public class ClientProductService {
                     });
 
             case "category" -> this.productRepo
-                    .productsByCategoryClient(catId, currency, PageRequest.of(page, size)) //
+                    .productsByCategoryClient(id, currency, PageRequest.of(page, size)) //
                     .map(pojo -> {
                         var url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());
                         return ProductResponse.builder()
                                 .category(pojo.getCategory())
-                                .id(pojo.getUuid())
-                                .name(pojo.getName())
-                                .desc(pojo.getDescription())
-                                .price(pojo.getPrice())
-                                .currency(pojo.getCurrency())
-                                .imageUrl(url)
-                                .build();
-                    });
-
-            case "collection" -> this.productRepo
-                    .productsByCollectionClient(currency, uuid, PageRequest.of(page, size))
-                    .map(pojo -> {
-                        var url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());
-                        return ProductResponse.builder()
-                                .collection(pojo.getCollection())
                                 .id(pojo.getUuid())
                                 .name(pojo.getName())
                                 .desc(pojo.getDescription())

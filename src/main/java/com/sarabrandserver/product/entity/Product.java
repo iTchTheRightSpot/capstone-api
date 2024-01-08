@@ -1,7 +1,6 @@
 package com.sarabrandserver.product.entity;
 
 import com.sarabrandserver.category.entity.ProductCategory;
-import com.sarabrandserver.collection.entity.ProductCollection;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -40,10 +39,6 @@ public class Product implements Serializable {
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "category_id", referencedColumnName = "category_id")
     private ProductCategory productCategory;
-
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "collection_id", referencedColumnName = "collection_id")
-    private ProductCollection productCollection;
 
     @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "product", orphanRemoval = true)
     private Set<ProductDetail> productDetails;

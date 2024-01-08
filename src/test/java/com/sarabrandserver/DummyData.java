@@ -6,7 +6,6 @@ import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.category.service.WorkerCategoryService;
-import com.sarabrandserver.collection.service.WorkerCollectionService;
 import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.product.service.WorkerProductService;
@@ -26,7 +25,6 @@ class DummyData {
             UserRepository repository,
             WorkerCategoryService categoryService,
             CategoryRepository categoryRepository,
-            WorkerCollectionService collectionService,
             WorkerProductService productService
     ) {
         return args -> {
@@ -78,7 +76,6 @@ class DummyData {
             var data = TestingData
                     .productDTO(
                             category,
-                            collection,
                             new Faker().commerce().productName() + " " + i,
                             new SizeInventoryDTO[] {
                                     new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "medium"),

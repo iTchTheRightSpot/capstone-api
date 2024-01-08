@@ -1,7 +1,6 @@
 package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.category.service.WorkerCategoryService;
-import com.sarabrandserver.collection.service.WorkerCollectionService;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.*;
 import com.sarabrandserver.product.dto.CreateProductDTO;
@@ -46,7 +45,6 @@ public class WorkerProductService {
     private final WorkerProductDetailService workerProductDetailService;
     private final ProductSKUService productSKUService;
     private final WorkerCategoryService categoryService;
-    private final WorkerCollectionService collectionService;
     private final CustomUtil customUtil;
     private final HelperService helperService;
 
@@ -82,7 +80,7 @@ public class WorkerProductService {
      *
      * @param files of type MultipartFile
      * @param dto   of type CreateProductDTO
-     * @throws CustomNotFoundException is thrown if category or collection name does not exist in database
+     * @throws CustomNotFoundException is thrown if category name does not exist in database
      * or currency passed in truncateAmount does not contain in dto property priceCurrency
      * @throws CustomAwsException      is thrown if File is not an image
      * @throws DuplicateException      is thrown if dto image exists in for Product
@@ -113,12 +111,6 @@ public class WorkerProductService {
                 .defaultKey(defaultImageKey.toString())
                 .productDetails(new HashSet<>())
                 .build();
-
-        // Set ProductCollection to Product
-        if (!dto.collection().isBlank()) {
-            var collection = this.collectionService.findByName(dto.collection().trim());
-            p.setProductCollection(collection);
-        }
 
         // Save Product
         var product = this.productRepo.save(p);
@@ -170,25 +162,13 @@ public class WorkerProductService {
 
         var category = this.categoryService.findById(dto.categoryId());
 
-        if (dto.collection().isEmpty()) {
-            this.productRepo.update_product_where_collection_not_present(
-                    dto.uuid(),
-                    dto.name().trim(),
-                    dto.desc().trim(),
-                    category
-            );
-
-        } else {
-            var collection = this.collectionService.productCollectionByUUID(dto.collectionId());
-
-            this.productRepo.update_product_where_category_and_collection_are_present(
-                    dto.uuid(),
-                    dto.name().trim(),
-                    dto.desc().trim(),
-                    category,
-                    collection
-            );
-        }
+        this.productRepo
+                .updateProduct(
+                        dto.uuid().trim(),
+                        dto.name().trim(),
+                        dto.desc().trim(),
+                        category
+                );
 
         // update price
         var currency = SarreCurrency.valueOf(dto.currency().toUpperCase());

@@ -86,18 +86,23 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     """)
     int onDuplicateCategoryName(long id, String name);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Transactional
     @Query("""
-        UPDATE ProductCategory pc
-        SET  pc.name = :name, pc.isVisible = :visible
-        WHERE pc.categoryId = :id
+    UPDATE ProductCategory pc
+    SET  pc.name = :name, pc.isVisible = :visible
+    WHERE pc.categoryId = :id
     """)
     void update(
             @Param(value = "name") String name,
             @Param(value = "visible") boolean visible,
             @Param(value = "id") long id
     );
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Transactional
+    @Query("UPDATE ProductCategory c SET c.isVisible = :visible WHERE c.categoryId = :id")
+    void upVisibility(long id, boolean visible);
 
     @Query(value = """
     SELECT
@@ -130,18 +135,20 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
      * @return a list of {@code CategoryPojo} object
      * */
     @Query(nativeQuery = true, value = """
-    WITH RECURSIVE category (id, name, parent) AS
+    WITH RECURSIVE category (id, name, status, parent) AS
     (
         SELECT
             c.category_id,
             c.name,
+            c.is_visible,
             c.parent_category_id
         FROM product_category c
-        WHERE c.parent_category_id = :id AND c.is_visible = TRUE
+        WHERE c.parent_category_id = :id
         UNION ALL
         SELECT
             pc.category_id,
             pc.name,
+            pc.is_visible,
             pc.parent_category_id
         FROM category cat
         INNER JOIN product_category pc
@@ -150,8 +157,10 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     SELECT
         c.id AS id,
         c.name AS name,
+        c.status AS visible,
         c.parent AS parent
-    FROM category c;
+    FROM category c
+    WHERE c.status IS TRUE;
     """)
     List<CategoryPojo> all_categories_store_front(long id);
 

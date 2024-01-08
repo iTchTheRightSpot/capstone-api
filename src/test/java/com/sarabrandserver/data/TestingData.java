@@ -94,7 +94,6 @@ public class TestingData {
     public static CreateProductDTO createProductDTO(SizeInventoryDTO[] dtos) {
         return productDTO(
                 new Faker().commerce().department(),
-                new Faker().commerce().department(),
                 new Faker().commerce().productName(),
                 dtos,
                 new Faker().commerce().color()
@@ -105,16 +104,14 @@ public class TestingData {
     public static CreateProductDTO createProductDTOCollectionNotPresent(
             String productName,
             String category,
-            String collection,
             SizeInventoryDTO[] dtos
     ) {
-        return productDTO(category, collection, productName, dtos, new Faker().commerce().color());
+        return productDTO(category, productName, dtos, new Faker().commerce().color());
     }
 
     @NotNull
     public static CreateProductDTO productDTO(
             String category,
-            String collection,
             String productName,
             SizeInventoryDTO[] dtos,
             String colour
@@ -126,7 +123,6 @@ public class TestingData {
 
         return new CreateProductDTO(
                 category,
-                collection,
                 productName,
                 new Faker().lorem().fixedString(1000),
                 arr,
@@ -146,9 +142,7 @@ public class TestingData {
             String productID,
             String productName,
             String category,
-            long categoryId,
-            String collection,
-            String collectionId
+            long categoryId
     ) {
         return new UpdateProductDTO(
                 productID,
@@ -157,9 +151,7 @@ public class TestingData {
                 "ngn",
                 new BigDecimal(new Faker().number().numberBetween(1000, 700000)),
                 category,
-                categoryId,
-                collection,
-                collectionId
+                categoryId
         );
     }
 

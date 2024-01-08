@@ -4,6 +4,7 @@ import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.sarabrandserver.category.entity.ProductCategory;
+import com.sarabrandserver.category.projection.CategoryPojo;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.enumeration.SarreCurrency;
@@ -126,6 +127,13 @@ public class WorkerCategoryService {
             throw new DuplicateException(dto.name() + " is a duplicate");
         }
 
+        // update all children categories to false
+        if (!dto.visible()) {
+            for (CategoryPojo pojo : categoryRepo.all_categories_admin_front(dto.id())) {
+                categoryRepo.upVisibility(pojo.getId(), false);
+            }
+        }
+
         this.categoryRepo
                 .update(dto.name().trim(), dto.visible(), dto.id());
     }
@@ -140,7 +148,7 @@ public class WorkerCategoryService {
         int c = this.categoryRepo.validateContainsSubCategory(id);
         int d = this.categoryRepo.validateProductAttached(id);
 
-        if (c > 0 || d > 0) {
+        if (c > 1 || d > 0) {
             throw new ResourceAttachedException("Category has 1 or many products or sub-category attached");
         }
 

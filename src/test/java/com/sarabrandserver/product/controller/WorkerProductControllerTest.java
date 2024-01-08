@@ -7,6 +7,7 @@ import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
@@ -20,24 +21,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class WorkerProductControllerTest extends AbstractIntegrationTest {
 
-    private final String requestMapping = "/api/v1/worker/product";
+
+    @Value(value = "/${api.endpoint.baseurl}worker/product")
+    private String requestMapping;
 
     private String productName() {
         var list = this.productRepo.findAll();
         assertFalse(list.isEmpty());
-        return list.get(0).getName();
+        return list.getFirst().getName();
     }
 
     private String category() {
         var list = this.categoryRepository.findAll();
         assertFalse(list.isEmpty());
-        return list.get(0).getName();
+        return list.getFirst().getName();
     }
 
     private String colour() {
         var list = this.productDetailRepo.findAll();
         assertFalse(list.isEmpty());
-        return list.get(0).getColour();
+        return list.getFirst().getColour();
     }
 
     @Test
@@ -72,7 +75,6 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                 .createProductDTOCollectionNotPresent(
                         new Faker().commerce().productName(),
                         category(),
-                        "",
                         dtos
                 );
 
@@ -104,7 +106,6 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                 .createProductDTOCollectionNotPresent(
                         new Faker().commerce().productName(),
                         category(),
-                        "",
                         new SizeInventoryDTO[]{ new SizeInventoryDTO(10, "small") }
                 );
 
@@ -147,7 +148,6 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         var dto = TestingData
                 .productDTO(
                         category(),
-                        "",
                         productName(),
                         dtos,
                         colour()
@@ -182,7 +182,6 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         var dto = TestingData
                 .productDTO(
                         category(),
-                        "",
                         new Faker().commerce().productName(),
                         null,
                         colour()
@@ -227,10 +226,8 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                 .updateProductDTO(
                         product.get(0).getUuid(),
                         product.get(1).getName(),
-                        category.get(0).getName(),
-                        category.get(0).getCategoryId(),
-                        "",
-                        ""
+                        category.getFirst().getName(),
+                        category.getFirst().getCategoryId()
                 );
 
         // Then
@@ -255,18 +252,14 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         var category = this.categoryRepository.findAll();
         assertFalse(category.isEmpty());
 
-        var collection = this.collectionRepository.findAll();
-        assertFalse(collection.isEmpty());
 
         // Payload
         var dto = TestingData
                 .updateProductDTO(
-                        product.get(0).getUuid(),
+                        product.getFirst().getUuid(),
                         "SEJU Development",
-                        category.get(0).getName(),
-                        category.get(0).getCategoryId(),
-                        collection.get(0).getCollection(),
-                        collection.get(0).getUuid()
+                        category.getFirst().getName(),
+                        category.getFirst().getCategoryId()
                 );
 
         // Then
@@ -293,12 +286,10 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         // payload
         var dto = TestingData
                 .updateProductDTO(
-                        product.get(0).getUuid(),
+                        product.getFirst().getUuid(),
                         "SEJU Development",
-                        category.get(0).getName(),
-                        category.get(0).getCategoryId(),
-                        "",
-                        ""
+                        category.getFirst().getName(),
+                        category.getFirst().getCategoryId()
                 );
 
         // Then

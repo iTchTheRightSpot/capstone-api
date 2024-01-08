@@ -12,9 +12,6 @@ public record CreateProductDTO(
         @NotEmpty(message = "Please select category as product has to below to a category")
         String category,
 
-        @NotNull(message = "Product collection cannot be null")
-        String collection,
-
         @NotNull(message = "Name cannot be null")
         @NotEmpty(message = "Please enter product name")
         @Size(max = 80, message = "Max of 80")

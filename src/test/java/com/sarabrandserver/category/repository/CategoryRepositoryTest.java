@@ -4,6 +4,7 @@ import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractRepositoryTest;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.projection.CategoryPojo;
+import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.repository.ProductRepo;
 import org.junit.jupiter.api.AfterEach;
@@ -11,11 +12,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CategoryRepositoryTest extends AbstractRepositoryTest {
 
@@ -31,13 +31,101 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
+    @DisplayName("Test returning all categories query")
+    void allCategories() {
+        // given
+        var category = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("category")
+                                .isVisible(true)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("clothes")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        var furniture = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("furniture")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("chair")
+                                .isVisible(true)
+                                .parentCategory(furniture)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("collection")
+                                .isVisible(true)
+                                .parentCategory(null)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        // then
+        List<CategoryPojo> list = this.categoryRepo.allCategories();
+        assertEquals(5, list.size());
+
+        List<CategoryResponse> parents = new ArrayList<>(
+                list
+                        .stream()
+                        .filter(p -> p.getParent() == null)
+                        .map(p -> new CategoryResponse(p.getId(), null, p.getName(), p.statusImpl(), new ArrayList<>()))
+                        .toList()
+        );
+
+        list.removeIf(p -> p.getParent() == null);
+
+        assertEquals(2, parents.size());
+
+        list.sort(Comparator.comparing(CategoryPojo::getParent));
+
+        // assert list is sorted based on parent id
+        assertTrue(list.size() > 1);
+
+        long parentId = list.getFirst().getParent();
+
+        for (int i = 1; i < list.size(); i++) {
+            assertTrue(parentId <= list.get(i).getParent());
+            parentId = list.get(i).getParent();
+        }
+
+    }
+
+    @Test
     @DisplayName("validate categoryId has 1 or more sub categoryId attached")
     void onSubCategory() {
         // given
         var c = categoryRepo
                 .save(
                         ProductCategory.builder()
-                                .name("categoryId")
+                                .name("category")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
                                 .product(new HashSet<>())
@@ -66,7 +154,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         var category = categoryRepo
                 .save(
                         ProductCategory.builder()
-                                .name("categoryId")
+                                .name("category")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
                                 .product(new HashSet<>())
@@ -97,7 +185,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         var category = categoryRepo
                 .save(
                         ProductCategory.builder()
-                                .name("categoryId")
+                                .name("category")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
                                 .product(new HashSet<>())
@@ -143,7 +231,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         var c = categoryRepo
                 .save(
                         ProductCategory.builder()
-                                .name("categoryId")
+                                .name("category")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
                                 .product(new HashSet<>())
@@ -186,7 +274,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         var category = categoryRepo
                 .save(
                         ProductCategory.builder()
-                                .name("categoryId")
+                                .name("category")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
                                 .product(new HashSet<>())
@@ -252,7 +340,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         var category = categoryRepo
                 .save(
                         ProductCategory.builder()
-                                .name("categoryId")
+                                .name("category")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
                                 .product(new HashSet<>())

@@ -36,19 +36,37 @@ public class WorkerCategoryService {
      * Returns a list of {@code CategoryResponse}
      * */
     public List<CategoryResponse> allCategories() {
-        return this.categoryRepo
-                .superCategories()
+        return this.categoryRepo.superCategories()
                 .stream()
-                .flatMap(cat -> this.categoryRepo
-                        .all_categories_admin_front(cat.getCategoryId())
-                        .stream()
-                        .map(p -> new CategoryResponse(p.getId(), p.getParent(), p.getName(), p.statusImpl()))
-                )
+                .map(parent -> {
+                    var children = this.categoryRepo
+                            .all_categories_admin_front(parent.getCategoryId())
+                            .stream()
+                            .map(child ->
+                                    new CategoryResponse(
+                                            child.getId(),
+                                            child.getParent(),
+                                            child.getName(),
+                                            child.statusImpl()
+                                    )
+                            )
+                            .toList();
+
+                    return new CategoryResponse(
+                            parent.getCategoryId(),
+                            null,
+                            parent.getName(),
+                            parent.isVisible(),
+                            children
+                    );
+                })
                 .toList();
+
     }
 
     /**
-     * Returns a page of ProductResponse based on categoryId uuid
+     * Returns a page of {@code ProductResponse} based on categoryId
+     *
      * @param id {@code ProductCategory} categoryId
      * @param page pagination
      * @param size pagination

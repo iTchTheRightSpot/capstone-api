@@ -3,12 +3,24 @@ package com.sarabrandserver.cart.controller;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.cart.dto.CartDTO;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
+import com.sarabrandserver.category.entity.ProductCategory;
+import com.sarabrandserver.category.repository.CategoryRepository;
+import com.sarabrandserver.category.service.WorkerCategoryService;
+import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.product.entity.ProductSku;
+import com.sarabrandserver.product.repository.ProductDetailRepo;
+import com.sarabrandserver.product.repository.ProductRepo;
+import com.sarabrandserver.product.repository.ProductSkuRepo;
+import com.sarabrandserver.product.service.WorkerProductService;
 import jakarta.servlet.http.Cookie;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -28,11 +40,58 @@ class CartControllerTest extends AbstractIntegrationTest {
 
     @Autowired
     private ShoppingSessionRepo shoppingSessionRepo;
+    @Autowired
+    private WorkerProductService workerProductService;
+    @Autowired
+    private ProductRepo productRepo;
+    @Autowired
+    private ProductSkuRepo productSkuRepo;
+    @Autowired
+    private ProductDetailRepo productDetailRepo;
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @BeforeEach
+    void before() {
+        var category = categoryRepository
+                .save(
+                        ProductCategory.builder()
+                                .name("category")
+                                .isVisible(true)
+                                .parentCategory(null)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        TestingData.dummyProducts(category, 2, workerProductService);
+
+        var clothes = categoryRepository
+                .save(
+                        ProductCategory.builder()
+                                .name("clothes")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        TestingData.dummyProducts(clothes, 5, workerProductService);
+    }
+
+    @AfterEach
+    void after() {
+        shoppingSessionRepo.deleteAll();
+        productDetailRepo.deleteAll();
+        productRepo.deleteAll();
+        categoryRepository.deleteAll();
+    }
 
     private ProductSku productSku() {
         var list = this.productSkuRepo.findAll();
         assertFalse(list.isEmpty());
-        return list.get(0);
+        return list.getFirst();
     }
 
     @Test

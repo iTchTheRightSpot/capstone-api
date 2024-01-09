@@ -118,7 +118,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     Page<ProductPojo> allProductsByCategory(SarreCurrency currency, long id, Pageable page);
 
     /**
-     * Selects all {@code ProductCategory} objects that have a parent category id null.
+     * Selects all {@code ProductCategory} objects that have a parent categoryId id null.
      *
      * @return a list of {@code ProductCategory}
      * */
@@ -173,12 +173,12 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
         ON cat.id = pc.parent_category_id
     )
     SELECT
-        c.id AS id,
-        c.name AS name,
-        c.status AS visible,
-        c.parent AS parent
-    FROM category c
-    WHERE c.status IS TRUE;
+        c1.id AS id,
+        c1.name AS name,
+        c1.status AS visible,
+        c1.parent AS parent
+    FROM category c1
+    WHERE c1.status IS TRUE;
     """)
     List<CategoryPojo> all_categories_store_front(long id);
 
@@ -212,11 +212,11 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
         ON cat.id = pc.parent_category_id
     )
     SELECT
-        c.id AS id,
-        c.name AS name,
-        c.status AS visible,
-        c.parent AS parent
-    FROM category c;
+        c1.id AS id,
+        c1.name AS name,
+        c1.parent AS parent,
+        c1.status AS status
+    FROM category c1;
     """)
     List<CategoryPojo> all_categories_admin_front(long id);
 

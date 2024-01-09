@@ -16,9 +16,9 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 
 @Configuration
-public class AwsConfigurations {
+public class AwsConfiguration {
 
-    private static final Logger log = LoggerFactory.getLogger(AwsConfigurations.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(AwsConfiguration.class.getName());
     private static final Region REGION;
     private static final AwsCredentialsProvider PROVIDER;
 

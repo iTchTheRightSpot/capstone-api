@@ -80,7 +80,7 @@ public class WorkerProductService {
      *
      * @param files of type MultipartFile
      * @param dto   of type CreateProductDTO
-     * @throws CustomNotFoundException is thrown if category name does not exist in database
+     * @throws CustomNotFoundException is thrown if categoryId name does not exist in database
      * or currency passed in truncateAmount does not contain in dto property priceCurrency
      * @throws CustomAwsException      is thrown if File is not an image
      * @throws DuplicateException      is thrown if dto image exists in for Product
@@ -91,7 +91,7 @@ public class WorkerProductService {
             throw new CustomInvalidFormatException("please check currencies and prices");
         }
 
-        var category = this.categoryService.findByName(dto.category().trim());
+        var category = this.categoryService.findById(dto.categoryId());
 
         // throw error if product exits
         if (this.productRepo.findByProductName(dto.name().trim()).isPresent()) {

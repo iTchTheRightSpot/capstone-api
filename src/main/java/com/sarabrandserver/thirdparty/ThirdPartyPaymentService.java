@@ -21,12 +21,10 @@ public class ThirdPartyPaymentService {
     private final Environment env;
 
     /**
-     * Returns PayStack pub and secret keys
+     * returns PayStack pub and secret keys
      * */
     public final PaymentCredentialObj payStackCredentials() {
         String profile = this.env.getProperty("spring.profiles.active", "");
-        String awsSecretId = this.env
-                .getProperty("aws.paystack.secret.id", "paystack-credentials");
         String pubKey = this.env.getProperty("paystack.pub.key", "");
         String secretKey = this.env.getProperty("paystack.secret.key", "");
 
@@ -34,18 +32,21 @@ public class ThirdPartyPaymentService {
             return new PaymentCredentialObj(pubKey, secretKey);
         }
 
+        String awsSecretId = this.env
+                .getProperty("aws.paystack.secret.id", "paystack-credentials");
+
         // TODO find out how to set credentials as an env variable not system variable
         return impl(awsSecretId, PaymentCredentialObj.class);
     }
 
     /**
-     * Returns Flutterwave pub, secret and encryption keys
+     * returns Flutterwave pub, secret and encryption keys
      * */
     final PaymentCredentialObj flutterWaveCredentials() {
         if (this.env.getProperty("spring.profiles.active", "").equals("test")) {
             String pubKey = this.env.getProperty("flutter.pub.key", "");
             String secretKey = this.env.getProperty("flutter.secret.key", "");
-            String encryptionKey = this.env.getProperty("flutter.secret.key", "");
+            String encryptionKey = this.env.getProperty("flutter.encryption.key", "");
             return new PaymentCredentialObj(pubKey, secretKey, encryptionKey);
         }
         return impl("flutter-credentials", PaymentCredentialObj.class);

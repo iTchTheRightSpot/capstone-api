@@ -14,7 +14,7 @@ public record UpdateCategoryDTO(
 
         @NotNull(message = "cannot be empty")
         @NotEmpty(message = "cannot be empty")
-        @Size(max = 50, message = "category name cannot exceed length of 50")
+        @Size(max = 50, message = "categoryId name cannot exceed length of 50")
         String name,
 
         @NotNull(message = "cannot be empty")

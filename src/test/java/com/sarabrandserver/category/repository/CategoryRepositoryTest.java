@@ -31,13 +31,13 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    @DisplayName("validate category has 1 or more sub category attached")
+    @DisplayName("validate categoryId has 1 or more sub categoryId attached")
     void onSubCategory() {
         // given
         var c = categoryRepo
                 .save(
                         ProductCategory.builder()
-                                .name("category")
+                                .name("categoryId")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
                                 .product(new HashSet<>())
@@ -61,12 +61,12 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    @DisplayName("validate category has 1 or more products attached")
+    @DisplayName("validate categoryId has 1 or more products attached")
     void OnProduct() {
         var category = categoryRepo
                 .save(
                         ProductCategory.builder()
-                                .name("category")
+                                .name("categoryId")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
                                 .product(new HashSet<>())
@@ -92,12 +92,12 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    @DisplayName("validate category has 1 or more sub-category and products attached")
+    @DisplayName("validate categoryId has 1 or more sub-categoryId and products attached")
     void validateOnDelete() {
         var category = categoryRepo
                 .save(
                         ProductCategory.builder()
-                                .name("category")
+                                .name("categoryId")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
                                 .product(new HashSet<>())
@@ -143,7 +143,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         var c = categoryRepo
                 .save(
                         ProductCategory.builder()
-                                .name("category")
+                                .name("categoryId")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
                                 .product(new HashSet<>())
@@ -186,7 +186,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         var category = categoryRepo
                 .save(
                         ProductCategory.builder()
-                                .name("category")
+                                .name("categoryId")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
                                 .product(new HashSet<>())
@@ -252,7 +252,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         var category = categoryRepo
                 .save(
                         ProductCategory.builder()
-                                .name("category")
+                                .name("categoryId")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
                                 .product(new HashSet<>())

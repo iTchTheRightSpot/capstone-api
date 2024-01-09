@@ -68,7 +68,9 @@ public class JwtTokenService {
      * */
     public boolean matchesRole(@NotNull final Cookie cookie, RoleEnum role) {
         try {
-            return this.jwtDecoder.decode(cookie.getValue()) //
+            // TODO
+            return this.jwtDecoder
+                    .decode(cookie.getValue()) //
                     .getClaims() //
                     .entrySet() //
                     .stream() //

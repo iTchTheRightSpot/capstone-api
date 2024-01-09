@@ -19,8 +19,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequiredArgsConstructor
 public class ClientProductController {
 
-    private final ClientProductService service
-            ;
+    private final ClientProductService service;
 
     /**
      * Returns a Page of ProductResponse objects

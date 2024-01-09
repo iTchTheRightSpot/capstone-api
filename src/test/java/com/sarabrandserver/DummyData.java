@@ -1,127 +1,120 @@
 package com.sarabrandserver;
 
-import com.github.javafaker.Faker;
+import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.service.AuthService;
-import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.data.TestingData;
-import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.product.service.WorkerProductService;
 import com.sarabrandserver.user.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
-import java.util.List;
+import java.util.HashSet;
 
 @TestConfiguration(proxyBeanMethods = false)
 class DummyData {
 
     @Bean
     public CommandLineRunner runner(
-            AuthService service,
+            AuthService authService,
             UserRepository repository,
-            WorkerCategoryService categoryService,
             CategoryRepository categoryRepository,
-            WorkerProductService productService
+            WorkerProductService workerProductService
     ) {
         return args -> {
-            String top = "top", bottom = "bottom";
-            String summer = "summer 2023", fall = "fall 2023";
-
-//            categoryService.create(new CategoryDTO(top, true, ""));
-//            categoryService.create(new CategoryDTO(bottom, true, ""));
-//            collectionService.create(new CollectionDTO(summer, true));
-//            collectionService.create(new CollectionDTO(fall, true));
-//
-//            dummyProducts(top, summer, bottom, fall, productService);
-//
-//            if (repository.findByPrincipal("admin@admin.com").isEmpty()) {
-//                var dto = new RegisterDTO(
-//                        "SEJU",
-//                        "Development",
-//                        "admin@admin.com",
-//                        "admin@admin.com",
-//                        "0000000000",
-//                        "password123"
-//                );
-//                service.workerRegister(dto);
-//            }
-//
-//            dummySubCategories(categoryService, categoryRepository);
-        };
-    }
-
-    final void dummyProducts(
-            String top,
-            String summer,
-            String bottom,
-            String fall,
-            WorkerProductService service
-    ) {
-        for (int i = 0; i < 50; i++) {
-            String category;
-            String collection;
-
-            if (i % 2 == 0) {
-                category = top;
-                collection = summer;
-            } else {
-                category = bottom;
-                collection = fall;
-            }
-
-            var data = TestingData
-                    .productDTO(
-                            category,
-                            new Faker().commerce().productName() + " " + i,
-                            new SizeInventoryDTO[] {
-                                    new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "medium"),
-                                    new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "small"),
-                                    new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "large")
-                            },
-                            new Faker().commerce().color() + " " + i
+            var category = categoryRepository
+                    .save(
+                            ProductCategory.builder()
+                                    .name("category")
+                                    .isVisible(true)
+                                    .parentCategory(null)
+                                    .categories(new HashSet<>())
+                                    .product(new HashSet<>())
+                                    .build()
                     );
 
-            var images = TestingData.files();
+            TestingData.dummyProducts(category, 2, workerProductService);
 
-            // Create product
-            service.create(data, images);
-        }
-    }
+            var clothes = categoryRepository
+                    .save(
+                            ProductCategory.builder()
+                                    .name("clothes")
+                                    .isVisible(true)
+                                    .parentCategory(category)
+                                    .categories(new HashSet<>())
+                                    .product(new HashSet<>())
+                                    .build()
+                    );
 
-    final void dummySubCategories(WorkerCategoryService service, CategoryRepository repository) {
-        List<ProductCategory> categories = repository.findAll();
+            TestingData.dummyProducts(clothes, 5, workerProductService);
 
-        String[] names = new String[categories.size()];
+            var shirt = categoryRepository
+                    .save(
+                            ProductCategory.builder()
+                                    .name("t-shirt")
+                                    .isVisible(true)
+                                    .parentCategory(clothes)
+                                    .categories(new HashSet<>())
+                                    .product(new HashSet<>())
+                                    .build()
+                    );
 
-        for (int i = 0; i < categories.size(); i++) {
-            String name = new Faker().commerce().department() + i;
-            var dto = new CategoryDTO(
-                    name,
-                    true,
-                    categories.get(i).getName()
-            );
+            TestingData.dummyProducts(shirt, 10, workerProductService);
 
-            names[i] = name;
-            service.create(dto);
-        }
+            var furniture = categoryRepository
+                    .save(
+                            ProductCategory.builder()
+                                    .name("furniture")
+                                    .isVisible(true)
+                                    .parentCategory(category)
+                                    .categories(new HashSet<>())
+                                    .product(new HashSet<>())
+                                    .build()
+                    );
 
-        for (int i = 0; i < names.length; i++) {
-            ProductCategory category = service.findByName(names[i]);
-            for (int j = 0; j < 3; j++) {
-                service.create(
-                        new CategoryDTO(
-                                new Faker().commerce().department() + ((i + 1) * categories.size()),
-                                true,
-                                category.getName()
-                        )
+            TestingData.dummyProducts(furniture, 3, workerProductService);
+
+            var collection = categoryRepository
+                    .save(
+                            ProductCategory.builder()
+                                    .name("collection")
+                                    .isVisible(true)
+                                    .parentCategory(null)
+                                    .categories(new HashSet<>())
+                                    .product(new HashSet<>())
+                                    .build()
+                    );
+
+            TestingData.dummyProducts(collection, 1, workerProductService);
+
+            var winter = categoryRepository
+                    .save(
+                            ProductCategory.builder()
+                                    .name("winter 2024")
+                                    .isVisible(true)
+                                    .parentCategory(collection)
+                                    .categories(new HashSet<>())
+                                    .product(new HashSet<>())
+                                    .build()
+                    );
+
+            TestingData.dummyProducts(winter, 15, workerProductService);
+
+            if (repository.findByPrincipal("admin@admin.com").isEmpty()) {
+                var dto = new RegisterDTO(
+                        "SEJU",
+                        "Development",
+                        "admin@admin.com",
+                        "admin@admin.com",
+                        "0000000000",
+                        "password123"
                 );
+                authService.workerRegister(dto);
             }
-        }
 
+        };
     }
 
 }

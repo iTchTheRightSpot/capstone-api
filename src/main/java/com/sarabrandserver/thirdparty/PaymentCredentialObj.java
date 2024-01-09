@@ -3,7 +3,7 @@ package com.sarabrandserver.thirdparty;
 import java.io.Serializable;
 
 /**
- * Main constructor for PayStack
+ * Main constructor for Flutterwave
  * */
 public record PaymentCredentialObj(
         String pubKey,
@@ -16,13 +16,6 @@ public record PaymentCredentialObj(
      * */
     public PaymentCredentialObj(String pubKey, String secretKey) {
         this(pubKey, secretKey, "");
-    }
-
-    /**
-     * Nested constructor for returning only pub key
-     * */
-    public PaymentCredentialObj(String pubKey) {
-        this(pubKey, "", "");
     }
 
 }

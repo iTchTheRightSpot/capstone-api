@@ -84,8 +84,7 @@ public class WorkerProductDetailService {
 
         if (exist.isPresent()) {
             // Create new ProductSKU
-            var detail = exist.get();
-            this.productSKUService.save(dto.sizeInventory(), detail);
+            this.productSKUService.save(dto.sizeInventory(), exist.get());
             return;
         }
 

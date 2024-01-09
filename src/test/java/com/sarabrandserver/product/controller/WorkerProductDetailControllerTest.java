@@ -2,46 +2,110 @@ package com.sarabrandserver.product.controller;
 
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
+import com.sarabrandserver.category.entity.ProductCategory;
+import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.product.dto.UpdateProductDetailDTO;
+import com.sarabrandserver.product.entity.Product;
+import com.sarabrandserver.product.repository.ProductDetailRepo;
+import com.sarabrandserver.product.repository.ProductRepo;
+import com.sarabrandserver.product.repository.ProductSkuRepo;
+import com.sarabrandserver.product.service.WorkerProductService;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
+
+import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
 
-    private final String requestMapping = "/api/v1/worker/product/detail";
+    @Value(value = "/${api.endpoint.baseurl}worker/product/detail")
+    private String requestMapping;
+
+    @Autowired
+    private WorkerProductService workerProductService;
+    @Autowired
+    private ProductRepo productRepo;
+    @Autowired
+    private ProductSkuRepo productSkuRepo;
+    @Autowired
+    private ProductDetailRepo productDetailRepo;
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @BeforeEach
+    void before() {
+        var category = categoryRepository
+                .save(
+                        ProductCategory.builder()
+                                .name("category")
+                                .isVisible(true)
+                                .parentCategory(null)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        TestingData.dummyProducts(category, 2, workerProductService);
+
+        var clothes = categoryRepository
+                .save(
+                        ProductCategory.builder()
+                                .name("clothes")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        TestingData.dummyProducts(clothes, 5, workerProductService);
+    }
+
+    @AfterEach
+    void after() {
+        productSkuRepo.deleteAll();
+        productDetailRepo.deleteAll();
+        productRepo.deleteAll();
+        categoryRepository.deleteAll();
+    }
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = """
-            Simulates fetching ProductDetails by product uuid.
-            Main objective is to validate native sql query
-            """)
+    Simulates fetching ProductDetails by product uuid.
+    Main objective is to validate native sql query
+    """)
     void fetchAllDetail() throws Exception {
-        // Given
+        // given
         var list = this.productRepo.findAll();
         assertFalse(list.isEmpty());
 
-        // Based on setUp
+        // based on setUp
         this.MOCKMVC
                 .perform(get(requestMapping)
-                        .param("id", list.get(0).getUuid())
+                        .param("id", list.getFirst().getUuid())
                 )
+                .andDo(print())
                 .andExpect(content().contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[*].variants").isArray())
-                .andExpect(jsonPath("$[*].variants.length()").value(this.detailSize));
+                .andExpect(jsonPath("$[*].variants.length()").value(3));
     }
 
     @Test
@@ -51,11 +115,9 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
         assertFalse(list.isEmpty());
 
         // payload
-        MockMultipartFile[] files = TestingData.files();
-
         var dtos = TestingData.sizeInventoryDTOArray(5);
 
-        String productID = list.get(0).getUuid();
+        String productID = list.getFirst().getUuid();
         var dto = TestingData.productDetailDTO(productID, "exon-mobile-colour", dtos);
 
         var payload = new MockMultipartFile(
@@ -66,14 +128,14 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
         );
 
         // request
-        MockMultipartHttpServletRequestBuilder requestBuilder = multipart(requestMapping).file(payload);
+        MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
 
         for (MockMultipartFile file : TestingData.files()) {
-            requestBuilder.file(file);
+            builder.file(file);
         }
 
         this.MOCKMVC
-                .perform(requestBuilder.contentType(MULTIPART_FORM_DATA).with(csrf()))
+                .perform(builder.contentType(MULTIPART_FORM_DATA).with(csrf()))
                 .andExpect(status().isCreated());
     }
 
@@ -84,7 +146,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
         var list = this.productSkuRepo.findAll();
         assertFalse(list.isEmpty());
 
-        String sku = list.get(0).getSku();
+        String sku = list.getFirst().getSku();
         var dto = new UpdateProductDetailDTO(
                 sku,
                 new Faker().commerce().color(),

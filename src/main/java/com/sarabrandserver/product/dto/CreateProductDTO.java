@@ -8,9 +8,9 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 
 public record CreateProductDTO(
-        @NotNull(message = "Please select category as product has to below to a category")
-        @NotEmpty(message = "Please select category as product has to below to a category")
-        String category,
+        @JsonProperty(value = "category_id")
+        @NotNull(message = "Please select categoryId as product has to below to a categoryId")
+        Long categoryId,
 
         @NotNull(message = "Name cannot be null")
         @NotEmpty(message = "Please enter product name")

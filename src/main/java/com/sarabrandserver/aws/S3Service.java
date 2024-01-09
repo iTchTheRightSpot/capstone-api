@@ -36,7 +36,7 @@ public class S3Service {
     }
 
     /**
-     * Constructor injected
+     * constructor injected
      * */
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
@@ -79,7 +79,7 @@ public class S3Service {
      * Delete image(s) from s3. As per docs
      * <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/DeleteObjects.java">...</a>
      * */
-    public void deleteFromS3Impl(List<ObjectIdentifier> keys, String bucketName) {
+    private void deleteFromS3Impl(List<ObjectIdentifier> keys, String bucketName) {
         Delete del = Delete.builder().objects(keys).build();
         try {
             DeleteObjectsRequest multiObjectDeleteRequest = DeleteObjectsRequest.builder()

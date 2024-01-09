@@ -109,7 +109,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
     @Test
     void update() {
         // Given
-        var dto = new UpdateCategoryDTO(1L, "update category name", true);
+        var dto = new UpdateCategoryDTO(1L, "update categoryId name", true);
 
         // When
         doReturn(0).when(this.categoryRepository)
@@ -124,7 +124,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
     @Test
     void update_category_name_to_existing_name() {
         // Given
-        var dto = new UpdateCategoryDTO(1L, "update category name", true);
+        var dto = new UpdateCategoryDTO(1L, "update categoryId name", true);
 
         // When
         when(this.categoryRepository.onDuplicateCategoryName(anyLong(), anyString()))

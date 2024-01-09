@@ -2,15 +2,27 @@ package com.sarabrandserver.order.controller;
 
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.cart.dto.CartDTO;
+import com.sarabrandserver.category.entity.ProductCategory;
+import com.sarabrandserver.category.repository.CategoryRepository;
+import com.sarabrandserver.category.service.WorkerCategoryService;
+import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.product.entity.ProductSku;
+import com.sarabrandserver.product.repository.ProductDetailRepo;
+import com.sarabrandserver.product.repository.ProductRepo;
+import com.sarabrandserver.product.repository.ProductSkuRepo;
+import com.sarabrandserver.product.service.WorkerProductService;
 import jakarta.servlet.http.Cookie;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -34,10 +46,58 @@ class PaymentControllerTest extends AbstractIntegrationTest {
     @Value("${cart.cookie.name}")
     private String CART_COOKIE;
 
+    @Autowired
+    private WorkerProductService workerProductService;
+    @Autowired
+    private ProductRepo productRepo;
+    @Autowired
+    private ProductSkuRepo productSkuRepo;
+    @Autowired
+    private ProductDetailRepo productDetailRepo;
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @BeforeEach
+    void before() {
+        var category = categoryRepository
+                .save(
+                        ProductCategory.builder()
+                                .name("category")
+                                .isVisible(true)
+                                .parentCategory(null)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        TestingData.dummyProducts(category, 2, workerProductService);
+
+        var clothes = categoryRepository
+                .save(
+                        ProductCategory.builder()
+                                .name("clothes")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        TestingData.dummyProducts(clothes, 5, workerProductService);
+    }
+
+    @AfterEach
+    void after() {
+        productSkuRepo.deleteAll();
+        productDetailRepo.deleteAll();
+        productRepo.deleteAll();
+        categoryRepository.deleteAll();
+    }
+
     private ProductSku productSku() {
         var list = this.productSkuRepo.findAll();
         assertFalse(list.isEmpty());
-        return list.get(0);
+        return list.getFirst();
     }
 
     private Cookie create_new_shopping_session() throws Exception {
@@ -159,7 +219,7 @@ class PaymentControllerTest extends AbstractIntegrationTest {
     private Cookie[] impl(int num) throws Exception {
         var list = this.productSkuRepo.findAll();
 
-        var sku = list.get(0);
+        var sku = list.getFirst();
 
         // update inventory to 1 to simulate num of users trying to purchase the only item in stock
         this.productSkuRepo

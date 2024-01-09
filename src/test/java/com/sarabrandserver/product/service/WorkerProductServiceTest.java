@@ -58,12 +58,15 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         // Given
         var sizeDtoArray = TestingData.sizeInventoryDTOArray(3);
         var files = TestingData.files();
-        var dto = TestingData.createProductDTO(sizeDtoArray);
-        var category = ProductCategory.builder().name(dto.category()).build();
+        var dto = TestingData.createProductDTO(1, sizeDtoArray);
+        var category = ProductCategory.builder()
+                .categoryId(dto.categoryId())
+                .name("category")
+                .build();
 
         // When
         when(this.customUtil.validateContainsCurrencies(dto.priceCurrency())).thenReturn(true);
-        when(this.workerCategoryService.findByName(anyString())).thenReturn(category);
+        when(this.workerCategoryService.findById(anyLong())).thenReturn(category);
         when(this.productRepo.findByProductName(anyString())).thenReturn(Optional.empty());
         when(this.customUtil.toUTC(any(Date.class))).thenReturn(null);
 
@@ -78,13 +81,16 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         // Given
         var sizeDtoArray = TestingData.sizeInventoryDTOArray(3);
         var files = TestingData.files();
-        var dto = TestingData.createProductDTO(sizeDtoArray);
-        var category = ProductCategory.builder().name(dto.category()).build();
+        var dto = TestingData.createProductDTO(1, sizeDtoArray);
+        var category = ProductCategory.builder()
+                .categoryId(dto.categoryId())
+                .name("category")
+                .build();
         var product = Product.builder().name(dto.name()).uuid("uuid").build();
 
         // When
         when(this.customUtil.validateContainsCurrencies(dto.priceCurrency())).thenReturn(true);
-        when(this.workerCategoryService.findByName(anyString())).thenReturn(category);
+        when(this.workerCategoryService.findById(anyLong())).thenReturn(category);
         when(this.productRepo.findByProductName(anyString())).thenReturn(Optional.of(product));
 
         // Then
@@ -92,7 +98,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     }
 
     @Test
-    @DisplayName(value = "Update a new product. category and collection are present in the payload")
+    @DisplayName(value = "Update a new product. categoryId and collection are present in the payload")
     void update() {
         // Given
         var payload = TestingData

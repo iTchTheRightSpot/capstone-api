@@ -42,17 +42,17 @@ public class WorkerCategoryService {
                 .flatMap(cat -> this.categoryRepo
                         .all_categories_admin_front(cat.getCategoryId())
                         .stream()
-                        .map(p -> new CategoryResponse(p.getId(), p.getParent(), p.getName(), p.getVisible()))
+                        .map(p -> new CategoryResponse(p.getId(), p.getParent(), p.getName(), p.statusImpl()))
                 )
                 .toList();
     }
 
     /**
-     * Returns a page of ProductResponse based on category uuid
+     * Returns a page of ProductResponse based on categoryId uuid
      * @param id {@code ProductCategory} categoryId
      * @param page pagination
      * @param size pagination
-     * @return Page of ProductResponse
+     * @return Page of {@code ProductResponse}
      * */
     public Page<ProductResponse> allProductsByCategory(SarreCurrency currency, long id, int page, int size) {
         return this.categoryRepo
@@ -71,15 +71,16 @@ public class WorkerCategoryService {
     }
 
     /**
-     * The logic to creating a new ProductCategory object is a worker can either add dto.name (child ProductCategory)
-     * to an existing dto.parent (parent ProductCategory) or create new ProductCategory who has no parent.
+     * The logic to creating a new ProductCategory object is a worker can either add dto.name
+     * (child {@code ProductCategory}) to an existing dto.parent (parent {@code ProductCategory})
+     * or create new ProductCategory who has no parent.
+     *
      * @param dto of type CategoryDTO
      * @throws DuplicateException when dto.name exists
      * @throws CustomNotFoundException when dto.parent (Parent Category) does not exist
      * */
     @Transactional
     public void create(CategoryDTO dto) {
-        // Handle cases based on the logic explained above.
         var category = dto.parent().isBlank()
                 ? parentCategoryIsBlank(dto)
                 : parentCategoryNotBlank(dto);
@@ -116,7 +117,7 @@ public class WorkerCategoryService {
     /**
      * Method is responsible for updating a ProductCategory based on uuid.
      * @param dto of type UpdateCategoryDTO
-     * @throws DuplicateException is thrown if category name exists but is not associated to uuid
+     * @throws DuplicateException is thrown if categoryId name exists but is not associated to uuid
      * */
     @Transactional
     public void update(UpdateCategoryDTO dto) {
@@ -141,7 +142,7 @@ public class WorkerCategoryService {
     /**
      * Permanently deletes a ProductCategory and its children.
      * @param id is the ProductCategory uuid
-     * @throws CustomNotFoundException is thrown if category node does not exist
+     * @throws CustomNotFoundException is thrown if categoryId node does not exist
      * */
     @Transactional
     public void delete(long id) {
@@ -149,7 +150,7 @@ public class WorkerCategoryService {
         int d = this.categoryRepo.validateProductAttached(id);
 
         if (c > 1 || d > 0) {
-            throw new ResourceAttachedException("Category has 1 or many products or sub-category attached");
+            throw new ResourceAttachedException("Category has 1 or many products or sub-categoryId attached");
         }
 
         var category = findById(id);

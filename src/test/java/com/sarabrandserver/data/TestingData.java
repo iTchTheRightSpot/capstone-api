@@ -1,11 +1,9 @@
 package com.sarabrandserver.data;
 
 import com.github.javafaker.Faker;
-import com.sarabrandserver.address.AddressDTO;
-import com.sarabrandserver.enumeration.SarreCurrency;
-import com.sarabrandserver.order.dto.PaymentDTO;
-import com.sarabrandserver.order.dto.SkuQtyDTO;
+import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.product.dto.*;
+import com.sarabrandserver.product.service.WorkerProductService;
 import com.sarabrandserver.user.entity.ClientRole;
 import com.sarabrandserver.user.entity.SarreBrandUser;
 import jakarta.validation.constraints.NotNull;
@@ -91,9 +89,9 @@ public class TestingData {
     }
 
     @NotNull
-    public static CreateProductDTO createProductDTO(SizeInventoryDTO[] dtos) {
+    public static CreateProductDTO createProductDTO(long categoryId, SizeInventoryDTO[] dtos) {
         return productDTO(
-                new Faker().commerce().department(),
+                categoryId,
                 new Faker().commerce().productName(),
                 dtos,
                 new Faker().commerce().color()
@@ -101,17 +99,17 @@ public class TestingData {
     }
 
     @NotNull
-    public static CreateProductDTO createProductDTOCollectionNotPresent(
+    public static CreateProductDTO createProductDTO(
             String productName,
-            String category,
+            long categoryId,
             SizeInventoryDTO[] dtos
     ) {
-        return productDTO(category, productName, dtos, new Faker().commerce().color());
+        return productDTO(categoryId, productName, dtos, new Faker().commerce().color());
     }
 
     @NotNull
     public static CreateProductDTO productDTO(
-            String category,
+            long categoryId,
             String productName,
             SizeInventoryDTO[] dtos,
             String colour
@@ -122,7 +120,7 @@ public class TestingData {
         };
 
         return new CreateProductDTO(
-                category,
+                categoryId,
                 productName,
                 new Faker().lorem().fixedString(1000),
                 arr,
@@ -156,29 +154,24 @@ public class TestingData {
     }
 
     @NotNull
-    public static PaymentDTO paymentDTO(String email, SarreCurrency currency, SkuQtyDTO[] arr) {
-        return new PaymentDTO(
-                email,
-                new Faker().name().fullName(),
-                new Faker().phoneNumber().phoneNumber(),
-                currency.name(),
-                new BigDecimal(new Faker().number().numberBetween(100, 500000)),
-                "Flutterwave",
-                arr,
-                addressDTO()
-        );
-    }
+    public static void dummyProducts(ProductCategory cat, int num, WorkerProductService service) {
+        var images = TestingData.files();
 
-    @NotNull
-    public static AddressDTO addressDTO() {
-        return new AddressDTO(
-                new Faker().address().fullAddress(),
-                new Faker().address().city(),
-                new Faker().address().state(),
-                new Faker().address().zipCode(),
-                new Faker().address().country(),
-                new Faker().lorem().fixedString(1000)
-        );
+        for (int i = 0; i < num; i++) {
+            var data = TestingData
+                    .productDTO(
+                            cat.getCategoryId(),
+                            new Faker().commerce().productName() + " " + i,
+                            new SizeInventoryDTO[]{
+                                    new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "medium"),
+                                    new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "small"),
+                                    new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "large")
+                            },
+                            new Faker().commerce().color() + " " + i
+                    );
+
+            service.create(data, images);
+        }
     }
 
 }

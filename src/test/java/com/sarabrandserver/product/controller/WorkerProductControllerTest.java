@@ -2,15 +2,25 @@ package com.sarabrandserver.product.controller;
 
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
+import com.sarabrandserver.category.entity.ProductCategory;
+import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
+import com.sarabrandserver.product.repository.ProductDetailRepo;
+import com.sarabrandserver.product.repository.ProductRepo;
+import com.sarabrandserver.product.service.WorkerProductService;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
+
+import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -21,9 +31,53 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class WorkerProductControllerTest extends AbstractIntegrationTest {
 
-
     @Value(value = "/${api.endpoint.baseurl}worker/product")
     private String requestMapping;
+
+    @Autowired
+    private WorkerProductService workerProductService;
+    @Autowired
+    private ProductRepo productRepo;
+    @Autowired
+    private ProductDetailRepo productDetailRepo;
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @BeforeEach
+    void before() {
+        var category = categoryRepository
+                .save(
+                        ProductCategory.builder()
+                                .name("category")
+                                .isVisible(true)
+                                .parentCategory(null)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        TestingData.dummyProducts(category, 2, workerProductService);
+
+        var clothes = categoryRepository
+                .save(
+                        ProductCategory.builder()
+                                .name("clothes")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        TestingData.dummyProducts(clothes, 5, workerProductService);
+    }
+
+    @AfterEach
+    void after() {
+        productDetailRepo.deleteAll();
+        productRepo.deleteAll();
+        categoryRepository.deleteAll();
+    }
 
     private String productName() {
         var list = this.productRepo.findAll();
@@ -31,10 +85,10 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         return list.getFirst().getName();
     }
 
-    private String category() {
+    private long categoryId() {
         var list = this.categoryRepository.findAll();
         assertFalse(list.isEmpty());
-        return list.getFirst().getName();
+        return list.getFirst().getCategoryId();
     }
 
     private String colour() {
@@ -62,8 +116,6 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Create a product")
     void create() throws Exception {
-        category();
-
         // payload
         SizeInventoryDTO[] dtos = {
                 new SizeInventoryDTO(10, "small"),
@@ -72,9 +124,9 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         };
 
         var dto = TestingData
-                .createProductDTOCollectionNotPresent(
+                .createProductDTO(
                         new Faker().commerce().productName(),
-                        category(),
+                        categoryId(),
                         dtos
                 );
 
@@ -103,9 +155,9 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     void val() throws Exception {
         // given
         var dto = TestingData
-                .createProductDTOCollectionNotPresent(
+                .createProductDTO(
                         new Faker().commerce().productName(),
-                        category(),
+                        categoryId(),
                         new SizeInventoryDTO[]{ new SizeInventoryDTO(10, "small") }
                 );
 
@@ -147,7 +199,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
 
         var dto = TestingData
                 .productDTO(
-                        category(),
+                        categoryId(),
                         productName(),
                         dtos,
                         colour()
@@ -181,7 +233,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     void exThrown() throws Exception {
         var dto = TestingData
                 .productDTO(
-                        category(),
+                        categoryId(),
                         new Faker().commerce().productName(),
                         null,
                         colour()
@@ -254,36 +306,6 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
 
 
         // Payload
-        var dto = TestingData
-                .updateProductDTO(
-                        product.getFirst().getUuid(),
-                        "SEJU Development",
-                        category.getFirst().getName(),
-                        category.getFirst().getCategoryId()
-                );
-
-        // Then
-        this.MOCKMVC
-                .perform(put(requestMapping)
-                        .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(dto))
-                        .with(csrf())
-                )
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Update Product. Collection and collection_id are empty payload")
-    void updateCol() throws Exception {
-        // Given
-        var product = this.productRepo.findAll();
-        assertFalse(product.isEmpty());
-
-        var category = this.categoryRepository.findAll();
-        assertFalse(category.isEmpty());
-
-        // payload
         var dto = TestingData
                 .updateProductDTO(
                         product.getFirst().getUuid(),

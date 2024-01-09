@@ -10,7 +10,7 @@ import java.io.Serializable;
 public record CategoryDTO(
         @NotNull(message = "name cannot be null")
         @NotEmpty(message = "name cannot be empty")
-        @Size(max = 50, message = "category name cannot exceed length of 50")
+        @Size(max = 50, message = "categoryId name cannot exceed length of 50")
         String name,
 
         @NotNull(message = "visible cannot be null")

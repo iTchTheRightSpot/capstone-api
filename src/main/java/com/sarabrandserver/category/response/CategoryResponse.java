@@ -2,6 +2,7 @@ package com.sarabrandserver.category.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public record CategoryResponse(
@@ -14,12 +15,20 @@ public record CategoryResponse(
         List<CategoryResponse> children
 ) {
 
-    public CategoryResponse(long id, long parent, String name, boolean visible) {
-        this(id, parent, name, visible, null);
+    public CategoryResponse(String name) {
+        this(-1, -1L, name);
     }
 
-    public CategoryResponse(long id, long parent, String name) {
+    public CategoryResponse(long id, Long parent, String name, boolean visible) {
+        this(id, parent, name, visible, new ArrayList<>());
+    }
+
+    public CategoryResponse(long id, Long parent, String name) {
         this(id, parent, name, false);
+    }
+
+    public void addToChildren(CategoryResponse child) {
+        children.add(child);
     }
 
 }

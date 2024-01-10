@@ -2,6 +2,7 @@ package com.sarabrandserver.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.dto.PriceCurrencyDTO;
 import com.sarabrandserver.product.dto.VariantMapper;
@@ -14,11 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
@@ -135,9 +134,6 @@ public class CustomUtil {
      * Returns jakarta.servlet.http.cookie based on cookie value passed.
      * Note if response is null, its is either HttpServletRequest contains
      * no cookies or name is not present in request cookies.
-     * @param req is of HttpServletRequest
-     * @param name is the cookie name to filter
-     * @return BiFunction of cookie
      * */
     public final BiFunction<HttpServletRequest, String, Cookie> cookie = (req, name) -> {
         Cookie[] cookies = req.getCookies();
@@ -147,6 +143,31 @@ public class CustomUtil {
                 .filter(c -> c.getName().equals(name))
                 .findFirst()
                 .orElse(null);
+    };
+
+    public final Function<List<CategoryResponse>, CategoryResponse> categoryConverter = (list) -> {
+        Map<Long, CategoryResponse> map = new HashMap<>();
+
+        // inject root
+        map.put(-1L, new CategoryResponse("root"));
+
+        // add all to map
+        for (CategoryResponse cat : list) {
+            map.put(cat.id(), cat);
+        }
+
+        for (Map.Entry<Long, CategoryResponse> entry : map.entrySet()) {
+            if (entry.getValue().parent() == null) {
+                // create a new leaf from root as parent category seen
+                map.get(-1L).addToChildren(entry.getValue());
+            } else {
+                Long parentId = entry.getValue().parent();
+                CategoryResponse parent = map.get(parentId);
+                parent.addToChildren(entry.getValue());
+            }
+        }
+
+        return map.get(-1L); // return children of root
     };
 
 }

@@ -77,7 +77,6 @@ public class WorkerCategoryService {
                 .allProductsByCategory(currency, id, PageRequest.of(page, size))
                 .map(pojo -> {
                     var url = this.s3Service.preSignedUrl(this.BUCKET, pojo.getKey());
-
                     return ProductResponse.builder()
                             .id(pojo.getUuid())
                             .name(pojo.getName())

@@ -4,7 +4,6 @@ import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractRepositoryTest;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.projection.CategoryPojo;
-import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.repository.ProductRepo;
 import org.junit.jupiter.api.AfterEach;
@@ -12,10 +11,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CategoryRepositoryTest extends AbstractRepositoryTest {
 
@@ -77,7 +77,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                                 .build()
                 );
 
-        categoryRepo
+        var collection = categoryRepo
                 .save(
                         ProductCategory.builder()
                                 .name("collection")
@@ -88,33 +88,31 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                                 .build()
                 );
 
+        var fall = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("Fall 2024")
+                                .isVisible(true)
+                                .parentCategory(collection)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("trouser Fall 2024")
+                                .isVisible(true)
+                                .parentCategory(fall)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
         // then
-        List<CategoryPojo> list = this.categoryRepo.allCategories();
-        assertEquals(5, list.size());
-
-        List<CategoryResponse> parents = new ArrayList<>(
-                list
-                        .stream()
-                        .filter(p -> p.getParent() == null)
-                        .map(p -> new CategoryResponse(p.getId(), null, p.getName(), p.statusImpl(), new ArrayList<>()))
-                        .toList()
-        );
-
-        list.removeIf(p -> p.getParent() == null);
-
-        assertEquals(2, parents.size());
-
-        list.sort(Comparator.comparing(CategoryPojo::getParent));
-
-        // assert list is sorted based on parent id
-        assertTrue(list.size() > 1);
-
-        long parentId = list.getFirst().getParent();
-
-        for (int i = 1; i < list.size(); i++) {
-            assertTrue(parentId <= list.get(i).getParent());
-            parentId = list.get(i).getParent();
-        }
+        var list = this.categoryRepo.allCategories();
+        assertEquals(7, list.size());
 
     }
 

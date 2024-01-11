@@ -26,14 +26,16 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     Optional<ProductCategory> findByName(@Param(value = "name") String name);
 
     /**
-     * Using native sql query, method allows deleting a {@code ProductCategory}
-     * only after validating if {@param id} has no nested
-     * {@code ProductCategory}/children attached and no {@code Product} is
-     * attached to {@param id} or its children.
+     * Using native sql query, method retrieves {@code ProductCategory}
+     * by {@param id} and all of its children {@code ProductCategory}.
+     * From the resulting {@code ProductCategory}, we validate if
+     * all categories have {@code Product attached}.
      *
-     * @param id is {@code ProductCategory} to be deleted
-     * @return if return value is 0, then none of the conditions apply else if
-     * greater than zero, all the conditions in the description applies.
+     * @param id is {@code ProductCategory} to be searched
+     * @return {@code 0 or greater than 0} where 0 means all the
+     * {@code ProductCategory} have no {@code Product} attached
+     * whilst greater than zero means 1 or more {@code Product} is
+     * attached to a {@code ProductCategory}
      * */
     @Query(nativeQuery = true, value = """
     WITH RECURSIVE category (id, parent) AS

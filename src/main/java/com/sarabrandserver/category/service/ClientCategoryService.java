@@ -1,10 +1,12 @@
 package com.sarabrandserver.category.service;
 
 import com.sarabrandserver.aws.S3Service;
+import com.sarabrandserver.category.projection.CategoryPojo;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.response.ProductResponse;
+import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -25,17 +27,17 @@ public class ClientCategoryService {
 
     /**
      * Returns a list of {@code CategoryResponse}
+     * with is_visible marked as true.
      * */
     public List<CategoryResponse> allCategories() {
-        return this.repository
-                .superCategories()
+        var list = this.repository
+                .allCategories()
                 .stream()
-                .flatMap(cat -> this.repository
-                        .all_categories_store_front(cat.getCategoryId())
-                        .stream()
-                        .map(p -> new CategoryResponse(p.getId(), p.getParent(), p.getName()))
-                )
+                .filter(CategoryPojo::statusImpl)
+                .map(p -> new CategoryResponse(p.getId(), p.getParent(), p.getName(), p.statusImpl()))
                 .toList();
+
+        return CustomUtil.categoryConverter(list);
     }
 
     public Page<ProductResponse> allProductsByUUID(

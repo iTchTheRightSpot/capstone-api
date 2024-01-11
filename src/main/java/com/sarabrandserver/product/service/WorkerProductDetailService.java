@@ -32,10 +32,9 @@ public class WorkerProductDetailService {
     private String BUCKET;
 
     private final ProductDetailRepo detailRepo;
-    private final ProductSKUService productSKUService;
-    private final ProductImageRepo productImageRepo;
+    private final ProductSKUService skuService;
+    private final ProductImageRepo imageRepo;
     private final ProductRepo productRepo;
-    private final CustomUtil customUtil;
     private final HelperService helperService;
 
     /**
@@ -54,7 +53,7 @@ public class WorkerProductDetailService {
                             .map(key -> this.helperService.preSignedURL(BUCKET, key))
                             .toList();
 
-                    Variant[] variants = this.customUtil
+                    Variant[] variants = CustomUtil
                             .toVariantArray(pojo.getVariants(), WorkerProductDetailService.class);
 
                     return DetailResponse.builder()
@@ -84,11 +83,9 @@ public class WorkerProductDetailService {
 
         if (exist.isPresent()) {
             // Create new ProductSKU
-            this.productSKUService.save(dto.sizeInventory(), exist.get());
+            this.skuService.save(dto.sizeInventory(), exist.get());
             return;
         }
-
-        var date = this.customUtil.toUTC(new Date());
 
         // Validate MultipartFile[] are all images
         var files = this.helperService.customMultiPartFiles(multipartFiles, new StringBuilder());
@@ -97,7 +94,7 @@ public class WorkerProductDetailService {
         var detail = ProductDetail.builder()
                 .product(product)
                 .colour(dto.colour())
-                .createAt(date)
+                .createAt(CustomUtil.toUTC(new Date()))
                 .isVisible(dto.visible())
                 .productImages(new HashSet<>())
                 .skus(new HashSet<>())
@@ -107,7 +104,7 @@ public class WorkerProductDetailService {
         var saved = this.detailRepo.save(detail);
 
         // Save ProductSKUs
-        this.productSKUService.save(dto.sizeInventory(), saved);
+        this.skuService.save(dto.sizeInventory(), saved);
 
         // Save ProductImages (save to s3)
         this.helperService.productImages(
@@ -144,7 +141,7 @@ public class WorkerProductDetailService {
     public void delete(final String sku) {
         var detail = productDetailByProductSku(sku);
 
-        var images = this.productImageRepo.imagesByProductDetailID(detail.getProductDetailId());
+        var images = this.imageRepo.imagesByProductDetailID(detail.getProductDetailId());
 
         List<ObjectIdentifier> keys = images //
                 .stream() //

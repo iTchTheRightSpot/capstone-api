@@ -102,7 +102,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Transactional
     @Query("UPDATE ProductCategory c SET c.isVisible = :visible WHERE c.categoryId = :id")
-    void upVisibility(long id, boolean visible);
+    void updateVisibility(long id, boolean visible);
 
     @Query(value = """
     SELECT
@@ -116,14 +116,6 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     WHERE c.categoryId = :id
     """)
     Page<ProductPojo> allProductsByCategory(SarreCurrency currency, long id, Pageable page);
-
-    /**
-     * Selects all {@code ProductCategory} objects that have a parent categoryId id null.
-     *
-     * @return a list of {@code ProductCategory}
-     * */
-    @Query("SELECT c FROM ProductCategory c WHERE c.parentCategory.categoryId IS NULL")
-    List<ProductCategory> superCategories();
 
     @Query(value = """
     SELECT
@@ -149,47 +141,8 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
      * For more about using common table expression CTE visit
      * <a href="https://dev.mysql.com/doc/refman/8.0/en/with.html#common-table-expressions-recursive">...</a>
      *
-     * @param id would be a {@code ProductCategory}
-     * @return a list of {@code CategoryPojo} object
-     * */
-    @Query(nativeQuery = true, value = """
-    WITH RECURSIVE category (id, name, status, parent) AS
-    (
-        SELECT
-            c.category_id,
-            c.name,
-            c.is_visible,
-            c.parent_category_id
-        FROM product_category c
-        WHERE c.parent_category_id = :id
-        UNION ALL
-        SELECT
-            pc.category_id,
-            pc.name,
-            pc.is_visible,
-            pc.parent_category_id
-        FROM category cat
-        INNER JOIN product_category pc
-        ON cat.id = pc.parent_category_id
-    )
-    SELECT
-        c1.id AS id,
-        c1.name AS name,
-        c1.status AS visible,
-        c1.parent AS parent
-    FROM category c1
-    WHERE c1.status IS TRUE;
-    """)
-    List<CategoryPojo> all_categories_store_front(long id);
-
-    /**
-     * Using native sql query and Spring Data projection, method returns all
-     * children of specified {@code ProductCategory} {@code id}.
-     * For more about using common table expression CTE visit
-     * <a href="https://dev.mysql.com/doc/refman/8.0/en/with.html#common-table-expressions-recursive">...</a>
-     *
-     * @param id would be a {@code ProductCategory}
-     * @return a list of {@code CategoryPojo} object
+     * @param id is categoryId in {@code ProductCategory}
+     * @return a list of {@code CategoryPojo} objects
      * */
     @Query(nativeQuery = true, value = """
     WITH RECURSIVE category (id, name, status, parent) AS
@@ -218,7 +171,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
         c1.status AS status
     FROM category c1;
     """)
-    List<CategoryPojo> all_categories_admin_front(long id);
+    List<CategoryPojo> all_categories_by_categoryId(long id);
 
     @Query(nativeQuery = true, value = """
     WITH RECURSIVE category (id, name, status, parent) AS

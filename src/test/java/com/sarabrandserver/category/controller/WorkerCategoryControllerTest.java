@@ -6,7 +6,6 @@ import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
@@ -85,10 +84,10 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
         categoryRepository.deleteAll();
     }
 
-    private String category() {
+    private ProductCategory category() {
         var list = this.categoryRepository.findAll();
         assertFalse(list.isEmpty());
-        return list.getFirst().getName();
+        return list.getFirst();
     }
 
     @Test
@@ -104,9 +103,10 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @DisplayName(value = "Test successfully creating a ProductCategory when parent id is null")
     void create() throws Exception {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().productName(), true, "");
+        var dto = new CategoryDTO(new Faker().commerce().productName(), true, null);
 
         // Then
         this.MOCKMVC
@@ -118,14 +118,12 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
                 .andExpect(status().isCreated());
     }
 
-    /**
-     * Simulates creating a new Category with param parent in CategoryDTO non-empty
-     */
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @DisplayName(value = "Test successfully creating a ProductCategory when parent id isn't null")
     void create1() throws Exception {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().productName(), true, category());
+        var dto = new CategoryDTO(new Faker().commerce().productName(), true, category().getCategoryId());
 
         // Then
         this.MOCKMVC
@@ -139,7 +137,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Testing updating a ProductCategory")
+    @DisplayName(value = "Test successfully updating a ProductCategory")
     void update() throws Exception {
         // Given
         var category = this.categoryRepository.findAll().getFirst();
@@ -157,18 +155,15 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "validates custom query throws exception when updating a ProductCategory")
+    @DisplayName(value = "validates exception thrown from duplicate category name")
     void ex() throws Exception {
-        // Given
+        // given
         var category = this.categoryRepository.findAll();
-        // First categoryId
         var first = category.getFirst();
-        // second categoryId
         var second = category.get(1);
-        // dto
         var dto = new UpdateCategoryDTO(first.getCategoryId(), second.getName(), first.isVisible());
 
-        // Then
+        // then
         this.MOCKMVC
                 .perform(put(requestMapping)
                         .with(csrf())
@@ -181,9 +176,14 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "delete ProductCategory when it has no Product attached")
+    @DisplayName(value = """
+    exception thrown when trying to delete a product because it has a
+    subcategory and product attached.
+    """)
     void deleteEx() throws Exception {
-        var category = this.categoryRepository.findByName(category()).orElse(null);
+        var category = this.categoryRepository
+                .findById(category().getCategoryId())
+                .orElse(null);
         assertNotNull(category);
 
         this.MOCKMVC

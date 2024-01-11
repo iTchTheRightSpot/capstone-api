@@ -9,36 +9,28 @@ import com.sarabrandserver.product.dto.VariantMapper;
 import com.sarabrandserver.product.response.Variant;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
 import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.FLOOR;
 
-@Service
-@RequiredArgsConstructor
 public class CustomUtil {
 
     private static final Logger log = LoggerFactory.getLogger(CustomUtil.class.getName());
-
-    private final ObjectMapper objectMapper;
 
     /**
      * Converts date to UTC Date
      *
      * @param date of type java.util.date
-     * @return Date of type java.util.date
+     * @return {@code java.util.date} in utc
      */
-    public Date toUTC(Date date) {
+    public static Date toUTC(Date date) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -48,7 +40,7 @@ public class CustomUtil {
     /**
      * Validates DTO is in the right format
      * */
-    public boolean validateContainsCurrencies(PriceCurrencyDTO[] dto) {
+    public static boolean validateContainsCurrencies(PriceCurrencyDTO[] dto) {
         if (dto.length != 2) {
             return false;
         }
@@ -79,9 +71,9 @@ public class CustomUtil {
      * @param clazz is the class that calls this method
      * @return Variant array
      * */
-    public <T> Variant[] toVariantArray(String str, T clazz) {
+    public static <T> Variant[] toVariantArray(String str, T clazz) {
         try {
-            VariantMapper[] arr = this.objectMapper.readValue(str, VariantMapper[].class);
+            VariantMapper[] arr = new ObjectMapper().readValue(str, VariantMapper[].class);
             return Arrays.stream(arr)
                     .map(m -> new Variant(m.sku(), m.inventory(), m.size()))
                     .toArray(Variant[]::new);
@@ -99,7 +91,7 @@ public class CustomUtil {
      * after cross multiplication,
      * x = (10 / 0.01) or 1000 cents
      */
-    public long convertCurrency(SarreCurrency currency, BigDecimal bigDecimal) {
+    public static long convertCurrency(SarreCurrency currency, BigDecimal bigDecimal) {
         return switch (currency) {
             case NGN -> {
                 BigDecimal b = bigDecimal.setScale(2, FLOOR);
@@ -135,7 +127,7 @@ public class CustomUtil {
      * Note if response is null, its is either HttpServletRequest contains
      * no cookies or name is not present in request cookies.
      * */
-    public final BiFunction<HttpServletRequest, String, Cookie> cookie = (req, name) -> {
+    public static Cookie cookie (HttpServletRequest req, String name) {
         Cookie[] cookies = req.getCookies();
         return cookies == null
                 ? null
@@ -145,10 +137,13 @@ public class CustomUtil {
                 .orElse(null);
     };
 
-    public final Function<List<CategoryResponse>, CategoryResponse> categoryConverter = (list) -> {
+    /**
+     * Creates an object hierarchy based on @param list
+     * */
+    public static List<CategoryResponse> categoryConverter(List<CategoryResponse> list) {
         Map<Long, CategoryResponse> map = new HashMap<>();
 
-        // inject root
+        // hierarchy is built by inject root
         map.put(-1L, new CategoryResponse("root"));
 
         // add all to map
@@ -156,18 +151,19 @@ public class CustomUtil {
             map.put(cat.id(), cat);
         }
 
-        for (Map.Entry<Long, CategoryResponse> entry : map.entrySet()) {
-            if (entry.getValue().parent() == null) {
-                // create a new leaf from root as parent category seen
-                map.get(-1L).addToChildren(entry.getValue());
+        for (CategoryResponse entry : list) {
+            if (entry.parent() == null) {
+                // create a new leaf from root as parentId category seen
+                map.get(-1L).addToChildren(entry);
             } else {
-                Long parentId = entry.getValue().parent();
-                CategoryResponse parent = map.get(parentId);
-                parent.addToChildren(entry.getValue());
+                // add child to parentId
+                var parent = map.get(entry.parent());
+                var child = map.get(entry.id());
+                parent.addToChildren(child);
             }
         }
 
-        return map.get(-1L); // return children of root
-    };
+        return map.get(-1L).children(); // return children of root
+    }
 
 }

@@ -20,7 +20,7 @@ public class ClientCategoryController {
 
     private final ClientCategoryService clientCategoryService;
 
-    /** Returns a list of parent and child categories. */
+    /** Returns a list of parentId and child categories. */
     @ResponseStatus(OK)
     @GetMapping(produces = "application/json")
     public List<CategoryResponse> allCategories() {

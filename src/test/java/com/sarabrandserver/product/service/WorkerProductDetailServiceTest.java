@@ -3,19 +3,18 @@ package com.sarabrandserver.product.service;
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractUnitTest;
 import com.sarabrandserver.data.TestingData;
+import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.entity.ProductDetail;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductImageRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
-import com.sarabrandserver.util.CustomUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.util.Date;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -24,27 +23,27 @@ import static org.mockito.Mockito.*;
 
 class WorkerProductDetailServiceTest extends AbstractUnitTest {
 
-    @Value(value = "${aws.bucket}") private String BUCKET;
+    @Value(value = "${aws.bucket}")
+    private String BUCKET;
 
-    private WorkerProductDetailService productDetailService;
+    private WorkerProductDetailService detailService;
+
     @Mock private ProductRepo productRepo;
-    @Mock private ProductSKUService productSKUService;
-    @Mock private ProductImageRepo productImageRepo;
+    @Mock private ProductSKUService skuService;
+    @Mock private ProductImageRepo imageRepo;
     @Mock private ProductDetailRepo detailRepo;
-    @Mock private CustomUtil customUtil;
     @Mock private HelperService helperService;
 
     @BeforeEach
     void setUp() {
-        this.productDetailService = new WorkerProductDetailService(
+        this.detailService = new WorkerProductDetailService(
                 this.detailRepo,
-                this.productSKUService,
-                this.productImageRepo,
+                this.skuService,
+                this.imageRepo,
                 this.productRepo,
-                this.customUtil,
                 this.helperService
         );
-        this.productDetailService.setBUCKET(BUCKET);
+        this.detailService.setBUCKET(BUCKET);
     }
 
     @Test
@@ -59,10 +58,9 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
         // When
         when(productRepo.findByProductUuid(anyString())).thenReturn(Optional.of(product));
         when(detailRepo.productDetailByColour(anyString())).thenReturn(Optional.empty());
-        when(customUtil.toUTC(any(Date.class))).thenReturn(new Date());
 
         // Then
-        productDetailService.create(dto, files);
+        detailService.create(dto, files);
         verify(this.detailRepo, times(1)).save(any(ProductDetail.class));
     }
 
@@ -76,13 +74,14 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
         var detail = ProductDetail.builder().colour(new Faker().commerce().color()).build();
         var dto = TestingData.productDetailDTO(product.getUuid(), detail.getColour(), dtos);
 
-
         // When
         when(productRepo.findByProductUuid(anyString())).thenReturn(Optional.of(product));
         when(detailRepo.productDetailByColour(anyString())).thenReturn(Optional.of(detail));
 
         // Then
-        productDetailService.create(dto, files);
+        detailService.create(dto, files);
+        verify(this.skuService, times(1))
+                .save(any(SizeInventoryDTO[].class), any(ProductDetail.class));
         verify(this.detailRepo, times(0)).save(any(ProductDetail.class));
     }
 

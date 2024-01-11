@@ -1,14 +1,11 @@
 package com.sarabrandserver.util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractUnitTest;
 import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.product.dto.PriceCurrencyDTO;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -17,15 +14,6 @@ import static com.sarabrandserver.enumeration.SarreCurrency.USD;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CustomUtilTest extends AbstractUnitTest {
-
-    @Mock ObjectMapper mapper;
-
-    private CustomUtil customUtil;
-
-    @BeforeEach
-    void setUp() {
-        this.customUtil = new CustomUtil(mapper);
-    }
 
     private record AmountConversion(BigDecimal given, long expected) { }
 
@@ -36,7 +24,7 @@ class CustomUtilTest extends AbstractUnitTest {
                 new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "NGN"),
         };
 
-        assertTrue(this.customUtil.validateContainsCurrencies(arr));
+        assertTrue(CustomUtil.validateContainsCurrencies(arr));
     }
 
     @Test
@@ -46,7 +34,7 @@ class CustomUtilTest extends AbstractUnitTest {
                 new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "NGN"),
         };
 
-        assertFalse(this.customUtil.validateContainsCurrencies(arr));
+        assertFalse(CustomUtil.validateContainsCurrencies(arr));
     }
 
     @Test
@@ -57,7 +45,7 @@ class CustomUtilTest extends AbstractUnitTest {
                 new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "NGN"),
         };
 
-        assertFalse(this.customUtil.validateContainsCurrencies(arr));
+        assertFalse(CustomUtil.validateContainsCurrencies(arr));
     }
 
     @Test
@@ -93,7 +81,7 @@ class CustomUtilTest extends AbstractUnitTest {
         };
 
         for (AmountConversion obj : arr) {
-            assertEquals(obj.expected(), this.customUtil.convertCurrency(USD, obj.given()));
+            assertEquals(obj.expected(), CustomUtil.convertCurrency(USD, obj.given()));
         } // end of for
     }
 
@@ -103,9 +91,10 @@ class CustomUtilTest extends AbstractUnitTest {
     received from {@code allCategory} in {@code CategoryResponse} interface
     """)
     void categoryConverter() {
-        CategoryResponse res = res();
+        var res = res();
         List<CategoryResponse> db = db();
-        assertEquals(res, this.customUtil.categoryConverter.apply(db));
+        var actual = CustomUtil.categoryConverter(db);
+        assertEquals(res, actual);
     }
 
     final List<CategoryResponse> db() {
@@ -121,19 +110,19 @@ class CustomUtilTest extends AbstractUnitTest {
         );
     }
 
-    final CategoryResponse res() {
-        // super parent
-        var res = new CategoryResponse(1L, null, "category", true);
+    final List<CategoryResponse> res() {
+        // super parentId
+        var category = new CategoryResponse(1L, null, "category", true);
 
         var clothes = new CategoryResponse(2L, 1L, "clothes", true);
-        res.addToChildren(clothes);
+        category.addToChildren(clothes);
 
         var top = new CategoryResponse(3L, 2L, "top", true);
         clothes.addToChildren(top);
 
         top.addToChildren(new CategoryResponse(8L, 3L, "long-sleeve", true));
 
-        // super parent
+        // super parentId
         var collection = new CategoryResponse(4L, null, "collection", true);
 
         var fall = new CategoryResponse(5L, 4L, "fall 2023", true);
@@ -143,9 +132,7 @@ class CustomUtilTest extends AbstractUnitTest {
         var summer = new CategoryResponse(6L, 4L, "summer 2023", true);
         collection.addToChildren(summer);
 
-
-        return res;
+        return List.of(category, collection);
     }
-
 
 }

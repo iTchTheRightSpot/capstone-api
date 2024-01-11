@@ -31,7 +31,6 @@ public class ClientProductService {
     private final ProductDetailRepo productDetailRepo;
     private final PriceCurrencyRepo priceCurrencyRepo;
     private final S3Service s3Service;
-    private final CustomUtil customUtil;
 
     /**
      * Returns a page of ProductResponse
@@ -77,7 +76,7 @@ public class ClientProductService {
                             .map(key -> this.s3Service.preSignedUrl(BUCKET, key))
                             .toList();
 
-                    Variant[] variants = this.customUtil
+                    Variant[] variants = CustomUtil
                             .toVariantArray(pojo.getVariants(), ClientProductService.class);
 
                     return DetailResponse.builder()

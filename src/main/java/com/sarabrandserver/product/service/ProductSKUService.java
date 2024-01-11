@@ -23,9 +23,9 @@ public class ProductSKUService {
      */
     @Transactional
     public void save(SizeInventoryDTO[] arr, ProductDetail detail) {
-        for (SizeInventoryDTO dto : arr) {
-            var sku = new ProductSku(UUID.randomUUID().toString(), dto.size(), dto.qty(), detail);
-            this.productSkuRepo.save(sku);
+        for (var dto : arr) {
+            this.productSkuRepo
+                    .save(new ProductSku(UUID.randomUUID().toString(), dto.size(), dto.qty(), detail));
         }
     }
 

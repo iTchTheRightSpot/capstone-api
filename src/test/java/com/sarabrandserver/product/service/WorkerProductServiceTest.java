@@ -8,14 +8,12 @@ import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.repository.PriceCurrencyRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
-import com.sarabrandserver.util.CustomUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.util.Date;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -28,28 +26,26 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     @Value(value = "${aws.bucket}")
     private String BUCKET;
 
-    private WorkerProductService workerProductService;
+    private WorkerProductService productService;
 
-    @Mock private PriceCurrencyRepo priceCurrencyRepo;
+    @Mock private PriceCurrencyRepo currencyRepo;
     @Mock private ProductRepo productRepo;
-    @Mock private WorkerProductDetailService workerProductDetailService;
+    @Mock private WorkerProductDetailService detailService;
     @Mock private HelperService helperService;
-    @Mock private ProductSKUService productSKUService;
-    @Mock private WorkerCategoryService workerCategoryService;
-    @Mock private CustomUtil customUtil;
+    @Mock private ProductSKUService skuService;
+    @Mock private WorkerCategoryService categoryService;
 
     @BeforeEach
     void setUp() {
-        this.workerProductService = new WorkerProductService(
-                this.priceCurrencyRepo,
+        this.productService = new WorkerProductService(
+                this.currencyRepo,
                 this.productRepo,
-                this.workerProductDetailService,
-                this.productSKUService,
-                this.workerCategoryService,
-                this.customUtil,
+                this.detailService,
+                this.skuService,
+                this.categoryService,
                 this.helperService
         );
-        this.workerProductService.setBUCKET(BUCKET);
+        this.productService.setBUCKET(BUCKET);
     }
 
     @Test
@@ -65,13 +61,11 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                 .build();
 
         // When
-        when(this.customUtil.validateContainsCurrencies(dto.priceCurrency())).thenReturn(true);
-        when(this.workerCategoryService.findById(anyLong())).thenReturn(category);
+        when(this.categoryService.findById(anyLong())).thenReturn(category);
         when(this.productRepo.findByProductName(anyString())).thenReturn(Optional.empty());
-        when(this.customUtil.toUTC(any(Date.class))).thenReturn(null);
 
         // Then
-        this.workerProductService.create(dto, files);
+        this.productService.create(dto, files);
         verify(this.productRepo, times(1)).save(any(Product.class));
     }
 
@@ -89,12 +83,11 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         var product = Product.builder().name(dto.name()).uuid("uuid").build();
 
         // When
-        when(this.customUtil.validateContainsCurrencies(dto.priceCurrency())).thenReturn(true);
-        when(this.workerCategoryService.findById(anyLong())).thenReturn(category);
+        when(this.categoryService.findById(anyLong())).thenReturn(category);
         when(this.productRepo.findByProductName(anyString())).thenReturn(Optional.of(product));
 
         // Then
-        assertThrows(DuplicateException.class, () -> this.workerProductService.create(dto, files));
+        assertThrows(DuplicateException.class, () -> this.productService.create(dto, files));
     }
 
     @Test
@@ -112,10 +105,10 @@ class WorkerProductServiceTest extends AbstractUnitTest {
 
         // When
         when(this.productRepo.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
-        when(this.workerCategoryService.findById(anyLong())).thenReturn(category);
+        when(this.categoryService.findById(anyLong())).thenReturn(category);
 
         // Then
-        this.workerProductService.update(payload);
+        this.productService.update(payload);
         verify(this.productRepo, times(1))
                 .updateProduct(
                         anyString(),
@@ -139,10 +132,10 @@ class WorkerProductServiceTest extends AbstractUnitTest {
 
         // When
         when(this.productRepo.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
-        when(this.workerCategoryService.findById(anyLong())).thenReturn(category);
+        when(this.categoryService.findById(anyLong())).thenReturn(category);
 
         // Then
-        this.workerProductService.update(payload);
+        this.productService.update(payload);
         verify(this.productRepo, times(1))
                 .updateProduct(
                         anyString(),

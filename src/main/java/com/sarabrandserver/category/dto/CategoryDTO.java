@@ -16,7 +16,6 @@ public record CategoryDTO(
         @NotNull(message = "visible cannot be null")
         Boolean visible,
 
-        @JsonProperty(value = "parent_name")
-        @NotNull(message = "parent cannot be null")
-        String parent
+        @JsonProperty(value = "parent_id")
+        Long parentId
 ) implements Serializable { }

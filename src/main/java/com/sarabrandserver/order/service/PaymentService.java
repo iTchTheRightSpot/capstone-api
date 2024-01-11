@@ -56,7 +56,6 @@ public class PaymentService {
     private final CartItemRepo cartItemRepo;
     private final OrderReservationRepo reservationRepo;
     private final ThirdPartyPaymentService thirdPartyService;
-    private final CustomUtil customUtil;
 
     /** TODO add shipping and taxes
      * Method helps prevent race condition or overselling by temporarily deducting
@@ -67,7 +66,7 @@ public class PaymentService {
      * */
     @Transactional
     public PaymentResponse raceCondition(HttpServletRequest req, SarreCurrency currency) {
-        Cookie cookie = this.customUtil.cookie.apply(req, CART_COOKIE);
+        Cookie cookie = CustomUtil.cookie(req, CART_COOKIE);
 
         if (cookie == null) {
             throw new CustomNotFoundException("No cookie found. Kindly refresh window");
@@ -87,7 +86,7 @@ public class PaymentService {
                 .orderReservationByCookie(sessionId, PENDING);
 
         long toExpire = Instant.now().plus(bound, ChronoUnit.MINUTES).toEpochMilli();
-        Date date = this.customUtil.toUTC(new Date(toExpire));
+        Date date = CustomUtil.toUTC(new Date(toExpire));
 
         if (reservations.isEmpty()) {
             for (CartItem c : cartItems) {
@@ -258,7 +257,7 @@ public class PaymentService {
     }
 
     void scheduledDelete() {
-        Date date = this.customUtil.toUTC(new Date());
+        Date date = CustomUtil.toUTC(new Date());
         var list = this.reservationRepo
                 .allPendingExpiredReservations(date, PENDING);
 

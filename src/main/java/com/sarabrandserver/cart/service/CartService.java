@@ -54,7 +54,6 @@ public class CartService {
     private final ShoppingSessionRepo shoppingSessionRepo;
     private final CartItemRepo cartItemRepo;
     private final ProductSKUService productSKUService;
-    private final CustomUtil customUtil;
     private final S3Service s3Service;
 
     /**
@@ -68,8 +67,8 @@ public class CartService {
             long d = Long.parseLong(arr[1]);
             long calc = d + (this.expirationBound * 3600);
 
-            Date five = this.customUtil.toUTC(new Date(calc));
-            Date now = this.customUtil.toUTC(new Date());
+            Date five = CustomUtil.toUTC(new Date(calc));
+            Date now = CustomUtil.toUTC(new Date());
 
             // within expiration bound
             if (five.before(now)) {
@@ -77,7 +76,7 @@ public class CartService {
                 String value = arr[0] + this.split + instant.toEpochMilli();
 
                 // update expiration in db
-                Date expiry = this.customUtil.toUTC(new Date(instant.toEpochMilli()));
+                Date expiry = CustomUtil.toUTC(new Date(instant.toEpochMilli()));
 
                 this.shoppingSessionRepo.updateShoppingSessionExpiry(arr[0], expiry);
 
@@ -102,7 +101,7 @@ public class CartService {
             HttpServletRequest req,
             HttpServletResponse res
     ) {
-        Cookie cookie = this.customUtil.cookie.apply(req, CART_COOKIE);
+        Cookie cookie = CustomUtil.cookie(req, CART_COOKIE);
 
         if (cookie == null) {
             // cookie value
@@ -155,7 +154,7 @@ public class CartService {
      */
     @Transactional
     public void create(CartDTO dto, HttpServletRequest req) {
-        Cookie cookie = this.customUtil.cookie.apply(req, CART_COOKIE);
+        Cookie cookie = CustomUtil.cookie(req, CART_COOKIE);
 
         if (cookie == null) {
             throw new CustomNotFoundException("No cookie found. Kindly refresh window");
@@ -197,8 +196,8 @@ public class CartService {
     public void create_new_shopping_session(String uuid, Date expiration, CartDTO dto) {
         var temp = new ShoppingSession(
                 uuid,
-                this.customUtil.toUTC(new Date()),
-                this.customUtil.toUTC(expiration),
+                CustomUtil.toUTC(new Date()),
+                CustomUtil.toUTC(expiration),
                 new HashSet<>()
         );
 
@@ -232,7 +231,7 @@ public class CartService {
      * */
     @Transactional
     public void remove_from_cart(HttpServletRequest req, String sku) {
-        Cookie cookie = this.customUtil.cookie.apply(req, CART_COOKIE);
+        Cookie cookie = CustomUtil.cookie(req, CART_COOKIE);
 
         if (cookie == null) {
             return;
@@ -253,7 +252,7 @@ public class CartService {
     }
 
     public void delete() {
-        Date date = this.customUtil.toUTC(new Date());
+        Date date = CustomUtil.toUTC(new Date());
         var list = this.shoppingSessionRepo.allByExpiry(date);
 
         // delete children

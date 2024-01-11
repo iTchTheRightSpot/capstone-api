@@ -7,7 +7,6 @@ import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,21 +21,21 @@ import static org.mockito.Mockito.*;
 
 class WorkerCategoryServiceTest extends AbstractUnitTest {
 
-    private WorkerCategoryService workerCategoryService;
+    private WorkerCategoryService categoryService;
 
     @Mock private CategoryRepository categoryRepository;
     @Mock private S3Service s3Service;
 
     @BeforeEach
     void setUp() {
-        this.workerCategoryService = new WorkerCategoryService(this.categoryRepository, this.s3Service);
+        this.categoryService = new WorkerCategoryService(this.categoryRepository, this.s3Service);
     }
 
-    /** Simulates creating a new ProductCategory when CategoryDTO param parent is empty */
+    /** Simulates creating a new ProductCategory when CategoryDTO param parentId is empty */
     @Test
     void create() {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().department(), true, "");
+        var dto = new CategoryDTO(new Faker().commerce().department(), true, null);
 
         var category = ProductCategory.builder()
                 .name(dto.name().trim())
@@ -49,15 +48,15 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         when(this.categoryRepository.save(any(ProductCategory.class))).thenReturn(category);
 
         // Then
-        this.workerCategoryService.create(dto);
+        this.categoryService.create(dto);
         verify(this.categoryRepository, times(1)).save(any(ProductCategory.class));
     }
 
-    /** Simulates creating a new ProductCategory when CategoryDTO param parent is non-empty */
+    /** Simulates creating a new ProductCategory when CategoryDTO param parentId is non-empty */
     @Test
     void createParent() {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().department(), true, new Faker().commerce().productName());
+        var dto = new CategoryDTO(new Faker().commerce().department(), true, 1L);
 
         var category = ProductCategory.builder()
                 .name(new Faker().commerce().department())
@@ -66,32 +65,34 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
                 .build();
 
         // When
-        when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.of(category));
+        when(this.categoryRepository.findById(anyLong())).thenReturn(Optional.of(category));
         when(this.categoryRepository.save(any(ProductCategory.class))).thenReturn(category);
 
         // Then
-        this.workerCategoryService.create(dto);
+        this.categoryService.create(dto);
         verify(this.categoryRepository, times(1)).save(any(ProductCategory.class));
     }
 
-    /** Simulates the correct exception class is thrown for the private method parentCategoryNotBlank. */
     @Test
-    void duplicate_name() {
+    void category_duplicate_name() {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().department(), true, new Faker().commerce().department());
+        var dto = new CategoryDTO(new Faker().commerce().department(), true, null);
 
         // When
-        when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.empty());
+        when(this.categoryRepository.findByName(anyString()))
+                .thenReturn(
+                        Optional.of(ProductCategory.builder().name(dto.name()).build())
+                );
 
         // Then
-        assertThrows(CustomNotFoundException.class, () -> this.workerCategoryService.create(dto));
+        assertThrows(DuplicateException.class, () -> this.categoryService.create(dto));
     }
 
     /** Simulates the correct exception class is thrown for duplicate parentCategoryIsBlank method. */
     @Test
     void duplicate() {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().department(), true, "");
+        var dto = new CategoryDTO(new Faker().commerce().department(), true, null);
 
         var category = ProductCategory.builder()
                 .name(new Faker().commerce().department())
@@ -103,7 +104,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.of(category));
 
         // Then
-        assertThrows(DuplicateException.class, () -> this.workerCategoryService.create(dto));
+        assertThrows(DuplicateException.class, () -> this.categoryService.create(dto));
     }
 
     @Test
@@ -116,7 +117,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
                 .onDuplicateCategoryName(anyLong(), anyString());
 
         // Then
-        this.workerCategoryService.update(dto);
+        this.categoryService.update(dto);
         verify(this.categoryRepository, times(1))
                 .update(anyString(), anyBoolean(), anyLong());
     }
@@ -131,7 +132,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
                 .thenReturn(1);
 
         // Then
-        assertThrows(DuplicateException.class, () -> this.workerCategoryService.update(dto));
+        assertThrows(DuplicateException.class, () -> this.categoryService.update(dto));
     }
 
 }

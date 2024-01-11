@@ -5,7 +5,6 @@ import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
 import com.sarabrandserver.product.service.ProductSKUService;
-import com.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,8 +34,6 @@ class CartServiceTest extends AbstractUnitTest {
     @Mock
     private ProductSKUService productSKUService;
     @Mock
-    private CustomUtil customUtil;
-    @Mock
     private S3Service s3Service;
 
     @BeforeEach
@@ -45,7 +42,6 @@ class CartServiceTest extends AbstractUnitTest {
                 this.shoppingSessionRepo,
                 this.cartItemRepo,
                 this.productSKUService,
-                this.customUtil,
                 this.s3Service
         );
 
@@ -68,11 +64,6 @@ class CartServiceTest extends AbstractUnitTest {
         Cookie cookie = new Cookie(CART_COOKIE, value);
         HttpServletResponse res = mock(HttpServletResponse.class);
 
-        // when
-        when(this.customUtil.toUTC(any(Date.class)))
-                .thenReturn(new Date(yesterday.toEpochMilli()))
-                .thenReturn(new Date(now.toEpochMilli()));
-
         // then
         this.cartService.validateCookieExpiration(res, cookie);
         verify(this.shoppingSessionRepo, times(1))
@@ -94,11 +85,6 @@ class CartServiceTest extends AbstractUnitTest {
         String value = UUID.randomUUID() + split + yesterday.toEpochMilli();
         Cookie cookie = new Cookie(CART_COOKIE, value);
         HttpServletResponse res = mock(HttpServletResponse.class);
-
-        // when
-        when(this.customUtil.toUTC(any(Date.class)))
-                .thenReturn(new Date(yesterday.toEpochMilli()))
-                .thenReturn(new Date(now.toEpochMilli()));
 
         // then
         this.cartService.validateCookieExpiration(res, cookie);

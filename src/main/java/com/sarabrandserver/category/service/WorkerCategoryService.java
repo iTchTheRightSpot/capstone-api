@@ -12,6 +12,7 @@ import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
 import com.sarabrandserver.product.response.ProductResponse;
+import com.sarabrandserver.util.CustomUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,32 +37,13 @@ public class WorkerCategoryService {
      * Returns a list of {@code CategoryResponse}
      * */
     public List<CategoryResponse> allCategories() {
-        return this.categoryRepo.superCategories()
+        var list = this.categoryRepo
+                .allCategories()
                 .stream()
-                .map(parent -> {
-                    var children = this.categoryRepo
-                            .all_categories_admin_front(parent.getCategoryId())
-                            .stream()
-                            .map(child ->
-                                    new CategoryResponse(
-                                            child.getId(),
-                                            child.getParent(),
-                                            child.getName(),
-                                            child.statusImpl()
-                                    )
-                            )
-                            .toList();
-
-                    return new CategoryResponse(
-                            parent.getCategoryId(),
-                            null,
-                            parent.getName(),
-                            parent.isVisible(),
-                            children
-                    );
-                })
+                .map(p -> new CategoryResponse(p.getId(), p.getParent(), p.getName(), p.statusImpl()))
                 .toList();
 
+        return CustomUtil.categoryConverter(list);
     }
 
     /**
@@ -89,26 +71,27 @@ public class WorkerCategoryService {
 
     /**
      * The logic to creating a new ProductCategory object is a worker can either add dto.name
-     * (child {@code ProductCategory}) to an existing dto.parent (parent {@code ProductCategory})
-     * or create new ProductCategory who has no parent.
+     * (child {@code ProductCategory}) to an existing dto.parentId (parentId {@code ProductCategory})
+     * or create new ProductCategory who has no parentId.
      *
      * @param dto of type CategoryDTO
      * @throws DuplicateException when dto.name exists
-     * @throws CustomNotFoundException when dto.parent (Parent Category) does not exist
+     * @throws CustomNotFoundException when dto.parentId does not exist
      * */
     @Transactional
     public void create(CategoryDTO dto) {
-        var category = dto.parent().isBlank()
-                ? parentCategoryIsBlank(dto)
-                : parentCategoryNotBlank(dto);
+        if (this.categoryRepo.findByName(dto.name().trim()).isPresent()) {
+            throw new DuplicateException(dto.name() + " exists");
+        }
+
+        var category = dto.parentId() == null
+                ? parentCategoryIsNull(dto)
+                : parentCategoryNotNull(dto);
 
         this.categoryRepo.save(category);
     }
 
-    private ProductCategory parentCategoryIsBlank(CategoryDTO dto) {
-        if (this.categoryRepo.findByName(dto.name().trim()).isPresent()) {
-            throw new DuplicateException(dto.name() + " exists");
-        }
+    private ProductCategory parentCategoryIsNull(CategoryDTO dto) {
         return ProductCategory.builder()
                 .name(dto.name().trim())
                 .isVisible(dto.visible())
@@ -117,11 +100,8 @@ public class WorkerCategoryService {
                 .build();
     }
 
-    /**
-     * Throws CustomNotFoundException if parent uuid does not exist
-     * */
-    private ProductCategory parentCategoryNotBlank(CategoryDTO dto) {
-        var parent = findByName(dto.parent().trim());
+    private ProductCategory parentCategoryNotNull(CategoryDTO dto) {
+        var parent = findById(dto.parentId());
         return ProductCategory.builder()
                 .name(dto.name().trim())
                 .isVisible(dto.visible())
@@ -132,9 +112,11 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Method is responsible for updating a ProductCategory based on uuid.
-     * @param dto of type UpdateCategoryDTO
-     * @throws DuplicateException is thrown if categoryId name exists but is not associated to uuid
+     * Updates a ProductCategory based on categoryId.
+     *
+     * @param dto {@code UpdateCategoryDTO}
+     * @throws DuplicateException is thrown if name exists, and it is not associated to
+     * categoryId
      * */
     @Transactional
     public void update(UpdateCategoryDTO dto) {
@@ -147,8 +129,8 @@ public class WorkerCategoryService {
 
         // update all children categories to false
         if (!dto.visible()) {
-            for (CategoryPojo pojo : categoryRepo.all_categories_admin_front(dto.id())) {
-                categoryRepo.upVisibility(pojo.getId(), false);
+            for (CategoryPojo pojo : categoryRepo.all_categories_by_categoryId(dto.id())) {
+                categoryRepo.updateVisibility(pojo.getId(), false);
             }
         }
 

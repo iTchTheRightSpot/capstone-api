@@ -40,12 +40,11 @@ public class WorkerProductService {
     @Value(value = "${aws.bucket}")
     private String BUCKET;
 
-    private final PriceCurrencyRepo priceCurrencyRepo;
+    private final PriceCurrencyRepo currencyRepo;
     private final ProductRepo productRepo;
-    private final WorkerProductDetailService workerProductDetailService;
-    private final ProductSKUService productSKUService;
+    private final WorkerProductDetailService detailService;
+    private final ProductSKUService skuService;
     private final WorkerCategoryService categoryService;
-    private final CustomUtil customUtil;
     private final HelperService helperService;
 
     /**
@@ -87,7 +86,7 @@ public class WorkerProductService {
      */
     @Transactional
     public void create(CreateProductDTO dto, MultipartFile[] files) {
-        if (!this.customUtil.validateContainsCurrencies(dto.priceCurrency())) {
+        if (!CustomUtil.validateContainsCurrencies(dto.priceCurrency())) {
             throw new CustomInvalidFormatException("please check currencies and prices");
         }
 
@@ -118,16 +117,16 @@ public class WorkerProductService {
         // save ngn & usd price
         BigDecimal ngn = truncateAmount.apply(dto.priceCurrency(), NGN);
         BigDecimal usd = truncateAmount.apply(dto.priceCurrency(), USD);
-        this.priceCurrencyRepo.save(new PriceCurrency(ngn, NGN, product));
-        this.priceCurrencyRepo.save(new PriceCurrency(usd, USD, product));
+        this.currencyRepo.save(new PriceCurrency(ngn, NGN, product));
+        this.currencyRepo.save(new PriceCurrency(usd, USD, product));
 
         // Save ProductDetails
-        var date = this.customUtil.toUTC(new Date());
-        var detail = this.workerProductDetailService.
+        var date = CustomUtil.toUTC(new Date());
+        var detail = this.detailService.
                 productDetail(product, dto.colour(), dto.visible(), date);
 
         // Save ProductSKUs
-        this.productSKUService.save(dto.sizeInventory(), detail);
+        this.skuService.save(dto.sizeInventory(), detail);
 
         // build and save ProductImages (save to s3)
         this.helperService.productImages(
@@ -172,7 +171,7 @@ public class WorkerProductService {
 
         // update price
         var currency = SarreCurrency.valueOf(dto.currency().toUpperCase());
-        this.priceCurrencyRepo.updatePriceByProductUUID(dto.uuid(), price, currency);
+        this.currencyRepo.updatePriceByProductUUID(dto.uuid(), price, currency);
     }
 
     // TODO validate product isn't in user session and it is not in order detail
@@ -189,7 +188,7 @@ public class WorkerProductService {
         var product = this.productRepo.findByProductUuid(uuid)
                 .orElseThrow(() -> new CustomNotFoundException(uuid + " does not exist"));
 
-        if (this.productRepo.productDetailAttach(uuid) > 1 || this.productSKUService.itemBeenBought(uuid) > 0) {
+        if (this.productRepo.productDetailAttach(uuid) > 1 || this.skuService.itemBeenBought(uuid) > 0) {
             throw new ResourceAttachedException(
                     "cannot delete %s as it has many variants".formatted(product.getName())
             );

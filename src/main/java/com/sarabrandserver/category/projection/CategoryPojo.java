@@ -5,20 +5,29 @@ public interface CategoryPojo {
 
     Long getId();
     String getName();
+
+    /**
+     * Do not return this value instead return
+     * {@code statusImpl} as it returns the appropriate
+     * type.
+     * */
     Object getStatus();
     Long getParent();
 
     /**
-     * Since {@code CategoryRepository} interface contains a native
-     * query method and this method returns a boolean column and
-     * mysql stores boolean values in 0 or 1, this method converts
-     * to boolean values.
+     * Since {@code CategoryRepository} interface contains jpa
+     * and native sql queries, {@code statusImpl} helps catch
+     * cases where jpa returns a boolean variable but native
+     * sql query returns 0 or 1.
      *
      * @return {@code Boolean}
      * */
     default Boolean statusImpl() {
-        Number status = (Number) getStatus();
-        return status.intValue() == 1;
+        return switch (getStatus()) {
+            case Number n -> n.intValue() == 1;
+            case Boolean b -> b;
+            default -> false;
+        };
     }
 
 }

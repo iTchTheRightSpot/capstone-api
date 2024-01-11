@@ -17,7 +17,7 @@ public class ClientRole implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "client_role_id", nullable = false, unique = true)
+    @Column(name = "role_id", nullable = false, unique = true)
     private Long roleId;
 
     @Enumerated(value = EnumType.STRING)
@@ -27,10 +27,6 @@ public class ClientRole implements Serializable {
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false, referencedColumnName = "client_id")
     private SarreBrandUser sarreBrandUser;
-
-    public ClientRole(RoleEnum roleEnum) {
-        this.role = roleEnum;
-    }
 
     public ClientRole(RoleEnum role, SarreBrandUser sarreBrandUser) {
         this.role = role;

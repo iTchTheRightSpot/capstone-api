@@ -7,6 +7,7 @@ import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.repository.ProductRepo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -29,7 +30,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    @DisplayName("Test returning all categories query")
+    @Order(1)
     void allCategories() {
         // given
         var category = categoryRepo
@@ -89,7 +90,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         var fall = categoryRepo
                 .save(
                         ProductCategory.builder()
-                                .name("Fall 2024")
+                                .name("fall 2024")
                                 .isVisible(true)
                                 .parentCategory(collection)
                                 .categories(new HashSet<>())
@@ -100,7 +101,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         categoryRepo
                 .save(
                         ProductCategory.builder()
-                                .name("trouser Fall 2024")
+                                .name("trouser fall 2024")
                                 .isVisible(true)
                                 .parentCategory(fall)
                                 .categories(new HashSet<>())
@@ -110,12 +111,15 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         // then
         var list = this.categoryRepo.allCategories();
-        assertEquals(7, list.size());
 
+        assertEquals(7, list.size());
+        assertEquals(2, list.stream().filter(p -> p.getParent() == null).toList().size());
+        assertEquals(5, list.stream().filter(p -> p.getParent() != null).toList().size());
     }
 
     @Test
     @DisplayName("validate categoryId has 1 or more sub categoryId attached")
+    @Order(2)
     void onSubCategory() {
         // given
         var c = categoryRepo
@@ -146,6 +150,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     @DisplayName("validate categoryId has 1 or more products attached")
+    @Order(3)
     void OnProduct() {
         var category = categoryRepo
                 .save(
@@ -177,6 +182,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     @DisplayName("validate categoryId has 1 or more sub-categoryId and products attached")
+    @Order(4)
     void validateOnDelete() {
         var category = categoryRepo
                 .save(
@@ -222,6 +228,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     Testing query to return all nested child subcategories based on id.
     Visibility for some subcategories are false. Admin front
     """)
+    @Order(5)
     void all_categories_admin_front() {
         // given
         var category = categoryRepo

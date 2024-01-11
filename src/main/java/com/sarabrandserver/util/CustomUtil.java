@@ -74,7 +74,7 @@ public class CustomUtil {
         try {
             return new ObjectMapper().readValue(str, Variant[].class);
         } catch (JsonProcessingException e) {
-            log.error("Error converting from ProductSKUs to Variant. " + clazz);
+            log.error("error converting from ProductSKUs to Variant. " + clazz);
             return null;
         }
     }

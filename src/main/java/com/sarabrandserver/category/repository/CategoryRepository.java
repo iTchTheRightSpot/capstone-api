@@ -172,33 +172,13 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     FROM category c1;
     """)
     List<CategoryPojo> all_categories_by_categoryId(long id);
-
-    @Query(nativeQuery = true, value = """
-    WITH RECURSIVE category (id, name, status, parent) AS
-    (
-        SELECT
-            c.category_id,
-            c.name,
-            c.is_visible,
-            c.parent_category_id
-        FROM product_category c
-        WHERE c.parent_category_id IS NULL
-        UNION ALL
-        SELECT
-            pc.category_id,
-            pc.name,
-            pc.is_visible,
-            pc.parent_category_id
-        FROM category cat
-        INNER JOIN product_category pc
-        ON cat.id = pc.parent_category_id
-    )
+@Query(value = """
     SELECT
-        c1.id AS id,
-        c1.name AS name,
-        c1.parent AS parent,
-        c1.status AS status
-    FROM category c1;
+    c.categoryId AS id,
+    c.name AS name,
+    c.isVisible AS status,
+    c.parentCategory.categoryId AS parent
+    FROM ProductCategory c
     """)
     List<CategoryPojo> allCategories();
 

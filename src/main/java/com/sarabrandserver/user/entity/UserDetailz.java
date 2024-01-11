@@ -1,25 +1,31 @@
 package com.sarabrandserver.user.entity;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
-public record UserDetailz(SarreBrandUser sarreBrandUser) implements UserDetails {
+public record UserDetailz(SarreBrandUser user) implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.sarreBrandUser.getAuthorities();
+        return this.user
+                .getClientRole()
+                .stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRole().toString()))
+                .collect(Collectors.toSet());
     }
 
     @Override
     public String getPassword() {
-        return this.sarreBrandUser.getPassword();
+        return this.user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return this.sarreBrandUser.getEmail();
+        return this.user.getEmail();
     }
 
     @Override
@@ -39,7 +45,7 @@ public record UserDetailz(SarreBrandUser sarreBrandUser) implements UserDetails 
 
     @Override
     public boolean isEnabled() {
-        return this.sarreBrandUser.isEnabled();
+        return this.user.isEnabled();
     }
 
 }

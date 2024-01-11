@@ -7,7 +7,9 @@ import com.sarabrandserver.enumeration.RoleEnum;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.user.entity.ClientRole;
 import com.sarabrandserver.user.entity.SarreBrandUser;
+import com.sarabrandserver.user.entity.UserDetailz;
 import com.sarabrandserver.user.repository.UserRepository;
+import com.sarabrandserver.user.repository.UserRoleRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -41,9 +43,10 @@ public class AuthService {
     private int MAXAGE;
 
     private final UserRepository userRepository;
+    private final UserRoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authManager;
-    private final JwtTokenService jwtTokenService;
+    private final JwtTokenService tokenService;
 
     /**
      * Responsible for registering a new worker. Logic is throw an error if client
@@ -54,22 +57,17 @@ public class AuthService {
      */
     @Transactional
     public void workerRegister(RegisterDTO dto) {
-        var client = this.userRepository
-                .workerExists(dto.email().trim())
-                .orElse(createUser(dto));
+        var optionalUser = this.userRepository.workerExists(dto.email().trim());
 
-        // Note User and Role tables have a relationship fetch type EAGER
-        boolean isAdmin = client.getClientRole() //
-                .stream() //
-                .anyMatch(role -> role.getRole().equals(WORKER));
-
-        if (isAdmin) {
+        if (optionalUser.isPresent() && optionalUser.get().getClientRole().stream()
+                .anyMatch(role -> role.getRole().equals(WORKER))
+        ) {
             throw new DuplicateException(dto.email() + " exists");
         }
 
-        client.addRole(new ClientRole(WORKER));
+        SarreBrandUser userToSave = optionalUser.orElseGet(() -> createUser(dto));
 
-        this.userRepository.save(client);
+        this.roleRepository.save(new ClientRole(WORKER, userToSave));
     }
 
     /**
@@ -84,10 +82,14 @@ public class AuthService {
             throw new DuplicateException(dto.email() + " exists");
         }
 
-        var user = this.userRepository.save(createUser(dto));
+        var user = createUser(dto);
 
         var authenticated = UsernamePasswordAuthenticationToken
-                .authenticated(user.getEmail(), null, user.getAuthorities());
+                .authenticated(
+                        user.getEmail(),
+                        null,
+                        new UserDetailz(user).getAuthorities()
+                );
 
         loginImpl(authenticated, response);
     }
@@ -127,7 +129,7 @@ public class AuthService {
     private void loginImpl(Authentication auth, HttpServletResponse response) {
         if (response == null) return;
 
-        String token = this.jwtTokenService.generateToken(auth);
+        String token = this.tokenService.generateToken(auth);
 
         // wt cookie
         Cookie cookie = new Cookie(JSESSIONID, token);
@@ -141,20 +143,25 @@ public class AuthService {
     }
 
     /**
-     * Create a new User object
+     * Create and a new User object
      */
     private SarreBrandUser createUser(RegisterDTO dto) {
-        var client = SarreBrandUser.builder()
-                .firstname(dto.firstname().trim())
-                .lastname(dto.lastname().trim())
-                .email(dto.email().trim())
-                .phoneNumber(dto.phone().trim())
-                .password(passwordEncoder.encode(dto.password()))
-                .enabled(true)
-                .clientRole(new HashSet<>())
-                .build();
-        client.addRole(new ClientRole(CLIENT));
-        return client;
+        var user = this.userRepository
+                .save(
+                        SarreBrandUser.builder()
+                                .firstname(dto.firstname().trim())
+                                .lastname(dto.lastname().trim())
+                                .email(dto.email().trim())
+                                .phoneNumber(dto.phone().trim())
+                                .password(passwordEncoder.encode(dto.password()))
+                                .enabled(true)
+                                .clientRole(new HashSet<>())
+                                .build()
+                );
+
+        this.roleRepository.save(new ClientRole(CLIENT, user));
+
+        return user;
     }
 
     /**
@@ -168,7 +175,7 @@ public class AuthService {
         Cookie[] cookies = res.getCookies();
         return cookies != null && Arrays.stream(cookies)
                 .filter(cookie -> cookie.getName().equals(JSESSIONID))
-                .anyMatch(cookie -> this.jwtTokenService.matchesRole(cookie, role));
+                .anyMatch(cookie -> this.tokenService.matchesRole(cookie, role));
     }
 
 }

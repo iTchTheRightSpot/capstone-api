@@ -92,10 +92,8 @@ class CustomUtilTest extends AbstractUnitTest {
     received from {@code allCategory} in {@code CategoryResponse} interface
     """)
     void categoryConverter() {
-        var res = res();
-        List<CategoryResponse> db = db();
-        var actual = CustomUtil.categoryConverter(db);
-        assertEquals(res, actual);
+        var actual = CustomUtil.categoryConverter(db());
+        assertEquals(res(), actual);
     }
 
     final List<CategoryResponse> db() {
@@ -115,22 +113,22 @@ class CustomUtilTest extends AbstractUnitTest {
         // super parentId
         var category = new CategoryResponse(1L, null, "category", true);
 
-        var clothes = new CategoryResponse(2L, 1L, "clothes", true);
+        var clothes = new CategoryResponse(2L, category.id(), "clothes", true);
         category.addToChildren(clothes);
 
-        var top = new CategoryResponse(3L, 2L, "top", true);
+        var top = new CategoryResponse(3L, clothes.id(), "top", true);
         clothes.addToChildren(top);
 
-        top.addToChildren(new CategoryResponse(8L, 3L, "long-sleeve", true));
+        top.addToChildren(new CategoryResponse(8L, top.id(), "long-sleeve", true));
 
         // super parentId
         var collection = new CategoryResponse(4L, null, "collection", true);
 
-        var fall = new CategoryResponse(5L, 4L, "fall 2023", true);
+        var fall = new CategoryResponse(5L, collection.id(), "fall 2023", true);
         collection.addToChildren(fall);
-        fall.addToChildren(new CategoryResponse(7L, 5L, "jacket fall 2023", true));
+        fall.addToChildren(new CategoryResponse(7L, fall.id(), "jacket fall 2023", true));
 
-        var summer = new CategoryResponse(6L, 4L, "summer 2023", true);
+        var summer = new CategoryResponse(6L, collection.id(), "summer 2023", true);
         collection.addToChildren(summer);
 
         return List.of(category, collection);

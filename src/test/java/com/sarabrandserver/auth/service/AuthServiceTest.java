@@ -6,8 +6,10 @@ import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.jwt.JwtTokenService;
 import com.sarabrandserver.data.TestingData;
 import com.sarabrandserver.exception.DuplicateException;
+import com.sarabrandserver.user.entity.ClientRole;
 import com.sarabrandserver.user.entity.SarreBrandUser;
 import com.sarabrandserver.user.repository.UserRepository;
+import com.sarabrandserver.user.repository.UserRoleRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,17 +41,19 @@ class AuthServiceTest extends AbstractUnitTest {
     private AuthService authService;
 
     @Mock private UserRepository userRepository;
+    @Mock private UserRoleRepository roleRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private AuthenticationManager manager;
-    @Mock private JwtTokenService jwtTokenService;
+    @Mock private JwtTokenService tokenService;
 
     @BeforeEach
     void setUp() {
         this.authService = new AuthService(
                 this.userRepository,
+                this.roleRepository,
                 this.passwordEncoder,
                 this.manager,
-                this.jwtTokenService
+                this.tokenService
         );
         this.authService.setJSESSIONID(JSESSIONID);
     }
@@ -72,8 +76,11 @@ class AuthServiceTest extends AbstractUnitTest {
 
         // Then
         this.authService.workerRegister(dto);
+
         verify(this.userRepository, times(1))
                 .save(any(SarreBrandUser.class));
+        verify(this.roleRepository, times(2))
+                .save(any(ClientRole.class));
     }
 
     @Test
@@ -96,7 +103,10 @@ class AuthServiceTest extends AbstractUnitTest {
         assertThrows(DuplicateException.class, () -> this.authService.workerRegister(dto));
     }
 
-    /** Simulates registering an existing Clientz but he or she doesn't have a role of WORKER */
+    /**
+     * Simulates registering an existing Clientz but he or she doesn't
+     * have a role of WORKER.
+     * */
     @Test
     void register_worker_with_role_only_client() {
         // Given
@@ -115,13 +125,14 @@ class AuthServiceTest extends AbstractUnitTest {
 
         // Then
         this.authService.workerRegister(dto);
-        verify(this.userRepository, times(1)).save(any(SarreBrandUser.class));
+        verify(this.userRepository, times(0)).save(any(SarreBrandUser.class));
+        verify(this.roleRepository, times(1)).save(any(ClientRole.class));
     }
 
     @Test
     void worker_login() {
         // Given
-        var dto = new LoginDTO("", TestingData.worker().getPassword());
+        var dto = new LoginDTO(TestingData.worker().getEmail(), TestingData.worker().getPassword());
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         Authentication authentication = mock(Authentication.class);
@@ -177,7 +188,10 @@ class AuthServiceTest extends AbstractUnitTest {
 
         // Then
         this.authService.clientRegister(dto, res);
-        verify(this.userRepository, times(1)).save(any(SarreBrandUser.class));
+        verify(this.userRepository, times(1))
+                .save(any(SarreBrandUser.class));
+        verify(this.roleRepository, times(1))
+                .save(any(ClientRole.class));
     }
 
     @Test

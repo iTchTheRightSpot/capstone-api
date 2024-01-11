@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -40,9 +41,9 @@ class CustomUtilTest extends AbstractUnitTest {
     @Test
     void can_only_be_ngn_and_usd() {
         PriceCurrencyDTO[] arr = {
-                new PriceCurrencyDTO(new BigDecimal("9.99"), "USD"),
-                new PriceCurrencyDTO(new BigDecimal("0"), "USD"),
-                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "NGN"),
+                new PriceCurrencyDTO(new BigDecimal("9.99"), USD.name()),
+                new PriceCurrencyDTO(new BigDecimal("0"), USD.name()),
+                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), NGN.name()),
         };
 
         assertFalse(CustomUtil.validateContainsCurrencies(arr));

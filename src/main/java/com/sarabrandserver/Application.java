@@ -4,7 +4,7 @@ import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.service.AuthService;
 import com.sarabrandserver.graal.MyRuntimeHints;
 import com.sarabrandserver.order.dto.PayloadMapper;
-import com.sarabrandserver.product.dto.VariantMapper;
+import com.sarabrandserver.product.response.Variant;
 import com.sarabrandserver.thirdparty.PaymentCredentialObj;
 import com.sarabrandserver.user.repository.UserRepository;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
@@ -20,7 +20,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 @ImportRuntimeHints(value = {MyRuntimeHints.class})
-@RegisterReflectionForBinding(value = {VariantMapper.class, PayloadMapper.class, PaymentCredentialObj.class})
+@RegisterReflectionForBinding(value = {Variant.class, PayloadMapper.class, PaymentCredentialObj.class})
 public class Application {
 
     @Value(value = "${user.principal}")

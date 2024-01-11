@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.dto.PriceCurrencyDTO;
-import com.sarabrandserver.product.dto.VariantMapper;
 import com.sarabrandserver.product.response.Variant;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -73,10 +72,7 @@ public class CustomUtil {
      * */
     public static <T> Variant[] toVariantArray(String str, T clazz) {
         try {
-            VariantMapper[] arr = new ObjectMapper().readValue(str, VariantMapper[].class);
-            return Arrays.stream(arr)
-                    .map(m -> new Variant(m.sku(), m.inventory(), m.size()))
-                    .toArray(Variant[]::new);
+            return new ObjectMapper().readValue(str, Variant[].class);
         } catch (JsonProcessingException e) {
             log.error("Error converting from ProductSKUs to Variant. " + clazz);
             return null;

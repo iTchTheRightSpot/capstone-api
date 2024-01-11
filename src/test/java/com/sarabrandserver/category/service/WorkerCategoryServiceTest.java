@@ -88,7 +88,9 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         assertThrows(DuplicateException.class, () -> this.categoryService.create(dto));
     }
 
-    /** Simulates the correct exception class is thrown for duplicate parentCategoryIsBlank method. */
+    /**
+     * simulates the correct exception class is thrown when category name exists
+     * */
     @Test
     void duplicate() {
         // Given

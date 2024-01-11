@@ -47,7 +47,6 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
 
         // response
         hints.serialization().registerType(Variant.class);
-        hints.serialization().registerType(VariantMapper.class);
         hints.serialization().registerType(DetailResponse.class);
 
         // Order

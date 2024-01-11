@@ -139,16 +139,20 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Permanently deletes a ProductCategory and its children.
-     * @param id is the ProductCategory uuid
+     * Permanently deletes a ProductCategory if it has no children and
+     * no {@code Product} attached.
+     *
+     * @param id is the ProductCategory by categoryId
+     * @throws ResourceAttachedException if {@code ProductCategory} by {@param id} has
+     * children or 1 or more {@code Product} is associated to it.
      * @throws CustomNotFoundException is thrown if categoryId node does not exist
      * */
     @Transactional
     public void delete(long id) {
-        int c = this.categoryRepo.validateContainsSubCategory(id);
+        int c = this.categoryRepo.validate_category_is_a_parent(id);
         int d = this.categoryRepo.validateProductAttached(id);
 
-        if (c > 1 || d > 0) {
+        if (c > 0 || d > 0) {
             throw new ResourceAttachedException("Category has 1 or many products or sub-categoryId attached");
         }
 

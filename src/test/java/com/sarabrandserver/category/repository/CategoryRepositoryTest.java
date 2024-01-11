@@ -7,7 +7,6 @@ import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.repository.ProductRepo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -30,7 +29,6 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    @Order(1)
     void allCategories() {
         // given
         var category = categoryRepo
@@ -118,11 +116,49 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    @DisplayName("validate categoryId has 1 or more sub categoryId attached")
-    @Order(2)
-    void onSubCategory() {
+    @DisplayName("validate categoryId has 1 subcategory attached")
+    void on1SubCategory() {
         // given
-        var c = categoryRepo
+        var category = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("category")
+                                .isVisible(true)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        var clothes = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("clothes")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("top")
+                                .isVisible(true)
+                                .parentCategory(clothes)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        assertEquals(1, categoryRepo.validate_category_is_a_parent(category.getCategoryId()));
+    }
+
+    @Test
+    @DisplayName("validate categoryId has 1 or more subcategory attached")
+    void onMultipleSubCategory() {
+        // given
+        var category = categoryRepo
                 .save(
                         ProductCategory.builder()
                                 .name("category")
@@ -137,21 +173,29 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                         ProductCategory.builder()
                                 .name("clothes")
                                 .isVisible(true)
-                                .parentCategory(c)
+                                .parentCategory(category)
                                 .categories(new HashSet<>())
                                 .product(new HashSet<>())
                                 .build()
                 );
 
-        int count = categoryRepo.validateContainsSubCategory(c.getCategoryId());
+        categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("furniture")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
 
-        assertEquals(2, count);
+        assertEquals(2, categoryRepo.validate_category_is_a_parent(category.getCategoryId()));
     }
 
     @Test
     @DisplayName("validate categoryId has 1 or more products attached")
-    @Order(3)
-    void OnProduct() {
+    void onProduct() {
         var category = categoryRepo
                 .save(
                         ProductCategory.builder()
@@ -182,7 +226,6 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     @DisplayName("validate categoryId has 1 or more sub-categoryId and products attached")
-    @Order(4)
     void validateOnDelete() {
         var category = categoryRepo
                 .save(
@@ -228,7 +271,6 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     Testing query to return all nested child subcategories based on id.
     Visibility for some subcategories are false. Admin front
     """)
-    @Order(5)
     void all_categories_admin_front() {
         // given
         var category = categoryRepo

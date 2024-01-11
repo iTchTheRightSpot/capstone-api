@@ -58,25 +58,21 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     """)
     int validateProductAttached(long id);
 
-    @Query(nativeQuery = true, value = """
-    WITH RECURSIVE category (id, parent) AS
-    (
-        SELECT
-            c.category_id,
-            c.parent_category_id
-        FROM product_category c
-        WHERE c.category_id = :id
-        UNION ALL
-        SELECT
-        pc.category_id,
-        pc.parent_category_id
-        FROM category cat
-        INNER JOIN product_category pc
-        ON cat.id = pc.parent_category_id
-    )
-    SELECT COUNT(c1.id) FROM category c1
+    /**
+     * Validates if 1 or more rows depends on {@code ProductCategory} by
+     * {@param id} as its parent.
+     *
+     * @param id is {@code ProductCategory} property {@code categoryId}
+     * @return {@code 0 or greater than 0} where 0 means it doesn't have a
+     * child {@code ProductCategory} and greater than 0 means 1 or more rows
+     * depends on it as a parent.
+     * */
+    @Query(value = """
+    SELECT COUNT (c.categoryId)
+    FROM ProductCategory c
+    WHERE c.parentCategory.categoryId = :id
     """)
-    int validateContainsSubCategory(long id);
+    int validate_category_is_a_parent(long id);
 
     @Query(value = """
     SELECT
@@ -172,7 +168,8 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     FROM category c1;
     """)
     List<CategoryPojo> all_categories_by_categoryId(long id);
-@Query(value = """
+
+    @Query(value = """
     SELECT
     c.categoryId AS id,
     c.name AS name,

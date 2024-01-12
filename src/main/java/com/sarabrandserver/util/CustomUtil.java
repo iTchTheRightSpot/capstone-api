@@ -134,9 +134,9 @@ public class CustomUtil {
     };
 
     /**
-     * Creates an object hierarchy based on @param list
+     * Creates an object hierarchy based on list of {@code CategoryResponse}
      * */
-    public static List<CategoryResponse> categoryConverter(List<CategoryResponse> list) {
+    public static List<CategoryResponse> createCategoryHierarchy(List<CategoryResponse> list) {
         Map<Long, CategoryResponse> map = new HashMap<>();
 
         // hierarchy is built by inject root

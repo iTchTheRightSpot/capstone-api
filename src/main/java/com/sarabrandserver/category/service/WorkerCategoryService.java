@@ -7,6 +7,7 @@ import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.projection.CategoryPojo;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.category.response.CategoryResponse;
+import com.sarabrandserver.category.response.WorkerCategoryResponse;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
@@ -21,7 +22,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -34,16 +34,25 @@ public class WorkerCategoryService {
     private final S3Service s3Service;
 
     /**
-     * Returns a list of {@code CategoryResponse}
+     * Returns a {@code WorkerCategoryResponse}
      * */
-    public List<CategoryResponse> allCategories() {
-        var list = this.categoryRepo
+    public WorkerCategoryResponse allCategories() {
+        var category = this.categoryRepo.allCategories();
+
+        // table
+        var table = this.categoryRepo
                 .allCategories()
+                .stream()
+                .map(CategoryResponse::workerList)
+                .toList();
+
+        // hierarchy
+        var hierarchy = category
                 .stream()
                 .map(p -> new CategoryResponse(p.getId(), p.getParent(), p.getName(), p.statusImpl()))
                 .toList();
 
-        return CustomUtil.categoryConverter(list);
+        return new WorkerCategoryResponse(table, CustomUtil.createCategoryHierarchy(hierarchy));
     }
 
     /**
@@ -158,11 +167,6 @@ public class WorkerCategoryService {
 
         var category = findById(id);
         this.categoryRepo.delete(category);
-    }
-
-    public ProductCategory findByName(String name) {
-        return this.categoryRepo.findByName(name)
-                .orElseThrow(() -> new CustomNotFoundException(name + " does not exist"));
     }
 
     public ProductCategory findById(long id) {

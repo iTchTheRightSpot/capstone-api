@@ -3,6 +3,7 @@ package com.sarabrandserver.category.controller;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.sarabrandserver.category.response.CategoryResponse;
+import com.sarabrandserver.category.response.WorkerCategoryResponse;
 import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.response.ProductResponse;
@@ -27,7 +28,7 @@ public class WorkerCategoryController {
 
     @ResponseStatus(OK)
     @GetMapping(produces = "application/json")
-    public List<CategoryResponse> allCategories() {
+    public WorkerCategoryResponse allCategories() {
         return this.workerCategoryService.allCategories();
     }
 

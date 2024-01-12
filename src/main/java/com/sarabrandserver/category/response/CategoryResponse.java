@@ -1,6 +1,7 @@
 package com.sarabrandserver.category.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.sarabrandserver.category.projection.CategoryPojo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,10 @@ public record CategoryResponse(
 
     public void addToChildren(CategoryResponse child) {
         children.add(child);
+    }
+
+    public static CategoryResponse workerList(CategoryPojo p) {
+        return new CategoryResponse(p.getId(), p.getParent(), p.getName(), p.statusImpl(), null);
     }
 
 }

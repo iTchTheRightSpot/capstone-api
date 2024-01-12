@@ -152,6 +152,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                 );
 
         assertEquals(1, categoryRepo.validate_category_is_a_parent(category.getCategoryId()));
+        assertEquals(1, categoryRepo.validate_category_is_a_parent(clothes.getCategoryId()));
     }
 
     @Test

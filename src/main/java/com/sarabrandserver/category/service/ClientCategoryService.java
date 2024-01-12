@@ -37,7 +37,7 @@ public class ClientCategoryService {
                 .map(p -> new CategoryResponse(p.getId(), p.getParent(), p.getName(), p.statusImpl()))
                 .toList();
 
-        return CustomUtil.categoryConverter(list);
+        return CustomUtil.createCategoryHierarchy(list);
     }
 
     public Page<ProductResponse> allProductsByUUID(

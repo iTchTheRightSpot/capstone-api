@@ -92,7 +92,7 @@ class CustomUtilTest extends AbstractUnitTest {
     received from {@code allCategory} in {@code CategoryResponse} interface
     """)
     void categoryConverter() {
-        var actual = CustomUtil.categoryConverter(db());
+        var actual = CustomUtil.createCategoryHierarchy(db());
         assertEquals(res(), actual);
     }
 

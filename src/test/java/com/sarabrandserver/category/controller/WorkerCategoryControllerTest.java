@@ -98,7 +98,8 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
                 .perform(get(requestMapping).contentType(APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.table").isArray())
+                .andExpect(jsonPath("$.hierarchy").isArray());
     }
 
     @Test

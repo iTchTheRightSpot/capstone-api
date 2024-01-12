@@ -22,7 +22,7 @@ public interface CategoryPojo {
      *
      * @return {@code Boolean}
      * */
-    default Boolean statusImpl() {
+    default boolean statusImpl() {
         return switch (getStatus()) {
             case Number n -> n.intValue() == 1;
             case Boolean b -> b;

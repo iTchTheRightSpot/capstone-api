@@ -107,7 +107,7 @@ class DummyData {
                         "SEJU",
                         "Development",
                         "admin@admin.com",
-                        "admin@admin.com",
+                        "",
                         "0000000000",
                         "password123"
                 );

@@ -3,8 +3,7 @@ package com.sarabrandserver.category.controller;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.category.service.WorkerCategoryService;
-import com.sarabrandserver.data.TestingData;
+import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
@@ -54,7 +53,7 @@ class ClientCategoryControllerTest extends AbstractIntegrationTest {
                                 .build()
                 );
 
-        TestingData.dummyProducts(category, 2, workerProductService);
+        TestData.dummyProducts(category, 2, workerProductService);
 
         var clothes = categoryRepository
                 .save(
@@ -67,7 +66,7 @@ class ClientCategoryControllerTest extends AbstractIntegrationTest {
                                 .build()
                 );
 
-        TestingData.dummyProducts(clothes, 5, workerProductService);
+        TestData.dummyProducts(clothes, 5, workerProductService);
     }
 
     @AfterEach

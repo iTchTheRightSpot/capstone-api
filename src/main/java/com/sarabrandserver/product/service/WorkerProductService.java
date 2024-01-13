@@ -60,10 +60,9 @@ public class WorkerProductService {
         return this.productRepo
                 .fetchAllProductsWorker(currency, PageRequest.of(page, size))
                 .map(pojo -> {
-                    var url = this.helperService.preSignedURL(BUCKET, pojo.getKey());
+                    var url = this.helperService.preSignedURL(BUCKET, pojo.getImage());
                     return ProductResponse.builder()
                             .category(pojo.getCategory())
-                            .collection(pojo.getCollection())
                             .id(pojo.getUuid())
                             .name(pojo.getName())
                             .desc(pojo.getDescription())
@@ -129,11 +128,7 @@ public class WorkerProductService {
         this.skuService.save(dto.sizeInventory(), detail);
 
         // build and save ProductImages (save to s3)
-        this.helperService.productImages(
-                detail,
-                file,
-                BUCKET
-        );
+        this.helperService.productImages(detail, file, BUCKET);
     }
 
     /**
@@ -194,26 +189,22 @@ public class WorkerProductService {
             );
         }
 
-        // Delete from S3
         List<ObjectIdentifier> keys = this.productRepo.productImagesByProductUUID(uuid)
                 .stream() //
                 .map(img -> ObjectIdentifier.builder().key(img.getImage()).build()) //
                 .toList();
 
+        // delete from S3 only if keys contain
         if (!keys.isEmpty()) {
             this.helperService.deleteFromS3(keys, BUCKET);
         }
 
-        // Delete from Database
+        // delete from Database
         this.productRepo.delete(product);
     }
 
     /**
      * Retrieves the price based on the currency.
-     *
-     * @param arr dto object gotten from the user
-     * @param currency gets the price in the array
-     * @return BigDecimal
      * */
     final BiFunction<PriceCurrencyDTO[], SarreCurrency, BigDecimal> truncateAmount = (arr, curr) -> Arrays
                     .stream(arr)

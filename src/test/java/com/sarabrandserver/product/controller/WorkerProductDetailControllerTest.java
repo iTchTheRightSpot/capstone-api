@@ -4,9 +4,8 @@ import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.data.TestingData;
+import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.product.dto.UpdateProductDetailDTO;
-import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
@@ -60,7 +59,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
                                 .build()
                 );
 
-        TestingData.dummyProducts(category, 2, workerProductService);
+        TestData.dummyProducts(category, 2, workerProductService);
 
         var clothes = categoryRepository
                 .save(
@@ -73,7 +72,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
                                 .build()
                 );
 
-        TestingData.dummyProducts(clothes, 5, workerProductService);
+        TestData.dummyProducts(clothes, 5, workerProductService);
     }
 
     @AfterEach
@@ -115,10 +114,10 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
         assertFalse(list.isEmpty());
 
         // payload
-        var dtos = TestingData.sizeInventoryDTOArray(5);
+        var dtos = TestData.sizeInventoryDTOArray(5);
 
         String productID = list.getFirst().getUuid();
-        var dto = TestingData.productDetailDTO(productID, "exon-mobile-colour", dtos);
+        var dto = TestData.productDetailDTO(productID, "exon-mobile-colour", dtos);
 
         var payload = new MockMultipartFile(
                 "dto",
@@ -130,7 +129,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegrationTest {
         // request
         MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
 
-        for (MockMultipartFile file : TestingData.files()) {
+        for (MockMultipartFile file : TestData.files()) {
             builder.file(file);
         }
 

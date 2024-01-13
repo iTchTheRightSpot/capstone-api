@@ -4,7 +4,7 @@ import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.data.TestingData;
+import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
@@ -56,7 +56,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                                 .build()
                 );
 
-        TestingData.dummyProducts(category, 2, workerProductService);
+        TestData.dummyProducts(category, 2, workerProductService);
 
         var clothes = categoryRepository
                 .save(
@@ -69,7 +69,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                                 .build()
                 );
 
-        TestingData.dummyProducts(clothes, 5, workerProductService);
+        TestData.dummyProducts(clothes, 5, workerProductService);
     }
 
     @AfterEach
@@ -123,7 +123,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                 new SizeInventoryDTO(15, "large"),
         };
 
-        var dto = TestingData
+        var dto = TestData
                 .createProductDTO(
                         new Faker().commerce().productName(),
                         categoryId(),
@@ -140,7 +140,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         // request
         MockMultipartHttpServletRequestBuilder requestBuilder = multipart(requestMapping).file(payload);
 
-        for (MockMultipartFile file : TestingData.files()) {
+        for (MockMultipartFile file : TestData.files()) {
             requestBuilder.file(file);
         }
 
@@ -154,7 +154,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @DisplayName(value = "Validate SizeInventoryDTO[] size is 1")
     void val() throws Exception {
         // given
-        var dto = TestingData
+        var dto = TestData
                 .createProductDTO(
                         new Faker().commerce().productName(),
                         categoryId(),
@@ -171,7 +171,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         // request
         MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
 
-        for (MockMultipartFile file : TestingData.files()) {
+        for (MockMultipartFile file : TestData.files()) {
             builder.file(file);
         }
 
@@ -197,7 +197,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                 new SizeInventoryDTO(15, "large"),
         };
 
-        var dto = TestingData
+        var dto = TestData
                 .productDTO(
                         categoryId(),
                         productName(),
@@ -215,7 +215,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         // Then
         MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
 
-        for (MockMultipartFile file : TestingData.files()) {
+        for (MockMultipartFile file : TestData.files()) {
             builder.file(file);
         }
 
@@ -231,7 +231,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     @DisplayName(value = "Validates bad request because sizeInventory JsonProperty is not present")
     void exThrown() throws Exception {
-        var dto = TestingData
+        var dto = TestData
                 .productDTO(
                         categoryId(),
                         new Faker().commerce().productName(),
@@ -249,7 +249,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         // Then
         MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
 
-        for (MockMultipartFile file : TestingData.files()) {
+        for (MockMultipartFile file : TestData.files()) {
             builder.file(file);
         }
 
@@ -274,7 +274,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         assertFalse(category.isEmpty());
 
         // Payload
-        var dto = TestingData
+        var dto = TestData
                 .updateProductDTO(
                         product.get(0).getUuid(),
                         product.get(1).getName(),
@@ -306,7 +306,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
 
 
         // Payload
-        var dto = TestingData
+        var dto = TestData
                 .updateProductDTO(
                         product.getFirst().getUuid(),
                         "SEJU Development",

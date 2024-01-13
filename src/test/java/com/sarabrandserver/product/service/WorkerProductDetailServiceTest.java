@@ -2,7 +2,7 @@ package com.sarabrandserver.product.service;
 
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractUnitTest;
-import com.sarabrandserver.data.TestingData;
+import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.entity.ProductDetail;
@@ -50,10 +50,10 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
     @DisplayName(value = "Create a new ProductDetail.")
     void create() {
         // Given
-        var dtos = TestingData.sizeInventoryDTOArray(4);
-        var files = TestingData.files();
+        var dtos = TestData.sizeInventoryDTOArray(4);
+        var files = TestData.files();
         var product = Product.builder().uuid("product uuid").build();
-        var dto = TestingData.productDetailDTO(product.getUuid(), "mat-black", dtos);
+        var dto = TestData.productDetailDTO(product.getUuid(), "mat-black", dtos);
 
         // When
         when(productRepo.findByProductUuid(anyString())).thenReturn(Optional.of(product));
@@ -68,11 +68,11 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
     @DisplayName(value = "Create a new ProductDetail. Colour exists")
     void createE() {
         // Given
-        var dtos = TestingData.sizeInventoryDTOArray(4);
-        var files = TestingData.files();
+        var dtos = TestData.sizeInventoryDTOArray(4);
+        var files = TestData.files();
         var product = Product.builder().uuid("product uuid").build();
         var detail = ProductDetail.builder().colour(new Faker().commerce().color()).build();
-        var dto = TestingData.productDetailDTO(product.getUuid(), detail.getColour(), dtos);
+        var dto = TestData.productDetailDTO(product.getUuid(), detail.getColour(), dtos);
 
         // When
         when(productRepo.findByProductUuid(anyString())).thenReturn(Optional.of(product));

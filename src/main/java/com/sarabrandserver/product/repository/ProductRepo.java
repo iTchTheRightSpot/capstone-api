@@ -48,7 +48,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     p.description AS description,
     (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
     (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
-    p.defaultKey AS key,
+    p.defaultKey AS image,
     cat.name AS category
     FROM Product p
     INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId
@@ -65,7 +65,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     p.description AS description,
     (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
     (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency ) AS price,
-    p.defaultKey AS key,
+    p.defaultKey AS image,
     cat.name AS category
     FROM Product p
     INNER JOIN ProductCategory cat ON cat.categoryId = p.productCategory.categoryId
@@ -108,7 +108,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     p.name AS name,
     (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
     (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
-    p.defaultKey AS key,
+    p.defaultKey AS image,
     cat.name AS category
     FROM Product p
     INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId

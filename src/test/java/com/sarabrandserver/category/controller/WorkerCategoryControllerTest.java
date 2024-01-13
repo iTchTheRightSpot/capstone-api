@@ -6,7 +6,7 @@ import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.data.TestingData;
+import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
@@ -27,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -60,7 +59,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
                                 .build()
                 );
 
-        TestingData.dummyProducts(category, 2, workerProductService);
+        TestData.dummyProducts(category, 2, workerProductService);
 
         var clothes = categoryRepository
                 .save(
@@ -73,7 +72,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
                                 .build()
                 );
 
-        TestingData.dummyProducts(clothes, 5, workerProductService);
+        TestData.dummyProducts(clothes, 5, workerProductService);
     }
 
     @AfterEach
@@ -96,7 +95,6 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
         // Then
         this.MOCKMVC
                 .perform(get(requestMapping).contentType(APPLICATION_JSON))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.table").isArray())
                 .andExpect(jsonPath("$.hierarchy").isArray());

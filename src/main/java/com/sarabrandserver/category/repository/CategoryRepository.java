@@ -56,7 +56,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     SELECT COUNT(p.product_id)
     FROM category c1
     INNER JOIN product p
-    ON c1.id = p.category_id
+    ON c1.id = p.category_id;
     """)
     int validateProductAttached(long id);
 
@@ -108,30 +108,44 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     p.name as name,
     (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
     (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
-    p.defaultKey as key
+    p.defaultKey as image
     FROM Product p
     INNER JOIN ProductCategory c ON p.productCategory.categoryId = c.categoryId
     WHERE c.categoryId = :id
     """)
-    Page<ProductPojo> allProductsByCategory(SarreCurrency currency, long id, Pageable page);
+    Page<ProductPojo> allProductsByCategoryWorker(SarreCurrency currency, long id, Pageable page);
 
-    @Query(value = """
+    /**
+     * Using native sql query, method returns all {@code Product} based on
+     * {@code ProductCategory} and its children.
+     *
+     * @param categoryId is the {@code ProductCategory} and all of its children
+     * @param currency is the string value of {@code SarreCurrency}
+     * @param page is the of {@code org.springframework.data.domain.Pageable}
+     * @return a {@code org.springframework.data.domain.Page} of {@code ProductPojo}
+     * */
+    @Query(nativeQuery = true, value = """
+    WITH RECURSIVE category (id) AS
+    (
+        SELECT c.category_id FROM product_category AS c WHERE c.category_id = :categoryId
+        UNION ALL
+        SELECT pc.category_id FROM category cat INNER JOIN product_category pc ON cat.id = pc.parent_category_id
+    )
     SELECT
     p.uuid AS uuid,
     p.name AS name,
     p.description AS description,
-    (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
-    (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
-    p.defaultKey AS key,
-    pc.name AS category
-    FROM Product p
-    INNER JOIN ProductCategory pc ON p.productCategory.categoryId = pc.categoryId
-    INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
-    INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
-    WHERE pd.isVisible = TRUE AND sku.inventory > 0 AND pc.categoryId = :id
-    GROUP BY p.uuid, p.name, p.description, p.defaultKey
+    (SELECT c.currency FROM price_currency c WHERE p.product_id = c.product_id AND c.currency = :#{#currency.name()}) AS currency,
+    (SELECT c.price FROM price_currency c WHERE p.product_id = c.product_id AND c.currency = :#{#currency.name()}) AS price,
+    p.default_image_key AS image
+    FROM category c1
+    INNER JOIN product p ON c1.id = p.category_id
+    INNER JOIN product_detail d ON p.product_id = d.product_id
+    INNER JOIN product_sku s ON d.detail_id = s.detail_id
+    WHERE d.is_visible = TRUE AND s.inventory > 0
+    GROUP BY p.uuid, p.name, p.description, p.default_image_key;
     """)
-    Page<ProductPojo> productsByCategoryClient(long id, SarreCurrency currency, Pageable page);
+    Page<ProductPojo> productsByCategoryId(long categoryId, SarreCurrency currency, Pageable page);
 
     /**
      * Using native sql query and Spring Data projection, method returns all

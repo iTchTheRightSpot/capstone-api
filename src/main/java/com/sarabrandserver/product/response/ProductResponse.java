@@ -22,6 +22,5 @@ public class ProductResponse {
     @JsonProperty(value = "image")
     private String imageUrl;
     private String category;
-    private String collection;
     private String prize;
 }

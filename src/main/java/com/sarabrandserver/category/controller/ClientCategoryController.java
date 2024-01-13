@@ -37,7 +37,7 @@ public class ClientCategoryController {
             @RequestParam(name = "currency", defaultValue = "NGN") String currency
     ) {
         return this.clientCategoryService
-                .allProductsByUUID(SarreCurrency.valueOf(currency), id, page, Math.min(size, 20));
+                .allProductsByCategoryId(SarreCurrency.valueOf(currency), id, page, Math.min(size, 20));
     }
 
 }

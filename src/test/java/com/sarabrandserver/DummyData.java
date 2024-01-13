@@ -4,7 +4,7 @@ import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.service.AuthService;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.data.TestingData;
+import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.product.service.WorkerProductService;
 import com.sarabrandserver.user.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -35,7 +35,7 @@ class DummyData {
                                     .build()
                     );
 
-            TestingData.dummyProducts(category, 2, workerProductService);
+            TestData.dummyProducts(category, 2, workerProductService);
 
             var clothes = categoryRepository
                     .save(
@@ -48,7 +48,7 @@ class DummyData {
                                     .build()
                     );
 
-            TestingData.dummyProducts(clothes, 5, workerProductService);
+            TestData.dummyProducts(clothes, 5, workerProductService);
 
             var shirt = categoryRepository
                     .save(
@@ -61,7 +61,7 @@ class DummyData {
                                     .build()
                     );
 
-            TestingData.dummyProducts(shirt, 10, workerProductService);
+            TestData.dummyProducts(shirt, 10, workerProductService);
 
             var furniture = categoryRepository
                     .save(
@@ -74,7 +74,7 @@ class DummyData {
                                     .build()
                     );
 
-            TestingData.dummyProducts(furniture, 3, workerProductService);
+            TestData.dummyProducts(furniture, 3, workerProductService);
 
             var collection = categoryRepository
                     .save(
@@ -87,7 +87,7 @@ class DummyData {
                                     .build()
                     );
 
-            TestingData.dummyProducts(collection, 1, workerProductService);
+            TestData.dummyProducts(collection, 1, workerProductService);
 
             var winter = categoryRepository
                     .save(
@@ -100,7 +100,7 @@ class DummyData {
                                     .build()
                     );
 
-            TestingData.dummyProducts(winter, 15, workerProductService);
+            TestData.dummyProducts(winter, 15, workerProductService);
 
             if (repository.findByPrincipal("admin@admin.com").isEmpty()) {
                 var dto = new RegisterDTO(

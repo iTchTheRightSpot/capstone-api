@@ -20,7 +20,7 @@ import java.util.Set;
 import static com.sarabrandserver.enumeration.RoleEnum.CLIENT;
 import static com.sarabrandserver.enumeration.RoleEnum.WORKER;
 
-public class TestingData {
+public class TestData {
 
     public static SarreBrandUser client() {
         var client = SarreBrandUser.builder()
@@ -154,10 +154,10 @@ public class TestingData {
 
     @NotNull
     public static void dummyProducts(ProductCategory cat, int num, WorkerProductService service) {
-        var images = TestingData.files();
+        var images = TestData.files();
 
         for (int i = 0; i < num; i++) {
-            var data = TestingData
+            var data = TestData
                     .productDTO(
                             cat.getCategoryId(),
                             new Faker().commerce().productName() + " " + i,

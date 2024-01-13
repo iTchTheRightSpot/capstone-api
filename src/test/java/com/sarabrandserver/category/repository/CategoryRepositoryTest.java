@@ -3,12 +3,18 @@ package com.sarabrandserver.category.repository;
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractRepositoryTest;
 import com.sarabrandserver.category.entity.ProductCategory;
+import com.sarabrandserver.data.TestData;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.entity.Product;
+import com.sarabrandserver.product.projection.ProductPojo;
 import com.sarabrandserver.product.repository.ProductRepo;
+import com.sarabrandserver.product.service.WorkerProductService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.HashSet;
 import java.util.UUID;
@@ -21,6 +27,8 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     private CategoryRepository categoryRepo;
     @Autowired
     private ProductRepo productRepo;
+    @Autowired
+    private WorkerProductService productService;
 
     @AfterEach
     void after() {
@@ -324,6 +332,68 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                         .all_categories_by_categoryId(category.getCategoryId())
                         .size()
         );
+    }
+
+    @Test
+    @DisplayName("""
+    test custom query for returning all Products based
+    on ProductCategory and its children
+    """)
+    void productByCategoryId() {
+        // given
+        var category = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("category")
+                                .isVisible(true)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        var clothes = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("clothes")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        for (int i = 0; i < 5; i++) {
+            productService
+                    .create(
+                            TestData.createProductDTO(
+                                    new Faker().commerce().productName() + i,
+                                    category.getCategoryId(),
+                                    TestData.sizeInventoryDTOArray(3)
+                            ),
+                            TestData.files()
+                    );
+        }
+
+        for (int i = 0; i < 3; i++) {
+            productService
+                    .create(
+                            TestData.createProductDTO(
+                                    new Faker().commerce().productName() + (i + 30),
+                                    clothes.getCategoryId(),
+                                    TestData.sizeInventoryDTOArray(3)
+                            ),
+                            TestData.files()
+                    );
+        }
+
+        Page<ProductPojo> pojos = categoryRepo
+                .productsByCategoryId(
+                        category.getCategoryId(),
+                        SarreCurrency.USD,
+                        PageRequest.of(0, 20)
+                );
+
+        assertEquals(8, pojos.getNumberOfElements());
     }
 
 }

@@ -44,10 +44,9 @@ public class ClientProductService {
         return this.productRepo
                 .allProductsByCurrencyClient(currency, PageRequest.of(page, size)) //
                 .map(pojo -> {
-                    var url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());
+                    var url = this.s3Service.preSignedUrl(BUCKET, pojo.getImage());
                     return ProductResponse.builder()
                             .category(pojo.getCategory())
-                            .collection(pojo.getCollection())
                             .id(pojo.getUuid())
                             .name(pojo.getName())
                             .desc(pojo.getDescription())
@@ -107,7 +106,7 @@ public class ClientProductService {
                 .productByNameAndCurrency(param + "%", currency, PageRequest.of(0, 10))
                 .stream()
                 .map(pojo -> {
-                    var url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());
+                    var url = this.s3Service.preSignedUrl(BUCKET, pojo.getImage());
                     return ProductResponse.builder()
                             .category(pojo.getCategory())
                             .id(pojo.getUuid())

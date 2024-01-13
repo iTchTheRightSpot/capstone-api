@@ -65,9 +65,9 @@ public class WorkerCategoryService {
      * */
     public Page<ProductResponse> allProductsByCategory(SarreCurrency currency, long id, int page, int size) {
         return this.categoryRepo
-                .allProductsByCategory(currency, id, PageRequest.of(page, size))
+                .allProductsByCategoryWorker(currency, id, PageRequest.of(page, size))
                 .map(pojo -> {
-                    var url = this.s3Service.preSignedUrl(this.BUCKET, pojo.getKey());
+                    var url = this.s3Service.preSignedUrl(this.BUCKET, pojo.getImage());
                     return ProductResponse.builder()
                             .id(pojo.getUuid())
                             .name(pojo.getName())

@@ -2,15 +2,14 @@
 Backend of Sarre The Brand.
 
 ### Technologies
-* Java 17
-* Spring Boot
+* Java 21
+* Spring Boot 3.2.1
 * Flyway Migration
 * AWS RDS (MySQL)
 * AWS Secret manager
 * AWS EC2
 * AWS SES
-* Unit test JUnit and Mockito
-* Integration test using test containers
+* Testing using JUnit, Mockito and Test Containers
 
 ### Schema
 Link for the most up-to-date schema.

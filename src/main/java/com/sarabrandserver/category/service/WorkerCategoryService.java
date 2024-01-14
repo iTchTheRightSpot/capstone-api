@@ -164,7 +164,7 @@ public class WorkerCategoryService {
         int d = this.categoryRepo.validateProductAttached(id);
 
         if (c > 0 || d > 0) {
-            throw new ResourceAttachedException("category has 1 or many products or sub-categoryId attached");
+            throw new ResourceAttachedException("category has 1 or many products or sub-category attached");
         }
 
         var category = findById(id);

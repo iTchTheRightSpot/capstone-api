@@ -4,7 +4,6 @@ import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.sarabrandserver.category.entity.ProductCategory;
-import com.sarabrandserver.category.projection.CategoryPojo;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.category.response.WorkerCategoryResponse;
@@ -136,11 +135,14 @@ public class WorkerCategoryService {
             throw new DuplicateException(dto.name() + " is a duplicate");
         }
 
-        // update all children categories to false
+        // update all children visibility to false
         if (!dto.visible()) {
-            for (CategoryPojo pojo : categoryRepo.all_categories_by_categoryId(dto.id())) {
-                categoryRepo.updateVisibility(pojo.getId(), false);
-            }
+            categoryRepo.updateAllChildrenToFalse(dto.id());
+        }
+
+        if (dto.parentId() != null) {
+            categoryRepo
+                    .update_category_parentId_based_on_categoryId(dto.id(), dto.parentId());
         }
 
         this.categoryRepo
@@ -162,7 +164,7 @@ public class WorkerCategoryService {
         int d = this.categoryRepo.validateProductAttached(id);
 
         if (c > 0 || d > 0) {
-            throw new ResourceAttachedException("Category has 1 or many products or sub-categoryId attached");
+            throw new ResourceAttachedException("category has 1 or many products or sub-categoryId attached");
         }
 
         var category = findById(id);
@@ -171,7 +173,7 @@ public class WorkerCategoryService {
 
     public ProductCategory findById(long id) {
         return this.categoryRepo.findById(id)
-                .orElseThrow(() -> new CustomNotFoundException("Product Category does not exist"));
+                .orElseThrow(() -> new CustomNotFoundException("does not exist"));
     }
 
 }

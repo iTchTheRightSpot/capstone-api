@@ -17,9 +17,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class CategoryRepositoryTest extends AbstractRepositoryTest {
 
@@ -234,7 +235,10 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    @DisplayName("validate categoryId has 1 or more sub-categoryId and products attached")
+    @DisplayName("""
+    validate categoryId has 1 or more sub-categoryId and products
+    attached.
+    """)
     void validateOnDelete() {
         var category = categoryRepo
                 .save(
@@ -277,7 +281,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     @DisplayName("""
-    Testing query to return all nested child subcategories based on id.
+    testing query to return all nested child subcategories based on id.
     Visibility for some subcategories are false. Admin front
     """)
     void all_categories_admin_front() {
@@ -394,6 +398,114 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                 );
 
         assertEquals(8, pojos.getNumberOfElements());
+    }
+
+    @Test
+    void updateAllChildrenVisibilityToFalse() {
+        // given
+        var category = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("category")
+                                .isVisible(true)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        var clothes = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("clothes")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+        var furniture = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("furniture")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        // when
+        categoryRepo.updateAllChildrenToFalse(category.getCategoryId());
+
+        // then
+        ProductCategory parent = categoryRepo
+                .findById(category.getCategoryId())
+                .orElse(null);
+        assertNotNull(parent);
+
+        ProductCategory child1 = categoryRepo
+                .findById(clothes.getCategoryId())
+                .orElse(null);
+        assertNotNull(child1);
+
+        ProductCategory child2 = categoryRepo
+                .findById(furniture.getCategoryId())
+                .orElse(null);
+        assertNotNull(child2);
+
+        assertTrue(parent.isVisible());
+        assertFalse(child1.isVisible());
+        assertFalse(child2.isVisible());
+    }
+
+    @Test
+    @DisplayName("""
+    tests custom query to update a ProductCategory
+    parentId
+    """)
+    void up () {
+        // given
+        var category = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("category")
+                                .isVisible(true)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        var clothes = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("clothes")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+        var collection = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("collection")
+                                .isVisible(true)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        // when
+        categoryRepo
+                .update_category_parentId_based_on_categoryId(
+                        clothes.getCategoryId(),
+                        collection.getCategoryId()
+                );
+
+        // then
+        assertEquals(0, categoryRepo.validate_category_is_a_parent(category.getCategoryId()));
+        assertEquals(0, categoryRepo.validate_category_is_a_parent(clothes.getCategoryId()));
+        assertEquals(1, categoryRepo.validate_category_is_a_parent(collection.getCategoryId()));
     }
 
 }

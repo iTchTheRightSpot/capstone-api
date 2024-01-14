@@ -97,10 +97,41 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
             @Param(value = "id") long id
     );
 
+    /**
+     * Using native sql query, method updates a {@code ProductCategory} parentId
+     * based on its categoryId
+     * */
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Transactional
-    @Query("UPDATE ProductCategory c SET c.isVisible = :visible WHERE c.categoryId = :id")
-    void updateVisibility(long id, boolean visible);
+    @Query(nativeQuery = true, value= """
+    UPDATE product_category c
+    SET c.parent_category_id = :parentId
+    WHERE c.category_id = :categoryId
+    """)
+    void update_category_parentId_based_on_categoryId(long categoryId, long parentId);
+
+    /**
+     * Using native sql query, we get all {@code ProductCategory} that have
+     * {@code parent_category_id} equalling {@param categoryId} and then update their
+     * visibility to false.
+     *
+     * @param categoryId is all {@code ProductCategory} who have their
+     *                   {@code parent_category_id} equalling.
+     * */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Transactional
+    @Query(nativeQuery = true, value = """
+    WITH RECURSIVE category (id) AS
+    (
+        SELECT c.category_id FROM product_category AS c WHERE c.parent_category_id = :categoryId
+        UNION ALL
+        SELECT pc.category_id FROM category cat INNER JOIN product_category pc ON cat.id = pc.parent_category_id
+    )
+    UPDATE product_category c, (SELECT rec.id FROM category rec) AS rec
+    SET c.is_visible = 0
+    WHERE c.category_id = rec.id
+    """)
+    void updateAllChildrenToFalse(long categoryId);
 
     @Query(value = """
     SELECT

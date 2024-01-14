@@ -140,7 +140,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
     void update() throws Exception {
         // Given
         var category = this.categoryRepository.findAll().getFirst();
-        var dto = new UpdateCategoryDTO(category.getCategoryId(), "Updated", category.isVisible());
+        var dto = new UpdateCategoryDTO(category.getCategoryId(), null, "Updated", category.isVisible());
 
         // Then
         this.MOCKMVC
@@ -160,7 +160,7 @@ class WorkerCategoryControllerTest extends AbstractIntegrationTest {
         var category = this.categoryRepository.findAll();
         var first = category.getFirst();
         var second = category.get(1);
-        var dto = new UpdateCategoryDTO(first.getCategoryId(), second.getName(), first.isVisible());
+        var dto = new UpdateCategoryDTO(first.getCategoryId(), null, second.getName(), first.isVisible());
 
         // then
         this.MOCKMVC

@@ -12,11 +12,14 @@ public record UpdateCategoryDTO(
         @JsonProperty(value = "category_id")
         Long id,
 
-        @NotNull(message = "cannot be empty")
-        @NotEmpty(message = "cannot be empty")
-        @Size(max = 50, message = "categoryId name cannot exceed length of 50")
-        String name,
+        @JsonProperty(value = "parent_id")
+        Long parentId,
 
         @NotNull(message = "cannot be empty")
+        @NotEmpty(message = "cannot be empty")
+        @Size(max = 50, message = "name cannot exceed length of 50")
+        String name,
+
+        @NotNull(message = "cannot be null")
         Boolean visible
 ) implements Serializable { }

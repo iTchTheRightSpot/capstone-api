@@ -9,8 +9,8 @@ import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,9 +18,10 @@ import org.springframework.beans.factory.annotation.Value;
 import java.util.HashSet;
 
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,8 +41,17 @@ class ClientCategoryControllerTest extends AbstractIntegrationTest {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    @BeforeEach
-    void before() {
+    @AfterEach
+    void after() {
+        productSkuRepo.deleteAll();
+        productDetailRepo.deleteAll();
+        productRepo.deleteAll();
+        categoryRepository.deleteAll();
+    }
+
+    @Test
+    @Order(2)
+    void allCategories() throws Exception {
         var category = categoryRepository
                 .save(
                         ProductCategory.builder()
@@ -67,18 +77,7 @@ class ClientCategoryControllerTest extends AbstractIntegrationTest {
                 );
 
         TestData.dummyProducts(clothes, 5, workerProductService);
-    }
 
-    @AfterEach
-    void after() {
-        productSkuRepo.deleteAll();
-        productDetailRepo.deleteAll();
-        productRepo.deleteAll();
-        categoryRepository.deleteAll();
-    }
-
-    @Test
-    void allCategories() throws Exception {
         this.MOCKMVC
                 .perform(get(requestParam).contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -88,14 +87,56 @@ class ClientCategoryControllerTest extends AbstractIntegrationTest {
 
     @Test
     @DisplayName(value = "All Products by categoryId id")
+    @Order(1)
     void productByCategory() throws Exception {
+        var category = categoryRepository
+                .save(
+                        ProductCategory.builder()
+                                .name("category")
+                                .isVisible(true)
+                                .parentCategory(null)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        TestData.dummyProducts(category, 2, workerProductService);
+
+        var clothes = categoryRepository
+                .save(
+                        ProductCategory.builder()
+                                .name("clothes")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        TestData.dummyProducts(clothes, 5, workerProductService);
+
+        var furniture = categoryRepository
+                .save(
+                        ProductCategory.builder()
+                                .name("furniture")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        TestData.dummyProducts(furniture, 1, workerProductService);
+
         // Given
-        var list = this.categoryRepository.findAll();
-        assertFalse(list.isEmpty());
+        ProductCategory id = this.categoryRepository
+                .findById(category.getCategoryId())
+                .orElse(null);
+        assertNotNull(id);
 
         this.MOCKMVC
                 .perform(get(requestParam + "/products")
-                        .param("category_id", String.valueOf(list.getFirst().getCategoryId()))
+                        .param("category_id", String.valueOf(id.getCategoryId()))
                         .contentType(APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())

@@ -20,17 +20,15 @@ public class ClientCategoryController {
 
     private final ClientCategoryService clientCategoryService;
 
-    /** Returns a list of parentId and child categories. */
     @ResponseStatus(OK)
     @GetMapping(produces = "application/json")
     public List<CategoryResponse> allCategories() {
         return this.clientCategoryService.allCategories();
     }
 
-    /** Returns a list of ProductResponse objects based on categoryId uuid */
     @ResponseStatus(OK)
     @GetMapping(path = "/products", produces = "application/json")
-    public Page<ProductResponse> fetchProductByCategory(
+    public Page<ProductResponse> allProductsByCategoryId(
             @NotNull @RequestParam(name = "category_id") Long id,
             @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam(name = "size", defaultValue = "20") Integer size,

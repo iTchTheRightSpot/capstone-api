@@ -2,16 +2,15 @@ package com.sarabrandserver;
 
 import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.service.AuthService;
+import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.entity.ProductCategory;
-import com.sarabrandserver.category.repository.CategoryRepository;
+import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.product.service.WorkerProductService;
 import com.sarabrandserver.user.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-
-import java.util.HashSet;
 
 @TestConfiguration(proxyBeanMethods = false)
 class DummyData {
@@ -20,87 +19,11 @@ class DummyData {
     public CommandLineRunner runner(
             AuthService authService,
             UserRepository repository,
-            CategoryRepository categoryRepository,
+            WorkerCategoryService catService,
             WorkerProductService workerProductService
     ) {
         return args -> {
-            var category = categoryRepository
-                    .save(
-                            ProductCategory.builder()
-                                    .name("category")
-                                    .isVisible(true)
-                                    .parentCategory(null)
-                                    .categories(new HashSet<>())
-                                    .product(new HashSet<>())
-                                    .build()
-                    );
-
-            TestData.dummyProducts(category, 2, workerProductService);
-
-            var clothes = categoryRepository
-                    .save(
-                            ProductCategory.builder()
-                                    .name("clothes")
-                                    .isVisible(true)
-                                    .parentCategory(category)
-                                    .categories(new HashSet<>())
-                                    .product(new HashSet<>())
-                                    .build()
-                    );
-
-            TestData.dummyProducts(clothes, 5, workerProductService);
-
-            var shirt = categoryRepository
-                    .save(
-                            ProductCategory.builder()
-                                    .name("t-shirt")
-                                    .isVisible(true)
-                                    .parentCategory(clothes)
-                                    .categories(new HashSet<>())
-                                    .product(new HashSet<>())
-                                    .build()
-                    );
-
-            TestData.dummyProducts(shirt, 10, workerProductService);
-
-            var furniture = categoryRepository
-                    .save(
-                            ProductCategory.builder()
-                                    .name("furniture")
-                                    .isVisible(true)
-                                    .parentCategory(category)
-                                    .categories(new HashSet<>())
-                                    .product(new HashSet<>())
-                                    .build()
-                    );
-
-            TestData.dummyProducts(furniture, 3, workerProductService);
-
-            var collection = categoryRepository
-                    .save(
-                            ProductCategory.builder()
-                                    .name("collection")
-                                    .isVisible(true)
-                                    .parentCategory(null)
-                                    .categories(new HashSet<>())
-                                    .product(new HashSet<>())
-                                    .build()
-                    );
-
-            TestData.dummyProducts(collection, 1, workerProductService);
-
-            var winter = categoryRepository
-                    .save(
-                            ProductCategory.builder()
-                                    .name("winter 2024")
-                                    .isVisible(true)
-                                    .parentCategory(collection)
-                                    .categories(new HashSet<>())
-                                    .product(new HashSet<>())
-                                    .build()
-                    );
-
-            TestData.dummyProducts(winter, 15, workerProductService);
+            extracted(catService, workerProductService);
 
             if (repository.findByPrincipal("admin@admin.com").isEmpty()) {
                 var dto = new RegisterDTO(
@@ -115,6 +38,44 @@ class DummyData {
             }
 
         };
+    }
+
+    private static void extracted(WorkerCategoryService catService, WorkerProductService service) {
+        var category = ProductCategory.builder()
+                .categoryId(1L)
+                .build();
+        catService.create(new CategoryDTO("category", true, null));
+        TestData.dummyProducts(category, 2, service);
+
+        var clothes = ProductCategory.builder()
+                .categoryId(2L)
+                .build();
+        catService.create(new CategoryDTO("clothes", true, 1L));
+        TestData.dummyProducts(clothes, 5, service);
+
+        var shirt = ProductCategory.builder()
+                .categoryId(3L)
+                .build();
+        catService.create(new CategoryDTO("t-shirt", true, 2L));
+        TestData.dummyProducts(shirt, 10, service);
+
+        var furniture = ProductCategory.builder()
+                .categoryId(4L)
+                .build();
+        catService.create(new CategoryDTO("furniture", true, null));
+        TestData.dummyProducts(furniture, 3, service);
+
+        var collection = ProductCategory.builder()
+                .categoryId(5L)
+                .build();
+        catService.create(new CategoryDTO("collection", true, null));
+        TestData.dummyProducts(collection, 1, service);
+
+        var winter = ProductCategory.builder()
+                .categoryId(6L)
+                .build();
+        catService.create(new CategoryDTO("winter 2024", true, 5L));
+        TestData.dummyProducts(winter, 15, service);
     }
 
 }

@@ -57,14 +57,19 @@ public class WorkerCategoryService {
     /**
      * Returns a page of {@code ProductResponse} based on categoryId
      *
-     * @param id {@code ProductCategory} categoryId
+     * @param categoryId {@code ProductCategory} categoryId
      * @param page pagination
      * @param size pagination
      * @return Page of {@code ProductResponse}
      * */
-    public Page<ProductResponse> allProductsByCategory(SarreCurrency currency, long id, int page, int size) {
+    public Page<ProductResponse> allProductsByCategoryId(
+            SarreCurrency currency,
+            long categoryId,
+            int page,
+            int size
+    ) {
         return this.categoryRepo
-                .allProductsByCategoryWorker(currency, id, PageRequest.of(page, size))
+                .allProductsByCategoryIdAdminFront(categoryId, currency, PageRequest.of(page, size))
                 .map(pojo -> {
                     var url = this.s3Service.preSignedUrl(this.BUCKET, pojo.getImage());
                     return ProductResponse.builder()

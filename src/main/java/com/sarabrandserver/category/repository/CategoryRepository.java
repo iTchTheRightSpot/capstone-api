@@ -137,14 +137,27 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     SELECT
     p.uuid as uuid,
     p.name as name,
-    (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
-    (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
-    p.defaultKey as image
+    p.defaultKey as image,
+    (
+        SELECT c.currency
+        FROM PriceCurrency c
+        WHERE c.productId = p.productId AND c.currency = :currency
+    ) AS currency,
+    (
+        SELECT c.price
+        FROM PriceCurrency c
+        WHERE c.productId = p.productId AND c.currency = :currency
+    ) AS price
     FROM Product p
     INNER JOIN ProductCategory c ON p.productCategory.categoryId = c.categoryId
-    WHERE c.categoryId = :id
+    WHERE c.categoryId = :categoryId
+    GROUP BY p.uuid, p.name, p.description, p.defaultKey
     """)
-    Page<ProductPojo> allProductsByCategoryWorker(SarreCurrency currency, long id, Pageable page);
+    Page<ProductPojo> allProductsByCategoryIdAdminFront(
+            long categoryId,
+            SarreCurrency currency,
+            Pageable page
+    );
 
     /**
      * Using native sql query, method returns all {@code Product} based on
@@ -166,17 +179,22 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     p.uuid AS uuid,
     p.name AS name,
     p.description AS description,
-    (SELECT c.currency FROM price_currency c WHERE p.product_id = c.product_id AND c.currency = :#{#currency.name()}) AS currency,
-    (SELECT c.price FROM price_currency c WHERE p.product_id = c.product_id AND c.currency = :#{#currency.name()}) AS price,
-    p.default_image_key AS image
+    p.default_image_key AS image,
+    pr.currency AS currency,
+    pr.price AS price
     FROM category c1
     INNER JOIN product p ON c1.id = p.category_id
+    INNER JOIN price_currency pr ON p.product_id = pr.product_id
     INNER JOIN product_detail d ON p.product_id = d.product_id
     INNER JOIN product_sku s ON d.detail_id = s.detail_id
-    WHERE d.is_visible = TRUE AND s.inventory > 0
-    GROUP BY p.uuid, p.name, p.description, p.default_image_key;
+    WHERE pr.currency = :#{#currency.name()} AND s.inventory > 0 AND d.is_visible = TRUE
+    GROUP BY p.uuid, p.name, p.description, p.default_image_key, pr.currency, pr.price
     """)
-    Page<ProductPojo> productsByCategoryId(long categoryId, SarreCurrency currency, Pageable page);
+    Page<ProductPojo> allProductsByCategoryIdWhereInStockAndIsVisible(
+            long categoryId,
+            SarreCurrency currency,
+            Pageable page
+    );
 
     /**
      * Using native sql query and Spring Data projection, method returns all
@@ -214,7 +232,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
         c1.status AS status
     FROM category c1;
     """)
-    List<CategoryPojo> all_categories_by_categoryId(long id);
+    List<CategoryPojo> allCategoriesByCategoryId(long id);
 
     @Query(value = """
     SELECT

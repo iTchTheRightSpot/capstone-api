@@ -47,7 +47,7 @@ public class ClientCategoryService {
             int size
     ) {
         return this.repository
-                .productsByCategoryId(id, currency, PageRequest.of(page, size)) //
+                .allProductsByCategoryIdWhereInStockAndIsVisible(id, currency, PageRequest.of(page, size)) //
                 .map(pojo -> {
                     var url = this.s3Service.preSignedUrl(BUCKET, pojo.getImage());
                     return ProductResponse.builder()

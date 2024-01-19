@@ -2,7 +2,6 @@ package com.sarabrandserver.category.controller;
 
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
-import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.category.response.WorkerCategoryResponse;
 import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.enumeration.SarreCurrency;
@@ -13,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -42,7 +39,7 @@ public class WorkerCategoryController {
     ) {
         var s =  SarreCurrency.valueOf(currency.toUpperCase());
         return this.workerCategoryService
-                .allProductsByCategory(s, id, page, Math.min(size, 20));
+                .allProductsByCategoryId(s, id, page, Math.min(size, 20));
     }
 
     @ResponseStatus(CREATED)

@@ -6,22 +6,20 @@ import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.entity.Product;
-import com.sarabrandserver.product.projection.ProductPojo;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Transactional
 class CategoryRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
@@ -30,12 +28,6 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     private ProductRepo productRepo;
     @Autowired
     private WorkerProductService productService;
-
-    @AfterEach
-    void after() {
-        categoryRepo.deleteAll();
-        productRepo.deleteAll();
-    }
 
     @Test
     void allCategories() {
@@ -333,17 +325,13 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         assertEquals(
                 3,
                 this.categoryRepo
-                        .all_categories_by_categoryId(category.getCategoryId())
+                        .allCategoriesByCategoryId(category.getCategoryId())
                         .size()
         );
     }
 
     @Test
-    @DisplayName("""
-    test custom query for returning all Products based
-    on ProductCategory and its children
-    """)
-    void productByCategoryId() {
+    void allProductsByCategoryIdWhereInStockAndIsVisible() {
         // given
         var category = categoryRepo
                 .save(
@@ -390,14 +378,23 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                     );
         }
 
-        Page<ProductPojo> pojos = categoryRepo
-                .productsByCategoryId(
+        var page = categoryRepo
+                .allProductsByCategoryIdWhereInStockAndIsVisible(
                         category.getCategoryId(),
                         SarreCurrency.USD,
                         PageRequest.of(0, 20)
                 );
 
-        assertEquals(8, pojos.getNumberOfElements());
+        assertEquals(8, page.getNumberOfElements());
+
+        var page1 = categoryRepo
+                .allProductsByCategoryIdWhereInStockAndIsVisible(
+                        clothes.getCategoryId(),
+                        SarreCurrency.USD,
+                        PageRequest.of(0, 20)
+                );
+
+        assertEquals(3, page1.getNumberOfElements());
     }
 
     @Test
@@ -506,6 +503,41 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         assertEquals(0, categoryRepo.validate_category_is_a_parent(category.getCategoryId()));
         assertEquals(0, categoryRepo.validate_category_is_a_parent(clothes.getCategoryId()));
         assertEquals(1, categoryRepo.validate_category_is_a_parent(collection.getCategoryId()));
+    }
+
+    @Test
+    void allProductsByCategoryIdAdminFront() {
+        // given
+        var category = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("category")
+                                .isVisible(true)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        for (int i = 0; i < 5; i++) {
+            productService
+                    .create(
+                            TestData.createProductDTO(
+                                    new Faker().commerce().productName() + i,
+                                    category.getCategoryId(),
+                                    TestData.sizeInventoryDTOArray(3)
+                            ),
+                            TestData.files()
+                    );
+        }
+
+        var page = categoryRepo
+                .allProductsByCategoryIdAdminFront(
+                        category.getCategoryId(),
+                        SarreCurrency.USD,
+                        PageRequest.of(0, 20)
+                );
+
+        assertEquals(5, page.getNumberOfElements());
     }
 
 }

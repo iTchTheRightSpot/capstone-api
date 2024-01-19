@@ -36,6 +36,12 @@ public class Product implements Serializable {
     @Column(name = "default_image_key", nullable = false)
     private String defaultKey;
 
+    @Column(nullable = false)
+    private double weight;
+
+    @Column(name = "weight_type")
+    private String weightType; // default injected in migration script
+
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "category_id", referencedColumnName = "category_id")
     private ProductCategory productCategory;

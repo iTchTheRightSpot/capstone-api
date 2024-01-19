@@ -23,4 +23,7 @@ public class ProductResponse {
     private String imageUrl;
     private String category;
     private String prize;
+    private double weight;
+    @JsonProperty(value = "weight_type")
+    private String weightType;
 }

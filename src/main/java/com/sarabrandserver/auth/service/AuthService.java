@@ -57,7 +57,7 @@ public class AuthService {
      */
     @Transactional
     public void workerRegister(RegisterDTO dto) {
-        var optionalUser = this.userRepository.workerExists(dto.email().trim());
+        var optionalUser = this.userRepository.findByPrincipal(dto.email().trim());
 
         if (optionalUser.isPresent() && optionalUser.get().getClientRole().stream()
                 .anyMatch(role -> role.getRole().equals(WORKER))

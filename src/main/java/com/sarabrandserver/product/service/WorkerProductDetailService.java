@@ -76,7 +76,7 @@ public class WorkerProductDetailService {
     @Transactional
     public void create(ProductDetailDTO dto, MultipartFile[] multipartFiles) {
         var product = this.productRepo
-                .findByProductUuid(dto.uuid())
+                .productByUuid(dto.uuid())
                 .orElseThrow(() -> new CustomNotFoundException("Product does not exist"));
 
         Optional<ProductDetail> exist = this.detailRepo.productDetailByColour(dto.colour());

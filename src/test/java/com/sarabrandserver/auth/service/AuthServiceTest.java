@@ -71,7 +71,7 @@ class AuthServiceTest extends AbstractUnitTest {
         );
 
         // When
-        when(this.userRepository.workerExists(anyString()))
+        when(this.userRepository.findByPrincipal(anyString()))
                 .thenReturn(Optional.empty());
 
         // Then
@@ -97,7 +97,8 @@ class AuthServiceTest extends AbstractUnitTest {
         );
 
         // When
-        when(this.userRepository.workerExists(anyString())).thenReturn(Optional.of(worker));
+        when(this.userRepository.findByPrincipal(anyString()))
+                .thenReturn(Optional.of(worker));
 
         // Then
         assertThrows(DuplicateException.class, () -> this.authService.workerRegister(dto));
@@ -121,7 +122,8 @@ class AuthServiceTest extends AbstractUnitTest {
         );
 
         // When
-        when(this.userRepository.workerExists(anyString())).thenReturn(Optional.of(client));
+        when(this.userRepository.findByPrincipal(anyString()))
+                .thenReturn(Optional.of(client));
 
         // Then
         this.authService.workerRegister(dto);

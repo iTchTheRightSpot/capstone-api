@@ -82,39 +82,24 @@ public class CustomUtil {
     /**
      * Converts from the amount to the lowest. E.g. converting from USD to cents
      * would be
-     * 1 cent = 0.01 usd
-     * x cent = 10 usd
-     * after cross multiplication,
-     * x = (10 / 0.01) or 1000 cents
+     * 1 dollar = 100 cents, so 1 cent is equal to 0.01 dollars.
+     *
+     * @param currencyConversion is the conversion rate to the lowest currency form
+     * @param currency to covert is of {@code SarreCurrency}.
+     * @param bigDecimal amount to convert to the lowest currency
+     *                   e.g. from NGN to KOBO
+     * @return {@code BigDecimal} amount converted to the lowest form.
      */
-    public static long convertCurrency(SarreCurrency currency, BigDecimal bigDecimal) {
+    public static BigDecimal convertCurrency(
+            final String currencyConversion,
+            final SarreCurrency currency,
+            final BigDecimal bigDecimal
+    ) {
+        final BigDecimal total = bigDecimal
+                .multiply(new BigDecimal(currencyConversion))
+                .setScale(2, FLOOR);
         return switch (currency) {
-            case NGN -> {
-                BigDecimal b = bigDecimal.setScale(2, FLOOR);
-                int compare = b.compareTo(ZERO);
-
-                if (compare == 0) {
-                    yield 0;
-                }
-
-                double d = b.doubleValue();
-                yield (long) d;
-
-            }
-            case USD -> {
-                // truncate without rounding and scale 2. meaning leave only 2 nums after .
-                BigDecimal b = bigDecimal.setScale(2, FLOOR);
-                int compare = b.compareTo(ZERO);
-
-                if (compare == 0) {
-                    yield 0;
-                }
-
-                // convert to whole number
-                // look in unit test class
-                double d = b.doubleValue() * 100;
-                yield (long) d;
-            }
+            case NGN, USD -> bigDecimal.compareTo(ZERO) == 0 ? bigDecimal : total;
         };
     }
 

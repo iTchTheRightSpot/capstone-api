@@ -2,14 +2,13 @@ package com.sarabrandserver.cart.repository;
 
 import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.enumeration.SarreCurrency;
-import com.sarabrandserver.order.projection.TotalPojo;
+import com.sarabrandserver.payment.projection.TotalPojo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,7 +49,8 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     @Query("""
     SELECT
     c.qty AS qty,
-    pc.price as price
+    pc.price AS price,
+    p.weight AS weight
     FROM CartItem c
     INNER JOIN ShoppingSession s ON c.shoppingSession.shoppingSessionId = s.shoppingSessionId
     INNER JOIN ProductSku ps ON c.sku = ps.sku

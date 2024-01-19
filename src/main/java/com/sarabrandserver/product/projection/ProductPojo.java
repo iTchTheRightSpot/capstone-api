@@ -10,5 +10,7 @@ public interface ProductPojo {
     BigDecimal getPrice();
     String getCurrency();
     String getImage();
+    Double getWeight();
+    String getWeightType();
     String getCategory();
 }

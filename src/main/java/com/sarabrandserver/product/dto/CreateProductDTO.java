@@ -22,6 +22,9 @@ public record CreateProductDTO(
         @NotEmpty(message = "Please enter product description")
         String desc,
 
+        @NotNull
+        Double weight,
+
         @NotNull(message = "cannot be empty")
         PriceCurrencyDTO[] priceCurrency,
 

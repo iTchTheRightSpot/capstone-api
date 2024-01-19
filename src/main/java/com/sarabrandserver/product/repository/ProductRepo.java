@@ -21,10 +21,10 @@ import java.util.Optional;
 public interface ProductRepo extends JpaRepository<Product, Long> {
 
     @Query(value = "SELECT p FROM Product p WHERE p.name = :name")
-    Optional<Product> findByProductName(@Param(value = "name") String name);
+    Optional<Product> productByName(@Param(value = "name") String name);
 
     @Query(value = "SELECT p FROM Product p WHERE p.uuid = :uuid")
-    Optional<Product> findByProductUuid(@Param(value = "uuid") String uuid);
+    Optional<Product> productByUuid(@Param(value = "uuid") String uuid);
 
     @Query(value = """
     SELECT COUNT (p.productId)
@@ -49,11 +49,13 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
     (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
     p.defaultKey AS image,
+    p.weight AS weight,
+    p.weightType AS weightType,
     cat.name AS category
     FROM Product p
     INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId
     """)
-    Page<ProductPojo> fetchAllProductsWorker(SarreCurrency currency, Pageable pageable);
+    Page<ProductPojo> allProductsAdminFront(SarreCurrency currency, Pageable pageable);
 
     /**
      * Returns a Product based non default currency
@@ -66,6 +68,8 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
     (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency ) AS price,
     p.defaultKey AS image,
+    p.weight AS weight,
+    p.weightType AS weightType,
     cat.name AS category
     FROM Product p
     INNER JOIN ProductCategory cat ON cat.categoryId = p.productCategory.categoryId
@@ -109,6 +113,8 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
     (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
     p.defaultKey AS image,
+    p.weight AS weight,
+    p.weightType AS weightType,
     cat.name AS category
     FROM Product p
     INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId

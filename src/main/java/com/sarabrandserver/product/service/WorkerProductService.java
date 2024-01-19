@@ -58,7 +58,7 @@ public class WorkerProductService {
      */
     public Page<ProductResponse> allProducts(SarreCurrency currency, int page, int size) {
         return this.productRepo
-                .fetchAllProductsWorker(currency, PageRequest.of(page, size))
+                .allProductsAdminFront(currency, PageRequest.of(page, size))
                 .map(pojo -> {
                     var url = this.helperService.preSignedURL(BUCKET, pojo.getImage());
                     return ProductResponse.builder()
@@ -69,6 +69,8 @@ public class WorkerProductService {
                             .price(pojo.getPrice())
                             .currency(pojo.getCurrency())
                             .imageUrl(url)
+                            .weight(pojo.getWeight())
+                            .weightType(pojo.getWeightType())
                             .build();
                 });
     }
@@ -92,7 +94,7 @@ public class WorkerProductService {
         var category = this.categoryService.findById(dto.categoryId());
 
         // throw error if product exits
-        if (this.productRepo.findByProductName(dto.name().trim()).isPresent()) {
+        if (this.productRepo.productByName(dto.name().trim()).isPresent()) {
             throw new DuplicateException(dto.name() + " exists");
         }
 
@@ -107,6 +109,7 @@ public class WorkerProductService {
                 .name(dto.name().trim())
                 .description(dto.desc().trim())
                 .defaultKey(defaultImageKey.toString())
+                .weight(dto.weight())
                 .productDetails(new HashSet<>())
                 .build();
 
@@ -180,7 +183,7 @@ public class WorkerProductService {
      */
     @Transactional
     public void delete(final String uuid) {
-        var product = this.productRepo.findByProductUuid(uuid)
+        var product = this.productRepo.productByUuid(uuid)
                 .orElseThrow(() -> new CustomNotFoundException(uuid + " does not exist"));
 
         if (this.productRepo.productDetailAttach(uuid) > 1 || this.skuService.itemBeenBought(uuid) > 0) {

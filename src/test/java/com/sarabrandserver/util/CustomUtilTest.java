@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CustomUtilTest extends AbstractUnitTest {
 
-    private record AmountConversion(BigDecimal given, long expected) { }
+    private record AmountConversion(BigDecimal given, BigDecimal expected) { }
 
     @Test
     void validate_contains_desired_currencies() {
@@ -50,40 +50,33 @@ class CustomUtilTest extends AbstractUnitTest {
     }
 
     @Test
-    @DisplayName(value = "validate conversion from usd to cents")
-    void cents() {
+    void fromNairaToKobo() {
         AmountConversion[] arr = {
-                new AmountConversion(new BigDecimal("0"), 0L),
-                new AmountConversion(new BigDecimal("0.00"), 0L),
-                new AmountConversion(new BigDecimal("0.010"), 1L),
-                new AmountConversion(new BigDecimal("0.013"), 1L),
-                new AmountConversion(new BigDecimal("0.015"), 1L),
-                new AmountConversion(new BigDecimal("0.0158"), 1L),
-                new AmountConversion(new BigDecimal("0.10"), 10L),
-                new AmountConversion(new BigDecimal("0.13"), 13L),
-                new AmountConversion(new BigDecimal("0.15"), 15L),
-                new AmountConversion(new BigDecimal("2"), 200L),
-                new AmountConversion(new BigDecimal("2.00"), 200L),
-                new AmountConversion(new BigDecimal("2.15"), 215L),
-                new AmountConversion(new BigDecimal("2.154"), 215L),
-                new AmountConversion(new BigDecimal("2.158"), 215L),
-                new AmountConversion(new BigDecimal("10"), 1000L),
-                new AmountConversion(new BigDecimal("10.50"), 1050L),
-                new AmountConversion(new BigDecimal("0.99"), 99L),
-                new AmountConversion(new BigDecimal("1.00"), 100),
-                new AmountConversion(new BigDecimal("9.19"), 919L),
-                new AmountConversion(new BigDecimal("10.50"), 1050L),
-                new AmountConversion(new BigDecimal("15.00"), 1500L),
-                new AmountConversion(new BigDecimal("100"), 10000L),
-                new AmountConversion(new BigDecimal("150"), 15000L),
-                new AmountConversion(new BigDecimal("550."), 55000L),
-                new AmountConversion(new BigDecimal("550.20"), 55020L),
-                new AmountConversion(new BigDecimal("1000000.50"), 100000050L),
+                new AmountConversion(new BigDecimal("0"), new BigDecimal("0")),
+                new AmountConversion(new BigDecimal("1"), new BigDecimal("0.32")),
+                new AmountConversion(new BigDecimal("20.00"), new BigDecimal("6.79")),
         };
 
         for (AmountConversion obj : arr) {
-            assertEquals(obj.expected(), CustomUtil.convertCurrency(USD, obj.given()));
-        } // end of for
+            assertEquals(obj.expected(), CustomUtil
+                    .convertCurrency("0.33993960073803103", USD, obj.given())
+            );
+        }
+    }
+
+    @Test
+    void fromUsdToCent() {
+        AmountConversion[] arr = {
+                new AmountConversion(new BigDecimal("0"), new BigDecimal("0")),
+                new AmountConversion(new BigDecimal("1"), new BigDecimal("0.01")),
+                new AmountConversion(new BigDecimal("20.00"), new BigDecimal("36258.82")),
+        };
+
+        for (AmountConversion obj : arr) {
+            assertEquals(obj.expected(), CustomUtil
+                    .convertCurrency("100", USD, obj.given())
+            );
+        }
     }
 
     @Test

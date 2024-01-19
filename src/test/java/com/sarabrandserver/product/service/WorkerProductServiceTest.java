@@ -62,7 +62,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
 
         // When
         when(this.categoryService.findById(anyLong())).thenReturn(category);
-        when(this.productRepo.findByProductName(anyString())).thenReturn(Optional.empty());
+        when(this.productRepo.productByName(anyString())).thenReturn(Optional.empty());
 
         // Then
         this.productService.create(dto, files);
@@ -84,7 +84,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
 
         // When
         when(this.categoryService.findById(anyLong())).thenReturn(category);
-        when(this.productRepo.findByProductName(anyString())).thenReturn(Optional.of(product));
+        when(this.productRepo.productByName(anyString())).thenReturn(Optional.of(product));
 
         // Then
         assertThrows(DuplicateException.class, () -> this.productService.create(dto, files));

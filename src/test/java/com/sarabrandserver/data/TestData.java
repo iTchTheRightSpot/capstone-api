@@ -107,6 +107,27 @@ public class TestData {
     }
 
     @NotNull
+    public static CreateProductDTO productDTOWeight(
+            long categoryId,
+            String productName,
+            SizeInventoryDTO[] dtos,
+            PriceCurrencyDTO[] pcDto,
+            String colour,
+            double weight
+    ) {
+        return new CreateProductDTO(
+                categoryId,
+                productName,
+                new Faker().lorem().fixedString(1000),
+                weight,
+                pcDto,
+                true,
+                dtos,
+                colour
+        );
+    }
+
+    @NotNull
     public static CreateProductDTO productDTO(
             long categoryId,
             String productName,
@@ -122,6 +143,7 @@ public class TestData {
                 categoryId,
                 productName,
                 new Faker().lorem().fixedString(1000),
+                new Faker().number().randomDouble(5, 0, 50),
                 arr,
                 true,
                 dtos,
@@ -167,6 +189,32 @@ public class TestData {
                                     new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "large")
                             },
                             new Faker().commerce().color() + " " + i
+                    );
+
+            service.create(data, images);
+        }
+    }
+
+    @NotNull
+    public static void dummyProductsTestTotalAmount(
+            ProductCategory cat,
+            PriceCurrencyDTO[] arr,
+            int numOfProducts,
+            int variantQty,
+            double weight,
+            WorkerProductService service
+    ) {
+        var images = TestData.files();
+
+        for (int i = 0; i < numOfProducts; i++) {
+            var data = TestData
+                    .productDTOWeight(
+                            cat.getCategoryId(),
+                            new Faker().commerce().productName() + " " + i,
+                            new SizeInventoryDTO[]{ new SizeInventoryDTO(variantQty, "medium") },
+                            arr,
+                            new Faker().commerce().color() + " " + i,
+                            weight
                     );
 
             service.create(data, images);

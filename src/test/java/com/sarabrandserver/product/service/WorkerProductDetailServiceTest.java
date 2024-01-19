@@ -56,7 +56,7 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
         var dto = TestData.productDetailDTO(product.getUuid(), "mat-black", dtos);
 
         // When
-        when(productRepo.findByProductUuid(anyString())).thenReturn(Optional.of(product));
+        when(productRepo.productByUuid(anyString())).thenReturn(Optional.of(product));
         when(detailRepo.productDetailByColour(anyString())).thenReturn(Optional.empty());
 
         // Then
@@ -75,7 +75,7 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
         var dto = TestData.productDetailDTO(product.getUuid(), detail.getColour(), dtos);
 
         // When
-        when(productRepo.findByProductUuid(anyString())).thenReturn(Optional.of(product));
+        when(productRepo.productByUuid(anyString())).thenReturn(Optional.of(product));
         when(detailRepo.productDetailByColour(anyString())).thenReturn(Optional.of(detail));
 
         // Then

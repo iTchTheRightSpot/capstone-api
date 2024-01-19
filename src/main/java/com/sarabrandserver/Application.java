@@ -3,7 +3,7 @@ package com.sarabrandserver;
 import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.service.AuthService;
 import com.sarabrandserver.graal.MyRuntimeHints;
-import com.sarabrandserver.order.dto.PayloadMapper;
+import com.sarabrandserver.payment.dto.PayloadMapper;
 import com.sarabrandserver.product.response.Variant;
 import com.sarabrandserver.thirdparty.PaymentCredentialObj;
 import com.sarabrandserver.user.repository.UserRepository;

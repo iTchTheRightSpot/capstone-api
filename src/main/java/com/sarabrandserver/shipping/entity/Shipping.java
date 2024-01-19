@@ -1,4 +1,4 @@
-package com.sarabrandserver.shipping;
+package com.sarabrandserver.shipping.entity;
 
 import com.sarabrandserver.enumeration.ShippingType;
 import jakarta.persistence.*;

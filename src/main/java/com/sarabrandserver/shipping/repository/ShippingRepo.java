@@ -1,6 +1,7 @@
-package com.sarabrandserver.shipping;
+package com.sarabrandserver.shipping.repository;
 
 import com.sarabrandserver.enumeration.ShippingType;
+import com.sarabrandserver.shipping.entity.Shipping;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

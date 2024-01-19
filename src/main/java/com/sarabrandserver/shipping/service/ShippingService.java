@@ -1,6 +1,10 @@
-package com.sarabrandserver.shipping;
+package com.sarabrandserver.shipping.service;
 
 import com.sarabrandserver.enumeration.ShippingType;
+import com.sarabrandserver.shipping.*;
+import com.sarabrandserver.shipping.dto.ShippingUpdateDto;
+import com.sarabrandserver.shipping.entity.Shipping;
+import com.sarabrandserver.shipping.repository.ShippingRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -1,8 +1,9 @@
-package com.sarabrandserver.shipping;
+package com.sarabrandserver.shipping.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 public record ShippingUpdateDto(
@@ -15,4 +16,4 @@ public record ShippingUpdateDto(
         @NotNull
         @JsonProperty("usd_price")
         BigDecimal usd
-) { }
+) implements Serializable { }

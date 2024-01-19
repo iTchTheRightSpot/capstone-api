@@ -1,7 +1,11 @@
-package com.sarabrandserver.shipping;
+package com.sarabrandserver.shipping.controller;
 
 import com.sarabrandserver.AbstractIntegrationTest;
 import com.sarabrandserver.enumeration.ShippingType;
+import com.sarabrandserver.shipping.ShippingDto;
+import com.sarabrandserver.shipping.dto.ShippingUpdateDto;
+import com.sarabrandserver.shipping.entity.Shipping;
+import com.sarabrandserver.shipping.repository.ShippingRepo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

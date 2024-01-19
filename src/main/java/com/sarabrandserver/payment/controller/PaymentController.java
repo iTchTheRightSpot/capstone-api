@@ -25,11 +25,11 @@ public class PaymentController {
     @PostMapping(produces = APPLICATION_JSON_VALUE)
     public PaymentResponse raceCondition(
             @NotNull @RequestParam(name = "currency") String currency,
-            @NotNull @RequestParam(name = "country") String county,
+            @NotNull @RequestParam(name = "country") String country,
             HttpServletRequest req
     ) {
         var sc = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.paymentService.raceCondition(req, county, sc);
+        return this.paymentService.raceCondition(req, country, sc);
     }
 
     /**

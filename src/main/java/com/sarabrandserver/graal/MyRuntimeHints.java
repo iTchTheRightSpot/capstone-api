@@ -14,6 +14,7 @@ import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.Variant;
 import com.sarabrandserver.shipping.ShippingDto;
 import com.sarabrandserver.shipping.ShippingResponse;
+import com.sarabrandserver.shipping.dto.ShippingUpdateDto;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 
@@ -60,6 +61,7 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
 
         // shipping
         hints.serialization().registerType(ShippingDto.class);
+        hints.serialization().registerType(ShippingUpdateDto.class);
         hints.serialization().registerType(ShippingResponse.class);
 
     }

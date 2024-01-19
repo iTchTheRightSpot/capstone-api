@@ -53,13 +53,13 @@ class CustomUtilTest extends AbstractUnitTest {
     void fromNairaToKobo() {
         AmountConversion[] arr = {
                 new AmountConversion(new BigDecimal("0"), new BigDecimal("0")),
-                new AmountConversion(new BigDecimal("1"), new BigDecimal("0.32")),
-                new AmountConversion(new BigDecimal("20.00"), new BigDecimal("6.79")),
+                new AmountConversion(new BigDecimal("1"), new BigDecimal("0.34")),
+                new AmountConversion(new BigDecimal("20.00"), new BigDecimal("6.80")),
         };
 
         for (AmountConversion obj : arr) {
             assertEquals(obj.expected(), CustomUtil
-                    .convertCurrency("0.33993960073803103", USD, obj.given())
+                    .convertCurrency("0.34", NGN, obj.given())
             );
         }
     }
@@ -68,8 +68,8 @@ class CustomUtilTest extends AbstractUnitTest {
     void fromUsdToCent() {
         AmountConversion[] arr = {
                 new AmountConversion(new BigDecimal("0"), new BigDecimal("0")),
-                new AmountConversion(new BigDecimal("1"), new BigDecimal("0.01")),
-                new AmountConversion(new BigDecimal("20.00"), new BigDecimal("36258.82")),
+                new AmountConversion(new BigDecimal("1"), new BigDecimal("100.00")),
+                new AmountConversion(new BigDecimal("20.00"), new BigDecimal("2000.00")),
         };
 
         for (AmountConversion obj : arr) {

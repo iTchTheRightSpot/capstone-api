@@ -106,14 +106,12 @@ public class AuthService {
      * @throws AuthenticationException is thrown when credentials do not exist,
      *                          bad credentials account is locked e.t.c.
      */
-    @Transactional
     public void login(
             RoleEnum key,
             LoginDTO dto,
             HttpServletRequest req,
             HttpServletResponse res
     ) {
-        // No need to re-authenticate if request contains valid jwt cookie
         if (_validateCookies(req, key)) {
             return;
         }
@@ -131,7 +129,6 @@ public class AuthService {
 
         String token = this.tokenService.generateToken(auth);
 
-        // wt cookie
         Cookie cookie = new Cookie(JSESSIONID, token);
         cookie.setMaxAge(MAXAGE);
         cookie.setHttpOnly(true);

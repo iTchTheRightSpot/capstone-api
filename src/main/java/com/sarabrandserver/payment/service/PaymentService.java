@@ -5,12 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.enumeration.ShippingType;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.OutOfStockException;
 import com.sarabrandserver.payment.entity.OrderReservation;
 import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.payment.response.PaymentResponse;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
+import com.sarabrandserver.shipping.Shipping;
+import com.sarabrandserver.shipping.ShippingRepo;
 import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
@@ -50,12 +53,8 @@ public class PaymentService {
     private String CART_COOKIE;
     @Value(value = "${cart.split}")
     private String SPLIT;
-    @Value("${shipping.usd.cost}")
-    private String shippingCostUSD;
     @Value("${sarre.usd.to.cent}")
     private String usdConversion;
-    @Value("${shipping.ngn.cost}")
-    private String shippingCostNGN;
     @Value("${sarre.ngn.to.kobo}")
     private String ngnConversion;
 
@@ -64,16 +63,23 @@ public class PaymentService {
     private final CartItemRepo cartItemRepo;
     private final OrderReservationRepo reservationRepo;
     private final ThirdPartyPaymentService thirdPartyService;
+    private final ShippingRepo shippingRepo;
 
     /**
      * Method helps prevent race condition or overselling by temporarily deducting
      * what is in the users cart with ProductSKU inventory.
-     * @param req is passed from the controller
-     * @param currency is currency customer wants to pay with
+     * @param req is passed from the {@code PaymentController}
+     * @param currency is is of {@code SarreCurrency}.
+     * @param country tells if user should be charged international or local fees.
      * @throws OutOfStockException if ProductSku inventory is negative
+     * @throws CustomNotFoundException if {@code Shipping} object is not found.
      * */
     @Transactional
-    public PaymentResponse raceCondition(HttpServletRequest req, SarreCurrency currency) {
+    public PaymentResponse raceCondition(
+            HttpServletRequest req,
+            final String country,
+            final SarreCurrency currency
+    ) {
         Cookie cookie = CustomUtil.cookie(req, CART_COOKIE);
 
         if (cookie == null) {
@@ -96,6 +102,7 @@ public class PaymentService {
         long toExpire = Instant.now().plus(bound, ChronoUnit.MINUTES).toEpochMilli();
         Date date = CustomUtil.toUTC(new Date(toExpire));
 
+        // race condition impl
         try {
             if (reservations.isEmpty()) {
                 for (CartItem c : cartItems) {
@@ -111,11 +118,25 @@ public class PaymentService {
             throw new OutOfStockException("an item in your cart is out of stock");
         }
 
+        // retrieve shipping cost
+        Shipping shipping = shippingRepo
+                .findByShippingType(
+                        country.equalsIgnoreCase("nigeria")
+                                ? ShippingType.LOCAL : ShippingType.INTERNATIONAL
+                )
+                .orElseThrow(() -> {
+                    log.error("error retrieving shipping details from raceCondition method");
+                    return new CustomNotFoundException(
+                            "an error occurred please try again or reach out to our customer service"
+                    );
+                });
+
         BigDecimal total = cartItemsTotal(sessionId, currency)
                 .add(currency.equals(SarreCurrency.USD)
-                        ? new BigDecimal(shippingCostUSD)
-                        : new BigDecimal(shippingCostNGN)
+                        ? shipping.usdPrice()
+                        : shipping.ngnPrice()
                 );
+
         var secret = this.thirdPartyService.payStackCredentials();
         return new PaymentResponse(
                 secret.pubKey(),

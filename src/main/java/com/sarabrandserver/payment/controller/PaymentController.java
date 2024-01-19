@@ -4,6 +4,7 @@ import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.payment.response.PaymentResponse;
 import com.sarabrandserver.payment.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,20 +22,21 @@ public class PaymentController {
      * Called before payment page appears
      * */
     @ResponseStatus(OK)
-    @GetMapping(produces = APPLICATION_JSON_VALUE)
+    @PostMapping(produces = APPLICATION_JSON_VALUE)
     public PaymentResponse raceCondition(
-            @RequestParam(name = "currency") String currency,
+            @NotNull @RequestParam(name = "currency") String currency,
+            @NotNull @RequestParam(name = "country") String county,
             HttpServletRequest req
     ) {
         var sc = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.paymentService.raceCondition(req, sc);
+        return this.paymentService.raceCondition(req, county, sc);
     }
 
     /**
      * Api called by third party service
      * */
     @ResponseStatus(OK)
-    @PostMapping
+    @PostMapping(path = "/webhook")
     public void order(HttpServletRequest req) {
         this.paymentService.order(req);
     }

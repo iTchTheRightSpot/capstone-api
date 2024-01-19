@@ -126,7 +126,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers(
                                 AntPathRequestMatcher
-                                        .antMatcher(HttpMethod.POST, "/" + this.BASEURL + "payment")
+                                        .antMatcher(HttpMethod.POST, "/" + this.BASEURL + "payment/webhook")
                         )
                         .csrfTokenRepository(csrfTokenRepository)
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())

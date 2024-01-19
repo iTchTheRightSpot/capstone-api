@@ -12,6 +12,8 @@ import com.sarabrandserver.payment.dto.SkuQtyDTO;
 import com.sarabrandserver.product.dto.*;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.Variant;
+import com.sarabrandserver.shipping.ShippingDto;
+import com.sarabrandserver.shipping.ShippingResponse;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 
@@ -55,6 +57,11 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
         hints.serialization().registerType(PaymentDTO.class);
         hints.serialization().registerType(OrderHistoryDTO.class);
         hints.serialization().registerType(SkuQtyDTO.class);
+
+        // shipping
+        hints.serialization().registerType(ShippingDto.class);
+        hints.serialization().registerType(ShippingResponse.class);
+
     }
 
 }

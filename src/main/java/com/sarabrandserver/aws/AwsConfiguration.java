@@ -57,7 +57,7 @@ public class AwsConfiguration {
 
     @Lazy
     @Bean
-    public static SecretsManagerClient secretsManagerClient() {
+    public static SecretsManagerClient secretsManager() {
         return SecretsManagerClient.builder()
                 .region(REGION)
                 .credentialsProvider(PROVIDER)

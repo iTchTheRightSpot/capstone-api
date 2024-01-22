@@ -21,7 +21,7 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     INNER JOIN OrderDetail o ON s.sku = o.sku
     WHERE s.sku = :sku
     """)
-    int itemBeenBought(String sku);
+    int skuHasBeenPurchased(String sku);
 
     @Query("""
     SELECT COUNT (s.skuId)
@@ -29,7 +29,7 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     INNER JOIN CartItem c ON s.sku = c.sku
     WHERE s.sku = :sku
     """)
-    int itemContainsCart(String sku);
+    int skuContainsInUserCart(String sku);
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -56,6 +56,6 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     s.inventory = (s.inventory + :qty)
     WHERE s.sku = :sku
     """)
-    void updateInventory(String sku, int qty);
+    void incrementInventory(String sku, int qty);
 
 }

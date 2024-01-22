@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.payment.dto.OrderHistoryDTO;
 import com.sarabrandserver.payment.dto.PayloadMapper;
-import com.sarabrandserver.payment.repository.OrderRepository;
+import com.sarabrandserver.payment.repository.OrderDetailRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,13 +25,13 @@ public class OrderService {
     @Value(value = "${aws.bucket}")
     private String BUCKET;
 
-    private final OrderRepository orderRepository;
+    private final OrderDetailRepository repository;
     private final S3Service s3Service;
     private final ObjectMapper objectMapper;
 
     public List<OrderHistoryDTO> orderHistory() {
         String principal = SecurityContextHolder.getContext().getAuthentication().getName();
-        return this.orderRepository
+        return this.repository
                 .orderHistoryByPrincipal(principal)
                 .stream()
                 .map(p -> {

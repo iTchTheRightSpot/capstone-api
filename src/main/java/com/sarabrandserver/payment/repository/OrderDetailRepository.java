@@ -12,7 +12,7 @@ import java.util.List;
  * Contains native query
  * */
 @Repository
-public interface OrderRepository extends JpaRepository<OrderDetail, Long> {
+public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> {
 
     @Query(nativeQuery = true, value = """
     SELECT

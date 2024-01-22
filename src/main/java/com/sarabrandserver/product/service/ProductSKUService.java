@@ -34,7 +34,7 @@ public class ProductSKUService {
      * */
     @Transactional
     public void delete(final String sku) {
-        if (this.productSkuRepo.itemContainsCart(sku) > 0 || this.productSkuRepo.itemBeenBought(sku) > 0) {
+        if (this.productSkuRepo.skuContainsInUserCart(sku) > 0 || this.productSkuRepo.skuHasBeenPurchased(sku) > 0) {
             throw new ResourceAttachedException("cannot delete item as it contains a users cart or order history");
         }
 
@@ -43,10 +43,10 @@ public class ProductSKUService {
     }
 
     public int itemBeenBought(final String sku) {
-        return this.productSkuRepo.itemBeenBought(sku);
+        return this.productSkuRepo.skuHasBeenPurchased(sku);
     }
 
-    public ProductSku productSkuBySKU(String sku) {
+    public ProductSku productSkuBySKU(final String sku) {
         return this.productSkuRepo
                 .findBySku(sku)
                 .orElseThrow(() -> new CustomNotFoundException("SKU %s does not exist".formatted(sku)));

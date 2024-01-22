@@ -1,15 +1,20 @@
-# Sarre The Brand
-Backend of Sarre The Brand.
+# About
+An ecommerce application. Note is still in development and it contains two branches. Master and dev.
+
+## Getting starter
+Pre-requisite docker installed
+on command line run `./mvnw clean spring-boot:test-run`
 
 ### Technologies
 * Java 21
 * Spring Boot 3.2.1
 * Flyway Migration
-* AWS RDS (MySQL)
-* AWS Secret manager
-* AWS EC2
-* AWS SES
-* Testing using JUnit, Mockito and Test Containers
+* AWS Java SDK v2
+* AWS S3Client
+* AWS S3Presigner
+* AWS SecretsManagerClient
+* Unit testing using JUnit and Mockito.
+* Integration and Repository testing using Test Containers.
 
 ### Schema
 Link for the most up-to-date schema.

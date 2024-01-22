@@ -233,7 +233,7 @@ public class PaymentService {
         for (Map.Entry<String, OrderReservation> entry : map.entrySet()) {
             OrderReservation r = entry.getValue();
             this.productSkuRepo
-                    .updateInventory(r.getSku(), r.getQty());
+                    .incrementInventory(r.getSku(), r.getQty());
             this.reservationRepo.deleteOrderReservationByReservationId(r.getReservationId());
         }
     }
@@ -316,7 +316,7 @@ public class PaymentService {
 
         for (OrderReservation r : list) {
             this.productSkuRepo
-                    .updateInventory(r.getSku(), r.getQty());
+                    .incrementInventory(r.getSku(), r.getQty());
             this.reservationRepo
                     .deleteOrderReservationByReservationId(r.getReservationId());
         }

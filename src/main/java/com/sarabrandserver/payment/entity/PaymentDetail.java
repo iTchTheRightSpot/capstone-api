@@ -37,8 +37,8 @@ public class PaymentDetail implements Serializable {
     @Column(nullable = false, length = 20)
     private String phone;
 
-    @Column(nullable = false, unique = true)
-    private String payment_id;
+    @Column(name = "payment_id", nullable = false, unique = true)
+    private String paymentId;
 
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)

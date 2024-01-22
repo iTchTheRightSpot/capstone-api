@@ -1,17 +1,20 @@
 package com.sarabrandserver.product.entity;
 
+import com.sarabrandserver.payment.entity.OrderDetail;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
+import java.util.Set;
 
+import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Table(name = "product_sku", indexes = @Index(name = "IX_product_sku_sku", columnList = "sku"))
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Getter
 @Setter
 public class ProductSku implements Serializable {
@@ -34,11 +37,7 @@ public class ProductSku implements Serializable {
     @JoinColumn(name = "detail_id", referencedColumnName = "detail_id", nullable = false)
     private ProductDetail productDetail;
 
-    public ProductSku(String sku, String size, int inventory, ProductDetail productDetail) {
-        this.sku = sku;
-        this.size = size;
-        this.inventory = inventory;
-        this.productDetail = productDetail;
-    }
+    @OneToMany(fetch = LAZY, cascade = ALL, mappedBy = "sku")
+    private Set<OrderDetail> orderDetail;
 
 }

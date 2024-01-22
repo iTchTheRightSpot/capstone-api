@@ -1,5 +1,6 @@
 package com.sarabrandserver.payment.entity;
 
+import com.sarabrandserver.product.entity.ProductSku;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,20 +20,21 @@ public class OrderDetail implements Serializable {
     @Column(name = "order_detail_id", nullable = false, unique = true)
     private Long orderDetailId;
 
-    @Column(name = "product_sku", nullable = false, length = 36)
-    private String sku; // translates to product_sku table
-
     @Column(nullable = false)
     private int qty;
 
     @ManyToOne
-    @JoinColumn(name = "payment_detail_id", referencedColumnName = "payment_detail_id")
+    @JoinColumn(name = "sku_id", referencedColumnName = "sku_id", nullable = false)
+    private ProductSku sku;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_detail_id", referencedColumnName = "payment_detail_id", nullable = false)
     private PaymentDetail paymentDetail;
 
-    public OrderDetail(String sku, int qty, PaymentDetail paymentDetail) {
-        this.sku = sku;
+    public OrderDetail(int qty, ProductSku sku, PaymentDetail detail) {
         this.qty = qty;
-        this.paymentDetail = paymentDetail;
+        this.sku = sku;
+        this.paymentDetail = detail;
     }
 
 }

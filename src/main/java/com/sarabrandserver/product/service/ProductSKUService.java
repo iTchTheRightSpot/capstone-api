@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.UUID;
 
 @Service
@@ -25,7 +26,15 @@ public class ProductSKUService {
     public void save(SizeInventoryDTO[] arr, ProductDetail detail) {
         for (var dto : arr) {
             this.productSkuRepo
-                    .save(new ProductSku(UUID.randomUUID().toString(), dto.size(), dto.qty(), detail));
+                    .save(
+                            ProductSku.builder()
+                                    .sku(UUID.randomUUID().toString())
+                                    .size(dto.size())
+                                    .inventory(dto.qty())
+                                    .productDetail(detail)
+                                    .orderDetail(new HashSet<>())
+                                    .build()
+                    );
         }
     }
 

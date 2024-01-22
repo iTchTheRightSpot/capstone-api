@@ -31,7 +31,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> 
     ']') AS detail
     FROM order_detail o
     INNER JOIN payment_detail p ON o.payment_detail_id = p.payment_detail_id
-    INNER JOIN product_sku s ON o.product_sku = s.sku
+    INNER JOIN product_sku s ON o.sku_id = s.sku_id
     INNER JOIN product_detail d ON s.detail_id = d.detail_id
     INNER JOIN product prod ON d.product_id = prod.product_id
     WHERE p.email = :principal

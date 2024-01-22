@@ -18,7 +18,7 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     @Query("""
     SELECT COUNT (s.skuId)
     FROM ProductSku s
-    INNER JOIN OrderDetail o ON s.sku = o.sku
+    INNER JOIN OrderDetail o ON s.skuId = o.sku.skuId
     WHERE s.sku = :sku
     """)
     int skuHasBeenPurchased(String sku);

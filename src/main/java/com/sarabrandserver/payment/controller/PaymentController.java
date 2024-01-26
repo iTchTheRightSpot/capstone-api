@@ -4,6 +4,7 @@ import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.payment.response.PaymentResponse;
 import com.sarabrandserver.payment.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ public class PaymentController {
     @PostMapping(produces = APPLICATION_JSON_VALUE)
     public PaymentResponse raceCondition(
             @NotNull @RequestParam(name = "currency") String currency,
-            @NotNull @RequestParam(name = "country") String country,
+            @NotNull @NotEmpty @RequestParam(name = "country") String country,
             HttpServletRequest req
     ) {
         var sc = SarreCurrency.valueOf(currency.toUpperCase());

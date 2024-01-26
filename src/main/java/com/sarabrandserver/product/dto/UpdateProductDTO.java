@@ -35,5 +35,8 @@ public record UpdateProductDTO(
 
         @JsonProperty(value = "category_id")
         @NotNull(message = "cannot be empty")
-        Long categoryId
+        Long categoryId,
+
+        @NotNull(message = "cannot be null")
+        Double weight
 ) implements Serializable { }

@@ -86,7 +86,7 @@ public class WorkerProductService {
      * @throws DuplicateException      is thrown if dto image exists in for Product
      */
     @Transactional
-    public void create(CreateProductDTO dto, MultipartFile[] files) {
+    public void create(final CreateProductDTO dto, final MultipartFile[] files) {
         if (!CustomUtil.validateContainsCurrencies(dto.priceCurrency())) {
             throw new CustomInvalidFormatException("please check currencies and prices");
         }
@@ -98,11 +98,11 @@ public class WorkerProductService {
             throw new DuplicateException(dto.name() + " exists");
         }
 
-        // Validate MultipartFile[] are all images
+        // validate MultipartFile[] are all images
         StringBuilder defaultImageKey = new StringBuilder();
         var file = this.helperService.customMultiPartFiles(files, defaultImageKey);
 
-        // Build Product
+        // build Product
         var p = Product.builder()
                 .productCategory(category)
                 .uuid(UUID.randomUUID().toString())
@@ -110,10 +110,11 @@ public class WorkerProductService {
                 .description(dto.desc().trim())
                 .defaultKey(defaultImageKey.toString())
                 .weight(dto.weight())
+                .weightType("kg")
                 .productDetails(new HashSet<>())
                 .build();
 
-        // Save Product
+        // save Product
         var product = this.productRepo.save(p);
 
         // save ngn & usd price
@@ -122,12 +123,12 @@ public class WorkerProductService {
         this.currencyRepo.save(new PriceCurrency(ngn, NGN, product));
         this.currencyRepo.save(new PriceCurrency(usd, USD, product));
 
-        // Save ProductDetails
+        // save ProductDetails
         var date = CustomUtil.toUTC(new Date());
         var detail = this.detailService.
                 productDetail(product, dto.colour(), dto.visible(), date);
 
-        // Save ProductSKUs
+        // save ProductSKUs
         this.skuService.save(dto.sizeInventory(), detail);
 
         // build and save ProductImages (save to s3)
@@ -148,7 +149,7 @@ public class WorkerProductService {
             throw new CustomInvalidFormatException("price cannot be zero");
         }
 
-        BigDecimal price = dto.price().setScale(2, RoundingMode.FLOOR);
+        var price = dto.price().setScale(2, RoundingMode.FLOOR);
 
         boolean bool = this.productRepo
                 .nameNotAssociatedToUuid(dto.uuid(), dto.name()) > 0;
@@ -164,7 +165,8 @@ public class WorkerProductService {
                         dto.uuid().trim(),
                         dto.name().trim(),
                         dto.desc().trim(),
-                        category
+                        category,
+                        dto.weight()
                 );
 
         // update price

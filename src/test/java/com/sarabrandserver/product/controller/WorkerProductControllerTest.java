@@ -351,8 +351,7 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
         this.MOCKMVC.perform(delete(requestMapping).param("id", product.getUuid()).with(csrf()))
                 .andExpect(status().isNoContent());
 
-        var del = this.productRepo.findById(product.getProductId()).orElse(null);
-        assertNull(del);
+        assertTrue(this.productRepo.findById(product.getProductId()).isEmpty());
     }
 
 }

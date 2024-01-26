@@ -170,7 +170,8 @@ public class TestData {
                 "ngn",
                 new BigDecimal(new Faker().number().numberBetween(1000, 700000)),
                 category,
-                categoryId
+                categoryId,
+                new Faker().number().randomDouble(5, 100, 100)
         );
     }
 

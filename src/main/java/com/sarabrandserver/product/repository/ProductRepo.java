@@ -87,14 +87,16 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     SET
     p.name = :name,
     p.description = :desc,
-    p.productCategory = :category
+    p.productCategory = :category,
+    p.weight = :weight
     WHERE p.uuid = :uuid
     """)
     void updateProduct(
             @Param(value = "uuid") String uuid,
             @Param(value = "name") String name,
             @Param(value = "desc") String desc,
-            @Param(value = "category") ProductCategory category
+            @Param(value = "category") ProductCategory category,
+            double weight
     );
 
     @Query(value = """

@@ -1,6 +1,5 @@
 package com.sarabrandserver.payment.dto;
 
-import com.sarabrandserver.address.AddressDTO;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 

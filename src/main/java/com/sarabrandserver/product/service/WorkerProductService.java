@@ -165,8 +165,8 @@ public class WorkerProductService {
                         dto.uuid().trim(),
                         dto.name().trim(),
                         dto.desc().trim(),
-                        category,
-                        dto.weight()
+                        dto.weight(),
+                        category
                 );
 
         // update price

@@ -44,7 +44,7 @@ public class JwtTokenService {
      * @param authentication of type org.springframework.security.core
      * @return String which is jwt
      * */
-    public String generateToken(Authentication authentication) {
+    public String generateToken(@NotNull final Authentication authentication) {
         Instant now = Instant.now();
 
         String[] role = authentication.getAuthorities() //
@@ -66,9 +66,8 @@ public class JwtTokenService {
     /**
      * Validates if jwt token is valid and it matches chosen role
      * */
-    public boolean matchesRole(@NotNull final Cookie cookie, RoleEnum role) {
+    public boolean matchesRole(@NotNull final Cookie cookie, @NotNull final RoleEnum role) {
         try {
-            // TODO
             return this.jwtDecoder
                     .decode(cookie.getValue()) //
                     .getClaims() //

@@ -114,8 +114,8 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                         anyString(),
                         anyString(),
                         anyString(),
-                        any(ProductCategory.class),
-                        anyDouble()
+                        anyDouble(),
+                        any(ProductCategory.class)
                 );
     }
 
@@ -142,8 +142,8 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                         anyString(),
                         anyString(),
                         anyString(),
-                        any(ProductCategory.class),
-                        anyDouble()
+                        anyDouble(),
+                        any(ProductCategory.class)
                 );
     }
 

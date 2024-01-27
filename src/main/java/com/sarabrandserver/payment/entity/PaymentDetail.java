@@ -1,6 +1,5 @@
 package com.sarabrandserver.payment.entity;
 
-import com.sarabrandserver.address.Address;
 import com.sarabrandserver.enumeration.PaymentStatus;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import jakarta.persistence.*;

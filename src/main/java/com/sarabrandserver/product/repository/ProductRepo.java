@@ -95,8 +95,8 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             @Param(value = "uuid") String uuid,
             @Param(value = "name") String name,
             @Param(value = "desc") String desc,
-            @Param(value = "category") ProductCategory category,
-            double weight
+            @Param(value = "weight") double weight,
+            @Param(value = "category") ProductCategory category
     );
 
     @Query(value = """

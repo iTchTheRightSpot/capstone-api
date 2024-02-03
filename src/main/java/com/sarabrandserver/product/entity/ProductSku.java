@@ -1,6 +1,8 @@
 package com.sarabrandserver.product.entity;
 
+import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.payment.entity.OrderDetail;
+import com.sarabrandserver.payment.entity.OrderReservation;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -39,5 +41,11 @@ public class ProductSku implements Serializable {
 
     @OneToMany(fetch = LAZY, cascade = ALL, mappedBy = "sku")
     private Set<OrderDetail> orderDetail;
+
+    @OneToMany(fetch = LAZY, cascade = ALL, mappedBy = "productSku")
+    private Set<OrderReservation> reservations;
+
+    @OneToMany(fetch = LAZY, cascade = ALL, mappedBy = "productSku")
+    private Set<CartItem> cartItems;
 
 }

@@ -34,22 +34,24 @@ public interface ShoppingSessionRepo extends JpaRepository<ShoppingSession, Long
     s.shoppingSessionId AS session,
     p.defaultKey AS key,
     p.name AS name,
-    (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
-    (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
+    cur.currency AS currency,
+    cur.price AS price,
     d.colour AS colour,
     ps.size AS size,
     ps.sku AS sku,
     c.qty AS qty
     FROM ShoppingSession s
     INNER JOIN CartItem c ON s.shoppingSessionId = c.shoppingSession.shoppingSessionId
-    INNER JOIN ProductSku ps ON ps.sku = c.sku
+    INNER JOIN ProductSku ps ON c.productSku.skuId = ps.skuId
     INNER JOIN ProductDetail d ON ps.productDetail.productDetailId = d.productDetailId
     INNER JOIN Product p ON d.product.productId = p.productId
-    WHERE s.cookie = :cookie
+    INNER JOIN PriceCurrency cur ON p.productId = cur.product.productId
+    WHERE s.cookie = :cookie AND cur.currency = :currency
+    GROUP BY p.uuid, s.shoppingSessionId, p.defaultKey, p.name, cur.currency, cur.price, d.colour, ps.size, ps.sku, c.qty
     """)
     List<CartPojo> cartItemsByCookieValue(SarreCurrency currency, String cookie);
 
     @Query("SELECT s FROM ShoppingSession s WHERE s.expireAt <= :d")
-    List<ShoppingSession> allByExpiry(Date d);
+    List<ShoppingSession> allExpiredShoppingSession(Date d);
 
 }

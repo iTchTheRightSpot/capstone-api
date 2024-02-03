@@ -99,7 +99,8 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
                         .isVisible(true)
                         .categories(new HashSet<>())
                         .product(new HashSet<>())
-                        .build());
+                        .build()
+                );
 
         productService
                 .create(

@@ -1,6 +1,8 @@
 package com.sarabrandserver.payment.entity;
 
+import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.enumeration.ReservationStatus;
+import com.sarabrandserver.product.entity.ProductSku;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,12 +22,6 @@ public class OrderReservation {
     @Column(name = "reservation_id", nullable = false, unique = true)
     private Long reservationId;
 
-    @Column(nullable = false, length = 39)
-    private String cookie; // translates to ShoppingSession cookie table
-
-    @Column(nullable = false, length = 36)
-    private String sku; // translates to product_sku table
-
     @Column(nullable = false)
     private int qty;
 
@@ -36,12 +32,26 @@ public class OrderReservation {
     @Column(name = "expire_at", nullable = false)
     private Date expireAt;
 
-    public OrderReservation(String cookie, String sku, int qty, ReservationStatus status, Date expireAt) {
-        this.cookie = cookie;
-        this.sku = sku;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "sku_id", referencedColumnName = "sku_id", nullable = false)
+    private ProductSku productSku;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "session_id", referencedColumnName = "session_id", nullable = false)
+    private ShoppingSession shoppingSession;
+
+    public OrderReservation(
+            int qty,
+            ReservationStatus status,
+            Date expireAt,
+            ProductSku sku,
+            ShoppingSession session
+    ) {
         this.qty = qty;
         this.status = status;
         this.expireAt = expireAt;
+        this.productSku = sku;
+        this.shoppingSession = session;
     }
 
 }

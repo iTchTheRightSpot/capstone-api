@@ -61,10 +61,11 @@ ALTER TABLE product_sku
 CREATE TABLE IF NOT EXISTS order_reservation
 (
     reservation_id BIGINT      NOT NULL UNIQUE AUTO_INCREMENT,
-    cookie VARCHAR(39) NOT NULL,
     sku            VARCHAR(36) NOT NULL,
     qty            INTEGER     NOT NULL,
     status         VARCHAR(10) NOT NULL,
     expire_at      DATETIME    NOT NULL,
-    PRIMARY KEY (reservation_id)
+    session_id BIGINT NOT NULL,
+    PRIMARY KEY (reservation_id),
+    FOREIGN KEY (session_id) REFERENCES shopping_session (session_id) ON DELETE RESTRICT
 );

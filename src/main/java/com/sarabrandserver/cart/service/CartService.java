@@ -11,6 +11,7 @@ import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomInvalidFormatException;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.OutOfStockException;
+import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.service.ProductSKUService;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
@@ -160,9 +161,9 @@ public class CartService {
             throw new CustomNotFoundException("No cookie found. Kindly refresh window");
         }
 
-        var qty = this.productSKUService
-                .productSkuBySKU(dto.sku())
-                .getInventory();
+        var productSku = this.productSKUService.productSkuBySKU(dto.sku());
+
+        int qty = productSku.getInventory();
 
         if (qty <= 0 || dto.qty() > qty) {
             throw new OutOfStockException("Product or selected quantity is out of stock.");
@@ -170,10 +171,10 @@ public class CartService {
 
         String[] arr = cookie.getValue().split(this.split);
 
-        Optional<ShoppingSession> optional = this.shoppingSessionRepo
+        Optional<ShoppingSession> session = this.shoppingSessionRepo
                 .shoppingSessionByCookie(arr[0]);
 
-        if (optional.isEmpty()) {
+        if (session.isEmpty()) {
             Date date;
 
             try {
@@ -184,42 +185,44 @@ public class CartService {
                 throw new CustomInvalidFormatException("invalid cookie");
             }
 
-            create_new_shopping_session(arr[0], date, dto);
+            create_new_shopping_session(arr[0], date, dto.qty(), productSku);
         } else {
-            add_to_existing_shopping_session(optional.get(), dto);
+            add_to_existing_shopping_session(session.get(), dto.qty(), productSku);
         }
     }
 
     /**
      * Creates a new shopping session
      */
-    public void create_new_shopping_session(String uuid, Date expiration, CartDTO dto) {
-        var temp = new ShoppingSession(
-                uuid,
-                CustomUtil.toUTC(new Date()),
-                CustomUtil.toUTC(expiration),
-                new HashSet<>()
-        );
+    private void create_new_shopping_session(String cookie, Date expiration, int qty, ProductSku sku) {
+        var session = this.shoppingSessionRepo
+                .save(
+                        new ShoppingSession(
+                                cookie,
+                                CustomUtil.toUTC(new Date()),
+                                CustomUtil.toUTC(expiration),
+                                new HashSet<>(),
+                                new HashSet<>()
+                        )
+                );
 
-        var shoppingSession = this.shoppingSessionRepo.save(temp);
-
-        this.cartItemRepo.save(new CartItem(dto.qty(), dto.sku(), shoppingSession));
+        this.cartItemRepo.save(new CartItem(qty, session, sku));
     }
 
     /**
      * Creates or updates a CartItem
      */
-    public void add_to_existing_shopping_session(ShoppingSession session, CartDTO dto) {
-        CartItem cart = this.cartItemRepo
-                .cart_item_by_shopping_session_id_and_sku(session.getShoppingSessionId(), dto.sku())
-                .orElse(null);
+    private void add_to_existing_shopping_session(ShoppingSession session, int qty, ProductSku sku) {
+        Optional<CartItem> cart = session.getCartItems()
+                .stream()
+                .filter(c -> c.getProductSku().getSku().equals(sku.getSku()))
+                .findFirst();
 
-        if (cart == null) {
-            // create new cart
-            this.cartItemRepo.save(new CartItem(dto.qty(), dto.sku(), session));
+        if (cart.isEmpty()) {
+            this.cartItemRepo.save(new CartItem(qty, session, sku));
         } else {
             // update quantity if cart is present
-            this.cartItemRepo.updateCartQtyByCartId(cart.getCartId(), dto.qty());
+            this.cartItemRepo.updateCartQtyByCartId(cart.get().getCartId(), qty);
         }
     }
 
@@ -253,7 +256,7 @@ public class CartService {
 
     public void delete() {
         Date date = CustomUtil.toUTC(new Date());
-        var list = this.shoppingSessionRepo.allByExpiry(date);
+        var list = this.shoppingSessionRepo.allExpiredShoppingSession(date);
 
         // delete children
         for (ShoppingSession s : list) {

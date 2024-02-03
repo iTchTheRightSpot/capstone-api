@@ -1,5 +1,6 @@
 package com.sarabrandserver.cart.entity;
 
+import com.sarabrandserver.payment.entity.OrderReservation;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,6 +10,7 @@ import java.util.Date;
 import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
+import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 import static jakarta.persistence.TemporalType.TIMESTAMP;
 
@@ -35,14 +37,24 @@ public class ShoppingSession {
     @Temporal(TIMESTAMP)
     private Date expireAt;
 
-    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "shoppingSession", orphanRemoval = true)
+    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "shoppingSession", orphanRemoval = true)
     private Set<CartItem> cartItems;
 
-    public ShoppingSession(String cookie, Date createAt, Date expireAt, Set<CartItem> cartItems) {
+    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "shoppingSession", orphanRemoval = true)
+    private Set<OrderReservation> reservations;
+
+    public ShoppingSession(
+            String cookie,
+            Date createAt,
+            Date expireAt,
+            Set<CartItem> cartItems,
+            Set<OrderReservation> reservations
+    ) {
         this.cookie = cookie;
         this.createAt = createAt;
         this.expireAt = expireAt;
         this.cartItems = cartItems;
+        this.reservations = reservations;
     }
 
 }

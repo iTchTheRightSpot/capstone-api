@@ -3,7 +3,9 @@ package com.sarabrandserver.payment.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.cart.entity.CartItem;
+import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.cart.repository.CartItemRepo;
+import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.enumeration.ShippingType;
 import com.sarabrandserver.exception.CustomNotFoundException;
@@ -59,6 +61,7 @@ public class PaymentService {
     private String ngnConversion;
 
     private final ProductSkuRepo productSkuRepo;
+    private final ShoppingSessionRepo shoppingSessionRepo;
     private final ObjectMapper objectMapper;
     private final CartItemRepo cartItemRepo;
     private final OrderReservationRepo reservationRepo;
@@ -68,6 +71,7 @@ public class PaymentService {
     /**
      * Method helps prevent race condition or overselling by temporarily deducting
      * what is in the users cart with ProductSKU inventory.
+     *
      * @param req is passed from the {@code PaymentController}
      * @param currency is is of {@code SarreCurrency}.
      * @param country tells if user should be charged international or local fees.
@@ -88,16 +92,14 @@ public class PaymentService {
 
         String sessionId = cookie.getValue().split(this.SPLIT)[0];
 
-        var cartItems = this.cartItemRepo
-                .cart_items_by_shopping_session_cookie(sessionId);
+        var session = shoppingSessionRepo.shoppingSessionByCookie(sessionId);
 
-        if (cartItems.isEmpty()) {
+        if (session.isEmpty()) {
             throw new CustomNotFoundException("invalid shopping session");
         }
 
-        // retrieve all pending OrderReservation
         var reservations = this.reservationRepo
-                .orderReservationByCookie(sessionId, PENDING);
+                .allPendingNoneExpiredReservations(CustomUtil.toUTC(new Date()), PENDING);
 
         long toExpire = Instant.now().plus(bound, ChronoUnit.MINUTES).toEpochMilli();
         Date date = CustomUtil.toUTC(new Date(toExpire));
@@ -105,14 +107,30 @@ public class PaymentService {
         // race condition impl
         try {
             if (reservations.isEmpty()) {
-                for (CartItem c : cartItems) {
+                for (CartItem cart : session.get().getCartItems()) {
+                    if (cart.quantityIsGreaterThanProductSkuInventory()) {
+                        throw new OutOfStockException("an item in your cart is out of stock");
+                    }
+
                     this.productSkuRepo
-                            .updateInventoryOnMakingReservation(c.getSku(), c.getQty());
+                            .updateInventoryOnMakingReservation(cart.getProductSku().getSku(), cart.getQty());
                     this.reservationRepo
-                            .save(new OrderReservation(sessionId, c.getSku(), c.getQty(), PENDING, date));
+                            .save(new OrderReservation(
+                                            cart.getQty(),
+                                            PENDING,
+                                            date,
+                                            cart.getProductSku(),
+                                            session.get()
+                                    )
+                            );
                 }
             } else {
-                onPendingReservationsNotEmpty(sessionId, date, reservations, cartItems);
+                onPendingReservationsNotEmpty(
+                        session.get(),
+                        date,
+                        reservations,
+                        session.get().getCartItems().stream().toList()
+                );
             }
         } catch (Exception e) {
             throw new OutOfStockException("an item in your cart is out of stock");
@@ -182,20 +200,28 @@ public class PaymentService {
      * @param date The current date.
      * @param reservations List of {@code OrderReservation} objects representing pending reservations.
      * @param cartItems List of {@code CartItem} objects representing items in the shopping cart.
-     * @param sessionId The ShoppingSession cookie associated with the cart items.
+     * @param session is of {@code ShoppingSession}
      * */
     private void onPendingReservationsNotEmpty(
-            String sessionId,
+            ShoppingSession session,
             Date date,
             List<OrderReservation> reservations,
             List<CartItem> cartItems
     ) {
-        Map<String, OrderReservation> map = reservations.stream()
-                .collect(Collectors.toMap(OrderReservation::getSku, orderReservation -> orderReservation));
+        Map<String, OrderReservation> map = reservations
+                .stream()
+                .collect(Collectors.toMap(
+                        reservation -> reservation.getProductSku().getSku(),
+                        orderReservation -> orderReservation)
+                );
 
         for (CartItem cart : cartItems) {
-            if (map.containsKey(cart.getSku())) {
-                OrderReservation reservation = map.get(cart.getSku());
+            if (cart.quantityIsGreaterThanProductSkuInventory()) {
+                throw new OutOfStockException("an item in your cart is out of stock");
+            }
+
+            if (map.containsKey(cart.getProductSku().getSku())) {
+                OrderReservation reservation = map.get(cart.getProductSku().getSku());
 
                 if (cart.getQty() > reservation.getQty()) {
                     this.reservationRepo
@@ -203,8 +229,8 @@ public class PaymentService {
                                     cart.getQty() - reservation.getQty(),
                                     cart.getQty(),
                                     date,
-                                    sessionId,
-                                    cart.getSku(),
+                                    session.getCookie(),
+                                    cart.getProductSku().getSku(),
                                     PENDING
                             );
                 } else if (cart.getQty() < reservation.getQty()) {
@@ -213,27 +239,25 @@ public class PaymentService {
                                     reservation.getQty() - cart.getQty(),
                                     cart.getQty(),
                                     date,
-                                    sessionId,
-                                    cart.getSku(),
+                                    session.getCookie(),
+                                    cart.getProductSku().getSku(),
                                     PENDING
                             );
                 }
 
-                map.remove(cart.getSku());
+                map.remove(cart.getProductSku().getSku());
             } else {
-
-
                 this.productSkuRepo
-                        .updateInventoryOnMakingReservation(cart.getSku(), cart.getQty());
+                        .updateInventoryOnMakingReservation(cart.getProductSku().getSku(), cart.getQty());
                 this.reservationRepo
-                        .save(new OrderReservation(sessionId, cart.getSku(), cart.getQty(), PENDING, date));
+                        .save(new OrderReservation(cart.getQty(), PENDING, date, cart.getProductSku(), session));
             }
         }
 
         for (Map.Entry<String, OrderReservation> entry : map.entrySet()) {
             OrderReservation r = entry.getValue();
             this.productSkuRepo
-                    .incrementInventory(r.getSku(), r.getQty());
+                    .incrementInventory(r.getProductSku().getSku(), r.getQty());
             this.reservationRepo.deleteOrderReservationByReservationId(r.getReservationId());
         }
     }
@@ -316,7 +340,7 @@ public class PaymentService {
 
         for (OrderReservation r : list) {
             this.productSkuRepo
-                    .incrementInventory(r.getSku(), r.getQty());
+                    .incrementInventory(r.getProductSku().getSku(), r.getQty());
             this.reservationRepo
                     .deleteOrderReservationByReservationId(r.getReservationId());
         }

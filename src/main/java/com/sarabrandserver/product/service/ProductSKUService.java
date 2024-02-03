@@ -33,6 +33,8 @@ public class ProductSKUService {
                                     .inventory(dto.qty())
                                     .productDetail(detail)
                                     .orderDetail(new HashSet<>())
+                                    .reservations(new HashSet<>())
+                                    .cartItems(new HashSet<>())
                                     .build()
                     );
         }
@@ -43,8 +45,12 @@ public class ProductSKUService {
      * */
     @Transactional
     public void delete(final String sku) {
-        if (this.productSkuRepo.skuContainsInUserCart(sku) > 0 || this.productSkuRepo.skuHasBeenPurchased(sku) > 0) {
-            throw new ResourceAttachedException("cannot delete item as it contains a users cart or order history");
+        if (this.productSkuRepo.skuContainsInUserCart(sku) > 0
+                || this.productSkuRepo.skuHasBeenPurchased(sku) > 0
+        ) {
+            throw new ResourceAttachedException(
+                    "cannot delete item as it contains a users cart or order history"
+            );
         }
 
         var obj = productSkuBySKU(sku);
@@ -58,7 +64,7 @@ public class ProductSKUService {
     public ProductSku productSkuBySKU(final String sku) {
         return this.productSkuRepo
                 .findBySku(sku)
-                .orElseThrow(() -> new CustomNotFoundException("SKU %s does not exist".formatted(sku)));
+                .orElseThrow(() -> new CustomNotFoundException("sku %s does not exist".formatted(sku)));
     }
 
 }

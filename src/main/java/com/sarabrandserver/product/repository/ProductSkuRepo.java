@@ -26,7 +26,7 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     @Query("""
     SELECT COUNT (s.skuId)
     FROM ProductSku s
-    INNER JOIN CartItem c ON s.sku = c.sku
+    INNER JOIN CartItem c ON s.skuId = c.productSku.skuId
     WHERE s.sku = :sku
     """)
     int skuContainsInUserCart(String sku);

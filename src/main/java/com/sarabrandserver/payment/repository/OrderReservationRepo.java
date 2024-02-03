@@ -18,19 +18,17 @@ import java.util.List;
 @Repository
 public interface OrderReservationRepo extends JpaRepository<OrderReservation, Long> {
 
-    @Query("SELECT o FROM OrderReservation o WHERE o.cookie = :cookie AND o.status = :status")
-    List<OrderReservation> orderReservationByCookie(String cookie, ReservationStatus status);
-
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(nativeQuery = true, value = """
     UPDATE product_sku s
-    INNER JOIN order_reservation o ON s.sku = o.sku
+    INNER JOIN order_reservation o ON s.sku_id = o.sku_id
+    INNER JOIN shopping_session sh ON o.session_id = sh.session_id
     SET
     s.inventory = (s.inventory - :productSkuQty),
     o.qty = :reservationQty,
     o.expire_at = :expire
-    WHERE s.sku = :sku AND o.cookie = :cookie AND o.status = :#{#status.name()}
+    WHERE s.sku = :sku AND sh.cookie = :cookie AND o.status = :#{#status.name()}
     """)
     void onSub(
             int productSkuQty,
@@ -45,12 +43,13 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(nativeQuery = true, value = """
     UPDATE product_sku s
-    INNER JOIN order_reservation o ON s.sku = o.sku
+    INNER JOIN order_reservation o ON s.sku_id = o.sku_id
+    INNER JOIN shopping_session sh ON o.session_id = sh.session_id
     SET
     s.inventory = (s.inventory + :productSkuQty),
     o.qty = :reservationQty,
     o.expire_at = :expire
-    WHERE s.sku = :sku AND o.cookie = :cookie AND o.status = :#{#status.name()}
+    WHERE s.sku = :sku AND sh.cookie = :cookie AND o.status = :#{#status.name()}
     """)
     void onAdd(
             int productSkuQty,
@@ -63,6 +62,9 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
 
     @Query("SELECT o FROM OrderReservation o WHERE o.expireAt <= :date AND o.status = :status")
     List<OrderReservation> allPendingExpiredReservations(Date date, ReservationStatus status);
+
+    @Query("SELECT o FROM OrderReservation o WHERE o.expireAt > :date AND o.status = :status")
+    List<OrderReservation> allPendingNoneExpiredReservations(Date date, ReservationStatus status);
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)

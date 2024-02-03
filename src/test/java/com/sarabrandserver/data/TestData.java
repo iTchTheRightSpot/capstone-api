@@ -53,9 +53,8 @@ public class TestData {
     @NotNull
     public static SizeInventoryDTO[] sizeInventoryDTOArray(int size) {
         SizeInventoryDTO[] dto = new SizeInventoryDTO[size];
-
         for (int i = 0; i < size; i++) {
-            dto[i] = new SizeInventoryDTO(new Faker().number().randomDigitNotZero(), "tall");
+            dto[i] = new SizeInventoryDTO(new Faker().number().randomDigitNotZero() + 1, "tall " + i);
         }
         return dto;
     }

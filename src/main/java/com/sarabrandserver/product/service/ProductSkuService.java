@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class ProductSKUService {
+public class ProductSkuService {
 
     private final ProductSkuRepo productSkuRepo;
 

@@ -15,3 +15,13 @@ ALTER TABLE product_collection
     DROP INDEX IX_product_collection_uuid;
 
 DROP TABLE product_collection;
+
+ALTER TABLE product_category
+    DROP FOREIGN KEY product_category_ibfk_1;
+ALTER TABLE product_category
+    ADD FOREIGN KEY (parent_category_id) REFERENCES product_category (category_id) ON DELETE NO ACTION;
+
+ALTER TABLE product
+    DROP FOREIGN KEY product_ibfk_1;
+ALTER TABLE product
+    ADD FOREIGN KEY (category_id) REFERENCES product_category (category_id) ON DELETE NO ACTION;

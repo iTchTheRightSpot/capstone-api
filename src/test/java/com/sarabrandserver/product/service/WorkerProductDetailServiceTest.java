@@ -29,7 +29,7 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
     private WorkerProductDetailService detailService;
 
     @Mock private ProductRepo productRepo;
-    @Mock private ProductSKUService skuService;
+    @Mock private ProductSkuService skuService;
     @Mock private ProductImageRepo imageRepo;
     @Mock private ProductDetailRepo detailRepo;
     @Mock private HelperService helperService;

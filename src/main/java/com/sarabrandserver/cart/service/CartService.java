@@ -12,7 +12,7 @@ import com.sarabrandserver.exception.CustomInvalidFormatException;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.OutOfStockException;
 import com.sarabrandserver.product.entity.ProductSku;
-import com.sarabrandserver.product.service.ProductSKUService;
+import com.sarabrandserver.product.service.ProductSkuService;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -55,7 +55,7 @@ public class CartService {
 
     private final ShoppingSessionRepo shoppingSessionRepo;
     private final CartItemRepo cartItemRepo;
-    private final ProductSKUService productSKUService;
+    private final ProductSkuService productSKUService;
     private final S3Service s3Service;
 
     /**

@@ -11,6 +11,7 @@ import com.sarabrandserver.product.service.WorkerProductService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -114,6 +115,45 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         assertEquals(7, list.size());
         assertEquals(2, list.stream().filter(p -> p.getParent() == null).toList().size());
         assertEquals(5, list.stream().filter(p -> p.getParent() != null).toList().size());
+    }
+
+    @Test
+    void validateOnDeleteNoActionWhenDeletingACategory() {
+        // given
+        var category = categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("category")
+                                .isVisible(true)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        categoryRepo
+                .save(
+                        ProductCategory.builder()
+                                .name("clothes")
+                                .isVisible(true)
+                                .parentCategory(category)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        productService
+                .create(
+                        TestData.createProductDTO(
+                                new Faker().commerce().productName(),
+                                category.getCategoryId(),
+                                TestData.sizeInventoryDTOArray(3)
+                        ),
+                        TestData.files()
+                );
+
+        // then
+        assertThrows(DataIntegrityViolationException.class,
+                () -> categoryRepo.deleteProductCategoryById(category.getCategoryId()));
     }
 
     @Test
@@ -432,7 +472,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                 );
 
         // when
-        categoryRepo.updateAllChildrenToFalse(category.getCategoryId());
+        categoryRepo.updateAllChildrenVisibilityToFalse(category.getCategoryId());
 
         // then
         ProductCategory parent = categoryRepo
@@ -494,7 +534,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         // when
         categoryRepo
-                .update_category_parentId_based_on_categoryId(
+                .updateCategoryParentIdBasedOnCategoryId(
                         clothes.getCategoryId(),
                         collection.getCategoryId()
                 );

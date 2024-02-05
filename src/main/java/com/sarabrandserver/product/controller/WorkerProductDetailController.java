@@ -1,6 +1,6 @@
 package com.sarabrandserver.product.controller;
 
-import com.sarabrandserver.product.service.ProductSKUService;
+import com.sarabrandserver.product.service.ProductSkuService;
 import com.sarabrandserver.product.service.WorkerProductDetailService;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.dto.ProductDetailDTO;
@@ -25,7 +25,7 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 public class WorkerProductDetailController {
 
     private final WorkerProductDetailService detailService;
-    private final ProductSKUService skuService;
+    private final ProductSkuService skuService;
 
     /**
      * Returns a list of DetailResponse.

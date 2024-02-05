@@ -32,7 +32,7 @@ public class WorkerProductDetailService {
     private String BUCKET;
 
     private final ProductDetailRepo detailRepo;
-    private final ProductSKUService skuService;
+    private final ProductSkuService skuService;
     private final ProductImageRepo imageRepo;
     private final ProductRepo productRepo;
     private final HelperService helperService;

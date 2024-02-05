@@ -10,7 +10,6 @@ import com.sarabrandserver.category.response.WorkerCategoryResponse;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
-import com.sarabrandserver.exception.ResourceAttachedException;
 import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.transaction.Transactional;
@@ -140,14 +139,13 @@ public class WorkerCategoryService {
             throw new DuplicateException(dto.name() + " is a duplicate");
         }
 
-        // update all children visibility to false
         if (!dto.visible()) {
-            categoryRepo.updateAllChildrenToFalse(dto.id());
+            categoryRepo.updateAllChildrenVisibilityToFalse(dto.id());
         }
 
         if (dto.parentId() != null) {
             categoryRepo
-                    .update_category_parentId_based_on_categoryId(dto.id(), dto.parentId());
+                    .updateCategoryParentIdBasedOnCategoryId(dto.id(), dto.parentId());
         }
 
         this.categoryRepo
@@ -155,25 +153,15 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Permanently deletes a ProductCategory if it has no children and
-     * no {@code Product} attached.
+     * Permanently deletes a {@code ProductCategory}.
      *
-     * @param id is the ProductCategory by categoryId
-     * @throws ResourceAttachedException if {@code ProductCategory} by {@param id} has
-     * children or 1 or more {@code Product} is associated to it.
-     * @throws CustomNotFoundException is thrown if categoryId node does not exist
+     * @param id is {@code ProductCategory} categoryId
+     * @throws org.springframework.dao.DataIntegrityViolationException if {@code ProductCategory}
+     * has children entities attached to it.
      * */
     @Transactional
-    public void delete(long id) {
-        int c = this.categoryRepo.validate_category_is_a_parent(id);
-        int d = this.categoryRepo.validateProductAttached(id);
-
-        if (c > 0 || d > 0) {
-            throw new ResourceAttachedException("category has 1 or many products or sub-category attached");
-        }
-
-        var category = findById(id);
-        this.categoryRepo.delete(category);
+    public void delete(final long id) {
+        this.categoryRepo.deleteProductCategoryById(id);
     }
 
     public ProductCategory findById(long id) {

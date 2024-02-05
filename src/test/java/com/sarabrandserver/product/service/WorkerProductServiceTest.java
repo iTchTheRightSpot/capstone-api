@@ -32,7 +32,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     @Mock private ProductRepo productRepo;
     @Mock private WorkerProductDetailService detailService;
     @Mock private HelperService helperService;
-    @Mock private ProductSKUService skuService;
+    @Mock private ProductSkuService skuService;
     @Mock private WorkerCategoryService categoryService;
 
     @BeforeEach

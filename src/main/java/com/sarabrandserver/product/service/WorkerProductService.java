@@ -43,7 +43,7 @@ public class WorkerProductService {
     private final PriceCurrencyRepo currencyRepo;
     private final ProductRepo productRepo;
     private final WorkerProductDetailService detailService;
-    private final ProductSKUService skuService;
+    private final ProductSkuService skuService;
     private final WorkerCategoryService categoryService;
     private final HelperService helperService;
 

@@ -4,7 +4,7 @@ import com.sarabrandserver.AbstractUnitTest;
 import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
-import com.sarabrandserver.product.service.ProductSKUService;
+import com.sarabrandserver.product.service.ProductSkuService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +32,7 @@ class CartServiceTest extends AbstractUnitTest {
     @Mock
     private CartItemRepo cartItemRepo;
     @Mock
-    private ProductSKUService productSKUService;
+    private ProductSkuService productSKUService;
     @Mock
     private S3Service s3Service;
 

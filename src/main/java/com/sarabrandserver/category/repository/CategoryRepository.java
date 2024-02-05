@@ -97,6 +97,11 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
             @Param(value = "id") long id
     );
 
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Transactional
+    @Query("DELETE FROM ProductCategory c WHERE c.categoryId = :id")
+    void deleteProductCategoryById(long id);
+
     /**
      * Using native sql query, method updates a {@code ProductCategory} parentId
      * based on its categoryId
@@ -108,7 +113,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     SET c.parent_category_id = :parentId
     WHERE c.category_id = :categoryId
     """)
-    void update_category_parentId_based_on_categoryId(long categoryId, long parentId);
+    void updateCategoryParentIdBasedOnCategoryId(long categoryId, long parentId);
 
     /**
      * Using native sql query, we get all {@code ProductCategory} that have
@@ -131,7 +136,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     SET c.is_visible = 0
     WHERE c.category_id = rec.id
     """)
-    void updateAllChildrenToFalse(long categoryId);
+    void updateAllChildrenVisibilityToFalse(long categoryId);
 
     @Query(value = """
     SELECT

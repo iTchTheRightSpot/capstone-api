@@ -1,6 +1,6 @@
 package com.sarabrandserver.auth.controller;
 
-import com.sarabrandserver.SingleThreadIntegration;
+import com.sarabrandserver.AbstractIntegration;
 import com.sarabrandserver.auth.dto.LoginDTO;
 import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.user.repository.UserRepository;
@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ClientAuthControllerTest extends SingleThreadIntegration {
+class ClientAuthControllerTest extends AbstractIntegration {
 
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;

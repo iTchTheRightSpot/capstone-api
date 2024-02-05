@@ -19,7 +19,7 @@ import java.util.Optional;
 public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
 
     /**
-     * Returns a ProductDetail based on ProductSku property sku
+     * Returns a {@code ProductDetail} by {@code ProductSku} property sku
      * */
     @Query(value = """
     SELECT d FROM ProductDetail d
@@ -28,9 +28,11 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     """)
     Optional<ProductDetail> productDetailByProductSku(@Param(value = "sku") String sku);
 
+    @Query("SELECT d FROM ProductDetail d WHERE d.colour = :colour")
+    Optional<ProductDetail> productDetailByColour(String colour);
+
     /**
-     * Update a ProductDetail and ProductSku using native MySQL query as you can update multiple
-     * tables in jpql without writing a lot of code
+     * using native MySQL query, method updates a ProductDetail and ProductSku.
      */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -40,7 +42,7 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     SET d.colour = :colour, d.is_visible = :visible, s.inventory = :qty, s.size = :s
     WHERE s.sku = :sku
     """)
-    void updateProductDetail(
+    void updateProductSkuAndProductDetailByProductSku(
             @Param(value = "sku") String sku,
             String colour,
             @Param(value = "visible") boolean visible,
@@ -77,12 +79,9 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     INNER JOIN product p ON d.product_id = p.product_id
     INNER JOIN product_sku s ON d.detail_id = s.detail_id
     WHERE p.uuid = :uuid AND d.is_visible = true
-    GROUP BY d.colour
+    GROUP BY d.is_visible, d.colour
     """)
-    List<DetailPojo> productDetailsByProductUUIDClient(@Param(value = "uuid") String uuid);
-
-    @Query(value = "SELECT d FROM ProductDetail d WHERE d.colour = :colour")
-    Optional<ProductDetail> productDetailByColour(String colour);
+    List<DetailPojo> productDetailsByProductUuidClient(@Param(value = "uuid") String uuid);
 
     @Query(nativeQuery = true, value = """
     SELECT
@@ -105,6 +104,6 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     WHERE p.uuid = :uuid
     GROUP BY d.is_visible, d.colour
     """)
-    List<DetailPojo> findProductDetailsByProductUuidWorker(@Param(value = "uuid") String uuid);
+    List<DetailPojo> productDetailsByProductUuidWorker(@Param(value = "uuid") String uuid);
 
 }

@@ -11,7 +11,6 @@ import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.enumeration.PaymentStatus;
 import com.sarabrandserver.enumeration.SarreCurrency;
-import com.sarabrandserver.exception.OutOfStockException;
 import com.sarabrandserver.payment.entity.OrderDetail;
 import com.sarabrandserver.payment.entity.OrderReservation;
 import com.sarabrandserver.payment.entity.PaymentDetail;
@@ -89,7 +88,7 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
                                 .paymentStatus(PaymentStatus.CONFIRMED)
                                 .createAt(new Date())
                                 .address(null)
-                                .orderDetail(new HashSet<>())
+                                .orderDetails(new HashSet<>())
                                 .build()
                 );
 
@@ -205,7 +204,7 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
                                 .paymentStatus(PaymentStatus.CONFIRMED)
                                 .createAt(new Date())
                                 .address(null)
-                                .orderDetail(new HashSet<>())
+                                .orderDetails(new HashSet<>())
                                 .build()
                 );
 

@@ -67,5 +67,5 @@ CREATE TABLE IF NOT EXISTS order_reservation
     expire_at      DATETIME    NOT NULL,
     session_id BIGINT,
     PRIMARY KEY (reservation_id),
-    FOREIGN KEY (session_id) REFERENCES shopping_session (session_id) ON DELETE SET NULL
+    CONSTRAINT `shopping_session_fk` FOREIGN KEY (session_id) REFERENCES shopping_session (session_id) ON DELETE SET NULL
 );

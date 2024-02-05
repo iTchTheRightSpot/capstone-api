@@ -1,6 +1,6 @@
 package com.sarabrandserver.user.controller;
 
-import com.sarabrandserver.SingleThreadIntegration;
+import com.sarabrandserver.AbstractIntegration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
-class WorkerControllerTest extends SingleThreadIntegration {
+class WorkerControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}worker")
     private String path;

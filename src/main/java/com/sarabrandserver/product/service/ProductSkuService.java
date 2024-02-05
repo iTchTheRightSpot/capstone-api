@@ -1,11 +1,15 @@
 package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.exception.CustomNotFoundException;
+import com.sarabrandserver.exception.ResourceAttachedException;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.product.entity.ProductDetail;
 import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +19,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ProductSkuService {
+
+    private static final Logger log = LoggerFactory.getLogger(ProductSkuService.class);
 
     private final ProductSkuRepo productSkuRepo;
 
@@ -47,11 +53,12 @@ public class ProductSkuService {
      * */
     @Transactional
     public void delete(final String sku) {
-        this.productSkuRepo.deleteProductSkuBySku(sku);
-    }
-
-    public int itemBeenBought(final String sku) {
-        return this.productSkuRepo.skuHasBeenPurchased(sku);
+        try {
+            this.productSkuRepo.deleteProductSkuBySku(sku);
+        } catch (DataIntegrityViolationException e) {
+            log.error("tried deleting a category with children attached {}", e.getMessage());
+            throw new ResourceAttachedException("resource(s) attached to product");
+        }
     }
 
     public ProductSku productSkuBySKU(final String sku) {

@@ -17,7 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.properties")
 @Import(TestConfig.class)
-public abstract class SingleThreadIntegration {
+public abstract class AbstractIntegration {
 
     @Autowired
     protected MockMvc MOCKMVC;

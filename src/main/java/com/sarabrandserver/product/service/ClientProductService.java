@@ -2,6 +2,7 @@ package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.product.projection.DetailPojo;
 import com.sarabrandserver.product.repository.PriceCurrencyRepo;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
@@ -62,13 +63,13 @@ public class ClientProductService {
      * */
     public List<DetailResponse> productDetailsByProductUUID(String uuid, SarreCurrency currency) {
         var object = this.priceCurrencyRepo
-                .priceCurrencyByProductUUIDAndCurrency(uuid, currency)
+                .priceCurrencyByProductUuidAndCurrency(uuid, currency)
                 .orElse(null);
 
         if (object == null) return List.of();
 
         return this.productDetailRepo
-                .productDetailsByProductUUIDClient(uuid) //
+                .productDetailsByProductUuidClient(uuid) //
                 .stream() //
                 .map(pojo -> {
                     var urls = Arrays.stream(pojo.getImage().split(","))
@@ -103,7 +104,7 @@ public class ClientProductService {
         // SQL LIKE Operator
         // https://www.w3schools.com/sql/sql_like.asp
         return this.productRepo
-                .productByNameAndCurrency(param + "%", currency, PageRequest.of(0, 10))
+                .productsByNameAndCurrency(param + "%", currency, PageRequest.of(0, 10))
                 .stream()
                 .map(pojo -> {
                     var url = this.s3Service.preSignedUrl(BUCKET, pojo.getImage());

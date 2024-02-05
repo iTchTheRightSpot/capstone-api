@@ -1,7 +1,7 @@
 package com.sarabrandserver.payment.controller;
 
 import com.github.javafaker.Faker;
-import com.sarabrandserver.SingleThreadIntegration;
+import com.sarabrandserver.AbstractIntegration;
 import com.sarabrandserver.cart.dto.CartDTO;
 import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.category.entity.ProductCategory;
@@ -51,7 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class PaymentControllerTest extends SingleThreadIntegration {
+class PaymentControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}payment")
     private String path;

@@ -1,6 +1,6 @@
 package com.sarabrandserver.auth.controller;
 
-import com.sarabrandserver.SingleThreadIntegration;
+import com.sarabrandserver.AbstractIntegration;
 import com.sarabrandserver.auth.dto.LoginDTO;
 import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.service.AuthService;
@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class WorkerAuthControllerTest extends SingleThreadIntegration {
+class WorkerAuthControllerTest extends AbstractIntegration {
 
     private final String PRINCIPAL = "SEJU@development.com";
     private final String PASSWORD = "123#-SEJU-Development";

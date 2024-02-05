@@ -1,6 +1,6 @@
 package com.sarabrandserver.cart.controller;
 
-import com.sarabrandserver.SingleThreadIntegration;
+import com.sarabrandserver.AbstractIntegration;
 import com.sarabrandserver.cart.dto.CartDTO;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
 import com.sarabrandserver.category.entity.ProductCategory;
@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
-class CartControllerTest extends SingleThreadIntegration {
+class CartControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}cart")
     private String path;

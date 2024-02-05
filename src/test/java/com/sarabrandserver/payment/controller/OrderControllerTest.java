@@ -1,6 +1,6 @@
 package com.sarabrandserver.payment.controller;
 
-import com.sarabrandserver.SingleThreadIntegration;
+import com.sarabrandserver.AbstractIntegration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
-class OrderControllerTest extends SingleThreadIntegration {
+class OrderControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}order")
     private String path;

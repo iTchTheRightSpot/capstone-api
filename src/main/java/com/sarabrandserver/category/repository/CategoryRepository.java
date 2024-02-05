@@ -143,20 +143,13 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     p.uuid as uuid,
     p.name as name,
     p.defaultKey as image,
-    (
-        SELECT c.currency
-        FROM PriceCurrency c
-        WHERE c.productId = p.productId AND c.currency = :currency
-    ) AS currency,
-    (
-        SELECT c.price
-        FROM PriceCurrency c
-        WHERE c.productId = p.productId AND c.currency = :currency
-    ) AS price
+    curr.currency AS currency,
+    curr.price AS price
     FROM Product p
     INNER JOIN ProductCategory c ON p.productCategory.categoryId = c.categoryId
-    WHERE c.categoryId = :categoryId
-    GROUP BY p.uuid, p.name, p.description, p.defaultKey
+    INNER JOIN PriceCurrency curr ON p.productId = curr.product.productId
+    WHERE c.categoryId = :categoryId AND curr.currency = :currency
+    GROUP BY p.uuid, p.name, p.description, p.defaultKey, curr.currency, curr.price
     """)
     Page<ProductPojo> allProductsByCategoryIdAdminFront(
             long categoryId,

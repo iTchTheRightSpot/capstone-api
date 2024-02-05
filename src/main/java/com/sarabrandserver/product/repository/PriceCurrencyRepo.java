@@ -19,12 +19,14 @@ public interface PriceCurrencyRepo extends JpaRepository<PriceCurrency, Long> {
     SELECT
     p.name AS name,
     p.description AS description,
-    (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency ) AS currency,
-    (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency ) AS price
+    c.currency AS currency,
+    c.price AS price
     FROM Product p
-    WHERE p.uuid = :uuid
+    INNER JOIN PriceCurrency c ON p.productId = c.product.productId
+    WHERE p.uuid = :uuid AND c.currency = :currency
+    GROUP BY p.name, p.description, c.currency, c.price
     """)
-    Optional<PriceCurrencyPojo> priceCurrencyByProductUUIDAndCurrency(String uuid, SarreCurrency currency);
+    Optional<PriceCurrencyPojo> priceCurrencyByProductUuidAndCurrency(String uuid, SarreCurrency currency);
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -34,6 +36,6 @@ public interface PriceCurrencyRepo extends JpaRepository<PriceCurrency, Long> {
     c.price = :price
     WHERE c.product.uuid = :uuid AND c.currency = :currency
     """)
-    void updatePriceByProductUUID(String uuid, BigDecimal price, SarreCurrency currency);
+    void updateProductPriceByProductUuidAndCurrency(String uuid, BigDecimal price, SarreCurrency currency);
 
 }

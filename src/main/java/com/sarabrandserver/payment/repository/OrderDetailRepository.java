@@ -14,6 +14,10 @@ import java.util.List;
 @Repository
 public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> {
 
+    /**
+     * @param principal is the email property of a {@code PaymentDetail}
+     * @return a {@code java.util.List} of {@code OrderPojo}.
+     * */
     @Query(nativeQuery = true, value = """
     SELECT
     p.created_at AS time,

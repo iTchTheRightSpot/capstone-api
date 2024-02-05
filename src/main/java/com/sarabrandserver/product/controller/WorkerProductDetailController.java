@@ -36,7 +36,7 @@ public class WorkerProductDetailController {
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
     public List<DetailResponse> get(@NotNull @RequestParam(value = "id") String uuid) {
-        return this.detailService.productDetailsByProductUUID(uuid);
+        return this.detailService.productDetailsByProductUuid(uuid);
     }
 
     /**

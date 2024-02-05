@@ -1,6 +1,6 @@
 package com.sarabrandserver.category.controller;
 
-import com.sarabrandserver.SingleThreadIntegration;
+import com.sarabrandserver.AbstractIntegration;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
-class ClientCategoryControllerTest extends SingleThreadIntegration {
+class ClientCategoryControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}client/category")
     private String requestParam;

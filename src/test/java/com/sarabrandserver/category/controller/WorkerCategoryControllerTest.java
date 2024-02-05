@@ -1,7 +1,7 @@
 package com.sarabrandserver.category.controller;
 
 import com.github.javafaker.Faker;
-import com.sarabrandserver.SingleThreadIntegration;
+import com.sarabrandserver.AbstractIntegration;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.sarabrandserver.category.entity.ProductCategory;
@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
-class WorkerCategoryControllerTest extends SingleThreadIntegration {
+class WorkerCategoryControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}worker/category")
     private String requestMapping;

@@ -16,7 +16,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Builder
 @Getter
 @Setter
-public class ProductDetail { // could be called ProductVariant
+public class ProductDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

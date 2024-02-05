@@ -33,27 +33,27 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     """)
     int nameNotAssociatedToUuid(String uuid, String name);
 
-    @Query(value = """
-    SELECT COUNT(d.productDetailId)
-    FROM ProductDetail d
-    INNER JOIN Product p ON d.product.uuid = p.uuid
-    WHERE p.uuid = :uuid
-    """)
-    int productDetailAttach(String uuid);
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM Product p WHERE p.uuid = :uuid")
+    void deleteByProductUuid(String uuid);
 
     @Query(value = """
     SELECT
     p.uuid AS uuid,
     p.name AS name,
     p.description AS description,
-    (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
-    (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
+    c.currency AS currency,
+    c.price AS price,
     p.defaultKey AS image,
     p.weight AS weight,
     p.weightType AS weightType,
     cat.name AS category
     FROM Product p
     INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId
+    INNER JOIN PriceCurrency c ON p.productId = c.product.productId
+    WHERE c.currency = :currency
+    GROUP BY p.uuid, p.name, p.description, p.defaultKey, c.currency, c.price, cat.name
     """)
     Page<ProductPojo> allProductsAdminFront(SarreCurrency currency, Pageable pageable);
 
@@ -65,8 +65,8 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     p.uuid AS uuid,
     p.name AS name,
     p.description AS description,
-    (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
-    (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency ) AS price,
+    c.currency AS currency,
+    c.price AS price,
     p.defaultKey AS image,
     p.weight AS weight,
     p.weightType AS weightType,
@@ -74,9 +74,10 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     FROM Product p
     INNER JOIN ProductCategory cat ON cat.categoryId = p.productCategory.categoryId
     INNER JOIN ProductDetail pd ON pd.product.productId = p.productId
+    INNER JOIN PriceCurrency c ON p.productId = c.product.productId
     INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
-    WHERE cat.isVisible = TRUE AND pd.isVisible = TRUE AND sku.inventory > 0
-    GROUP BY p.uuid, p.name, p.description, p.defaultKey
+    WHERE cat.isVisible = TRUE AND pd.isVisible = TRUE AND sku.inventory > 0 AND c.currency = :currency
+    GROUP BY p.uuid, p.name, p.description, p.defaultKey, c.currency, c.price, cat.name
     """)
     Page<ProductPojo> allProductsByCurrencyClient(SarreCurrency currency, Pageable pageable);
 
@@ -106,25 +107,26 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     INNER JOIN Product p ON p.productId = pd.product.productId
     WHERE p.uuid = :uuid
     """)
-    List<ImagePojo> productImagesByProductUUID(@Param(value = "uuid") String uuid);
+    List<ImagePojo> productImagesByProductUuid(@Param(value = "uuid") String uuid);
 
     @Query("""
     SELECT
     p.uuid AS uuid,
     p.name AS name,
-    (SELECT c.price FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS price,
-    (SELECT c.currency FROM PriceCurrency c WHERE p.productId = c.product.productId AND c.currency = :currency) AS currency,
+    c.price AS price,
+    c.currency AS currency,
     p.defaultKey AS image,
     p.weight AS weight,
     p.weightType AS weightType,
     cat.name AS category
     FROM Product p
     INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId
+    INNER JOIN PriceCurrency c ON p.productId = c.product.productId
     INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
     INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
-    WHERE p.name LIKE :name AND sku.inventory > 0
-    GROUP BY p.uuid, p.name, p.defaultKey
+    WHERE p.name LIKE :name AND sku.inventory > 0 AND c.currency = :currency
+    GROUP BY p.uuid, p.name, p.defaultKey, c.currency, c.price, cat.name
     """)
-    Page<ProductPojo> productByNameAndCurrency(String name, SarreCurrency currency, Pageable page);
+    Page<ProductPojo> productsByNameAndCurrency(String name, SarreCurrency currency, Pageable page);
 
 }

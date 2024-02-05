@@ -10,11 +10,15 @@ import com.sarabrandserver.category.response.WorkerCategoryResponse;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
+import com.sarabrandserver.exception.ResourceAttachedException;
 import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -24,6 +28,8 @@ import java.util.HashSet;
 @Service
 @RequiredArgsConstructor
 public class WorkerCategoryService {
+
+    private static final Logger log = LoggerFactory.getLogger(WorkerCategoryService.class);
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
@@ -161,7 +167,12 @@ public class WorkerCategoryService {
      * */
     @Transactional
     public void delete(final long id) {
-        this.categoryRepo.deleteProductCategoryById(id);
+        try {
+            this.categoryRepo.deleteProductCategoryById(id);
+        } catch (DataIntegrityViolationException e) {
+            log.error("tried deleting a category with children attached {}", e.getMessage());
+            throw new ResourceAttachedException("resource attached to category");
+        }
     }
 
     public ProductCategory findById(long id) {

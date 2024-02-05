@@ -14,7 +14,10 @@ import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -36,6 +39,8 @@ import static java.math.RoundingMode.FLOOR;
 @RequiredArgsConstructor
 @Setter
 public class WorkerProductService {
+
+    private static final Logger log = LoggerFactory.getLogger(WorkerProductService.class);
 
     @Value(value = "${aws.bucket}")
     private String BUCKET;
@@ -171,41 +176,34 @@ public class WorkerProductService {
 
         // update price
         var currency = SarreCurrency.valueOf(dto.currency().toUpperCase());
-        this.currencyRepo.updatePriceByProductUUID(dto.uuid(), price, currency);
+        this.currencyRepo
+                .updateProductPriceByProductUuidAndCurrency(dto.uuid(), price, currency);
     }
 
-    // TODO validate product isn't in user session and it is not in order detail
     /**
-     * Permanently deletes a Product db.
+     * Permanently deletes a {@code Product}.
      *
-     * @param uuid is the product uuid
-     * @throws CustomNotFoundException   is thrown when Product id does not exist
+     * @param uuid is a property of {@code Product}
      * @throws ResourceAttachedException is thrown if Product has ProductDetails attached
      * @throws S3Exception               is thrown when deleting from s3
      */
     @Transactional
     public void delete(final String uuid) {
-        var product = this.productRepo.productByUuid(uuid)
-                .orElseThrow(() -> new CustomNotFoundException(uuid + " does not exist"));
-
-        if (this.productRepo.productDetailAttach(uuid) > 1 || this.skuService.itemBeenBought(uuid) > 0) {
-            throw new ResourceAttachedException(
-                    "cannot delete %s as it has many variants".formatted(product.getName())
-            );
-        }
-
-        List<ObjectIdentifier> keys = this.productRepo.productImagesByProductUUID(uuid)
+        final List<ObjectIdentifier> keys = this.productRepo.productImagesByProductUuid(uuid)
                 .stream() //
                 .map(img -> ObjectIdentifier.builder().key(img.getImage()).build()) //
                 .toList();
 
-        // delete from S3 only if keys contain
+        try {
+            this.productRepo.deleteByProductUuid(uuid);
+        } catch (DataIntegrityViolationException e) {
+            log.error("resources attached to Product {}", e.getMessage());
+            throw new ResourceAttachedException("resource(s) attached to product");
+        }
+
         if (!keys.isEmpty()) {
             this.helperService.deleteFromS3(keys, BUCKET);
         }
-
-        // delete from Database
-        this.productRepo.delete(product);
     }
 
     /**

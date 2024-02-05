@@ -20,7 +20,7 @@ public class PriceCurrency {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "price_currency_id", nullable = false, unique = true)
-    private Long productId;
+    private Long currencyId;
 
     @Column(nullable = false)
     private BigDecimal price;

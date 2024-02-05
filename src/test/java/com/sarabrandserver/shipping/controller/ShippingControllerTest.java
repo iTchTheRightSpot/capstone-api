@@ -1,6 +1,6 @@
 package com.sarabrandserver.shipping.controller;
 
-import com.sarabrandserver.SingleThreadIntegration;
+import com.sarabrandserver.AbstractIntegration;
 import com.sarabrandserver.enumeration.ShippingType;
 import com.sarabrandserver.shipping.ShippingDto;
 import com.sarabrandserver.shipping.dto.ShippingUpdateDto;
@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
-class ShippingControllerTest extends SingleThreadIntegration {
+class ShippingControllerTest extends AbstractIntegration {
 
     @Value("${api.endpoint.baseurl}shipping")
     private String path;

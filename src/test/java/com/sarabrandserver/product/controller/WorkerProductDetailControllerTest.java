@@ -1,7 +1,7 @@
 package com.sarabrandserver.product.controller;
 
 import com.github.javafaker.Faker;
-import com.sarabrandserver.SingleThreadIntegration;
+import com.sarabrandserver.AbstractIntegration;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Transactional
-class WorkerProductDetailControllerTest extends SingleThreadIntegration {
+class WorkerProductDetailControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}worker/product/detail")
     private String requestMapping;

@@ -7,6 +7,7 @@ import com.sarabrandserver.payment.dto.OrderHistoryDTO;
 import com.sarabrandserver.payment.dto.PayloadMapper;
 import com.sarabrandserver.payment.repository.OrderDetailRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +23,7 @@ public class OrderService {
 
     private static final Logger log = LoggerFactory.getLogger(OrderService.class.getName());
 
+    @Setter
     @Value(value = "${aws.bucket}")
     private String BUCKET;
 
@@ -35,7 +37,7 @@ public class OrderService {
                 .orderHistoryByPrincipal(principal)
                 .stream()
                 .map(p -> {
-                    var detail = transform(p.getDetail());
+                    var detail = transform(objectMapper, s3Service, BUCKET, p.getDetail());
                     return new OrderHistoryDTO(
                             p.getTime().getTime(),
                             p.getCurrency(),
@@ -49,19 +51,19 @@ public class OrderService {
 
     /**
      * Maps from string to PayloadMapper[]
-     * param str is in format [ "name" : "", "key" : "", "qty" : "" ]
+     * param str is in format [ { "name" : "", "key" : "", "colour" : "" } ]
      * */
-    private PayloadMapper[] transform(String str) {
+    public static PayloadMapper[] transform(ObjectMapper mapper, S3Service s3Service, String bucketName, String str) {
         try {
-            PayloadMapper[] arr = this.objectMapper.readValue(str, PayloadMapper[].class);
+            PayloadMapper[] arr = mapper.readValue(str, PayloadMapper[].class);
             return Arrays.stream(arr)
                     .map(m -> {
-                        String url = this.s3Service.preSignedUrl(this.BUCKET, m.key());
+                        String url = s3Service.preSignedUrl(bucketName, m.key());
                         return new PayloadMapper(m.name(), url, m.colour());
                     })
                     .toArray(PayloadMapper[]::new);
         } catch (JsonProcessingException e) {
-            log.error("Error converting from PayloadDTO to OrderHistoryDTO");
+            log.error("error converting str to PayloadMapper");
             return null;
         }
     }

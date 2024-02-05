@@ -62,6 +62,6 @@ public class PaymentDetail implements Serializable {
     private Address address;
 
     @OneToMany(fetch = LAZY, cascade = { PERSIST, MERGE, REFRESH }, mappedBy = "paymentDetail")
-    private Set<OrderDetail> orderDetail;
+    private Set<OrderDetail> orderDetails;
 
 }

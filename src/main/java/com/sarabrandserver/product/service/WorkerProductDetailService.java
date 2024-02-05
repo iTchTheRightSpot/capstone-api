@@ -43,9 +43,9 @@ public class WorkerProductDetailService {
      * @param uuid is the uuid of the product
      * @return List of DetailResponse
      */
-    public List<DetailResponse> productDetailsByProductUUID(String uuid) {
+    public List<DetailResponse> productDetailsByProductUuid(String uuid) {
         return this.detailRepo
-                .findProductDetailsByProductUuidWorker(uuid) //
+                .productDetailsByProductUuidWorker(uuid) //
                 .stream() //
                 .map(pojo -> {
                     var urls = Arrays
@@ -121,7 +121,7 @@ public class WorkerProductDetailService {
      */
     @Transactional
     public void update(final UpdateProductDetailDTO dto) {
-        this.detailRepo.updateProductDetail(
+        this.detailRepo.updateProductSkuAndProductDetailByProductSku(
                 dto.sku(),
                 dto.colour(),
                 dto.isVisible(),
@@ -141,7 +141,7 @@ public class WorkerProductDetailService {
     public void delete(final String sku) {
         var detail = productDetailByProductSku(sku);
 
-        var images = this.imageRepo.imagesByProductDetailID(detail.getProductDetailId());
+        var images = this.imageRepo.imagesByProductDetailId(detail.getProductDetailId());
 
         List<ObjectIdentifier> keys = images //
                 .stream() //

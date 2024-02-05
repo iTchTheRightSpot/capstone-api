@@ -16,6 +16,6 @@ public interface ProductImageRepo extends JpaRepository<ProductImage, Long> {
     INNER JOIN ProductDetail d ON i.productDetails.productDetailId = d.productDetailId
     WHERE d.productDetailId = :id
     """)
-    List<ProductImage> imagesByProductDetailID(long id);
+    List<ProductImage> imagesByProductDetailId(long id);
 
 }

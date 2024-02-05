@@ -20,7 +20,7 @@ public class ProductImage implements Serializable {
     private Long productImageId;
 
     @Column(name = "image_key", nullable = false, unique = true, updatable = false, length = 50)
-    private String imageKey; // Represents key in AWS or DigitalOcean bucket
+    private String imageKey; // represents key in AWS or DigitalOcean bucket
 
     @Column(name = "image_path", nullable = false)
     private String imagePath;

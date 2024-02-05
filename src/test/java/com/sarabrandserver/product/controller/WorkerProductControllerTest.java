@@ -1,7 +1,7 @@
 package com.sarabrandserver.product.controller;
 
 import com.github.javafaker.Faker;
-import com.sarabrandserver.SingleThreadIntegration;
+import com.sarabrandserver.AbstractIntegration;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Transactional
-class WorkerProductControllerTest extends SingleThreadIntegration {
+class WorkerProductControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}worker/product")
     private String requestMapping;
@@ -289,7 +289,6 @@ class WorkerProductControllerTest extends SingleThreadIntegration {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Update Product. Category and Collection are in the payload")
     void updateProduct() throws Exception {
         // Given
         var product = this.productRepo.findAll();
@@ -297,7 +296,6 @@ class WorkerProductControllerTest extends SingleThreadIntegration {
 
         var category = this.categoryRepository.findAll();
         assertFalse(category.isEmpty());
-
 
         // Payload
         var dto = TestData
@@ -320,8 +318,10 @@ class WorkerProductControllerTest extends SingleThreadIntegration {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    void deleteProduct() throws Exception {
-        var product = this.productRepo.findAll().stream().findFirst().orElse(null);
+    void deleteProductButExceptionIsThrownDueToResourcesAttached() throws Exception {
+        var products = this.productRepo.findAll();
+        assertFalse(products.isEmpty());
+        var product = products.getFirst();
         assertNotNull(product);
 
         this.MOCKMVC
@@ -329,23 +329,9 @@ class WorkerProductControllerTest extends SingleThreadIntegration {
                         .param("id", product.getUuid())
                         .with(csrf())
                 )
-                .andExpect(status().isNoContent());
+                .andExpect(result -> assertInstanceOf(DuplicateException.class, result.getResolvedException()));
 
-        var del = this.productRepo.findById(product.getProductId()).orElse(null);
-        assertNull(del);
-    }
-
-    @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Delete Product. Exception thrown because product has more than 1 ProductDetail ")
-    void deleteProductEx() throws Exception {
-        var product = this.productRepo.findAll().stream().findFirst().orElse(null);
-        assertNotNull(product);
-
-        this.MOCKMVC.perform(delete(requestMapping).param("id", product.getUuid()).with(csrf()))
-                .andExpect(status().isNoContent());
-
-        assertTrue(this.productRepo.findById(product.getProductId()).isEmpty());
+        assertTrue(productRepo.findById(product.getProductId()).isEmpty());
     }
 
 }

@@ -78,7 +78,7 @@ public class AuthService {
      */
     @Transactional
     public void clientRegister(RegisterDTO dto, HttpServletResponse response) {
-        if (this.userRepository.principalExists(dto.email().trim()) > 0) {
+        if (this.userRepository.findByPrincipal(dto.email().trim()).isPresent()) {
             throw new DuplicateException(dto.email() + " exists");
         }
 

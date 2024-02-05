@@ -184,7 +184,7 @@ class AuthServiceTest extends AbstractUnitTest {
         HttpServletResponse res = mock(HttpServletResponse.class);
 
         // When
-        when(this.userRepository.principalExists(anyString())).thenReturn(0);
+        when(this.userRepository.findByPrincipal(anyString())).thenReturn(Optional.empty());
         when(this.passwordEncoder.encode(anyString())).thenReturn(dto.password());
         when(this.userRepository.save(any(SarreBrandUser.class))).thenReturn(user);
 
@@ -211,7 +211,17 @@ class AuthServiceTest extends AbstractUnitTest {
         HttpServletResponse res = mock(HttpServletResponse.class);
 
         // When
-        when(this.userRepository.principalExists(anyString())).thenReturn(1);
+        when(this.userRepository.findByPrincipal(anyString()))
+                .thenReturn(Optional
+                        .of(SarreBrandUser.builder()
+                                .firstname(dto.firstname())
+                                .lastname(dto.lastname())
+                                .email(dto.email())
+                                .phoneNumber(dto.phone())
+                                .password(dto.password())
+                                .build()
+                        )
+                );
 
         // Then
         assertThrows(DuplicateException.class, () -> this.authService.clientRegister(dto, res));

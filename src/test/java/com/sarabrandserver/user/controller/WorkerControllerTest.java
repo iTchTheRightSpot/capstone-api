@@ -1,16 +1,17 @@
 package com.sarabrandserver.user.controller;
 
-import com.sarabrandserver.AbstractIntegrationTest;
+import com.sarabrandserver.SingleThreadIntegration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class WorkerControllerTest extends AbstractIntegrationTest {
+@Transactional
+class WorkerControllerTest extends SingleThreadIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}worker")
     private String path;
@@ -20,7 +21,6 @@ class WorkerControllerTest extends AbstractIntegrationTest {
     void allUsers() throws Exception {
         this.MOCKMVC
                 .perform(get(path + "/user").with(csrf()))
-                .andDo(print())
                 .andExpect(status().isOk());
     }
 

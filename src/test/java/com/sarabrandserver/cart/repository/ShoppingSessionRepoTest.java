@@ -17,12 +17,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashSet;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
+import static java.time.temporal.ChronoUnit.HOURS;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Transactional
@@ -47,7 +47,7 @@ class ShoppingSessionRepoTest extends AbstractRepositoryTest {
                         new ShoppingSession(
                                 "cookie",
                                 new Date(),
-                                new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()),
+                                new Date(Instant.now().plus(1, HOURS).toEpochMilli()),
                                 new HashSet<>(),
                                 new HashSet<>()
                         )
@@ -66,13 +66,13 @@ class ShoppingSessionRepoTest extends AbstractRepositoryTest {
                         new ShoppingSession(
                                 "cookie",
                                 new Date(),
-                                new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()),
+                                new Date(Instant.now().plus(1, HOURS).toEpochMilli()),
                                 new HashSet<>(),
                                 new HashSet<>()
                         )
                 );
 
-        var update = Instant.now().plus(2, ChronoUnit.HOURS);
+        var update = Instant.now().plus(2, HOURS);
         sessionRepo.updateShoppingSessionExpiry("cookie", Date.from(update));
 
         // when
@@ -112,7 +112,7 @@ class ShoppingSessionRepoTest extends AbstractRepositoryTest {
                         new ShoppingSession(
                                 "cookie",
                                 new Date(),
-                                new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()),
+                                new Date(Instant.now().plus(1, HOURS).toEpochMilli()),
                                 new HashSet<>(),
                                 new HashSet<>()
                         )
@@ -161,8 +161,8 @@ class ShoppingSessionRepoTest extends AbstractRepositoryTest {
     @Test
     void allExpiredShoppingSession() {
         // given
-        var createExpired = new Date(Instant.now().minus(2, ChronoUnit.HOURS).toEpochMilli());
-        var toExpire = new Date(Instant.now().minus(1, ChronoUnit.HOURS).toEpochMilli());
+        var createExpired = new Date(Instant.now().minus(2, HOURS).toEpochMilli());
+        var toExpire = new Date(Instant.now().minus(1, HOURS).toEpochMilli());
 
         int num = 5;
 

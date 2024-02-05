@@ -2,25 +2,37 @@ package com.sarabrandserver.product.repository;
 
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractRepositoryTest;
+import com.sarabrandserver.cart.entity.CartItem;
+import com.sarabrandserver.cart.entity.ShoppingSession;
+import com.sarabrandserver.cart.repository.CartItemRepo;
+import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.enumeration.PaymentStatus;
 import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.exception.OutOfStockException;
 import com.sarabrandserver.payment.entity.OrderDetail;
+import com.sarabrandserver.payment.entity.OrderReservation;
 import com.sarabrandserver.payment.entity.PaymentDetail;
 import com.sarabrandserver.payment.repository.OrderDetailRepository;
+import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.payment.repository.PaymentRepo;
+import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.service.WorkerProductService;
+import com.sarabrandserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
 
+import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
+import static java.time.temporal.ChronoUnit.HOURS;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Transactional
@@ -36,6 +48,12 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
     private OrderDetailRepository orderRepository;
     @Autowired
     private PaymentRepo paymentRepo;
+    @Autowired
+    private OrderReservationRepo reservationRepo;
+    @Autowired
+    private ShoppingSessionRepo sessionRepo;
+    @Autowired
+    private CartItemRepo cartItemRepo;
 
     @Test
     void itemBeenBought() {
@@ -88,10 +106,6 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void itemContainsCart() {
-    }
-
-    @Test
     void updateInventoryOnMakingReservation() {
         var cat = categoryRepo
                 .save(ProductCategory.builder()
@@ -118,7 +132,7 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
 
         assertNotEquals(0, sku.getInventory());
 
-        skuRepo.updateInventoryOnMakingReservation(sku.getSku(), sku.getInventory());
+        skuRepo.updateInventoryBySubtractingFromCurrentInventory(sku.getSku(), sku.getInventory());
 
         var optional = skuRepo.findBySku(sku.getSku());
         assertFalse(optional.isEmpty());
@@ -151,7 +165,7 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
 
         assertNotEquals(0, sku.getInventory());
 
-        skuRepo.incrementInventory(sku.getSku(), sku.getInventory());
+        skuRepo.updateInventoryByAddingToCurrentInventory(sku.getSku(), sku.getInventory());
 
         var optional = skuRepo.findBySku(sku.getSku());
         assertFalse(optional.isEmpty());
@@ -159,7 +173,7 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void validateDeleteOnRestrict() {
+    void validateOnDeleteNoActionConstraintForProductSku() {
         var cat = categoryRepo
                 .save(ProductCategory.builder()
                         .name("category")
@@ -198,13 +212,46 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
         // then
         var skus = skuRepo.findAll();
         assertFalse(skus.isEmpty());
-        var sku = skus.getFirst();
+        ProductSku sku = skus.getFirst();
 
+        // save OrderDetail
         orderRepository.save(new OrderDetail(1, sku, paymentDetail));
-        orderRepository
-                .save(new OrderDetail(2, sku, paymentDetail));
 
-        assertThrows(SQLException.class, () -> skuRepo.delete(sku));
+        var session = this.sessionRepo
+                .save(
+                        new ShoppingSession(
+                                "cookie",
+                                new Date(),
+                                CustomUtil.toUTC(new Date(Instant.now().plus(1, HOURS).toEpochMilli())),
+                                new HashSet<>(),
+                                new HashSet<>()
+                        )
+                );
+
+        // save OrderReservation
+        Date current = new Date();
+        reservationRepo
+                .save(
+                        new OrderReservation(
+                                sku.getInventory() - 1,
+                                PENDING,
+                                CustomUtil.toUTC(
+                                        new Date(current
+                                                .toInstant()
+                                                .minus(5, HOURS)
+                                                .toEpochMilli()
+                                        )
+                                ),
+                                sku,
+                                session
+                        )
+                );
+
+        // save CartItem
+        cartItemRepo.save(new CartItem(Integer.MAX_VALUE, session, sku));
+
+        assertThrows(DataIntegrityViolationException.class,
+                () -> skuRepo.deleteProductSkuBySku(sku.getSku()));
     }
 
 }

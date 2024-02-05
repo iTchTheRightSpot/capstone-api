@@ -22,12 +22,12 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("DELETE FROM CartItem c WHERE c.shoppingSession.cookie = :cookie AND c.productSku.sku = :sku")
-    void delete_cartItem_by_cookie_and_sku(String cookie, String sku);
+    void deleteCartItemByCookieAndSku(String cookie, String sku);
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("DELETE FROM CartItem c WHERE c.shoppingSession.shoppingSessionId = :id")
-    void deleteByParentID(long id);
+    void deleteByParentId(long id);
 
     @Query("""
     SELECT
@@ -42,6 +42,6 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     INNER JOIN PriceCurrency pc ON p.productId = pc.product.productId
     WHERE s.cookie = :cookie AND pc.currency = :currency
     """)
-    List<TotalPojo> total_amount_in_default_currency(String cookie, SarreCurrency currency);
+    List<TotalPojo> totalAmountInDefaultCurrency(String cookie, SarreCurrency currency);
 
 }

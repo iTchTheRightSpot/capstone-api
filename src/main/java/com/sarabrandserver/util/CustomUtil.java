@@ -21,7 +21,7 @@ import static java.math.RoundingMode.FLOOR;
 
 public class CustomUtil {
 
-    private static final Logger log = LoggerFactory.getLogger(CustomUtil.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(CustomUtil.class);
 
     /**
      * Converts date to UTC Date
@@ -64,7 +64,7 @@ public class CustomUtil {
 
     /**
      * Convert String gotten from DetailPojo getVariant method to
-     * a Variant array object
+     * a Variant array object.
      *
      * @param str is String method getVariants in DetailPojo
      * @param clazz is the class that calls this method

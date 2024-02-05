@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS address
 );
 
 ALTER TABLE product_sku
-    ADD CONSTRAINT chk_inventory_is_always_greater_than_zero CHECK ( inventory >= 0 );
+    ADD CONSTRAINT validate_inventory_is_always_greater_than_zero CHECK ( inventory >= 0 );
 
 CREATE TABLE IF NOT EXISTS order_reservation
 (
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS order_reservation
     qty            INTEGER     NOT NULL,
     status         VARCHAR(10) NOT NULL,
     expire_at      DATETIME    NOT NULL,
-    session_id BIGINT NOT NULL,
+    session_id BIGINT,
     PRIMARY KEY (reservation_id),
-    FOREIGN KEY (session_id) REFERENCES shopping_session (session_id) ON DELETE RESTRICT
+    FOREIGN KEY (session_id) REFERENCES shopping_session (session_id) ON DELETE SET NULL
 );

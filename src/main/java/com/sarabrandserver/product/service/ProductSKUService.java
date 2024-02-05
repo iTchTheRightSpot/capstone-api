@@ -1,7 +1,6 @@
 package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.exception.CustomNotFoundException;
-import com.sarabrandserver.exception.ResourceAttachedException;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.product.entity.ProductDetail;
 import com.sarabrandserver.product.entity.ProductSku;
@@ -41,20 +40,14 @@ public class ProductSKUService {
     }
 
     /**
-     * Deletes ProductSKU
+     * Deletes ProductSku by sku.
+     *
+     * @throws org.springframework.dao.DataIntegrityViolationException if {@code ProductSku}
+     * has children entities attached to it.
      * */
     @Transactional
     public void delete(final String sku) {
-        if (this.productSkuRepo.skuContainsInUserCart(sku) > 0
-                || this.productSkuRepo.skuHasBeenPurchased(sku) > 0
-        ) {
-            throw new ResourceAttachedException(
-                    "cannot delete item as it contains a users cart or order history"
-            );
-        }
-
-        var obj = productSkuBySKU(sku);
-        this.productSkuRepo.delete(obj);
+        this.productSkuRepo.deleteProductSkuBySku(sku);
     }
 
     public int itemBeenBought(final String sku) {

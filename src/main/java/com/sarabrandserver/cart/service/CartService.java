@@ -35,7 +35,8 @@ import static java.time.temporal.ChronoUnit.DAYS;
 
 @Service
 @RequiredArgsConstructor
-@Setter @Getter
+@Getter
+@Setter
 public class CartService {
 
     private static final Logger log = LoggerFactory.getLogger(CartService.class);
@@ -233,7 +234,7 @@ public class CartService {
      * @param sku unique ProductSku
      * */
     @Transactional
-    public void remove_from_cart(HttpServletRequest req, String sku) {
+    public void deleteFromCart(HttpServletRequest req, String sku) {
         Cookie cookie = CustomUtil.cookie(req, CART_COOKIE);
 
         if (cookie == null) {
@@ -242,7 +243,7 @@ public class CartService {
 
         String[] arr = cookie.getValue().split(this.split);
 
-        this.cartItemRepo.delete_cartItem_by_cookie_and_sku(arr[0], sku);
+        this.cartItemRepo.deleteCartItemByCookieAndSku(arr[0], sku);
     }
 
     /**
@@ -260,7 +261,7 @@ public class CartService {
 
         // delete children
         for (ShoppingSession s : list) {
-            this.cartItemRepo.deleteByParentID(s.getShoppingSessionId());
+            this.cartItemRepo.deleteByParentId(s.getShoppingSessionId());
         }
 
         for (ShoppingSession s : list) {

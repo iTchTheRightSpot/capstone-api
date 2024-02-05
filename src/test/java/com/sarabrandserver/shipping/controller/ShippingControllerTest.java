@@ -1,17 +1,17 @@
 package com.sarabrandserver.shipping.controller;
 
-import com.sarabrandserver.AbstractIntegrationTest;
+import com.sarabrandserver.SingleThreadIntegration;
 import com.sarabrandserver.enumeration.ShippingType;
 import com.sarabrandserver.shipping.ShippingDto;
 import com.sarabrandserver.shipping.dto.ShippingUpdateDto;
 import com.sarabrandserver.shipping.entity.Shipping;
 import com.sarabrandserver.shipping.repository.ShippingRepo;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
@@ -20,18 +20,14 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class ShippingControllerTest extends AbstractIntegrationTest {
+@Transactional
+class ShippingControllerTest extends SingleThreadIntegration {
 
     @Value("${api.endpoint.baseurl}shipping")
     private String path;
 
     @Autowired
     private ShippingRepo shippingRepo;
-
-    @BeforeEach
-    void before() {
-        shippingRepo.deleteAll();
-    }
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})

@@ -1,7 +1,7 @@
 package com.sarabrandserver.product.controller;
 
 import com.github.javafaker.Faker;
-import com.sarabrandserver.AbstractIntegrationTest;
+import com.sarabrandserver.SingleThreadIntegration;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
@@ -10,7 +10,6 @@ import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 
@@ -29,7 +29,8 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class WorkerProductControllerTest extends AbstractIntegrationTest {
+@Transactional
+class WorkerProductControllerTest extends SingleThreadIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}worker/product")
     private String requestMapping;
@@ -70,13 +71,6 @@ class WorkerProductControllerTest extends AbstractIntegrationTest {
                 );
 
         TestData.dummyProducts(clothes, 5, workerProductService);
-    }
-
-    @AfterEach
-    void after() {
-        productDetailRepo.deleteAll();
-        productRepo.deleteAll();
-        categoryRepository.deleteAll();
     }
 
     private String productName() {

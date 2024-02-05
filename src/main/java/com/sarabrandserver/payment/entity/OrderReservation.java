@@ -37,7 +37,7 @@ public class OrderReservation {
     private ProductSku productSku;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "session_id", referencedColumnName = "session_id", nullable = false)
+    @JoinColumn(name = "session_id", referencedColumnName = "session_id")
     private ShoppingSession shoppingSession;
 
     public OrderReservation(

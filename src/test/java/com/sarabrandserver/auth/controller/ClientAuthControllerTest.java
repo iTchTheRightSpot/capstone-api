@@ -1,12 +1,16 @@
 package com.sarabrandserver.auth.controller;
 
-import com.sarabrandserver.AbstractIntegrationTest;
+import com.sarabrandserver.SingleThreadIntegration;
 import com.sarabrandserver.auth.dto.LoginDTO;
 import com.sarabrandserver.auth.dto.RegisterDTO;
+import com.sarabrandserver.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -16,12 +20,21 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class ClientAuthControllerTest extends AbstractIntegrationTest {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class ClientAuthControllerTest extends SingleThreadIntegration {
 
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
     @Value(value = "/${api.endpoint.baseurl}client/auth/")
     private String path;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @AfterEach
+    void after() {
+        userRepository.deleteAll();
+    }
 
     Cookie cookie(String principal, String password) throws Exception {
         var dto = new RegisterDTO(
@@ -33,7 +46,6 @@ class ClientAuthControllerTest extends AbstractIntegrationTest {
                 password
         );
 
-        // assert jwt cookie is present after registration
         return this.MOCKMVC
                 .perform(post(this.path + "register")
                         .contentType(APPLICATION_JSON)

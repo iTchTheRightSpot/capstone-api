@@ -40,7 +40,7 @@ public class ShoppingSession {
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "shoppingSession", orphanRemoval = true)
     private Set<CartItem> cartItems;
 
-    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "shoppingSession", orphanRemoval = true)
+    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "shoppingSession")
     private Set<OrderReservation> reservations;
 
     public ShoppingSession(

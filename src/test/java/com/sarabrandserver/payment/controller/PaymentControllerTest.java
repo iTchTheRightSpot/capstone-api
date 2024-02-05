@@ -1,12 +1,14 @@
 package com.sarabrandserver.payment.controller;
 
 import com.github.javafaker.Faker;
-import com.sarabrandserver.AbstractIntegrationTest;
+import com.sarabrandserver.SingleThreadIntegration;
 import com.sarabrandserver.cart.dto.CartDTO;
+import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
-import com.sarabrandserver.enumeration.ShippingType;
+import com.sarabrandserver.payment.repository.OrderDetailRepository;
+import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.product.dto.PriceCurrencyDTO;
 import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
@@ -36,6 +39,8 @@ import java.util.concurrent.Executors;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
+import static com.sarabrandserver.enumeration.ShippingType.INTERNATIONAL;
+import static com.sarabrandserver.enumeration.ShippingType.LOCAL;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -45,7 +50,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class PaymentControllerTest extends AbstractIntegrationTest {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class PaymentControllerTest extends SingleThreadIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}payment")
     private String path;
@@ -59,7 +65,7 @@ class PaymentControllerTest extends AbstractIntegrationTest {
     private String ngnConversion;
 
     @Autowired
-    private WorkerProductService workerProductService;
+    private WorkerProductService productService;
     @Autowired
     private ProductRepo productRepo;
     @Autowired
@@ -70,9 +76,18 @@ class PaymentControllerTest extends AbstractIntegrationTest {
     private CategoryRepository categoryRepository;
     @Autowired
     private ShippingRepo shippingRepo;
+    @Autowired
+    private OrderDetailRepository detailRepository;
+    @Autowired
+    private OrderReservationRepo reservationRepo;
+    @Autowired
+    private CartItemRepo cartItemRepo;
 
     @BeforeEach
     void before() {
+        detailRepository.deleteAll();
+        reservationRepo.deleteAll();
+        cartItemRepo.deleteAll();
         shippingRepo.deleteAll();
         productSkuRepo.deleteAll();
         productDetailRepo.deleteAll();
@@ -81,9 +96,9 @@ class PaymentControllerTest extends AbstractIntegrationTest {
     }
 
     private void extracted() {
-        shippingRepo.save(new Shipping(new BigDecimal("20000"), new BigDecimal("25.20"), ShippingType.LOCAL));
+        shippingRepo.save(new Shipping(new BigDecimal("20000"), new BigDecimal("25.20"), LOCAL));
         shippingRepo
-                .save(new Shipping(new BigDecimal("40000.00"), new BigDecimal("30.55"), ShippingType.INTERNATIONAL));
+                .save(new Shipping(new BigDecimal("40000.00"), new BigDecimal("30.55"), INTERNATIONAL));
 
         var category = categoryRepository
                 .save(
@@ -96,7 +111,7 @@ class PaymentControllerTest extends AbstractIntegrationTest {
                                 .build()
                 );
 
-        TestData.dummyProducts(category, 2, workerProductService);
+        TestData.dummyProducts(category, 2, productService);
 
         var clothes = categoryRepository
                 .save(
@@ -109,7 +124,7 @@ class PaymentControllerTest extends AbstractIntegrationTest {
                                 .build()
                 );
 
-        TestData.dummyProducts(clothes, 5, workerProductService);
+        TestData.dummyProducts(clothes, 5, productService);
     }
 
     private ProductSku productSku() {
@@ -284,9 +299,9 @@ class PaymentControllerTest extends AbstractIntegrationTest {
     """)
     void va() throws Exception {
         shippingRepo
-                .save(new Shipping(new BigDecimal("25025"), new BigDecimal("30.20"), ShippingType.INTERNATIONAL));
+                .save(new Shipping(new BigDecimal("25025"), new BigDecimal("30.20"), INTERNATIONAL));
         shippingRepo
-                .save(new Shipping(new BigDecimal("3075"), new BigDecimal("45.19"), ShippingType.LOCAL));
+                .save(new Shipping(new BigDecimal("3075"), new BigDecimal("45.19"), LOCAL));
 
         PriceCurrencyDTO[] arr = {
                 new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "USD"),
@@ -312,7 +327,7 @@ class PaymentControllerTest extends AbstractIntegrationTest {
                         1, // 1 product
                         1, // variant qty
                         5.5, // 5.5kg
-                        workerProductService
+                        productService
                 );
 
         int numOfUsers = 5;
@@ -386,7 +401,7 @@ class PaymentControllerTest extends AbstractIntegrationTest {
 
     @Test
     void validateTotalAmountUSD() throws Exception {
-        shippingRepo.save(new Shipping(new BigDecimal("0"), new BigDecimal("30.20"), ShippingType.INTERNATIONAL));
+        shippingRepo.save(new Shipping(new BigDecimal("0"), new BigDecimal("30.20"), INTERNATIONAL));
 
         PriceCurrencyDTO[] arr = {
                 new PriceCurrencyDTO(new BigDecimal("150.55"), "USD"),
@@ -414,7 +429,7 @@ class PaymentControllerTest extends AbstractIntegrationTest {
                         1, // 1 product
                         qty, // 1 variants
                         weight, // 2.5kg
-                        workerProductService
+                        productService
                 );
 
         Cookie cookie = createNewShoppingSession();
@@ -452,7 +467,7 @@ class PaymentControllerTest extends AbstractIntegrationTest {
                 new PriceCurrencyDTO(new BigDecimal("75000"), "NGN"),
         };
 
-        shippingRepo.save(new Shipping(new BigDecimal("20000"), new BigDecimal("25.20"), ShippingType.LOCAL));
+        shippingRepo.save(new Shipping(new BigDecimal("20000"), new BigDecimal("25.20"), LOCAL));
         var category = categoryRepository
                 .save(
                         ProductCategory.builder()
@@ -473,7 +488,7 @@ class PaymentControllerTest extends AbstractIntegrationTest {
                         1, // 1 product
                         qty, // 5 variants
                         weight, // 5.5kg
-                        workerProductService
+                        productService
                 );
 
         Cookie cookie = createNewShoppingSession();

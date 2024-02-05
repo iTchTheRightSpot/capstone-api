@@ -2,6 +2,7 @@ package com.sarabrandserver.payment.repository;
 
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractRepositoryTest;
+import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
 import com.sarabrandserver.category.entity.ProductCategory;

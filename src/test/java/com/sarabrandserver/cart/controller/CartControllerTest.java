@@ -1,23 +1,21 @@
 package com.sarabrandserver.cart.controller;
 
-import com.sarabrandserver.AbstractIntegrationTest;
+import com.sarabrandserver.SingleThreadIntegration;
 import com.sarabrandserver.cart.dto.CartDTO;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.product.entity.ProductSku;
-import com.sarabrandserver.product.repository.ProductDetailRepo;
-import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 
@@ -30,7 +28,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class CartControllerTest extends AbstractIntegrationTest {
+@Transactional
+class CartControllerTest extends SingleThreadIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}cart")
     private String path;
@@ -42,11 +41,7 @@ class CartControllerTest extends AbstractIntegrationTest {
     @Autowired
     private WorkerProductService workerProductService;
     @Autowired
-    private ProductRepo productRepo;
-    @Autowired
     private ProductSkuRepo productSkuRepo;
-    @Autowired
-    private ProductDetailRepo productDetailRepo;
     @Autowired
     private CategoryRepository categoryRepository;
 
@@ -77,14 +72,6 @@ class CartControllerTest extends AbstractIntegrationTest {
                 );
 
         TestData.dummyProducts(clothes, 5, workerProductService);
-    }
-
-    @AfterEach
-    void after() {
-        shoppingSessionRepo.deleteAll();
-        productDetailRepo.deleteAll();
-        productRepo.deleteAll();
-        categoryRepository.deleteAll();
     }
 
     private ProductSku productSku() {

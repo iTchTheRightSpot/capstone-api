@@ -44,7 +44,7 @@ public class CartController {
     @ResponseStatus(OK)
     @DeleteMapping
     public void deleteItem(@NotNull @RequestParam(name = "sku") String sku, HttpServletRequest req) {
-        this.cartService.remove_from_cart(req, sku);
+        this.cartService.deleteFromCart(req, sku);
     }
 
 }

@@ -1,19 +1,16 @@
 package com.sarabrandserver.category.controller;
 
-import com.sarabrandserver.AbstractIntegrationTest;
+import com.sarabrandserver.SingleThreadIntegration;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
-import com.sarabrandserver.product.repository.ProductDetailRepo;
-import com.sarabrandserver.product.repository.ProductRepo;
-import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 
@@ -21,11 +18,11 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class ClientCategoryControllerTest extends AbstractIntegrationTest {
+@Transactional
+class ClientCategoryControllerTest extends SingleThreadIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}client/category")
     private String requestParam;
@@ -33,21 +30,7 @@ class ClientCategoryControllerTest extends AbstractIntegrationTest {
     @Autowired
     private WorkerProductService workerProductService;
     @Autowired
-    private ProductRepo productRepo;
-    @Autowired
-    private ProductSkuRepo productSkuRepo;
-    @Autowired
-    private ProductDetailRepo productDetailRepo;
-    @Autowired
     private CategoryRepository categoryRepository;
-
-    @AfterEach
-    void after() {
-        productSkuRepo.deleteAll();
-        productDetailRepo.deleteAll();
-        productRepo.deleteAll();
-        categoryRepository.deleteAll();
-    }
 
     @Test
     @Order(2)

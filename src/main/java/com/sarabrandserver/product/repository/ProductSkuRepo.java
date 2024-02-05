@@ -39,7 +39,7 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     s.inventory = (s.inventory - :qty)
     WHERE s.sku = :sku
     """)
-    void updateInventoryOnMakingReservation(String sku, int qty);
+    void updateInventoryBySubtractingFromCurrentInventory(String sku, int qty);
 
     /**
      * Update ProductSku inventory based on ProductSku.sku.
@@ -56,6 +56,14 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     s.inventory = (s.inventory + :qty)
     WHERE s.sku = :sku
     """)
-    void incrementInventory(String sku, int qty);
+    void updateInventoryByAddingToCurrentInventory(String sku, int qty);
+
+    /**
+     * Deletes ProductSku from db
+     * */
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM ProductSku s WHERE s.sku = :sku")
+    void deleteProductSkuBySku(String sku);
 
 }

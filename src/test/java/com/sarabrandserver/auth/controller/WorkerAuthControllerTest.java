@@ -1,23 +1,22 @@
 package com.sarabrandserver.auth.controller;
 
-import com.sarabrandserver.AbstractIntegrationTest;
+import com.sarabrandserver.SingleThreadIntegration;
 import com.sarabrandserver.auth.dto.LoginDTO;
 import com.sarabrandserver.auth.dto.RegisterDTO;
 import com.sarabrandserver.auth.service.AuthService;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.user.repository.UserRepository;
-import com.sarabrandserver.user.repository.UserRoleRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MvcResult;
 
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -25,7 +24,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class WorkerAuthControllerTest extends AbstractIntegrationTest {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class WorkerAuthControllerTest extends SingleThreadIntegration {
 
     private final String PRINCIPAL = "SEJU@development.com";
     private final String PASSWORD = "123#-SEJU-Development";
@@ -35,27 +35,14 @@ class WorkerAuthControllerTest extends AbstractIntegrationTest {
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
 
-    @Autowired private AuthService authService;
-    @Autowired private UserRoleRepository userRoleRepository;
-    @Autowired private UserRepository userRepository;
-
-    @BeforeEach
-    void setUp() {
-        var dto = new RegisterDTO(
-                "SEJU",
-                "Development",
-                PRINCIPAL,
-                "",
-                "000-000-0000",
-                PASSWORD
-        );
-        this.authService.workerRegister(dto);
-    }
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private AuthService authService;
 
     @AfterEach
-    void tearDown() {
-        this.userRoleRepository.deleteAll();
-        this.userRepository.deleteAll();
+    void after() {
+        userRepository.deleteAll();
     }
 
     /**
@@ -64,7 +51,17 @@ class WorkerAuthControllerTest extends AbstractIntegrationTest {
     @Test
     @Order(1)
     void register() throws Exception {
-        // Login
+        // given
+        this.authService.workerRegister(new RegisterDTO(
+                "SEJU",
+                "Development",
+                PRINCIPAL,
+                "",
+                "000-000-0000",
+                PASSWORD
+        ));
+
+        // when
         MvcResult login = this.MOCKMVC
                 .perform(post(requestMapping + "login")
                         .with(csrf())
@@ -100,7 +97,17 @@ class WorkerAuthControllerTest extends AbstractIntegrationTest {
     @Test
     @Order(2)
     void register_with_existing_credentials() throws Exception {
-        // Login
+        // given
+        this.authService.workerRegister(new RegisterDTO(
+                "SEJU",
+                "Development",
+                PRINCIPAL,
+                "",
+                "000-000-0000",
+                PASSWORD
+        ));
+
+        // when
         MvcResult login = this.MOCKMVC
                 .perform(post(requestMapping + "login")
                         .with(csrf())
@@ -126,12 +133,23 @@ class WorkerAuthControllerTest extends AbstractIntegrationTest {
                         .content(this.MAPPER.writeValueAsString(dto))
                         .cookie(login.getResponse().getCookie(JSESSIONID))
                 )
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof DuplicateException));
+                .andExpect(result -> assertInstanceOf(DuplicateException.class, result.getResolvedException()));
     }
 
     @Test
     @Order(3)
     void login_wrong_password() throws Exception {
+        // given
+        this.authService.workerRegister(new RegisterDTO(
+                "SEJU",
+                "Development",
+                PRINCIPAL,
+                "",
+                "000-000-0000",
+                PASSWORD
+        ));
+
+        // when
         String payload = this.MAPPER
                 .writeValueAsString(new LoginDTO(PRINCIPAL, "fFeubfrom@#$%^124234"));
         this.MOCKMVC
@@ -145,12 +163,22 @@ class WorkerAuthControllerTest extends AbstractIntegrationTest {
     }
 
     /**
-     * Validates cookie has been clear. But cookie will still be valid if it due to jwt being stateless
+     * Validates cookie has been cleared.
      */
     @Test
     @Order(4)
     void logout() throws Exception {
-        // Login
+        // given
+        this.authService.workerRegister(new RegisterDTO(
+                "SEJU",
+                "Development",
+                PRINCIPAL,
+                "",
+                "000-000-0000",
+                PASSWORD
+        ));
+
+        // then
         MvcResult login = this.MOCKMVC
                 .perform(post(requestMapping + "login")
                         .with(csrf())

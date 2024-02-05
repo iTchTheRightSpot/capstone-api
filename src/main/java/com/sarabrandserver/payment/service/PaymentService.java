@@ -113,7 +113,10 @@ public class PaymentService {
                     }
 
                     this.productSkuRepo
-                            .updateInventoryOnMakingReservation(cart.getProductSku().getSku(), cart.getQty());
+                            .updateInventoryBySubtractingFromCurrentInventory(
+                                    cart.getProductSku().getSku(),
+                                    cart.getQty()
+                            );
                     this.reservationRepo
                             .save(new OrderReservation(
                                             cart.getQty(),
@@ -172,7 +175,7 @@ public class PaymentService {
      * */
     private BigDecimal cartItemsTotal(String sessionId, SarreCurrency currency) {
         return this.cartItemRepo
-                .total_amount_in_default_currency(sessionId, currency)
+                .totalAmountInDefaultCurrency(sessionId, currency)
                 .stream()
                 .map(p -> {
                     BigDecimal mul = p.getPrice().multiply(BigDecimal.valueOf(p.getQty()));
@@ -248,7 +251,10 @@ public class PaymentService {
                 map.remove(cart.getProductSku().getSku());
             } else {
                 this.productSkuRepo
-                        .updateInventoryOnMakingReservation(cart.getProductSku().getSku(), cart.getQty());
+                        .updateInventoryBySubtractingFromCurrentInventory(
+                                cart.getProductSku().getSku(),
+                                cart.getQty()
+                        );
                 this.reservationRepo
                         .save(new OrderReservation(cart.getQty(), PENDING, date, cart.getProductSku(), session));
             }
@@ -257,7 +263,7 @@ public class PaymentService {
         for (Map.Entry<String, OrderReservation> entry : map.entrySet()) {
             OrderReservation r = entry.getValue();
             this.productSkuRepo
-                    .incrementInventory(r.getProductSku().getSku(), r.getQty());
+                    .updateInventoryByAddingToCurrentInventory(r.getProductSku().getSku(), r.getQty());
             this.reservationRepo.deleteOrderReservationByReservationId(r.getReservationId());
         }
     }
@@ -340,7 +346,7 @@ public class PaymentService {
 
         for (OrderReservation r : list) {
             this.productSkuRepo
-                    .incrementInventory(r.getProductSku().getSku(), r.getQty());
+                    .updateInventoryByAddingToCurrentInventory(r.getProductSku().getSku(), r.getQty());
             this.reservationRepo
                     .deleteOrderReservationByReservationId(r.getReservationId());
         }

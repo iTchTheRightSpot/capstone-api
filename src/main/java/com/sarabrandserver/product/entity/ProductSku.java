@@ -35,12 +35,12 @@ public class ProductSku implements Serializable {
     @Column(name = "inventory", nullable = false)
     private int inventory;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne
     @JoinColumn(name = "detail_id", referencedColumnName = "detail_id", nullable = false)
     private ProductDetail productDetail;
 
     @OneToMany(fetch = LAZY, cascade = ALL, mappedBy = "sku")
-    private Set<OrderDetail> orderDetail;
+    private Set<OrderDetail> orderDetails;
 
     @OneToMany(fetch = LAZY, cascade = ALL, mappedBy = "productSku")
     private Set<OrderReservation> reservations;

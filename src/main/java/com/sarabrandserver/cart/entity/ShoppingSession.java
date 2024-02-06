@@ -2,6 +2,7 @@ package com.sarabrandserver.cart.entity;
 
 import com.sarabrandserver.payment.entity.OrderReservation;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,6 +18,7 @@ import static jakarta.persistence.TemporalType.TIMESTAMP;
 @Table(name = "shopping_session")
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 public class ShoppingSession {

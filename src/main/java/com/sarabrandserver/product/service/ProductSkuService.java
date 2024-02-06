@@ -37,7 +37,7 @@ public class ProductSkuService {
                                     .size(dto.size())
                                     .inventory(dto.qty())
                                     .productDetail(detail)
-                                    .orderDetail(new HashSet<>())
+                                    .orderDetails(new HashSet<>())
                                     .reservations(new HashSet<>())
                                     .cartItems(new HashSet<>())
                                     .build()

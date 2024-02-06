@@ -23,6 +23,7 @@ import com.sarabrandserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -131,7 +132,7 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
 
         assertNotEquals(0, sku.getInventory());
 
-        skuRepo.updateInventoryBySubtractingFromCurrentInventory(sku.getSku(), sku.getInventory());
+        skuRepo.updateProductSkuInventoryBySubtractingFromExistingInventory(sku.getSku(), sku.getInventory());
 
         var optional = skuRepo.findBySku(sku.getSku());
         assertFalse(optional.isEmpty());
@@ -164,7 +165,7 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
 
         assertNotEquals(0, sku.getInventory());
 
-        skuRepo.updateInventoryByAddingToCurrentInventory(sku.getSku(), sku.getInventory());
+        skuRepo.updateProductSkuInventoryByAddingToExistingInventory(sku.getSku(), sku.getInventory());
 
         var optional = skuRepo.findBySku(sku.getSku());
         assertFalse(optional.isEmpty());
@@ -251,6 +252,39 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
 
         assertThrows(DataIntegrityViolationException.class,
                 () -> skuRepo.deleteProductSkuBySku(sku.getSku()));
+    }
+
+    @Test
+    void validateConstraintProductSkuInvCannotBeLessThanZero() {
+        // given
+        var cat = categoryRepo
+                .save(ProductCategory.builder()
+                        .name("category")
+                        .isVisible(true)
+                        .categories(new HashSet<>())
+                        .product(new HashSet<>())
+                        .build());
+
+        productService
+                .create(
+                        TestData.createProductDTO(
+                                new Faker().commerce().productName(),
+                                cat.getCategoryId(),
+                                TestData.sizeInventoryDTOArray(3)
+                        ),
+                        TestData.files()
+                );
+
+        // when
+        var skus = skuRepo.findAll();
+        assertFalse(skus.isEmpty());
+
+        assertThrows(JpaSystemException.class,
+                () -> skuRepo.updateProductSkuInventoryByAddingToExistingInventory(
+                        skus.getFirst().getSku(),
+                        -100
+                )
+        );
     }
 
 }

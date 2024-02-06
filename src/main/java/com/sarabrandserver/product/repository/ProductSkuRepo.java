@@ -23,6 +23,12 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     """)
     int skuHasBeenPurchased(String sku);
 
+    /**
+     * Update a {@code ProductSku} qty property by deducting from current qty.
+     *
+     * @param sku is a unique string for every {@code ProductSku}.
+     * @param qty is the number to add to an existing {@code ProductSku}.
+     * */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
@@ -31,14 +37,13 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     s.inventory = (s.inventory - :qty)
     WHERE s.sku = :sku
     """)
-    void updateInventoryBySubtractingFromCurrentInventory(String sku, int qty);
+    void updateProductSkuInventoryBySubtractingFromExistingInventory(String sku, int qty);
 
     /**
-     * Update ProductSku inventory based on ProductSku.sku.
-     * Achieves this by adding qty passed in the parameter.
-     * Note this method is only called in PaymentService when
-     * reserved ProductSku has either expired or user no longer
-     * wants to purchase item.
+     * Update a {@code ProductSku} qty property by adding from current qty.
+     *
+     * @param sku is a unique string for every {@code ProductSku}.
+     * @param qty is the number to add to an existing {@code ProductSku}.
      * */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -48,7 +53,7 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     s.inventory = (s.inventory + :qty)
     WHERE s.sku = :sku
     """)
-    void updateInventoryByAddingToCurrentInventory(String sku, int qty);
+    void updateProductSkuInventoryByAddingToExistingInventory(String sku, int qty);
 
     /**
      * Deletes ProductSku from db

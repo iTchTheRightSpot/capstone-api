@@ -117,7 +117,7 @@ public class PaymentService {
                     }
 
                     this.productSkuRepo
-                            .updateInventoryBySubtractingFromCurrentInventory(
+                            .updateProductSkuInventoryBySubtractingFromExistingInventory(
                                     cart.getProductSku().getSku(),
                                     cart.getQty()
                             );
@@ -132,14 +132,21 @@ public class PaymentService {
                             );
                 }
             } else {
+                Map<String, OrderReservation> map = reservations
+                        .stream()
+                        .collect(Collectors.toMap(
+                                reservation -> reservation.getProductSku().getSku(),
+                                orderReservation -> orderReservation)
+                        );
                 onPendingReservationsNotEmpty(
                         session.get(),
                         date,
-                        reservations,
+                        map,
                         session.get().getCartItems().stream().toList()
                 );
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            log.error("race condition exception thrown. {}", e.getMessage());
             throw new OutOfStockException("an item in your cart is out of stock");
         }
 
@@ -189,42 +196,37 @@ public class PaymentService {
     }
 
     /**
-     * The implementation below eliminates race condition for a situation where a user is indecisive about
-     * the number of items to purchase.
-     * 1. We convert reservations into a map of OrderReservation.sku to the object.
-     *    Think map: { key: "OrderReservation.sku", value: the object }.
-     * 2. Iterate cartItems for find CartItem.sku that contains in the map.
-     * 3. Now that we have the items we want, we update ProductSku inventory and OrderReservation qty if
-     *    we have a situation where the items in our CartItem qty is greater or less than OrderReservation qty.
-     * 4. For cart.getQty() > reservation.getQty(), we subtract (cart.getQty() - reservation.getQty()) from
-     *    ProductSku inv since the reservation already exists.
-     * 5. For cart.getQty() < reservation.getQty(), we add (reservation.getQty() - cart.getQty()) from
-     *    ProductSku inv since the reservation already exists.
-     * 6. For step 4 and 5, we update OrderReservation qty to CartItem qty
-     * 7. Final step in the iteration of cartItems is to remove the sku that contain from the map
-     * 8. Finally, after the current data have been purged, we delete unassociated data.
+     * The implementation below is the last line of defence to protect against
+     * race condition/overselling. It applies the logic of:
+     * 1. Error thrown if qty in a users cart is greater than what is in stock.
+     * 2. A user reduces or adds a new {@code ProductSku} to their cart.
+     * 3. Combination of step 2 but the qty for each {@code CartItem} is
+     * might be different to what is reserved.
+     * 4. User tries checking out with some items removed from cart.
      *
-     * @param date The current date.
-     * @param reservations List of {@code OrderReservation} objects representing pending reservations.
-     * @param cartItems List of {@code CartItem} objects representing items in the shopping cart.
-     * @param session is of {@code ShoppingSession}
+     * @param date the current date.
+     * @param map of {@code Map<String, OrderReservation>} where the key is
+     *            a unique string assigned to a {@code ProductSku} and
+     *            the value is {@code OrderReservation}.
+     * @param cartItems is a list of {@code CartItem} objects representing
+     *                  items in the shopping cart.
+     * @param session is a unique string of {@code ShoppingSession} assigned
+     *                to every device that visits our application.
+     * @throws OutOfStockException if {@code CartItem} property qty is
+     * greater than {@code ProductSku} inventory.
+     * @throws org.springframework.orm.jpa.JpaSystemException if
+     * {@code ProductSku} is less than 0.
      * */
+    @Transactional
     void onPendingReservationsNotEmpty(
             ShoppingSession session,
             Date date,
-            List<OrderReservation> reservations,
+            Map<String, OrderReservation> map,
             List<CartItem> cartItems
     ) {
-        Map<String, OrderReservation> map = reservations
-                .stream()
-                .collect(Collectors.toMap(
-                        reservation -> reservation.getProductSku().getSku(),
-                        orderReservation -> orderReservation)
-                );
-
         for (CartItem cart : cartItems) {
             if (cart.quantityIsGreaterThanProductSkuInventory()) {
-                throw new OutOfStockException("an item in your cart is out of stock");
+                throw new OutOfStockException("");
             }
 
             if (map.containsKey(cart.getProductSku().getSku())) {
@@ -232,7 +234,7 @@ public class PaymentService {
 
                 if (cart.getQty() > reservation.getQty()) {
                     this.reservationRepo
-                            .onSub(
+                            .deductFromProductSkuInventoryAndReplaceReservationQty(
                                     cart.getQty() - reservation.getQty(),
                                     cart.getQty(),
                                     date,
@@ -242,7 +244,7 @@ public class PaymentService {
                             );
                 } else if (cart.getQty() < reservation.getQty()) {
                     this.reservationRepo
-                            .onAdd(
+                            .addToProductSkuInventoryAndReplaceReservationQty(
                                     reservation.getQty() - cart.getQty(),
                                     cart.getQty(),
                                     date,
@@ -255,7 +257,7 @@ public class PaymentService {
                 map.remove(cart.getProductSku().getSku());
             } else {
                 this.productSkuRepo
-                        .updateInventoryBySubtractingFromCurrentInventory(
+                        .updateProductSkuInventoryBySubtractingFromExistingInventory(
                                 cart.getProductSku().getSku(),
                                 cart.getQty()
                         );
@@ -265,10 +267,13 @@ public class PaymentService {
         }
 
         for (Map.Entry<String, OrderReservation> entry : map.entrySet()) {
-            OrderReservation r = entry.getValue();
+            OrderReservation value = entry.getValue();
             this.productSkuRepo
-                    .updateInventoryByAddingToCurrentInventory(r.getProductSku().getSku(), r.getQty());
-            this.reservationRepo.deleteOrderReservationByReservationId(r.getReservationId());
+                    .updateProductSkuInventoryByAddingToExistingInventory(
+                            value.getProductSku().getSku(),
+                            value.getQty()
+                    );
+            this.reservationRepo.deleteOrderReservationByReservationId(value.getReservationId());
         }
     }
 
@@ -350,7 +355,7 @@ public class PaymentService {
 
         for (OrderReservation r : list) {
             this.productSkuRepo
-                    .updateInventoryByAddingToCurrentInventory(r.getProductSku().getSku(), r.getQty());
+                    .updateProductSkuInventoryByAddingToExistingInventory(r.getProductSku().getSku(), r.getQty());
             this.reservationRepo
                     .deleteOrderReservationByReservationId(r.getReservationId());
         }

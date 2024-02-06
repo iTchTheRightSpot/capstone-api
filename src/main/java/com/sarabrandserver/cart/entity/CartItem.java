@@ -2,6 +2,7 @@ package com.sarabrandserver.cart.entity;
 
 import com.sarabrandserver.product.entity.ProductSku;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,6 +13,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Table(name = "cart_item")
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 public class CartItem {

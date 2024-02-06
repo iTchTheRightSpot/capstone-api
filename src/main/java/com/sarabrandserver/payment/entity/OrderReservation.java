@@ -4,6 +4,7 @@ import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.enumeration.ReservationStatus;
 import com.sarabrandserver.product.entity.ProductSku;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,6 +14,7 @@ import java.util.Date;
 @Table(name = "order_reservation")
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 public class OrderReservation {

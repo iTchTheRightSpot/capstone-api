@@ -98,7 +98,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
 
         // when
         reservationRepo
-                .onSub(
+                .deductFromProductSkuInventoryAndReplaceReservationQty(
                         reservation.getQty(),
                         2,
                         CustomUtil.toUTC(
@@ -181,7 +181,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
 
         // when
         reservationRepo
-                .onAdd(
+                .addToProductSkuInventoryAndReplaceReservationQty(
                         reservation.getQty(),
                         5,
                         CustomUtil.toUTC(

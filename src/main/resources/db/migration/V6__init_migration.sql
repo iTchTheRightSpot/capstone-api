@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS price_currency (
     currency          VARCHAR(10) NOT NULL,
     product_id        BIGINT      NOT NULL,
     PRIMARY KEY (price_currency_id),
-    FOREIGN KEY (product_id) references product (product_id)
+    CONSTRAINT `price_currency_product_fk` FOREIGN KEY (product_id) references product (product_id) ON DELETE CASCADE
 );

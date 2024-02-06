@@ -8,8 +8,6 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 
-import static jakarta.persistence.FetchType.LAZY;
-
 @Table(name = "price_currency")
 @Entity
 @NoArgsConstructor
@@ -29,7 +27,7 @@ public class PriceCurrency {
     @Column(nullable = false, length = 10)
     private SarreCurrency currency;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne
     @JoinColumn(name = "product_id", referencedColumnName = "product_id", nullable = false)
     private Product product;
 

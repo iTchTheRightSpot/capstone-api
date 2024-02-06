@@ -42,7 +42,7 @@ public class Product implements Serializable {
     @Column(name = "weight_type")
     private String weightType; // default injected in migration script
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne
     @JoinColumn(name = "category_id", referencedColumnName = "category_id")
     private ProductCategory productCategory;
 

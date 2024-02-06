@@ -5,6 +5,7 @@ import com.sarabrandserver.AbstractRepositoryTest;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
+import com.sarabrandserver.product.entity.PriceCurrency;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.projection.ImagePojo;
 import com.sarabrandserver.product.projection.ProductPojo;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 
@@ -34,10 +36,6 @@ class ProductRepoTest extends AbstractRepositoryTest {
     private ProductRepo productRepo;
     @Autowired
     private PriceCurrencyRepo currencyRepo;
-    @Autowired
-    private ProductDetailRepo detailRepo;
-    @Autowired
-    private ProductSkuRepo skuRepo;
 
     @Test
     void nameNotAssociatedToUuid() {
@@ -340,7 +338,7 @@ class ProductRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void validateOnDeleteCascadeWhenDeletingAProductWithNoDetailsButIsAttachedToPricesAndImageKeys() {
+    void validateOnDeleteCascadeWhenDeletingAProductWithNoDetailsButIsAttachedToPriceCurrency() {
         // given
         var cat = categoryRepo
                 .save(ProductCategory.builder()
@@ -350,29 +348,27 @@ class ProductRepoTest extends AbstractRepositoryTest {
                         .product(new HashSet<>())
                         .build());
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
+        var product = productRepo
+                .save(Product.builder()
+                        .uuid("uuid")
+                        .name("product-1")
+                        .description(new Faker().lorem().fixedString(500))
+                        .defaultKey("default-image-key")
+                        .weight(2.5)
+                        .weightType("kg")
+                        .productCategory(cat)
+                        .productDetails(new HashSet<>())
+                        .priceCurrency(new HashSet<>())
+                        .build()
                 );
 
-        // when
-        skuRepo.deleteAll();
-        detailRepo.deleteAll();
+        currencyRepo.save(new PriceCurrency(new BigDecimal("45750"), NGN, product));
+        currencyRepo.save(new PriceCurrency(new BigDecimal("10.52"), USD, product));
 
         // then
-        var products = productRepo.findAll();
-        assertFalse(products.isEmpty());
-        Product first = products.getFirst();
-
-        assertTrue(productRepo.productImagesByProductUuid(first.getUuid()).isEmpty());
         assertFalse(currencyRepo.findAll().isEmpty());
-        assertThrows(DataIntegrityViolationException.class,
-                () -> productRepo.deleteByProductUuid(first.getUuid()));
+        productRepo.deleteByProductUuid(product.getUuid());
+        assertTrue(currencyRepo.findAll().isEmpty());
     }
 
 }

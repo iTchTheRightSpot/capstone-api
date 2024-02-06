@@ -22,6 +22,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.xml.bind.DatatypeConverter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,18 +52,21 @@ public class PaymentService {
     private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
     private static final long bound = 15;
 
+    @Setter
     @Value("${cart.cookie.name}")
     private String CART_COOKIE;
+    @Setter
     @Value(value = "${cart.split}")
     private String SPLIT;
+    @Setter
     @Value("${sarre.usd.to.cent}")
     private String usdConversion;
+    @Setter
     @Value("${sarre.ngn.to.kobo}")
     private String ngnConversion;
 
     private final ProductSkuRepo productSkuRepo;
     private final ShoppingSessionRepo shoppingSessionRepo;
-    private final ObjectMapper objectMapper;
     private final CartItemRepo cartItemRepo;
     private final OrderReservationRepo reservationRepo;
     private final ThirdPartyPaymentService thirdPartyService;
@@ -205,7 +209,7 @@ public class PaymentService {
      * @param cartItems List of {@code CartItem} objects representing items in the shopping cart.
      * @param session is of {@code ShoppingSession}
      * */
-    private void onPendingReservationsNotEmpty(
+    void onPendingReservationsNotEmpty(
             ShoppingSession session,
             Date date,
             List<OrderReservation> reservations,
@@ -318,7 +322,7 @@ public class PaymentService {
     private String validateRequestFromPayStack(String secretKey, String body) {
         String hmac = "HmacSHA512";
         try {
-            JsonNode node = this.objectMapper.readValue(body, JsonNode.class);
+            JsonNode node = new ObjectMapper().readValue(body, JsonNode.class);
             Mac sha512_HMAC = Mac.getInstance(hmac);
             sha512_HMAC.init(new SecretKeySpec(secretKey.getBytes(UTF_8), hmac));
             return DatatypeConverter

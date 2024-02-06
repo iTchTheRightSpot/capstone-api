@@ -197,7 +197,7 @@ class AuthServiceTest extends AbstractUnitTest {
     }
 
     @Test
-    void register_client_existing_principal() {
+    void registerClientExistingPrincipal() {
         // Given
         var dto = new RegisterDTO(
                 TestData.client().getFirstname(),

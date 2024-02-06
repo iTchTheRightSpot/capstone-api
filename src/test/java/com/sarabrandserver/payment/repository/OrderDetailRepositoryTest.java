@@ -1,6 +1,5 @@
 package com.sarabrandserver.payment.repository;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractRepositoryTest;
 import com.sarabrandserver.aws.S3Service;
@@ -119,7 +118,7 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
             assertNotNull(pojo.getPaymentId());
 
             PayloadMapper[] arr = OrderService
-                    .transform(new ObjectMapper(), s3Service, BUCKET, pojo.getDetail());
+                    .transform(s3Service, BUCKET, pojo.getDetail());
             assertNotNull(arr);
 
             for (PayloadMapper mapper : arr) {

@@ -6,6 +6,7 @@ import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.exception.DuplicateException;
+import com.sarabrandserver.exception.ResourceAttachedException;
 import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
@@ -329,7 +330,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
                         .param("id", product.getUuid())
                         .with(csrf())
                 )
-                .andExpect(result -> assertInstanceOf(DuplicateException.class, result.getResolvedException()));
+                .andExpect(result -> assertInstanceOf(ResourceAttachedException.class, result.getResolvedException()));
 
         assertTrue(productRepo.findById(product.getProductId()).isEmpty());
     }

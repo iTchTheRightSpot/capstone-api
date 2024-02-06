@@ -29,7 +29,6 @@ public class OrderService {
 
     private final OrderDetailRepository repository;
     private final S3Service s3Service;
-    private final ObjectMapper objectMapper;
 
     public List<OrderHistoryDTO> orderHistory() {
         String principal = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -37,7 +36,7 @@ public class OrderService {
                 .orderHistoryByPrincipal(principal)
                 .stream()
                 .map(p -> {
-                    var detail = transform(objectMapper, s3Service, BUCKET, p.getDetail());
+                    var detail = transform(s3Service, BUCKET, p.getDetail());
                     return new OrderHistoryDTO(
                             p.getTime().getTime(),
                             p.getCurrency(),
@@ -53,9 +52,9 @@ public class OrderService {
      * Maps from string to PayloadMapper[]
      * param str is in format [ { "name" : "", "key" : "", "colour" : "" } ]
      * */
-    public static PayloadMapper[] transform(ObjectMapper mapper, S3Service s3Service, String bucketName, String str) {
+    public static PayloadMapper[] transform(S3Service s3Service, String bucketName, String str) {
         try {
-            PayloadMapper[] arr = mapper.readValue(str, PayloadMapper[].class);
+            PayloadMapper[] arr = new ObjectMapper().readValue(str, PayloadMapper[].class);
             return Arrays.stream(arr)
                     .map(m -> {
                         String url = s3Service.preSignedUrl(bucketName, m.key());

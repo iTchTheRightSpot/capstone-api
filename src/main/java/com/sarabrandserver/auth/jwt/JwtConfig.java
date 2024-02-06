@@ -1,6 +1,5 @@
 package com.sarabrandserver.auth.jwt;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -35,11 +34,6 @@ public class JwtConfig {
     private String JSESSIONID;
     @Value(value = "${jwt.claim}")
     private String CLAIM;
-
-    @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
-    }
 
     @Bean
     public JwtEncoder jwtEncoder() {

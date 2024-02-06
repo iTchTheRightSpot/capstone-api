@@ -1,19 +1,15 @@
 package com.sarabrandserver.payment.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.AbstractUnitTest;
 import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.payment.dto.PayloadMapper;
 import com.sarabrandserver.payment.repository.OrderDetailRepository;
-import com.sarabrandserver.user.entity.SarreBrandUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.springframework.beans.factory.annotation.Value;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -26,7 +22,7 @@ class OrderServiceTest extends AbstractUnitTest {
 
     @BeforeEach
     void setUp() {
-        OrderService orderService = new OrderService(repository, s3Service, new ObjectMapper());
+        OrderService orderService = new OrderService(repository, s3Service);
         orderService.setBUCKET("dummy");
     }
 
@@ -47,7 +43,7 @@ class OrderServiceTest extends AbstractUnitTest {
 
         // then
         PayloadMapper[] arr = OrderService
-                .transform(new ObjectMapper(), s3Service, "dummy", str);
+                .transform(s3Service, "dummy", str);
 
         assertNotNull(arr);
         verify(s3Service, times(3))

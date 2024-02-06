@@ -1,5 +1,6 @@
 package com.sarabrandserver;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -12,6 +13,11 @@ import org.testcontainers.containers.MySQLContainer;
 public class TestConfig {
 
     static final Logger log = LoggerFactory.getLogger(TestConfig.class);
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
+    }
 
     @Bean
     @ServiceConnection

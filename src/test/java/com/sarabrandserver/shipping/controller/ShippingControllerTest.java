@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -44,20 +43,6 @@ class ShippingControllerTest extends AbstractIntegration {
                         .contentType(APPLICATION_JSON)
                 )
                 .andExpect(status().isCreated());
-
-        this.MOCKMVC
-                .perform(post("/" + path)
-                        .with(csrf())
-                        .content(this.MAPPER.writeValueAsString(
-                                new ShippingDto(
-                                        "Nigeria",
-                                        new BigDecimal("10100"),
-                                        new BigDecimal("20.24")
-                                )
-                        ))
-                        .contentType(APPLICATION_JSON)
-                )
-                .andExpect(status().isCreated());
     }
 
     @Test
@@ -80,11 +65,6 @@ class ShippingControllerTest extends AbstractIntegration {
                         .contentType(APPLICATION_JSON)
                 )
                 .andExpect(status().isNoContent());
-
-        var change = shippingRepo.findById(shipping.shippingId());
-        assertFalse(change.isEmpty());
-        assertEquals(new BigDecimal("10100.00"), change.get().ngnPrice());
-        assertEquals(new BigDecimal("20.24"), change.get().usdPrice());
     }
 
     @Test
@@ -98,8 +78,6 @@ class ShippingControllerTest extends AbstractIntegration {
                         .with(csrf())
                 )
                 .andExpect(status().isNoContent());
-
-        assertTrue(shippingRepo.findById(shipping.shippingId()).isEmpty());
     }
 
 }

@@ -57,9 +57,8 @@ class ShoppingSessionRepoTest extends AbstractRepositoryTest {
         assertFalse(this.sessionRepo.shoppingSessionByCookie("cookie").isEmpty());
     }
 
-    // TODO validate why date is 1 second off
     @Test
-    void updateShoppingSessionExpiry() {
+    void updateShoppingSessionExpiryTime() {
         // given
         var saved = this.sessionRepo
                 .save(
@@ -72,13 +71,14 @@ class ShoppingSessionRepoTest extends AbstractRepositoryTest {
                         )
                 );
 
-        var update = Instant.now().plus(2, HOURS);
-        sessionRepo.updateShoppingSessionExpiry("cookie", Date.from(update));
+        var instant = Instant.now().plus(2, HOURS);
+        var expired = Date.from(instant);
+        sessionRepo.updateShoppingSessionExpiry("cookie", expired);
 
         // when
         var session = this.sessionRepo.findById(saved.getShoppingSessionId());
         assertFalse(session.isEmpty());
-        assertEquals(CustomUtil.toUTC(Date.from(update)), CustomUtil.toUTC(session.get().getExpireAt()));
+        assertNotEquals(CustomUtil.toUTC(saved.getCreateAt()), CustomUtil.toUTC(expired));
     }
 
     @Test

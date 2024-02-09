@@ -1,5 +1,6 @@
 package com.sarabrandserver.shipping.service;
 
+import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
 import com.sarabrandserver.shipping.ShippingDto;
 import com.sarabrandserver.shipping.ShippingMapper;
@@ -7,6 +8,7 @@ import com.sarabrandserver.shipping.entity.Shipping;
 import com.sarabrandserver.shipping.repository.ShippingRepo;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,12 +39,16 @@ public class ShippingService {
      *
      * @param dto is of {@code ShippingDto} which contains the
      *            necessary info to save a {@code Shipping} object.
-     * @throws java.sql.SQLException if dto.country() exists.
+     * @throws DuplicateException if dto.country() exists.
      * */
     @Transactional
     public void create(ShippingDto dto) {
+        try {
         repository
                 .save(new Shipping(StringUtils.capitalize(dto.country()), dto.ngn(), dto.usd()));
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateException("%s exists".formatted(dto.country()));
+        }
     }
 
     /**
@@ -50,12 +56,16 @@ public class ShippingService {
      *
      * @param dto is of {@code ShippingMapper} which contains the
      *            necessary info to update a {@code Shipping} object.
-     * @throws java.sql.SQLException if dto.country() exists.
+     * @throws DuplicateException if dto.country() exists.
      * */
     @Transactional
     public void update(ShippingMapper dto) {
-        repository
-                .updateShippingById(dto.id(), dto.country(), dto.ngn(), dto.usd());
+        try {
+            repository
+                    .updateShippingById(dto.id(), dto.country(), dto.ngn(), dto.usd());
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateException("%s exists".formatted(dto.country()));
+        }
     }
 
     /**

@@ -4,10 +4,10 @@ import com.sarabrandserver.AbstractRepositoryTest;
 import com.sarabrandserver.shipping.entity.Shipping;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,7 +39,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
 
         // then
         assertThrows(
-                SQLException.class,
+                DataIntegrityViolationException.class,
                 () -> shippingRepo
                         .save(new Shipping(
                                 "nigeria",
@@ -66,7 +66,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
 
         var shipping = optional.get();
         assertEquals("france", shipping.country());
-        assertEquals(new BigDecimal("500"), shipping.ngnPrice());
+        assertEquals(new BigDecimal("500.00"), shipping.ngnPrice());
         assertEquals(new BigDecimal("5.50"), shipping.usdPrice());
     }
 
@@ -82,7 +82,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
 
         // then
         assertThrows(
-                SQLException.class,
+                DataIntegrityViolationException.class,
                 () -> shippingRepo
                         .updateShippingById(
                                 id,
@@ -109,6 +109,18 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
+    void shouldContainShippingBecauseOfMigrationScriptV13() {
+        var all = shippingRepo.findAll();
+        assertEquals(1, all.size());
+
+        var shipping = all.getFirst();
+        assertEquals(1L, shipping.shippingId());
+        assertEquals("default", shipping.country());
+        assertEquals(new BigDecimal("0.00"), shipping.ngnPrice());
+        assertEquals(new BigDecimal("0.00"), shipping.usdPrice());
+    }
+
+    @Test
     void shippingByCountryShouldReturnDefaultValueInsertedInMigrationScriptV13() {
         // given
         shippingRepo
@@ -124,8 +136,8 @@ class ShippingRepoTest extends AbstractRepositoryTest {
         Shipping obj = optional.get();
         assertEquals(obj.shippingId(), 1L);
         assertEquals(obj.country(), "default");
-        assertEquals(obj.ngnPrice(), new BigDecimal("0"));
-        assertEquals(obj.ngnPrice(), new BigDecimal("0"));
+        assertEquals(obj.ngnPrice(), new BigDecimal("0.00"));
+        assertEquals(obj.ngnPrice(), new BigDecimal("0.00"));
     }
 
 }

@@ -22,7 +22,7 @@ public interface ShippingRepo extends JpaRepository<Shipping, Long> {
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
     UPDATE Shipping s
-    SET s.country = :name, s.ngnPrice = :ngn, s.usdPrice = :usd
+    SET s.country = :country, s.ngnPrice = :ngn, s.usdPrice = :usd
     WHERE s.shippingId = :id
     """)
     void updateShippingById(long id, String country, BigDecimal ngn, BigDecimal usd);
@@ -31,7 +31,11 @@ public interface ShippingRepo extends JpaRepository<Shipping, Long> {
      * Retrieves a {@code Shipping} entity based on the provided country.
      * If a country is specified, it returns the corresponding
      * {@code Shipping} entity, otherwise, it returns a default entity
-     * where the country name is 'default'.
+     * where the country name is 'default'. For better understanding,
+     * the native query is:
+     * SELECT * FROM shipping s WHERE s.country = (
+     * IF(( SELECT COUNT(*) FROM shipping h WHERE h.country = :country ) > 0,
+     * :country, 'default'))
      *
      * @param country The country for which to retrieve the
      *                {@code Shipping} entity. If {@code Shipping} does
@@ -41,12 +45,18 @@ public interface ShippingRepo extends JpaRepository<Shipping, Long> {
      * entity, or an empty {@code Optional} if default entity is not found.
      */
     @Query("""
-    SELECT
-    CASE
-        WHEN s.country = :country THEN s
-        WHEN s.country = 'default' THEN s
-    END
-    FROM Shipping s
+    SELECT s FROM Shipping s
+    WHERE s.country = (
+        CASE WHEN (
+                SELECT
+                COUNT(s)
+                FROM Shipping s
+                WHERE s.country = :country
+            ) > 0
+            THEN :country
+            ELSE 'default'
+            END
+    )
     """)
     Optional<Shipping> shippingByCountryElseReturnDefault(String country);
 

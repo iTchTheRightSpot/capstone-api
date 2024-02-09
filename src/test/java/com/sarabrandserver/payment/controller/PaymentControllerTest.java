@@ -20,7 +20,6 @@ import com.sarabrandserver.shipping.repository.ShippingRepo;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -91,18 +90,23 @@ class PaymentControllerTest extends AbstractIntegration {
         productDetailRepo.deleteAll();
         productRepo.deleteAll();
         categoryRepository.deleteAll();
+
+        // as we are deleting all from Shipping,
+        // we need to save default object again
+        shippingRepo
+                .save(new Shipping("default", new BigDecimal("0.00"), new BigDecimal("0.00")));
     }
 
-    private void extracted() {
+    private void preSaveNecessaryData() {
         shippingRepo
                 .save(new Shipping(
-                        new Faker().country().name(),
+                        "Canada",
                         new BigDecimal("20000"),
                         new BigDecimal("25.20")
                 ));
         shippingRepo
                 .save(new Shipping(
-                        new Faker().country().name(),
+                        "Nigeria",
                         new BigDecimal("40000.00"),
                         new BigDecimal("30.55")
                 ));
@@ -165,9 +169,8 @@ class PaymentControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @DisplayName("Tests against race condition. User doesn't have any item reserved")
-    void validate() throws Exception {
-        extracted();
+    void testRaceConditionWhereAUserDoesNotChangeAnythingInCart() throws Exception {
+        preSaveNecessaryData();
 
         // simulate adding item to cart
         Cookie cookie = create_new_shopping_session();
@@ -184,12 +187,8 @@ class PaymentControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @DisplayName("""
-    Tests against race condition. User being indecisive with the qty.
-    Basically user keeps switching from payment to checkout page.
-    """)
-    void valid() throws Exception {
-        extracted();
+    void raceConditionWhereAUserIsIndecisiveAboutQtyInTheirCart() throws Exception {
+        preSaveNecessaryData();
 
         var list = this.productSkuRepo.findAll();
 
@@ -299,12 +298,7 @@ class PaymentControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @DisplayName("""
-    Tests against race condition. Multiple users fighting to
-    purchase the last item in stock. Only one is going to get 200
-    whilst the others get 409.
-    """)
-    void va() throws Exception {
+    void multipleUserTryPurchasingTheLastItemButOnlyIsAllowedAndTheRestGetA409() throws Exception {
         shippingRepo
                 .save(new Shipping(
                         new Faker().country().name(),
@@ -418,8 +412,8 @@ class PaymentControllerTest extends AbstractIntegration {
     void validateTotalAmountUSD() throws Exception {
         shippingRepo
                 .save(new Shipping(
-                        new Faker().country().name(),
-                        new BigDecimal("0"),
+                        "Canada",
+                        new BigDecimal("55000"),
                         new BigDecimal("30.20")
                 ));
 
@@ -477,6 +471,8 @@ class PaymentControllerTest extends AbstractIntegration {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpectAll(jsonPath("$.total").isNotEmpty());
+        // TODO validate why MockMvcResultMatchers is removing the ending 0
+//        org.hamcrest.Matchers.is(total)
 //                .andExpect(jsonPath("$.total").value(total));
     }
 
@@ -489,7 +485,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         shippingRepo
                 .save(new Shipping(
-                        new Faker().country().name(),
+                        "nigeria",
                         new BigDecimal("20000"),
                         new BigDecimal("25.20")
                 ));
@@ -538,7 +534,6 @@ class PaymentControllerTest extends AbstractIntegration {
                         .with(csrf())
                         .cookie(cookie)
                 )
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpectAll(jsonPath("$.total").isNotEmpty())
                 .andExpect(jsonPath("$.total").value(total));

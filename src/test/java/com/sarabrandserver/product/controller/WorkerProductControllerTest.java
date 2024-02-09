@@ -332,7 +332,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
                 )
                 .andExpect(result -> assertInstanceOf(ResourceAttachedException.class, result.getResolvedException()));
 
-        assertTrue(productRepo.findById(product.getProductId()).isEmpty());
+        assertFalse(productRepo.findById(product.getProductId()).isEmpty());
     }
 
 }

@@ -1,26 +1,26 @@
 package com.sarabrandserver.shipping;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
  * Acts as an updateDto and Shipping response mapper.
  * */
-public class ShippingMapper extends ShippingDto {
-
+public record ShippingMapper(
         @NotNull
         @JsonProperty("shipping_id")
-        private final Long id;
-
-        public ShippingMapper(Long id, String country, BigDecimal ngn, BigDecimal usd) {
-                super(country, ngn, usd);
-                this.id = id;
-        }
-
-        public Long id() {
-                return id;
-        }
-
-}
+        Long id,
+        @NotNull
+        @NotEmpty
+        String country,
+        @NotNull
+        @JsonProperty("ngn_price")
+        BigDecimal ngn,
+        @NotNull
+        @JsonProperty("usd_price")
+        BigDecimal usd
+) implements Serializable { }

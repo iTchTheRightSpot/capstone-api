@@ -20,7 +20,7 @@ public class Shipping {
     @Column(name = "shipping_id", nullable = false, unique = true)
     private Long shippingId;
 
-    @Column(name = "ngn_price", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     private String country;
 
     @Column(name = "ngn_price", nullable = false)

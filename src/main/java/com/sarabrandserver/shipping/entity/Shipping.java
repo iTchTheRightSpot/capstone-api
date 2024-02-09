@@ -1,12 +1,14 @@
 package com.sarabrandserver.shipping.entity;
 
-import com.sarabrandserver.enumeration.ShippingType;
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 
+/**
+ * A representation of countries we are allowed to ship to.
+ * */
 @Table(name = "shipping")
 @Entity
 @NoArgsConstructor
@@ -18,25 +20,26 @@ public class Shipping {
     @Column(name = "shipping_id", nullable = false, unique = true)
     private Long shippingId;
 
+    @Column(name = "ngn_price", nullable = false, unique = true)
+    private String country;
+
     @Column(name = "ngn_price", nullable = false)
     private BigDecimal ngnPrice;
 
     @Column(name = "usd_price", nullable = false)
     private BigDecimal usdPrice;
 
-    @Column(name = "shipping_type", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private ShippingType shippingType;
-
-    public Shipping(BigDecimal ngnPrice, BigDecimal usdPrice, ShippingType shippingType) {
+    public Shipping(String country, BigDecimal ngnPrice, BigDecimal usdPrice) {
+        this.country = country;
         this.ngnPrice = ngnPrice;
         this.usdPrice = usdPrice;
-        this.shippingType = shippingType;
     }
 
     public Long shippingId() {
         return shippingId;
     }
+
+    public String country() { return country; }
 
     public BigDecimal ngnPrice() {
         return ngnPrice;
@@ -44,10 +47,6 @@ public class Shipping {
 
     public BigDecimal usdPrice() {
         return usdPrice;
-    }
-
-    public ShippingType type() {
-        return shippingType;
     }
 
 }

@@ -1,6 +1,5 @@
 package com.sarabrandserver.payment.entity;
 
-import com.sarabrandserver.payment.entity.PaymentDetail;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -1,9 +1,10 @@
 package com.sarabrandserver.auth.controller;
 
 import com.sarabrandserver.AbstractIntegration;
-import com.sarabrandserver.auth.dto.LoginDTO;
-import com.sarabrandserver.auth.dto.RegisterDTO;
+import com.sarabrandserver.auth.dto.LoginDto;
+import com.sarabrandserver.auth.dto.RegisterDto;
 import com.sarabrandserver.auth.service.AuthService;
+import com.sarabrandserver.enumeration.RoleEnum;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
@@ -31,18 +32,18 @@ class WorkerAuthControllerTest extends AbstractIntegration {
     private final String PASSWORD = "123#-SEJU-Development";
 
     @Value(value = "/${api.endpoint.baseurl}worker/auth/")
-    private String requestMapping;
+    private String route;
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserRepository repository;
     @Autowired
-    private AuthService authService;
+    private AuthService service;
 
     @AfterEach
     void after() {
-        userRepository.deleteAll();
+        repository.deleteAll();
     }
 
     /**
@@ -52,27 +53,31 @@ class WorkerAuthControllerTest extends AbstractIntegration {
     @Order(1)
     void register() throws Exception {
         // given
-        this.authService.workerRegister(new RegisterDTO(
+        this.service.register(
+                null,
+                new RegisterDto(
                 "SEJU",
                 "Development",
                 PRINCIPAL,
                 "",
                 "000-000-0000",
                 PASSWORD
-        ));
+                ),
+                RoleEnum.WORKER
+        );
 
         // when
         MvcResult login = this.MOCKMVC
-                .perform(post(requestMapping + "login")
+                .perform(post(route + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(new LoginDTO(PRINCIPAL, PASSWORD)))
+                        .content(this.MAPPER.writeValueAsString(new LoginDto(PRINCIPAL, PASSWORD)))
                 )
                 .andExpect(status().isOk())
                 .andReturn();
 
         // Register
-        var dto = new RegisterDTO(
+        var dto = new RegisterDto(
                 "James",
                 "james@james.com",
                 "james@james.com",
@@ -82,7 +87,7 @@ class WorkerAuthControllerTest extends AbstractIntegration {
         );
 
         this.MOCKMVC
-                .perform(post(requestMapping + "register")
+                .perform(post(route + "register")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(this.MAPPER.writeValueAsString(dto))
@@ -98,26 +103,30 @@ class WorkerAuthControllerTest extends AbstractIntegration {
     @Order(2)
     void register_with_existing_credentials() throws Exception {
         // given
-        this.authService.workerRegister(new RegisterDTO(
-                "SEJU",
-                "Development",
-                PRINCIPAL,
-                "",
-                "000-000-0000",
-                PASSWORD
-        ));
+        this.service.register(
+                null,
+                new RegisterDto(
+                        "SEJU",
+                        "Development",
+                        PRINCIPAL,
+                        "",
+                        "000-000-0000",
+                        PASSWORD
+                ),
+                RoleEnum.WORKER
+        );
 
         // when
         MvcResult login = this.MOCKMVC
-                .perform(post(requestMapping + "login")
+                .perform(post(route + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(new LoginDTO(PRINCIPAL, PASSWORD)))
+                        .content(this.MAPPER.writeValueAsString(new LoginDto(PRINCIPAL, PASSWORD)))
                 )
                 .andExpect(status().isOk())
                 .andReturn();
 
-        var dto = new RegisterDTO(
+        var dto = new RegisterDto(
                 "SEJU",
                 "Development",
                 PRINCIPAL,
@@ -127,7 +136,7 @@ class WorkerAuthControllerTest extends AbstractIntegration {
         );
 
         this.MOCKMVC
-                .perform(post(requestMapping + "register")
+                .perform(post(route + "register")
                         .contentType(APPLICATION_JSON)
                         .with(csrf())
                         .content(this.MAPPER.writeValueAsString(dto))
@@ -140,20 +149,24 @@ class WorkerAuthControllerTest extends AbstractIntegration {
     @Order(3)
     void login_wrong_password() throws Exception {
         // given
-        this.authService.workerRegister(new RegisterDTO(
-                "SEJU",
-                "Development",
-                PRINCIPAL,
-                "",
-                "000-000-0000",
-                PASSWORD
-        ));
+        this.service.register(
+                null,
+                new RegisterDto(
+                        "SEJU",
+                        "Development",
+                        PRINCIPAL,
+                        "",
+                        "000-000-0000",
+                        PASSWORD
+                ),
+                RoleEnum.WORKER
+        );
 
         // when
         String payload = this.MAPPER
-                .writeValueAsString(new LoginDTO(PRINCIPAL, "fFeubfrom@#$%^124234"));
+                .writeValueAsString(new LoginDto(PRINCIPAL, "fFeubfrom@#$%^124234"));
         this.MOCKMVC
-                .perform(post(requestMapping + "login")
+                .perform(post(route + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(payload)
@@ -169,21 +182,25 @@ class WorkerAuthControllerTest extends AbstractIntegration {
     @Order(4)
     void logout() throws Exception {
         // given
-        this.authService.workerRegister(new RegisterDTO(
-                "SEJU",
-                "Development",
-                PRINCIPAL,
-                "",
-                "000-000-0000",
-                PASSWORD
-        ));
+        this.service.register(
+                null,
+                new RegisterDto(
+                        "SEJU",
+                        "Development",
+                        PRINCIPAL,
+                        "",
+                        "000-000-0000",
+                        PASSWORD
+                ),
+                RoleEnum.WORKER
+        );
 
         // then
         MvcResult login = this.MOCKMVC
-                .perform(post(requestMapping + "login")
+                .perform(post(route + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(new LoginDTO(PRINCIPAL, PASSWORD)))
+                        .content(this.MAPPER.writeValueAsString(new LoginDto(PRINCIPAL, PASSWORD)))
                 )
                 .andExpect(status().isOk())
                 .andReturn();

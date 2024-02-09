@@ -4,17 +4,36 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 
-public record ShippingDto(
-        @NotNull
-        @JsonProperty("ngn_price")
-        BigDecimal ngn,
-        @NotNull
-        @JsonProperty("usd_price")
-        BigDecimal usd,
+public class ShippingDto {
+
         @NotNull
         @NotEmpty
-        String type
-) implements Serializable { }
+        private final String country;
+        @NotNull
+        @JsonProperty("ngn_price")
+        private final BigDecimal ngn;
+        @NotNull
+        @JsonProperty("usd_price")
+        private final BigDecimal usd;
+
+        public ShippingDto(String country, BigDecimal ngn, BigDecimal usd) {
+                this.country = country;
+                this.ngn = ngn;
+                this.usd = usd;
+        }
+
+        public String country() {
+                return country;
+        }
+
+        public BigDecimal ngn() {
+                return ngn;
+        }
+
+        public BigDecimal usd() {
+                return usd;
+        }
+
+}

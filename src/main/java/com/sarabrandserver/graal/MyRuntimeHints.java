@@ -1,7 +1,7 @@
 package com.sarabrandserver.graal;
 
-import com.sarabrandserver.auth.dto.LoginDTO;
-import com.sarabrandserver.auth.dto.RegisterDTO;
+import com.sarabrandserver.auth.dto.LoginDto;
+import com.sarabrandserver.auth.dto.RegisterDto;
 import com.sarabrandserver.cart.dto.CartDTO;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
@@ -12,9 +12,6 @@ import com.sarabrandserver.payment.dto.SkuQtyDTO;
 import com.sarabrandserver.product.dto.*;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.Variant;
-import com.sarabrandserver.shipping.ShippingDto;
-import com.sarabrandserver.shipping.ShippingResponse;
-import com.sarabrandserver.shipping.dto.ShippingUpdateDto;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 
@@ -34,8 +31,8 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
         hints.serialization().registerType(CartDTO.class);
 
         // Auth
-        hints.serialization().registerType(LoginDTO.class);
-        hints.serialization().registerType(RegisterDTO.class);
+        hints.serialization().registerType(LoginDto.class);
+        hints.serialization().registerType(RegisterDto.class);
 
         // Category
         hints.serialization().registerType(CategoryDTO.class);
@@ -60,10 +57,6 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
         hints.serialization().registerType(SkuQtyDTO.class);
 
         // shipping
-        hints.serialization().registerType(ShippingDto.class);
-        hints.serialization().registerType(ShippingUpdateDto.class);
-        hints.serialization().registerType(ShippingResponse.class);
-
     }
 
 }

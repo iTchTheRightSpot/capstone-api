@@ -1,15 +1,15 @@
 package com.sarabrandserver.auth.controller;
 
-import com.sarabrandserver.auth.dto.LoginDTO;
-import com.sarabrandserver.auth.dto.RegisterDTO;
+import com.sarabrandserver.auth.dto.LoginDto;
+import com.sarabrandserver.auth.dto.RegisterDto;
 import com.sarabrandserver.auth.service.AuthService;
-import com.sarabrandserver.enumeration.RoleEnum;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import static com.sarabrandserver.enumeration.RoleEnum.CLIENT;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -19,22 +19,22 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequiredArgsConstructor
 public class ClientAuthController {
 
-    private final AuthService authService;
+    private final AuthService service;
 
     @ResponseStatus(CREATED)
     @PostMapping(path = "/register", consumes = APPLICATION_JSON_VALUE)
-    public void register(@Valid @RequestBody RegisterDTO dto, HttpServletResponse response) {
-        this.authService.clientRegister(dto, response);
+    public void register(@Valid @RequestBody RegisterDto dto, HttpServletResponse res) {
+        this.service.register(res, dto, CLIENT);
     }
 
     @ResponseStatus(OK)
     @PostMapping(path = "/login", consumes = APPLICATION_JSON_VALUE)
     public void login(
-            @Valid @RequestBody LoginDTO dto,
+            @Valid @RequestBody LoginDto dto,
             HttpServletRequest request,
             HttpServletResponse response
     ) {
-        this.authService.login(RoleEnum.CLIENT, dto, request, response);
+        this.service.login(CLIENT, dto, request, response);
     }
 
 }

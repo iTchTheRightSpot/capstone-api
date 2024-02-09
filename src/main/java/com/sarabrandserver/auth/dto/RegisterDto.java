@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
-public record RegisterDTO(
+public record RegisterDto(
         @NotNull(message = "cannot be empty")
         @NotEmpty(message = "cannot be empty")
         String firstname,

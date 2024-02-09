@@ -39,8 +39,6 @@ import java.util.concurrent.Executors;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
-import static com.sarabrandserver.enumeration.ShippingType.INTERNATIONAL;
-import static com.sarabrandserver.enumeration.ShippingType.LOCAL;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -96,9 +94,18 @@ class PaymentControllerTest extends AbstractIntegration {
     }
 
     private void extracted() {
-        shippingRepo.save(new Shipping(new BigDecimal("20000"), new BigDecimal("25.20"), LOCAL));
         shippingRepo
-                .save(new Shipping(new BigDecimal("40000.00"), new BigDecimal("30.55"), INTERNATIONAL));
+                .save(new Shipping(
+                        new Faker().country().name(),
+                        new BigDecimal("20000"),
+                        new BigDecimal("25.20")
+                ));
+        shippingRepo
+                .save(new Shipping(
+                        new Faker().country().name(),
+                        new BigDecimal("40000.00"),
+                        new BigDecimal("30.55")
+                ));
 
         var category = categoryRepository
                 .save(
@@ -299,9 +306,17 @@ class PaymentControllerTest extends AbstractIntegration {
     """)
     void va() throws Exception {
         shippingRepo
-                .save(new Shipping(new BigDecimal("25025"), new BigDecimal("30.20"), INTERNATIONAL));
+                .save(new Shipping(
+                        new Faker().country().name(),
+                        new BigDecimal("25025"),
+                        new BigDecimal("30.20")
+                ));
         shippingRepo
-                .save(new Shipping(new BigDecimal("3075"), new BigDecimal("45.19"), LOCAL));
+                .save(new Shipping(
+                        new Faker().country().name(),
+                        new BigDecimal("3075"),
+                        new BigDecimal("45.19")
+                ));
 
         PriceCurrencyDTO[] arr = {
                 new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "USD"),
@@ -401,7 +416,12 @@ class PaymentControllerTest extends AbstractIntegration {
 
     @Test
     void validateTotalAmountUSD() throws Exception {
-        shippingRepo.save(new Shipping(new BigDecimal("0"), new BigDecimal("30.20"), INTERNATIONAL));
+        shippingRepo
+                .save(new Shipping(
+                        new Faker().country().name(),
+                        new BigDecimal("0"),
+                        new BigDecimal("30.20")
+                ));
 
         PriceCurrencyDTO[] arr = {
                 new PriceCurrencyDTO(new BigDecimal("150.55"), "USD"),
@@ -467,7 +487,13 @@ class PaymentControllerTest extends AbstractIntegration {
                 new PriceCurrencyDTO(new BigDecimal("75000"), "NGN"),
         };
 
-        shippingRepo.save(new Shipping(new BigDecimal("20000"), new BigDecimal("25.20"), LOCAL));
+        shippingRepo
+                .save(new Shipping(
+                        new Faker().country().name(),
+                        new BigDecimal("20000"),
+                        new BigDecimal("25.20")
+                ));
+
         var category = categoryRepository
                 .save(
                         ProductCategory.builder()

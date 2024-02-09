@@ -7,7 +7,6 @@ import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
 import com.sarabrandserver.enumeration.SarreCurrency;
-import com.sarabrandserver.enumeration.ShippingType;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.OutOfStockException;
 import com.sarabrandserver.payment.entity.OrderReservation;
@@ -152,14 +151,11 @@ public class PaymentService {
 
         // retrieve shipping cost
         Shipping shipping = shippingRepo
-                .findByShippingType(
-                        country.equalsIgnoreCase("nigeria")
-                                ? ShippingType.LOCAL : ShippingType.INTERNATIONAL
-                )
+                .shippingByCountryElseReturnDefault(country)
                 .orElseThrow(() -> {
-                    log.error("error retrieving shipping details from raceCondition method");
+                    log.error("error retrieving Shipping object from raceCondition method");
                     return new CustomNotFoundException(
-                            "an error occurred please try again or reach out to our customer service"
+                            "an error occurred please try again or contact our customer service"
                     );
                 });
 
@@ -174,7 +170,7 @@ public class PaymentService {
                 secret.pubKey(),
                 currency,
                 CustomUtil.convertCurrency(
-                        currency.equals(SarreCurrency.USD) ? usdConversion : ngnConversion,
+                        currency.equals(SarreCurrency.NGN) ? ngnConversion : usdConversion,
                         currency,
                         total
                 )

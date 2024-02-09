@@ -1,8 +1,8 @@
 package com.sarabrandserver.auth.controller;
 
 import com.sarabrandserver.AbstractIntegration;
-import com.sarabrandserver.auth.dto.LoginDTO;
-import com.sarabrandserver.auth.dto.RegisterDTO;
+import com.sarabrandserver.auth.dto.LoginDto;
+import com.sarabrandserver.auth.dto.RegisterDto;
 import com.sarabrandserver.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
@@ -37,7 +37,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
     }
 
     Cookie cookie(String principal, String password) throws Exception {
-        var dto = new RegisterDTO(
+        var dto = new RegisterDto(
                 "SEUY",
                 "Development",
                 principal,
@@ -67,7 +67,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
         Cookie c = cookie(principal, password);
         assertNotNull(c);
 
-        String dto = this.MAPPER.writeValueAsString(new LoginDTO(principal, password));
+        String dto = this.MAPPER.writeValueAsString(new LoginDto(principal, password));
 
         MvcResult login = this.MOCKMVC
                 .perform(post(this.path + "login")
@@ -91,7 +91,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
     @Order(2)
     void simulate_logging_in_with_none_existent_user() throws Exception {
         String dto = this.MAPPER
-                .writeValueAsString(new LoginDTO("admin@admin.com", "password123"));
+                .writeValueAsString(new LoginDto("admin@admin.com", "password123"));
         this.MOCKMVC
                 .perform(post(this.path + "login")
                         .with(csrf())
@@ -110,7 +110,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
         Cookie c = cookie(principal, password);
         assertNotNull(c);
 
-        String dto = this.MAPPER.writeValueAsString(new LoginDTO(principal, password));
+        String dto = this.MAPPER.writeValueAsString(new LoginDto(principal, password));
 
         MvcResult login = this.MOCKMVC
                 .perform(post(this.path + "login")

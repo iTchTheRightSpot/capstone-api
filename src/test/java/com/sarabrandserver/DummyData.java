@@ -1,11 +1,12 @@
 package com.sarabrandserver;
 
-import com.sarabrandserver.auth.dto.RegisterDTO;
+import com.sarabrandserver.auth.dto.RegisterDto;
 import com.sarabrandserver.auth.service.AuthService;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.data.TestData;
+import com.sarabrandserver.enumeration.RoleEnum;
 import com.sarabrandserver.product.service.WorkerProductService;
 import com.sarabrandserver.user.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -26,7 +27,7 @@ class DummyData {
             extracted(catService, workerProductService);
 
             if (repository.findByPrincipal("admin@admin.com").isEmpty()) {
-                var dto = new RegisterDTO(
+                var dto = new RegisterDto(
                         "SEJU",
                         "Development",
                         "admin@admin.com",
@@ -34,9 +35,8 @@ class DummyData {
                         "0000000000",
                         "password123"
                 );
-                authService.workerRegister(dto);
+                authService.register(null, dto, RoleEnum.WORKER);
             }
-
         };
     }
 

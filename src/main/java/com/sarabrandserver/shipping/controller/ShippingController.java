@@ -1,9 +1,8 @@
 package com.sarabrandserver.shipping.controller;
 
 import com.sarabrandserver.shipping.ShippingDto;
-import com.sarabrandserver.shipping.ShippingResponse;
 import com.sarabrandserver.shipping.service.ShippingService;
-import com.sarabrandserver.shipping.dto.ShippingUpdateDto;
+import com.sarabrandserver.shipping.ShippingMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Defines the routes for countries we can ship to.
+ * */
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}shipping")
 @RequiredArgsConstructor
@@ -23,8 +25,8 @@ public class ShippingController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(produces = "application/json")
-    List<ShippingResponse> allShipping() {
-        return service.allShipping();
+    List<ShippingMapper> allShipping() {
+        return service.shipping();
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -35,7 +37,7 @@ public class ShippingController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping(consumes = "application/json")
-    void update(@Valid @RequestBody ShippingUpdateDto dto) {
+    void update(@Valid @RequestBody ShippingMapper dto) {
         service.update(dto);
     }
 

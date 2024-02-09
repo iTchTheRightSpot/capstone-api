@@ -1,7 +1,7 @@
 package com.sarabrandserver.auth.service;
 
-import com.sarabrandserver.auth.dto.LoginDTO;
-import com.sarabrandserver.auth.dto.RegisterDTO;
+import com.sarabrandserver.auth.dto.LoginDto;
+import com.sarabrandserver.auth.dto.RegisterDto;
 import com.sarabrandserver.auth.jwt.JwtTokenService;
 import com.sarabrandserver.enumeration.RoleEnum;
 import com.sarabrandserver.exception.DuplicateException;
@@ -38,9 +38,9 @@ public class AuthService {
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
     @Value(value = "${server.servlet.session.cookie.secure}")
-    private boolean COOKIESECURE;
+    private boolean secure;
     @Value(value = "${server.servlet.session.cookie.max-age}")
-    private int MAXAGE;
+    private int maxage;
 
     private final UserRepository userRepository;
     private final UserRoleRepository roleRepository;
@@ -49,23 +49,42 @@ public class AuthService {
     private final JwtTokenService tokenService;
 
     /**
+     * Method called by either {@code WorkerAuthController}
+     * and {@code ClientAuthController} to register a user.
+     *
+     * @param res is a {@code HttpServletResponse} where we add a jwt token
+     *            based on the controller class that calls it.
+     * @param dto is an object of {@code RegisterDto} containing the
+     *            necessary details to create a user.
+     * @param key is of {@code RoleEnum}. If is equal to CLIENT, we add a
+     *            jwt cookie to {@code HttpServletResponse}.
+     */
+    @Transactional
+    public void register(HttpServletResponse res, RegisterDto dto, RoleEnum key) {
+        if (key.equals(CLIENT)) {
+            clientRegister(dto, res);
+        } else {
+            workerRegister(dto);
+        }
+    }
+
+    /**
      * Responsible for registering a new worker. Logic is throw an error if client
      * has a role of Worker or else add ROLE worker to client.
      *
      * @param dto of type WorkerRegisterDTO
      * @throws DuplicateException when user principal exists and has a role of worker
      */
-    @Transactional
-    public void workerRegister(RegisterDTO dto) {
-        var optionalUser = this.userRepository.findByPrincipal(dto.email().trim());
+    void workerRegister(RegisterDto dto) {
+        var optional = this.userRepository.findByPrincipal(dto.email().trim());
 
-        if (optionalUser.isPresent() && optionalUser.get().getClientRole().stream()
+        if (optional.isPresent() && optional.get().getClientRole().stream()
                 .anyMatch(role -> role.getRole().equals(WORKER))
         ) {
             throw new DuplicateException(dto.email() + " exists");
         }
 
-        SarreBrandUser userToSave = optionalUser.orElseGet(() -> createUser(dto));
+        SarreBrandUser userToSave = optional.orElseGet(() -> createUser(dto));
 
         this.roleRepository.save(new ClientRole(WORKER, userToSave));
     }
@@ -76,8 +95,7 @@ public class AuthService {
      * @param dto of type ClientRegisterDTO
      * @throws DuplicateException when user principal exists
      */
-    @Transactional
-    public void clientRegister(RegisterDTO dto, HttpServletResponse response) {
+    void clientRegister(RegisterDto dto, HttpServletResponse response) {
         if (this.userRepository.findByPrincipal(dto.email().trim()).isPresent()) {
             throw new DuplicateException(dto.email() + " exists");
         }
@@ -108,7 +126,7 @@ public class AuthService {
      */
     public void login(
             RoleEnum key,
-            LoginDTO dto,
+            LoginDto dto,
             HttpServletRequest req,
             HttpServletResponse res
     ) {
@@ -130,10 +148,10 @@ public class AuthService {
         String token = this.tokenService.generateToken(auth);
 
         Cookie cookie = new Cookie(JSESSIONID, token);
-        cookie.setMaxAge(MAXAGE);
+        cookie.setMaxAge(maxage);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        cookie.setSecure(COOKIESECURE);
+        cookie.setSecure(secure);
 
         // add token to response
         response.addCookie(cookie);
@@ -142,18 +160,17 @@ public class AuthService {
     /**
      * Create and a new User object
      */
-    private SarreBrandUser createUser(RegisterDTO dto) {
+    private SarreBrandUser createUser(RegisterDto dto) {
         var user = this.userRepository
-                .save(
-                        SarreBrandUser.builder()
-                                .firstname(dto.firstname().trim())
-                                .lastname(dto.lastname().trim())
-                                .email(dto.email().trim())
-                                .phoneNumber(dto.phone().trim())
-                                .password(passwordEncoder.encode(dto.password()))
-                                .enabled(true)
-                                .clientRole(new HashSet<>())
-                                .build()
+                .save(SarreBrandUser.builder()
+                        .firstname(dto.firstname().trim())
+                        .lastname(dto.lastname().trim())
+                        .email(dto.email().trim())
+                        .phoneNumber(dto.phone().trim())
+                        .password(passwordEncoder.encode(dto.password()))
+                        .enabled(true)
+                        .clientRole(new HashSet<>())
+                        .build()
                 );
 
         this.roleRepository.save(new ClientRole(CLIENT, user));
@@ -163,10 +180,10 @@ public class AuthService {
 
     /**
      * Validates if requests contains a valid jwt cookie.
-     * Prevents a generating unnecessary jwt.
+     * Prevents generating unnecessary jwt.
      *
-     * @param res of HttpServletRequest
-     * @return boolean
+     * @param res of HttpServletRequest.
+     * @return boolean true if jwt contains a valid cookie else false.
      */
     private boolean _validateCookies(HttpServletRequest res, RoleEnum role) {
         Cookie[] cookies = res.getCookies();

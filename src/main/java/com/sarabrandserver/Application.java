@@ -1,7 +1,8 @@
 package com.sarabrandserver;
 
-import com.sarabrandserver.auth.dto.RegisterDTO;
+import com.sarabrandserver.auth.dto.RegisterDto;
 import com.sarabrandserver.auth.service.AuthService;
+import com.sarabrandserver.enumeration.RoleEnum;
 import com.sarabrandserver.graal.MyRuntimeHints;
 import com.sarabrandserver.payment.dto.PayloadMapper;
 import com.sarabrandserver.product.response.Variant;
@@ -37,7 +38,7 @@ public class Application {
     public CommandLineRunner commandLineRunner(AuthService service, UserRepository repository) {
         return args -> {
             if (repository.findByPrincipal(principal).isEmpty()) {
-                var dto = new RegisterDTO(
+                var dto = new RegisterDto(
                         "SEJU",
                         "Development",
                         principal,
@@ -45,7 +46,7 @@ public class Application {
                         "0000000000",
                         password
                 );
-                service.workerRegister(dto);
+                service.register(null, dto, RoleEnum.WORKER);
             }
         };
     }

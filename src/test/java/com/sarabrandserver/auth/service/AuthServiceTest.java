@@ -1,8 +1,8 @@
 package com.sarabrandserver.auth.service;
 
 import com.sarabrandserver.AbstractUnitTest;
-import com.sarabrandserver.auth.dto.LoginDTO;
-import com.sarabrandserver.auth.dto.RegisterDTO;
+import com.sarabrandserver.auth.dto.LoginDto;
+import com.sarabrandserver.auth.dto.RegisterDto;
 import com.sarabrandserver.auth.jwt.JwtTokenService;
 import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.exception.DuplicateException;
@@ -61,7 +61,7 @@ class AuthServiceTest extends AbstractUnitTest {
     @Test
     void register_worker_that_doesnt_exist() {
         // Given
-        var dto = new RegisterDTO(
+        var dto = new RegisterDto(
                 TestData.worker().getFirstname(),
                 TestData.worker().getLastname(),
                 TestData.worker().getEmail(),
@@ -87,7 +87,7 @@ class AuthServiceTest extends AbstractUnitTest {
     void register_worker_with_already_existing_role_worker() {
         // Given
         var worker = TestData.worker();
-        var dto = new RegisterDTO(
+        var dto = new RegisterDto(
                 worker.getFirstname(),
                 worker.getLastname(),
                 worker.getEmail(),
@@ -112,7 +112,7 @@ class AuthServiceTest extends AbstractUnitTest {
     void register_worker_with_role_only_client() {
         // Given
         var client = TestData.client();
-        var dto = new RegisterDTO(
+        var dto = new RegisterDto(
                 client.getFirstname(),
                 client.getLastname(),
                 client.getEmail(),
@@ -134,7 +134,7 @@ class AuthServiceTest extends AbstractUnitTest {
     @Test
     void worker_login() {
         // Given
-        var dto = new LoginDTO(TestData.worker().getEmail(), TestData.worker().getPassword());
+        var dto = new LoginDto(TestData.worker().getEmail(), TestData.worker().getPassword());
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         Authentication authentication = mock(Authentication.class);
@@ -151,7 +151,7 @@ class AuthServiceTest extends AbstractUnitTest {
     @Test
     void worker_login_non_existing_credentials() {
         // Given
-        var dto = new LoginDTO("client@client.com", TestData.worker().getPassword());
+        var dto = new LoginDto("client@client.com", TestData.worker().getPassword());
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
 
@@ -166,7 +166,7 @@ class AuthServiceTest extends AbstractUnitTest {
     @Test
     void clientRegister() {
         // Given
-        var dto = new RegisterDTO(
+        var dto = new RegisterDto(
                 TestData.client().getFirstname(),
                 TestData.client().getLastname(),
                 TestData.client().getEmail(),
@@ -199,7 +199,7 @@ class AuthServiceTest extends AbstractUnitTest {
     @Test
     void registerClientExistingPrincipal() {
         // Given
-        var dto = new RegisterDTO(
+        var dto = new RegisterDto(
                 TestData.client().getFirstname(),
                 TestData.client().getLastname(),
                 TestData.client().getEmail(),
@@ -230,7 +230,7 @@ class AuthServiceTest extends AbstractUnitTest {
     @Test
     void client_login() {
         // Given
-        var dto = new LoginDTO(TestData.client().getEmail(), TestData.client().getPassword());
+        var dto = new LoginDto(TestData.client().getEmail(), TestData.client().getPassword());
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         Authentication authentication = mock(Authentication.class);
@@ -247,7 +247,7 @@ class AuthServiceTest extends AbstractUnitTest {
     @Test
     void client_login_wrong_credentials() {
         // Given
-        var dto = new LoginDTO("worker@worker.com", TestData.client().getPassword());
+        var dto = new LoginDto("worker@worker.com", TestData.client().getPassword());
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
 

@@ -1,21 +1,20 @@
 package com.sarabrandserver.shipping.controller;
 
 import com.sarabrandserver.AbstractIntegration;
-import com.sarabrandserver.enumeration.ShippingType;
 import com.sarabrandserver.shipping.ShippingDto;
-import com.sarabrandserver.shipping.dto.ShippingUpdateDto;
+import com.sarabrandserver.shipping.ShippingMapper;
 import com.sarabrandserver.shipping.entity.Shipping;
 import com.sarabrandserver.shipping.repository.ShippingRepo;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -36,10 +35,13 @@ class ShippingControllerTest extends AbstractIntegration {
                 .perform(post("/" + path)
                         .with(csrf())
                         .content(this.MAPPER.writeValueAsString(
-                                new ShippingDto(new BigDecimal("25750"),
-                                        new BigDecimal("30.54"), ShippingType.INTERNATIONAL.name())
+                                new ShippingDto(
+                                        "Canada",
+                                        new BigDecimal("10100"),
+                                        new BigDecimal("20.24")
+                                )
                         ))
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                 )
                 .andExpect(status().isCreated());
 
@@ -47,10 +49,13 @@ class ShippingControllerTest extends AbstractIntegration {
                 .perform(post("/" + path)
                         .with(csrf())
                         .content(this.MAPPER.writeValueAsString(
-                                new ShippingDto(new BigDecimal("10100"),
-                                        new BigDecimal("20.24"), ShippingType.LOCAL.name())
+                                new ShippingDto(
+                                        "Nigeria",
+                                        new BigDecimal("10100"),
+                                        new BigDecimal("20.24")
+                                )
                         ))
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                 )
                 .andExpect(status().isCreated());
     }
@@ -59,19 +64,20 @@ class ShippingControllerTest extends AbstractIntegration {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void update() throws Exception {
         var shipping = shippingRepo
-                .save(new Shipping(new BigDecimal("25750"), new BigDecimal("35.55"), ShippingType.LOCAL));
+                .save(new Shipping("Japan", new BigDecimal("25750"), new BigDecimal("35.55")));
 
         this.MOCKMVC
                 .perform(put("/" + path)
                         .with(csrf())
                         .content(this.MAPPER.writeValueAsString(
-                                new ShippingUpdateDto(
+                                new ShippingMapper(
                                         shipping.shippingId(),
+                                        shipping.country(),
                                         new BigDecimal("10100"),
                                         new BigDecimal("20.24")
                                 )
                         ))
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                 )
                 .andExpect(status().isNoContent());
 
@@ -85,7 +91,7 @@ class ShippingControllerTest extends AbstractIntegration {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void deleteShipping() throws Exception {
         var shipping = shippingRepo
-                .save(new Shipping(new BigDecimal("25750"), new BigDecimal("35.55"), ShippingType.LOCAL));
+                .save(new Shipping("France", new BigDecimal("25750"), new BigDecimal("35.55")));
 
         this.MOCKMVC
                 .perform(delete("/" + path + "/" + shipping.shippingId())

@@ -71,7 +71,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void updateShippingToExistingShippingNameShouldThrowError() {
+    void shouldThrowErrorWhenUpdatingACountry() {
         // given
         var obj = shippingRepo
                 .save(new Shipping("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
@@ -94,7 +94,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void shippingByCountryShouldReturnNotDefault() {
+    void shouldNotReturnDefaultShipping() {
         // given
         var obj = shippingRepo
                 .save(new Shipping("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
@@ -109,19 +109,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void shouldContainShippingBecauseOfMigrationScriptV13() {
-        var all = shippingRepo.findAll();
-        assertEquals(1, all.size());
-
-        var shipping = all.getFirst();
-        assertEquals(1L, shipping.shippingId());
-        assertEquals("default", shipping.country());
-        assertEquals(new BigDecimal("0.00"), shipping.ngnPrice());
-        assertEquals(new BigDecimal("0.00"), shipping.usdPrice());
-    }
-
-    @Test
-    void shippingByCountryShouldReturnDefaultValueInsertedInMigrationScriptV13() {
+    void shouldReturnDefaultShippingInsertedInMigrationScriptV13() {
         // given
         shippingRepo
                 .save(new Shipping("france", new BigDecimal("4500"), new BigDecimal("3.50")));

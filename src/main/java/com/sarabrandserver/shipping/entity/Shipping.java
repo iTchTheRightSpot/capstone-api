@@ -1,7 +1,6 @@
 package com.sarabrandserver.shipping.entity;
 
 import jakarta.persistence.*;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
@@ -9,9 +8,8 @@ import java.math.BigDecimal;
 /**
  * A representation of countries we are allowed to ship to.
  * */
-@Table(name = "shipping")
+@Table(name = "shipping_setting")
 @Entity
-@NoArgsConstructor
 @Setter
 public class Shipping {
 
@@ -28,6 +26,8 @@ public class Shipping {
 
     @Column(name = "usd_price", nullable = false)
     private BigDecimal usdPrice;
+
+    public Shipping() {}
 
     public Shipping(String country, BigDecimal ngnPrice, BigDecimal usdPrice) {
         this.country = country;

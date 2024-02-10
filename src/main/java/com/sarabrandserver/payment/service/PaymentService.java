@@ -14,7 +14,9 @@ import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.payment.response.PaymentResponse;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.shipping.entity.Shipping;
-import com.sarabrandserver.shipping.repository.ShippingRepo;
+import com.sarabrandserver.shipping.service.ShippingService;
+import com.sarabrandserver.tax.Tax;
+import com.sarabrandserver.tax.TaxService;
 import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
@@ -69,7 +71,8 @@ public class PaymentService {
     private final CartItemRepo cartItemRepo;
     private final OrderReservationRepo reservationRepo;
     private final ThirdPartyPaymentService thirdPartyService;
-    private final ShippingRepo shippingRepo;
+    private final ShippingService shippingService;
+    private final TaxService taxService;
 
     /**
      * Method helps prevent race condition or overselling by temporarily deducting
@@ -102,7 +105,11 @@ public class PaymentService {
         }
 
         var reservations = this.reservationRepo
-                .allPendingNoneExpiredReservations(CustomUtil.toUTC(new Date()), PENDING);
+                .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
+                        session.get().getShoppingSessionId(),
+                        CustomUtil.toUTC(new Date()),
+                        PENDING
+                );
 
         long toExpire = Instant.now().plus(bound, ChronoUnit.MINUTES).toEpochMilli();
         Date date = CustomUtil.toUTC(new Date(toExpire));
@@ -149,21 +156,18 @@ public class PaymentService {
             throw new OutOfStockException("an item in your cart is out of stock");
         }
 
-        // retrieve shipping cost
-        Shipping shipping = shippingRepo
-                .shippingByCountryElseReturnDefault(country)
-                .orElseThrow(() -> {
-                    log.error("error retrieving Shipping object from raceCondition method");
-                    return new CustomNotFoundException(
-                            "an error occurred please try again or contact our customer service"
-                    );
-                });
+        Shipping shipping = shippingService
+                .shippingByCountryElseReturnDefault(country);
 
-        BigDecimal total = cartItemsTotal(sessionId, currency)
-                .add(currency.equals(SarreCurrency.USD)
+        Tax tax = taxService.taxById(1);
+
+        BigDecimal total = calculateTotal(
+                cartItemsTotal(sessionId, currency),
+                tax.percentage(),
+                currency.equals(SarreCurrency.USD)
                         ? shipping.usdPrice()
                         : shipping.ngnPrice()
-                );
+        );
 
         var secret = this.thirdPartyService.payStackCredentials();
         return new PaymentResponse(
@@ -175,6 +179,13 @@ public class PaymentService {
                         total
                 )
         );
+    }
+
+    BigDecimal calculateTotal(BigDecimal cartItemsTotal, double tax, BigDecimal shippingPrice) {
+        var newTax = cartItemsTotal.multiply(BigDecimal.valueOf(tax));
+        return cartItemsTotal
+                .add(newTax)
+                .add(shippingPrice);
     }
 
     /**

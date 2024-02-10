@@ -95,8 +95,16 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     @Query("SELECT o FROM OrderReservation o WHERE o.expireAt <= :date AND o.status = :status")
     List<OrderReservation> allPendingExpiredReservations(Date date, ReservationStatus status);
 
-    @Query("SELECT o FROM OrderReservation o WHERE o.expireAt > :date AND o.status = :status")
-    List<OrderReservation> allPendingNoneExpiredReservations(Date date, ReservationStatus status);
+    @Query("""
+    SELECT o FROM OrderReservation o
+    INNER JOIN ShoppingSession s ON o.shoppingSession.shoppingSessionId = s.shoppingSessionId
+    WHERE s.shoppingSessionId = :id AND o.expireAt > :date AND o.status = :status
+    """)
+    List<OrderReservation> allPendingNoneExpiredReservationsAssociatedToShoppingSession(
+            @Param("id") long shoppingSessionId,
+            Date date,
+            ReservationStatus status
+    );
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)

@@ -11,12 +11,14 @@ import com.sarabrandserver.payment.entity.OrderReservation;
 import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
-import com.sarabrandserver.shipping.repository.ShippingRepo;
+import com.sarabrandserver.shipping.service.ShippingService;
+import com.sarabrandserver.tax.TaxService;
 import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,8 +27,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
+import static java.math.RoundingMode.FLOOR;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.times;
@@ -45,15 +49,45 @@ class PaymentServiceTest extends AbstractUnitTest {
     @Mock
     private OrderReservationRepo reservationRepo;
     @Mock
-    private ThirdPartyPaymentService thirdPartyPaymentService;
+    private ThirdPartyPaymentService thirdPartyService;
     @Mock
-    private ShippingRepo shippingRepo;
+    private ShippingService shippingService;
+    @Mock
+    private TaxService taxService;
 
     @BeforeEach
     void setUp() {
         paymentService = new PaymentService(
-                skuRepo, sessionRepo, cartItemRepo, reservationRepo, thirdPartyPaymentService, shippingRepo
+                skuRepo,
+                sessionRepo,
+                cartItemRepo,
+                reservationRepo,
+                thirdPartyService,
+                shippingService,
+                taxService
         );
+    }
+
+    @Test
+    void calculateTotalInNGN() {
+        // when
+        BigDecimal res = paymentService
+                .calculateTotal(new BigDecimal("1200"), 0.0725, new BigDecimal("500"))
+                .setScale(2, FLOOR);
+
+        // then
+        assertEquals(new BigDecimal("1787.00"), res);
+    }
+
+    @Test
+    void calculateTotalInUSD() {
+        // when
+        BigDecimal res = paymentService
+                .calculateTotal(new BigDecimal("75.00"), 0.05, new BigDecimal("10.48"))
+                .setScale(2, FLOOR);
+
+        // then
+        assertEquals(new BigDecimal("89.23"), res);
     }
 
     @Test

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -78,6 +79,22 @@ class ShippingControllerTest extends AbstractIntegration {
                         .with(csrf())
                 )
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    void deleteDefaultShouldThrowError() throws Exception {
+        // given
+        var optional = shippingRepo
+                .shippingByCountryElseReturnDefault("default");
+        assertFalse(optional.isEmpty());
+
+        // then
+        this.MOCKMVC
+                .perform(delete("/" + path + "/" + optional.get().shippingId())
+                        .with(csrf())
+                )
+                .andExpect(status().isConflict());
     }
 
 }

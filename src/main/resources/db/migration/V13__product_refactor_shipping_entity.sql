@@ -5,7 +5,7 @@ ALTER TABLE product_detail
         REFERENCES product (product_id) ON DELETE NO ACTION;
 
 ALTER TABLE product
-    ADD COLUMN weight FLOAT NOT NULL;
+    ADD COLUMN weight FLOAT(5, 2) NOT NULL;
 
 ALTER TABLE product
     ADD COLUMN weight_type VARCHAR(2) DEFAULT 'kg';
@@ -16,7 +16,7 @@ ALTER TABLE product_image
     ADD CONSTRAINT `product_detail_fk` FOREIGN KEY (detail_id)
         REFERENCES product_detail (detail_id) ON DELETE CASCADE;
 
-CREATE TABLE IF NOT EXISTS shipping
+CREATE TABLE IF NOT EXISTS shipping_setting
 (
     shipping_id   BIGINT         NOT NULL UNIQUE AUTO_INCREMENT,
     country VARCHAR(57) UNIQUE NOT NULL,
@@ -25,5 +25,5 @@ CREATE TABLE IF NOT EXISTS shipping
     PRIMARY KEY (shipping_id)
 );
 
-INSERT INTO shipping (country, ngn_price, usd_price)
+INSERT INTO shipping_setting (country, ngn_price, usd_price)
     VALUE ('default', 0.00, 0.00);

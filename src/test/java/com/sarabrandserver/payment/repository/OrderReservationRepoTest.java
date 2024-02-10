@@ -269,7 +269,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void allPendingNoneExpiredReservations() {
+    void allPendingNoneExpiredReservationsAssociatedToShoppingSession() {
         // given
         var cat = categoryRepo
                 .save(ProductCategory.builder()
@@ -326,7 +326,14 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
         }
 
         // when
-        var list = reservationRepo.allPendingNoneExpiredReservations(CustomUtil.toUTC(current), PENDING);
+        var list = reservationRepo
+                .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
+                        session.getShoppingSessionId(),
+                        CustomUtil.toUTC(current),
+                        PENDING
+                );
+
+        // then
         assertEquals(1, list.size());
     }
 

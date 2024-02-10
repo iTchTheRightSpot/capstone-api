@@ -1,13 +1,17 @@
 package com.sarabrandserver.shipping.service;
 
+import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
+import com.sarabrandserver.payment.service.PaymentService;
 import com.sarabrandserver.shipping.ShippingDto;
 import com.sarabrandserver.shipping.ShippingMapper;
 import com.sarabrandserver.shipping.entity.Shipping;
 import com.sarabrandserver.shipping.repository.ShippingRepo;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +24,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ShippingService {
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
     private final ShippingRepo repository;
 
@@ -42,9 +48,9 @@ public class ShippingService {
      * @throws DuplicateException if dto.country() exists.
      * */
     @Transactional
-    public void create(ShippingDto dto) {
+    public void create(final ShippingDto dto) {
         try {
-        repository
+            repository
                 .save(new Shipping(StringUtils.capitalize(dto.country()), dto.ngn(), dto.usd()));
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateException("%s exists".formatted(dto.country()));
@@ -59,7 +65,7 @@ public class ShippingService {
      * @throws DuplicateException if dto.country() exists.
      * */
     @Transactional
-    public void update(ShippingMapper dto) {
+    public void update(final ShippingMapper dto) {
         try {
             repository
                     .updateShippingById(dto.id(), dto.country(), dto.ngn(), dto.usd());
@@ -75,11 +81,22 @@ public class ShippingService {
      * @throws ResourceAttachedException if id is equal to 1.
      * */
     @Transactional
-    public void delete(long id) {
+    public void delete(final long id) {
         if (id == 1)
             throw new ResourceAttachedException("cannot delete default country.");
 
         repository.deleteShippingById(id);
+    }
+
+    public Shipping shippingByCountryElseReturnDefault(String country) {
+        return repository
+                .shippingByCountryElseReturnDefault(country)
+                .orElseThrow(() -> {
+                    log.error("shipping country does not exist");
+                    return new CustomNotFoundException(
+                            "country to ship to is not allowed. Please reach out to our customer service."
+                    );
+                });
     }
 
 }

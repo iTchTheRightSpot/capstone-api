@@ -6,4 +6,4 @@ CREATE TABLE IF NOT EXISTS tax_setting
     PRIMARY KEY (tax_id)
 );
 
-INSERT INTO tax_setting (name, percentage) VALUE ('VAT', 0.00);
+INSERT INTO tax_setting (name, percentage) VALUE ('vat', 0.00);

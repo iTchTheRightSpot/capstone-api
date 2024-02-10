@@ -8,15 +8,15 @@ import java.math.BigDecimal;
 /**
  * A representation of countries we are allowed to ship to.
  * */
-@Table(name = "shipping_setting")
+@Table(name = "ship_setting")
 @Entity
 @Setter
-public class Shipping {
+public class ShipSetting {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "shipping_id", nullable = false, unique = true)
-    private Long shippingId;
+    @Column(name = "ship_id", nullable = false, unique = true)
+    private Long shipId;
 
     @Column(nullable = false, unique = true)
     private String country;
@@ -27,19 +27,22 @@ public class Shipping {
     @Column(name = "usd_price", nullable = false)
     private BigDecimal usdPrice;
 
-    public Shipping() {}
+    public ShipSetting() {
+    }
 
-    public Shipping(String country, BigDecimal ngnPrice, BigDecimal usdPrice) {
+    public ShipSetting(String country, BigDecimal ngnPrice, BigDecimal usdPrice) {
         this.country = country;
         this.ngnPrice = ngnPrice;
         this.usdPrice = usdPrice;
     }
 
-    public Long shippingId() {
-        return shippingId;
+    public Long shipId() {
+        return shipId;
     }
 
-    public String country() { return country; }
+    public String country() {
+        return country;
+    }
 
     public BigDecimal ngnPrice() {
         return ngnPrice;

@@ -5,21 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.cart.repository.CartItemRepo;
-import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
+import com.sarabrandserver.checkout.CheckoutService;
+import com.sarabrandserver.checkout.CustomObject;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.OutOfStockException;
 import com.sarabrandserver.payment.entity.OrderReservation;
+import com.sarabrandserver.payment.projection.TotalPojo;
 import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.payment.response.PaymentResponse;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
-import com.sarabrandserver.shipping.entity.Shipping;
-import com.sarabrandserver.shipping.service.ShippingService;
-import com.sarabrandserver.tax.Tax;
-import com.sarabrandserver.tax.TaxService;
 import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
 import com.sarabrandserver.util.CustomUtil;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.xml.bind.DatatypeConverter;
 import lombok.RequiredArgsConstructor;
@@ -51,12 +48,6 @@ public class PaymentService {
     private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
     @Setter
-    @Value("${cart.cookie.name}")
-    private String CART_COOKIE;
-    @Setter
-    @Value(value = "${cart.split}")
-    private String SPLIT;
-    @Setter
     @Value("${sarre.usd.to.cent}")
     private String usdConversion;
     @Setter
@@ -66,56 +57,44 @@ public class PaymentService {
     @Value("${race-condition.expiration.bound}")
     private long bound;
 
-
     private final ProductSkuRepo productSkuRepo;
-    private final ShoppingSessionRepo shoppingSessionRepo;
     private final CartItemRepo cartItemRepo;
     private final OrderReservationRepo reservationRepo;
     private final ThirdPartyPaymentService thirdPartyService;
-    private final ShippingService shippingService;
-    private final TaxService taxService;
+    private final CheckoutService checkoutService;
 
     /**
-     * Method helps prevent race condition or overselling by temporarily deducting
-     * what is in the users cart with ProductSKU inventory.
+     * Prevents race conditions or overselling by temporarily reserving inventory
+     * based on the items in the user's cart.
+     * <p>
+     * This method is used to prevent race conditions or overselling scenarios by
+     * temporarily deducting the quantity in a users cart (represented as
+     * {@code CartItem}) from the inventory of corresponding {@code ProductSku} items.
+     * It creates reservations for the items in the cart to ensure that they are not
+     * oversold. The method also generates payment information based on the user's
+     * country and selected currency, preparing the response for payment.
      *
-     * @param req is passed from the {@code PaymentController}
-     * @param currency is is of {@code SarreCurrency}.
-     * @param country tells if user should be charged international or local fees.
-     * @throws OutOfStockException if ProductSku inventory is negative
-     * @throws CustomNotFoundException if {@code Shipping} object is not found.
-     * */
+     * @param req The HttpServletRequest passed from the PaymentController.
+     * @param country The country of the user would like to ship to which corresponds
+     *                to {@code Shipping}.
+     * @param currency The currency selected for the payment, of type SarreCurrency.
+     * @return A PaymentResponse containing payment details for the user.
+     * @throws OutOfStockException If the inventory of a ProductSku becomes negative after
+     * reservation.
+     * @throws CustomNotFoundException If required information for checkout cannot be retrieved.
+     */
     @Transactional
     public PaymentResponse raceCondition(
             HttpServletRequest req,
             final String country,
             final SarreCurrency currency
     ) {
-        Cookie cookie = CustomUtil.cookie(req, CART_COOKIE);
-
-        if (cookie == null) {
-            throw new CustomNotFoundException("no cookie found. kindly refresh window");
-        }
-
-        var optionalShoppingSession = shoppingSessionRepo
-                .shoppingSessionByCookie(cookie.getValue().split(this.SPLIT)[0]);
-
-        if (optionalShoppingSession.isEmpty()) {
-            throw new CustomNotFoundException("invalid shopping session");
-        }
-
-        ShoppingSession session = optionalShoppingSession.get();
-        long sessionId = session.shoppingSessionId();
-
-        var carts = cartItemRepo.cartItemsByShoppingSessionId(sessionId);
-
-        if (carts.isEmpty()) {
-            throw new CustomNotFoundException("cart is empty");
-        }
+        CustomObject obj = checkoutService
+                .createCustomObjectForShoppingSession(req, country.toLowerCase().trim());
 
         var reservations = this.reservationRepo
                 .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
-                        sessionId,
+                        obj.session().shoppingSessionId(),
                         CustomUtil.toUTC(new Date()),
                         PENDING
                 );
@@ -125,21 +104,19 @@ public class PaymentService {
                 .toEpochMilli();
         Date toExpire = CustomUtil.toUTC(new Date(instant));
 
-        // race condition impl
-        raceConditionImpl(reservations, carts, toExpire, session);
+        raceConditionImpl(reservations, obj.cartItems(), toExpire, obj.session());
 
-        Shipping shipping = shippingService
-                .shippingByCountryElseReturnDefault(country);
+        List<TotalPojo> list = this.cartItemRepo
+                .totalPojoByShoppingSessionId(obj.session().shoppingSessionId(), currency);
 
-        Tax tax = taxService.taxById(1);
-
-        BigDecimal total = calculateTotal(
-                cartItemsTotal(sessionId, currency),
-                tax.percentage(),
-                currency.equals(SarreCurrency.USD)
-                        ? shipping.usdPrice()
-                        : shipping.ngnPrice()
-        );
+        BigDecimal total = CustomUtil
+                .calculateTotal(
+                        CustomUtil.cartItemsTotal(list),
+                        obj.tax().percentage(),
+                        currency.equals(SarreCurrency.USD)
+                                ? obj.ship().usdPrice()
+                                : obj.ship().ngnPrice()
+                );
 
         var secret = this.thirdPartyService.payStackCredentials();
         return new PaymentResponse(
@@ -153,6 +130,24 @@ public class PaymentService {
         );
     }
 
+    /**
+     * An implementation of core logic of raceCondition method above where
+     * race conditions or overselling is prevented by temporarily reserving inventory
+     * and updating order reservations for items in the user's cart.
+     * <p>
+     * This method ensures data consistency and prevents race conditions or overselling
+     * by temporarily deducting the quantity of items in the user's cart from the inventory
+     * of corresponding {@code ProductSku} items. It creates {@code OrderReservations} for
+     * the items in the cart to ensure that they are not oversold. If any inconsistency occurs,
+     * such as inventory becoming negative, it throws an OutOfStockException.
+     *
+     * @param reservations A list of existing {@code OrderReservations} associated with
+     *                     the {@code ShoppingSession}.
+     * @param carts        A list of {@code CartItem} representing items in the user's cart.
+     * @param toExpire     The expiration date for the reservations.
+     * @param session      The {@code ShoppingSession} associated with the user's device.
+     * @throws OutOfStockException If inventory becomes negative due to reservations.
+     */
     @Transactional
     void raceConditionImpl(
             List<OrderReservation> reservations,
@@ -202,48 +197,26 @@ public class PaymentService {
         }
     }
 
-    BigDecimal calculateTotal(BigDecimal cartItemsTotal, double tax, BigDecimal shippingPrice) {
-        var newTax = cartItemsTotal.multiply(BigDecimal.valueOf(tax));
-        return cartItemsTotal
-                .add(newTax)
-                .add(shippingPrice);
-    }
-
     /**
-     * Calculates the total for each item. Total = weight + (price * qty)
-     * */
-    private BigDecimal cartItemsTotal(long sessionId, SarreCurrency currency) {
-        return this.cartItemRepo
-                .totalPojoByShoppingSessionId(sessionId, currency)
-                .stream()
-                .map(p -> {
-                    BigDecimal mul = p.getPrice().multiply(BigDecimal.valueOf(p.getQty()));
-                    return BigDecimal.valueOf(p.getWeight()).add(mul);
-                })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    /**
-     * The implementation below is the last line of defence to protect against
-     * race condition/overselling. It applies the logic of:
-     * 1. Error thrown if qty in a users cart is greater than what is in stock.
-     * 2. A user reduces or adds a new {@code ProductSku} to their cart.
-     * 3. Combination of step 2 but the qty for each {@code CartItem} is
-     * might be different to what is reserved.
-     * 4. User tries checking out with some items removed from cart.
+     * Handles scenarios when pending reservations exist for items in the user's cart.
+     * <p>
+     * This method serves as the last line of defense against race conditions
+     * or overselling by updating existing reservations and ensuring consistency
+     * between cart items and order reservations. It applies the logic of
+     * adjusting inventory quantities and replacing reservation quantities based
+     * on the current state of the cart items and existing reservations.
      *
-     * @param toExpire the current toExpire.
-     * @param map of {@code Map<String, OrderReservation>} where the key is
-     *            a unique string assigned to a {@code ProductSku} and
-     *            the value is {@code OrderReservation}.
-     * @param cartItems is a list of {@code CartItem} objects representing
-     *                  items in the shopping cart.
-     * @param session is a unique string of {@code ShoppingSession} assigned
-     *                to every device that visits our application.
-     * @throws OutOfStockException if {@code CartItem} property qty is
-     * greater than {@code ProductSku} inventory.
-     * @throws org.springframework.orm.jpa.JpaSystemException if
-     * {@code ProductSku} is less than 0.
+     * @param session The {@code ShoppingSession} associated with the user's
+     *                device.
+     * @param toExpire The expiration date for the reservations.
+     * @param map A map of existing {@code OrderReservations} indexed by
+     *            {@code ProductSku} property sku.
+     * @param cartItems A list of {@code CartItem} representing items in the
+     *                  user's cart.
+     * @throws OutOfStockException if {@code CartItem} property qty is greater
+     * than {@code ProductSku} property inventory.
+     * @throws org.springframework.orm.jpa.JpaSystemException if {@code ProductSku}
+     * property inventory becomes.
      * */
     @Transactional
     void onPendingReservationsNotEmpty(

@@ -15,7 +15,7 @@ import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
-import com.sarabrandserver.shipping.entity.Shipping;
+import com.sarabrandserver.shipping.entity.ShipSetting;
 import com.sarabrandserver.shipping.repository.ShippingRepo;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
@@ -94,18 +94,18 @@ class PaymentControllerTest extends AbstractIntegration {
         // as we are deleting all from Shipping,
         // we need to save default object again
         shippingRepo
-                .save(new Shipping("default", new BigDecimal("0.00"), new BigDecimal("0.00")));
+                .save(new ShipSetting("default", new BigDecimal("0.00"), new BigDecimal("0.00")));
     }
 
     private void preSaveNecessaryData() {
         shippingRepo
-                .save(new Shipping(
+                .save(new ShipSetting(
                         "Canada",
                         new BigDecimal("20000"),
                         new BigDecimal("25.20")
                 ));
         shippingRepo
-                .save(new Shipping(
+                .save(new ShipSetting(
                         "Nigeria",
                         new BigDecimal("40000.00"),
                         new BigDecimal("30.55")
@@ -144,7 +144,7 @@ class PaymentControllerTest extends AbstractIntegration {
         return list.getFirst();
     }
 
-    private Cookie create_new_shopping_session() throws Exception {
+    private Cookie createNewShoppingSessionCookie() throws Exception {
         MvcResult result = this.MOCKMVC
                 .perform(get(cartPath).with(csrf()))
                 .andReturn();
@@ -173,7 +173,7 @@ class PaymentControllerTest extends AbstractIntegration {
         preSaveNecessaryData();
 
         // simulate adding item to cart
-        Cookie cookie = create_new_shopping_session();
+        Cookie cookie = createNewShoppingSessionCookie();
 
         // request
         this.MOCKMVC
@@ -300,13 +300,13 @@ class PaymentControllerTest extends AbstractIntegration {
     @Test
     void multipleUserTryPurchasingTheLastItemButOnlyIsAllowedAndTheRestGetA409() throws Exception {
         shippingRepo
-                .save(new Shipping(
+                .save(new ShipSetting(
                         new Faker().country().name(),
                         new BigDecimal("25025"),
                         new BigDecimal("30.20")
                 ));
         shippingRepo
-                .save(new Shipping(
+                .save(new ShipSetting(
                         new Faker().country().name(),
                         new BigDecimal("3075"),
                         new BigDecimal("45.19")
@@ -411,7 +411,7 @@ class PaymentControllerTest extends AbstractIntegration {
     @Test
     void validateTotalAmountUSD() throws Exception {
         shippingRepo
-                .save(new Shipping(
+                .save(new ShipSetting(
                         "Canada",
                         new BigDecimal("55000"),
                         new BigDecimal("30.20")
@@ -484,7 +484,7 @@ class PaymentControllerTest extends AbstractIntegration {
         };
 
         shippingRepo
-                .save(new Shipping(
+                .save(new ShipSetting(
                         "nigeria",
                         new BigDecimal("20000"),
                         new BigDecimal("25.20")

@@ -37,7 +37,7 @@ public class TaxService {
     public void update(TaxDto dto) {
         try {
             repository
-                    .updateByTaxId(dto.id(), dto.name(), dto.percentage());
+                    .updateByTaxId(dto.id(), dto.name().toUpperCase().trim(), dto.percentage());
         } catch (DataIntegrityViolationException e) {
             log.error(e.getMessage());
             String error = dto.name().length() > 5

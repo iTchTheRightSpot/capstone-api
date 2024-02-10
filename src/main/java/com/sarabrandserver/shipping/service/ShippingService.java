@@ -3,13 +3,11 @@ package com.sarabrandserver.shipping.service;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
-import com.sarabrandserver.payment.service.PaymentService;
 import com.sarabrandserver.shipping.ShippingDto;
 import com.sarabrandserver.shipping.ShippingMapper;
-import com.sarabrandserver.shipping.entity.Shipping;
+import com.sarabrandserver.shipping.entity.ShipSetting;
 import com.sarabrandserver.shipping.repository.ShippingRepo;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -25,7 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ShippingService {
 
-    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+    private static final Logger log = LoggerFactory.getLogger(ShippingService.class);
 
     private final ShippingRepo repository;
 
@@ -36,7 +34,7 @@ public class ShippingService {
     public List<ShippingMapper> shipping() {
         return repository.findAll()
                 .stream()
-                .map(s -> new ShippingMapper(s.shippingId(), s.country(), s.ngnPrice(), s.usdPrice()))
+                .map(s -> new ShippingMapper(s.shipId(), s.country(), s.ngnPrice(), s.usdPrice()))
                 .toList();
     }
 
@@ -51,7 +49,7 @@ public class ShippingService {
     public void create(final ShippingDto dto) {
         try {
             repository
-                .save(new Shipping(StringUtils.capitalize(dto.country()), dto.ngn(), dto.usd()));
+                .save(new ShipSetting(dto.country().toLowerCase().trim(), dto.ngn(), dto.usd()));
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateException("%s exists".formatted(dto.country()));
         }
@@ -68,7 +66,12 @@ public class ShippingService {
     public void update(final ShippingMapper dto) {
         try {
             repository
-                    .updateShippingById(dto.id(), dto.country(), dto.ngn(), dto.usd());
+                    .updateShippingById(
+                            dto.id(),
+                            dto.country().toLowerCase().trim(),
+                            dto.ngn(),
+                            dto.usd()
+                    );
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateException("%s exists".formatted(dto.country()));
         }
@@ -84,11 +87,10 @@ public class ShippingService {
     public void delete(final long id) {
         if (id == 1)
             throw new ResourceAttachedException("cannot delete default country.");
-
         repository.deleteShippingById(id);
     }
 
-    public Shipping shippingByCountryElseReturnDefault(String country) {
+    public ShipSetting shippingByCountryElseReturnDefault(String country) {
         return repository
                 .shippingByCountryElseReturnDefault(country)
                 .orElseThrow(() -> {

@@ -12,11 +12,34 @@ import java.util.List;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
+import static java.math.RoundingMode.FLOOR;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CustomUtilTest extends AbstractUnitTest {
 
     private record AmountConversion(BigDecimal given, BigDecimal expected) { }
+
+    @Test
+    void calculateTotalInNGN() {
+        // when
+        BigDecimal res = CustomUtil
+                .calculateTotal(new BigDecimal("1200"), 0.0725, new BigDecimal("500"))
+                .setScale(2, FLOOR);
+
+        // then
+        assertEquals(new BigDecimal("1787.00"), res);
+    }
+
+    @Test
+    void calculateTotalInUSD() {
+        // when
+        BigDecimal res = CustomUtil
+                .calculateTotal(new BigDecimal("75.00"), 0.05, new BigDecimal("10.48"))
+                .setScale(2, FLOOR);
+
+        // then
+        assertEquals(new BigDecimal("89.23"), res);
+    }
 
     @Test
     void validate_contains_desired_currencies() {

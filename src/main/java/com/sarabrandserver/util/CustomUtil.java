@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.payment.projection.TotalPojo;
 import com.sarabrandserver.product.dto.PriceCurrencyDTO;
 import com.sarabrandserver.product.response.Variant;
 import jakarta.servlet.http.Cookie;
@@ -145,6 +146,26 @@ public class CustomUtil {
         }
 
         return map.get(-1L).children(); // return children of root
+    }
+
+    public static BigDecimal calculateTotal(BigDecimal cartItemsTotal, double tax, BigDecimal shippingPrice) {
+        var newTax = cartItemsTotal.multiply(BigDecimal.valueOf(tax));
+        return cartItemsTotal
+                .add(newTax)
+                .add(shippingPrice);
+    }
+
+    /**
+     * Calculates the total for each item. Total = weight + (price * qty)
+     */
+    public static BigDecimal cartItemsTotal(List<TotalPojo> list) {
+        return list
+                .stream()
+                .map(p -> {
+                    BigDecimal mul = p.getPrice().multiply(BigDecimal.valueOf(p.getQty()));
+                    return BigDecimal.valueOf(p.getWeight()).add(mul);
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
 }

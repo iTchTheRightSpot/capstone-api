@@ -1,7 +1,7 @@
 package com.sarabrandserver.shipping.repository;
 
 import com.sarabrandserver.AbstractRepositoryTest;
-import com.sarabrandserver.shipping.entity.Shipping;
+import com.sarabrandserver.shipping.entity.ShipSetting;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -21,8 +21,8 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     void deleteShippingById() {
         // given
         var obj = shippingRepo
-                .save(new Shipping("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
-        long id = obj.shippingId();
+                .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
+        long id = obj.shipId();
 
         // when
         shippingRepo.deleteShippingById(id);
@@ -35,13 +35,13 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     void shouldThrowExceptionWhenCreatingAnExistingCountry() {
         // given
         shippingRepo
-                .save(new Shipping("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
+                .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
 
         // then
         assertThrows(
                 DataIntegrityViolationException.class,
                 () -> shippingRepo
-                        .save(new Shipping(
+                        .save(new ShipSetting(
                                 "nigeria",
                                 new BigDecimal("5000"),
                                 new BigDecimal("5.50")
@@ -53,8 +53,8 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     void updateShippingById() {
         // given
         var obj = shippingRepo
-                .save(new Shipping("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
-        long id = obj.shippingId();
+                .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
+        long id = obj.shipId();
 
         // when
         shippingRepo
@@ -74,11 +74,11 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     void shouldThrowErrorWhenUpdatingACountry() {
         // given
         var obj = shippingRepo
-                .save(new Shipping("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
-        long id = obj.shippingId();
+                .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
+        long id = obj.shipId();
 
         shippingRepo
-                .save(new Shipping("france", new BigDecimal("4500"), new BigDecimal("3.50")));
+                .save(new ShipSetting("france", new BigDecimal("4500"), new BigDecimal("3.50")));
 
         // then
         assertThrows(
@@ -97,7 +97,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     void shouldNotReturnDefaultShipping() {
         // given
         var obj = shippingRepo
-                .save(new Shipping("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
+                .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
 
         // when
         var optional = shippingRepo
@@ -112,7 +112,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     void shouldReturnDefaultShippingInsertedInMigrationScriptV13() {
         // given
         shippingRepo
-                .save(new Shipping("france", new BigDecimal("4500"), new BigDecimal("3.50")));
+                .save(new ShipSetting("france", new BigDecimal("4500"), new BigDecimal("3.50")));
 
         // when
         var optional = shippingRepo
@@ -121,8 +121,8 @@ class ShippingRepoTest extends AbstractRepositoryTest {
         // then
         assertFalse(optional.isEmpty());
 
-        Shipping obj = optional.get();
-        assertEquals(obj.shippingId(), 1L);
+        ShipSetting obj = optional.get();
+        assertEquals(obj.shipId(), 1L);
         assertEquals(obj.country(), "default");
         assertEquals(obj.ngnPrice(), new BigDecimal("0.00"));
         assertEquals(obj.ngnPrice(), new BigDecimal("0.00"));

@@ -1,6 +1,6 @@
 package com.sarabrandserver.shipping.repository;
 
-import com.sarabrandserver.shipping.entity.Shipping;
+import com.sarabrandserver.shipping.entity.ShipSetting;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,19 +11,19 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 @Repository
-public interface ShippingRepo extends JpaRepository<Shipping, Long> {
+public interface ShippingRepo extends JpaRepository<ShipSetting, Long> {
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query("DELETE FROM Shipping s WHERE s.shippingId = :id")
+    @Query("DELETE FROM ShipSetting s WHERE s.shipId = :id")
     void deleteShippingById(long id);
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
-    UPDATE Shipping s
+    UPDATE ShipSetting s
     SET s.country = :country, s.ngnPrice = :ngn, s.usdPrice = :usd
-    WHERE s.shippingId = :id
+    WHERE s.shipId = :id
     """)
     void updateShippingById(long id, String country, BigDecimal ngn, BigDecimal usd);
 
@@ -45,12 +45,12 @@ public interface ShippingRepo extends JpaRepository<Shipping, Long> {
      * entity, or an empty {@code Optional} if default entity is not found.
      */
     @Query("""
-    SELECT s FROM Shipping s
+    SELECT s FROM ShipSetting s
     WHERE s.country = (
         CASE WHEN (
                 SELECT
                 COUNT(s)
-                FROM Shipping s
+                FROM ShipSetting s
                 WHERE s.country = :country
             ) > 0
             THEN :country
@@ -58,6 +58,6 @@ public interface ShippingRepo extends JpaRepository<Shipping, Long> {
             END
     )
     """)
-    Optional<Shipping> shippingByCountryElseReturnDefault(String country);
+    Optional<ShipSetting> shippingByCountryElseReturnDefault(String country);
 
 }

@@ -3,7 +3,7 @@ package com.sarabrandserver.shipping.controller;
 import com.sarabrandserver.AbstractIntegration;
 import com.sarabrandserver.shipping.ShippingDto;
 import com.sarabrandserver.shipping.ShippingMapper;
-import com.sarabrandserver.shipping.entity.Shipping;
+import com.sarabrandserver.shipping.entity.ShipSetting;
 import com.sarabrandserver.shipping.repository.ShippingRepo;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,14 +50,14 @@ class ShippingControllerTest extends AbstractIntegration {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void update() throws Exception {
         var shipping = shippingRepo
-                .save(new Shipping("Japan", new BigDecimal("25750"), new BigDecimal("35.55")));
+                .save(new ShipSetting("Japan", new BigDecimal("25750"), new BigDecimal("35.55")));
 
         this.MOCKMVC
                 .perform(put("/" + path)
                         .with(csrf())
                         .content(this.MAPPER.writeValueAsString(
                                 new ShippingMapper(
-                                        shipping.shippingId(),
+                                        shipping.shipId(),
                                         shipping.country(),
                                         new BigDecimal("10100"),
                                         new BigDecimal("20.24")
@@ -72,10 +72,10 @@ class ShippingControllerTest extends AbstractIntegration {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void deleteShipping() throws Exception {
         var shipping = shippingRepo
-                .save(new Shipping("France", new BigDecimal("25750"), new BigDecimal("35.55")));
+                .save(new ShipSetting("France", new BigDecimal("25750"), new BigDecimal("35.55")));
 
         this.MOCKMVC
-                .perform(delete("/" + path + "/" + shipping.shippingId())
+                .perform(delete("/" + path + "/" + shipping.shipId())
                         .with(csrf())
                 )
                 .andExpect(status().isNoContent());
@@ -91,7 +91,7 @@ class ShippingControllerTest extends AbstractIntegration {
 
         // then
         this.MOCKMVC
-                .perform(delete("/" + path + "/" + optional.get().shippingId())
+                .perform(delete("/" + path + "/" + optional.get().shipId())
                         .with(csrf())
                 )
                 .andExpect(status().isConflict());

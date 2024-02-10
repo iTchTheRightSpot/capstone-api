@@ -16,14 +16,14 @@ ALTER TABLE product_image
     ADD CONSTRAINT `product_detail_fk` FOREIGN KEY (detail_id)
         REFERENCES product_detail (detail_id) ON DELETE CASCADE;
 
-CREATE TABLE IF NOT EXISTS shipping_setting
+CREATE TABLE IF NOT EXISTS ship_setting
 (
-    shipping_id   BIGINT         NOT NULL UNIQUE AUTO_INCREMENT,
+    ship_id   BIGINT         NOT NULL UNIQUE AUTO_INCREMENT,
     country VARCHAR(57) UNIQUE NOT NULL,
     ngn_price     DECIMAL(20, 2) NOT NULL,
     usd_price     DECIMAL(20, 2) NOT NULL,
-    PRIMARY KEY (shipping_id)
+    PRIMARY KEY (ship_id)
 );
 
-INSERT INTO shipping_setting (country, ngn_price, usd_price)
+INSERT INTO ship_setting (country, ngn_price, usd_price)
     VALUE ('default', 0.00, 0.00);

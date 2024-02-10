@@ -23,35 +23,37 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
 @Service
 @RequiredArgsConstructor
-@Getter
-@Setter
 public class CartService {
 
     private static final Logger log = LoggerFactory.getLogger(CartService.class);
 
     private final int expire = 2; // cart expiration
-    private final int expirationBound = 5;
 
+    @Setter @Getter
     @Value(value = "${cart.split}")
     private String split;
+    @Setter @Getter
     @Value(value = "${aws.bucket}")
     private String BUCKET;
+    @Setter @Getter
     @Value("${cart.cookie.name}")
     private String CART_COOKIE;
+    @Setter @Getter
     @Value(value = "${server.servlet.session.cookie.secure}")
     private boolean COOKIESECURE;
+    @Setter @Getter
+    @Value("${shopping.session.expiration.bound}")
+    private long bound;
 
     private final ShoppingSessionRepo shoppingSessionRepo;
     private final CartItemRepo cartItemRepo;
@@ -67,7 +69,7 @@ public class CartService {
         try {
             String[] arr = cookie.getValue().split(this.split);
             long d = Long.parseLong(arr[1]);
-            long calc = d + (this.expirationBound * 3600);
+            long calc = d + (this.bound * 3600);
 
             Date five = CustomUtil.toUTC(new Date(calc));
             Date now = CustomUtil.toUTC(new Date());
@@ -245,30 +247,6 @@ public class CartService {
         String[] arr = cookie.getValue().split(this.split);
 
         this.cartItemRepo.deleteCartItemByCookieAndSku(arr[0], sku);
-    }
-
-    /**
-     * Schedule deletion for expired ShoppingSession every 10 mins
-     * <a href="https://docs.spring.io/spring-framework/reference/integration/scheduling.html">...</a>
-     * */
-    @Scheduled(fixedRate = 10, timeUnit = TimeUnit.MINUTES, zone = "UTC")
-    public void schedule() {
-        delete();
-    }
-
-    public void delete() {
-        Date date = CustomUtil.toUTC(new Date());
-        var list = this.shoppingSessionRepo.allExpiredShoppingSession(date);
-
-        // delete children
-        for (ShoppingSession s : list) {
-            this.cartItemRepo
-                    .deleteCartItemsByShoppingSessionId(s.shoppingSessionId());
-        }
-
-        for (ShoppingSession s : list) {
-            this.shoppingSessionRepo.deleteById(s.shoppingSessionId());
-        }
     }
 
 }

@@ -2,6 +2,7 @@ package com.sarabrandserver.payment.entity;
 
 import com.sarabrandserver.enumeration.PaymentStatus;
 import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.user.entity.SarreBrandUser;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -60,6 +61,10 @@ public class PaymentDetail implements Serializable {
     @OneToOne(mappedBy = "paymentDetail", cascade = { PERSIST, MERGE, REFRESH })
     @PrimaryKeyJoinColumn
     private Address address;
+
+    @ManyToOne
+    @JoinColumn(name = "client_id", referencedColumnName = "client_id")
+    private SarreBrandUser user;
 
     @OneToMany(fetch = LAZY, cascade = { PERSIST, MERGE, REFRESH }, mappedBy = "paymentDetail")
     private Set<OrderDetail> orderDetails;

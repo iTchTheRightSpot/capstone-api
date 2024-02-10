@@ -2,7 +2,6 @@ package com.sarabrandserver.user.entity;
 
 import com.sarabrandserver.enumeration.RoleEnum;
 import jakarta.persistence.*;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
@@ -11,7 +10,6 @@ import java.io.Serializable;
 @Table(name = "client_role")
 @Entity
 @NoArgsConstructor
-@Getter
 @Setter
 public class ClientRole implements Serializable {
 
@@ -31,6 +29,18 @@ public class ClientRole implements Serializable {
     public ClientRole(RoleEnum role, SarreBrandUser sarreBrandUser) {
         this.role = role;
         this.sarreBrandUser = sarreBrandUser;
+    }
+
+    public Long roleId() {
+        return roleId;
+    }
+
+    public RoleEnum role() {
+        return role;
+    }
+
+    public SarreBrandUser user() {
+        return sarreBrandUser;
     }
 
 }

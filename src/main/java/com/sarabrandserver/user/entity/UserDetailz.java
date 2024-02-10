@@ -14,7 +14,7 @@ public record UserDetailz(SarreBrandUser user) implements UserDetails {
         return this.user
                 .getClientRole()
                 .stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRole().toString()))
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.role().toString()))
                 .collect(Collectors.toSet());
     }
 

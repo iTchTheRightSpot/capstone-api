@@ -36,7 +36,10 @@ CREATE TABLE IF NOT EXISTS payment_detail
     payment_provider   VARCHAR(30)    NOT NULL,
     payment_status     VARCHAR(10)    NOT NULL,
     created_at         DATETIME       NOT NULL,
-    PRIMARY KEY (payment_detail_id)
+    client_id BIGINT,
+    PRIMARY KEY (payment_detail_id),
+    CONSTRAINT `payment_detail_clientz_fk` FOREIGN KEY (client_id)
+        REFERENCES clientz (client_id) ON DELETE SET NULL
 );
 
 ALTER TABLE order_detail
@@ -67,5 +70,6 @@ CREATE TABLE IF NOT EXISTS order_reservation
     expire_at      DATETIME    NOT NULL,
     session_id BIGINT,
     PRIMARY KEY (reservation_id),
-    CONSTRAINT `shopping_session_fk` FOREIGN KEY (session_id) REFERENCES shopping_session (session_id) ON DELETE SET NULL
+    CONSTRAINT `shopping_session_fk` FOREIGN KEY (session_id)
+        REFERENCES shopping_session (session_id) ON DELETE SET NULL
 );

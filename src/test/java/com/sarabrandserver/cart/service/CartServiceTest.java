@@ -46,6 +46,7 @@ class CartServiceTest extends AbstractUnitTest {
         );
 
         this.cartService.setSplit("%");
+        this.cartService.setBound(5);
     }
 
     /**
@@ -55,7 +56,7 @@ class CartServiceTest extends AbstractUnitTest {
     @Test
     void validate_cookie_about_to_expire() {
         // given
-        int expirationBound = this.cartService.getExpirationBound();
+        long expirationBound = this.cartService.getBound();
         String split = this.cartService.getSplit();
 
         Instant now = Instant.now();
@@ -77,7 +78,7 @@ class CartServiceTest extends AbstractUnitTest {
     @Test
     void validate_cookie() {
         // given
-        int expirationBound = this.cartService.getExpirationBound();
+        long expirationBound = this.cartService.getBound();
         String split = this.cartService.getSplit();
 
         Instant now = Instant.now();

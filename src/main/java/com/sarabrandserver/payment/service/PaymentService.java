@@ -27,7 +27,6 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +39,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
@@ -51,7 +49,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class PaymentService {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
-    private static final long bound = 15;
 
     @Setter
     @Value("${cart.cookie.name}")
@@ -65,6 +62,10 @@ public class PaymentService {
     @Setter
     @Value("${sarre.ngn.to.kobo}")
     private String ngnConversion;
+    @Setter
+    @Value("${race-condition.expiration.bound}")
+    private long bound;
+
 
     private final ProductSkuRepo productSkuRepo;
     private final ShoppingSessionRepo shoppingSessionRepo;
@@ -119,7 +120,9 @@ public class PaymentService {
                         PENDING
                 );
 
-        long instant = Instant.now().plus(bound, ChronoUnit.MINUTES).toEpochMilli();
+        long instant = Instant.now()
+                .plus(bound, ChronoUnit.MINUTES)
+                .toEpochMilli();
         Date toExpire = CustomUtil.toUTC(new Date(instant));
 
         // race condition impl
@@ -361,30 +364,6 @@ public class PaymentService {
             log.info("Error validating request from paystack {}", e.getMessage());
             return "";
         }
-    }
-
-    /**
-     * Returning pending order reservation back to stock.
-     * Note we are making the interval to be 20 mins
-     * for extra breathing space from payment provider webhook
-     * */
-    @Scheduled(fixedRate = bound + 5, timeUnit = TimeUnit.MINUTES, zone = "UTC")
-    public void schedule() {
-        scheduledDelete();
-    }
-
-    void scheduledDelete() {
-        Date date = CustomUtil.toUTC(new Date());
-        var list = this.reservationRepo
-                .allPendingExpiredReservations(date, PENDING);
-
-        for (OrderReservation r : list) {
-            this.productSkuRepo
-                    .updateProductSkuInventoryByAddingToExistingInventory(r.getProductSku().getSku(), r.getQty());
-            this.reservationRepo
-                    .deleteOrderReservationByReservationId(r.getReservationId());
-        }
-        this.reservationRepo.deleteExpired(date);
     }
 
 }

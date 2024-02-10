@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 import static com.sarabrandserver.enumeration.RoleEnum.CLIENT;
@@ -30,6 +31,7 @@ public class TestData {
                 .phoneNumber(new Faker().phoneNumber().phoneNumber())
                 .password(new Faker().phoneNumber().phoneNumber())
                 .enabled(true)
+                .paymentDetails(new HashSet<>())
                 .build();
         client.setClientRole(Set.of(new ClientRole(CLIENT, client)));
         return client;
@@ -43,6 +45,7 @@ public class TestData {
                 .phoneNumber(new Faker().phoneNumber().phoneNumber())
                 .password(new Faker().phoneNumber().phoneNumber())
                 .enabled(true)
+                .paymentDetails(new HashSet<>())
                 .build();
         client.setClientRole(
                 Set.of(new ClientRole(CLIENT, client), new ClientRole(WORKER, client))

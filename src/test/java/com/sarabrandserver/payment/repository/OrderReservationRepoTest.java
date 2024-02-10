@@ -456,7 +456,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
                 );
 
         // when
-        reservationRepo.deleteExpired(CustomUtil.toUTC(new Date()));
+        reservationRepo.deleteExpiredOrderReservations(CustomUtil.toUTC(new Date()), PENDING);
         assertTrue(reservationRepo.findById(reservation.getReservationId()).isEmpty());
     }
 

@@ -79,7 +79,7 @@ public class AuthService {
         var optional = this.userRepository.findByPrincipal(dto.email().trim());
 
         if (optional.isPresent() && optional.get().getClientRole().stream()
-                .anyMatch(role -> role.getRole().equals(WORKER))
+                .anyMatch(role -> role.role().equals(WORKER))
         ) {
             throw new DuplicateException(dto.email() + " exists");
         }
@@ -169,6 +169,7 @@ public class AuthService {
                         .phoneNumber(dto.phone().trim())
                         .password(passwordEncoder.encode(dto.password()))
                         .enabled(true)
+                        .paymentDetails(new HashSet<>())
                         .clientRole(new HashSet<>())
                         .build()
                 );

@@ -76,9 +76,9 @@ class ShoppingSessionRepoTest extends AbstractRepositoryTest {
         sessionRepo.updateShoppingSessionExpiry("cookie", expired);
 
         // when
-        var session = this.sessionRepo.findById(saved.getShoppingSessionId());
+        var session = this.sessionRepo.findById(saved.shoppingSessionId());
         assertFalse(session.isEmpty());
-        assertNotEquals(CustomUtil.toUTC(saved.getCreateAt()), CustomUtil.toUTC(expired));
+        assertNotEquals(CustomUtil.toUTC(saved.createAt()), CustomUtil.toUTC(expired));
     }
 
     @Test

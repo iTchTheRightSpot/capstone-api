@@ -129,7 +129,7 @@ class CartItemRepoTest extends AbstractRepositoryTest {
         CartItem cart = cartItemRepo.save(new CartItem(sku.getInventory() - 1, session, sku));
 
         // when
-        cartItemRepo.deleteCartItemByCookieAndSku(session.getCookie(), sku.getSku());
+        cartItemRepo.deleteCartItemByCookieAndSku(session.cookie(), sku.getSku());
 
         Optional<CartItem> optional = cartItemRepo.findById(cart.getCartId());
         assertTrue(optional.isEmpty());
@@ -177,8 +177,8 @@ class CartItemRepoTest extends AbstractRepositoryTest {
         }
 
         // when
-        var usd = cartItemRepo.totalAmountInDefaultCurrency(saved.getCookie(), USD);
-        var ngn = cartItemRepo.totalAmountInDefaultCurrency(saved.getCookie(), NGN);
+        var usd = cartItemRepo.totalPojoByShoppingSessionId(saved.shoppingSessionId(), USD);
+        var ngn = cartItemRepo.totalPojoByShoppingSessionId(saved.shoppingSessionId(), NGN);
 
         assertFalse(usd.isEmpty());
         assertFalse(ngn.isEmpty());
@@ -238,6 +238,182 @@ class CartItemRepoTest extends AbstractRepositoryTest {
 
         // when
         assertTrue(cart.quantityIsGreaterThanProductSkuInventory());
+    }
+
+    @Test
+    void deleteCartItemsByShoppingSessionId() {
+        // given
+        var cat = categoryRepo
+                .save(ProductCategory.builder()
+                        .name("category")
+                        .isVisible(true)
+                        .categories(new HashSet<>())
+                        .product(new HashSet<>())
+                        .build()
+                );
+
+        // create 2 ProductSku objects
+        service
+                .create(
+                        TestData.createProductDTO(
+                                new Faker().commerce().productName(),
+                                cat.getCategoryId(),
+                                TestData.sizeInventoryDTOArray(3)
+                        ),
+                        TestData.files()
+                );
+
+        var skus = skuRepo.findAll();
+        assertEquals(3, skus.size());
+        ProductSku first = skus.getFirst();
+        ProductSku second = skus.get(1);
+        ProductSku third = skus.get(2);
+
+        var session = this.sessionRepo
+                .save(
+                        new ShoppingSession(
+                                "cookie",
+                                new Date(),
+                                new Date(Instant.now().plus(1, HOURS).toEpochMilli()),
+                                new HashSet<>(),
+                                new HashSet<>()
+                        )
+                );
+
+        cartItemRepo.save(new CartItem(3, session, first));
+        cartItemRepo.save(new CartItem(5, session, second));
+        cartItemRepo.save(new CartItem(7, session, third));
+
+        assertEquals(3, cartItemRepo
+                .cartItemsByShoppingSessionId(session.shoppingSessionId()).size()
+        );
+
+        // when
+        cartItemRepo
+                .deleteCartItemsByShoppingSessionId(session.shoppingSessionId());
+
+        // then
+        assertTrue(cartItemRepo
+                .cartItemsByShoppingSessionId(session.shoppingSessionId()).isEmpty()
+        );
+    }
+
+    @Test
+    void cartItemsByShoppingSessionId() {
+        // given
+        var cat = categoryRepo
+                .save(ProductCategory.builder()
+                        .name("category")
+                        .isVisible(true)
+                        .categories(new HashSet<>())
+                        .product(new HashSet<>())
+                        .build()
+                );
+
+        // create 2 ProductSku objects
+        service
+                .create(
+                        TestData.createProductDTO(
+                                new Faker().commerce().productName(),
+                                cat.getCategoryId(),
+                                TestData.sizeInventoryDTOArray(3)
+                        ),
+                        TestData.files()
+                );
+
+        var skus = skuRepo.findAll();
+        assertEquals(3, skus.size());
+        ProductSku first = skus.getFirst();
+        ProductSku second = skus.get(1);
+        ProductSku third = skus.get(2);
+
+        var session = this.sessionRepo
+                .save(
+                        new ShoppingSession(
+                                "cookie",
+                                new Date(),
+                                new Date(Instant.now().plus(1, HOURS).toEpochMilli()),
+                                new HashSet<>(),
+                                new HashSet<>()
+                        )
+                );
+
+        cartItemRepo.save(new CartItem(3, session, first));
+        cartItemRepo.save(new CartItem(5, session, second));
+        cartItemRepo.save(new CartItem(7, session, third));
+
+        // when
+        assertEquals(3,
+                cartItemRepo
+                        .cartItemsByShoppingSessionId(session.shoppingSessionId())
+                        .size()
+        );
+    }
+
+    @Test
+    void cartItemByShoppingSessionIdAndProductSkuSku() {
+        // given
+        var cat = categoryRepo
+                .save(ProductCategory.builder()
+                        .name("category")
+                        .isVisible(true)
+                        .categories(new HashSet<>())
+                        .product(new HashSet<>())
+                        .build()
+                );
+
+        // create 2 ProductSku objects
+        service
+                .create(
+                        TestData.createProductDTO(
+                                new Faker().commerce().productName(),
+                                cat.getCategoryId(),
+                                TestData.sizeInventoryDTOArray(2)
+                        ),
+                        TestData.files()
+                );
+
+        var skus = skuRepo.findAll();
+        assertEquals(2, skus.size());
+        ProductSku first = skus.getFirst();
+        ProductSku second = skus.get(1);
+
+        var session = this.sessionRepo
+                .save(
+                        new ShoppingSession(
+                                "cookie",
+                                new Date(),
+                                new Date(Instant.now().plus(1, HOURS).toEpochMilli()),
+                                new HashSet<>(),
+                                new HashSet<>()
+                        )
+                );
+
+        cartItemRepo.save(new CartItem(3, session, first));
+        cartItemRepo.save(new CartItem(3, session, second));
+
+        // when
+        var optional = cartItemRepo
+                .cartItemByShoppingSessionIdAndProductSkuSku(
+                        session.shoppingSessionId(),
+                        second.getSku()
+                );
+
+        assertFalse(cartItemRepo
+                .cartItemByShoppingSessionIdAndProductSkuSku(
+                        session.shoppingSessionId(),
+                        first.getSku()
+                )
+                .isEmpty()
+        );
+
+        assertFalse(cartItemRepo
+                .cartItemByShoppingSessionIdAndProductSkuSku(
+                        session.shoppingSessionId(),
+                        second.getSku()
+                )
+                .isEmpty()
+        );
     }
 
 }

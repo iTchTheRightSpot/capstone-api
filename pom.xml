@@ -78,7 +78,7 @@
             <version>${jakarta.xml.bind.version}</version>
         </dependency>
 
-        <!-- In other to enable @Scheduling -->
+        <!-- For CRON jobs @Scheduling -->
         <dependency>
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>

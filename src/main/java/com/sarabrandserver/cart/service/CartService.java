@@ -188,7 +188,7 @@ public class CartService {
 
             create_new_shopping_session(arr[0], date, dto.qty(), productSku);
         } else {
-            add_to_existing_shopping_session(session.get(), dto.qty(), productSku);
+            addToExistingShoppingSession(session.get(), dto.qty(), productSku);
         }
     }
 
@@ -213,17 +213,18 @@ public class CartService {
     /**
      * Creates or updates a CartItem
      */
-    private void add_to_existing_shopping_session(ShoppingSession session, int qty, ProductSku sku) {
-        Optional<CartItem> cart = session.getCartItems()
-                .stream()
-                .filter(c -> c.getProductSku().getSku().equals(sku.getSku()))
-                .findFirst();
+    private void addToExistingShoppingSession(ShoppingSession session, int qty, ProductSku sku) {
+        var optional = cartItemRepo
+                .cartItemByShoppingSessionIdAndProductSkuSku(
+                        session.shoppingSessionId(),
+                        sku.getSku()
+                );
 
-        if (cart.isEmpty()) {
+        if (optional.isEmpty()) {
             this.cartItemRepo.save(new CartItem(qty, session, sku));
         } else {
             // update quantity if cart is present
-            this.cartItemRepo.updateCartQtyByCartId(cart.get().getCartId(), qty);
+            this.cartItemRepo.updateCartQtyByCartId(optional.get().getCartId(), qty);
         }
     }
 
@@ -261,11 +262,12 @@ public class CartService {
 
         // delete children
         for (ShoppingSession s : list) {
-            this.cartItemRepo.deleteByParentId(s.getShoppingSessionId());
+            this.cartItemRepo
+                    .deleteCartItemsByShoppingSessionId(s.shoppingSessionId());
         }
 
         for (ShoppingSession s : list) {
-            this.shoppingSessionRepo.deleteById(s.getShoppingSessionId());
+            this.shoppingSessionRepo.deleteById(s.shoppingSessionId());
         }
     }
 

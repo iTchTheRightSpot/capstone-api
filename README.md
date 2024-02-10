@@ -1,20 +1,37 @@
 # About
-An ecommerce application. Note is still in development and it contains two branches. Master and dev.
+An ecommerce application still in development.
 
-## Getting starter
-Pre-requisite docker installed
-on command line run `./mvnw clean spring-boot:test-run`
+## Getting started
+#### Pre-requisite
+1. docker
+
+```
+After or If docker is installed, cd into root directory and enter
+in your command line 
+
+./mvnw clean spring-boot:test-run
+or
+mvn clean spring-boot:test-run
+
+To run all test
+mvn clean test
+```
 
 ### Technologies
-* Java 21
-* Spring Boot 3.2.1
-* Flyway Migration
-* AWS Java SDK v2
-* AWS S3Client
-* AWS S3Presigner
-* AWS SecretsManagerClient
-* Unit testing using JUnit and Mockito.
-* Integration and Repository testing using Test Containers.
+* Java 21.
+* Spring Boot 3.2.2.
+  * Spring Starter Web.
+  * Spring Starter Validation.
+  * Spring Data JPA.
+  * Spring Oauth2 Resource Server (manual authentication and authorization using jwt).
+  * Spring Session (http only cookie).
+* MySQL connector.
+* Flyway Migration.
+* Paystack.
+* Cron jobs using Awaitility.
+* AWS Java SDK v2 (SESv2, S3Client, S3Presigner and SecretsManager Client).
+* Unit testing, Data Access Layer and Integration Testing using JUnit, Mockito, Hamcrest and Test Containers.
+
 
 ### Schema
 Link for the most up-to-date schema.

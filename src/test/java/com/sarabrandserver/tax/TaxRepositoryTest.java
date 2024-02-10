@@ -3,6 +3,7 @@ package com.sarabrandserver.tax;
 import com.sarabrandserver.AbstractRepositoryTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -12,24 +13,45 @@ class TaxRepositoryTest extends AbstractRepositoryTest {
     private TaxRepository repository;
 
     @Test
-    void updateByTaxId () {
-        // given
-        // contains value from migration script V15
-        var all = repository.findAll();
-        assertEquals(1, all.size());
-        Tax first = all.getFirst();
-
+    void shouldContainDefaultTaxAsPerMigrationScriptV15() {
         // when
-        repository
-                .updateByTaxId(first.taxId(), "name", 25.32);
+        var all = repository.findAll();
 
         // then
-        var optional = repository.findById(first.taxId());
+        assertEquals(1, all.size());
+    }
+
+    @Test
+    void updateByTaxId () {
+        // when
+        repository.updateByTaxId(1, "name", 25.32);
+
+        // then
+        var optional = repository.findById(1L);
         assertFalse(optional.isEmpty());
 
         Tax tax = optional.get();
         assertEquals("name", tax.name());
         assertEquals(25.32, tax.percentage());
+    }
+
+    @Test
+    void shouldThrowErrorAsPercentageIsNotInTheRightFormat() {
+        // when
+        assertThrows(DataIntegrityViolationException.class,
+                () -> repository
+                        .updateByTaxId(1, "name", 225.32));
+
+        assertThrows(DataIntegrityViolationException.class,
+                () -> repository
+                        .updateByTaxId(1, "frank", 225.32666));
+    }
+
+    @Test
+    void shouldThrowErrorWhenUpdatingTaxBecauseOfLengthOfName() {
+        assertThrows(DataIntegrityViolationException.class,
+                () -> repository.updateByTaxId(1,"hungary-tax", 10.2345)
+        );
     }
 
 }

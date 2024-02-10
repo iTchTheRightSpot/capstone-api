@@ -21,11 +21,6 @@ public class Tax {
 
     public Tax() {}
 
-    public Tax(String name, double percentage) {
-        this.name = name;
-        this.percentage = percentage;
-    }
-
     public Long taxId() {
         return taxId;
     }

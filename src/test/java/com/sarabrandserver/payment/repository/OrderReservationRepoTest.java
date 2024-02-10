@@ -328,7 +328,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
         // when
         var list = reservationRepo
                 .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
-                        session.getShoppingSessionId(),
+                        session.shoppingSessionId(),
                         CustomUtil.toUTC(current),
                         PENDING
                 );

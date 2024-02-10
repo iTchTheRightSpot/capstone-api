@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CartItemRepo extends JpaRepository<CartItem, Long> {
@@ -24,11 +25,21 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     @Query("DELETE FROM CartItem c WHERE c.shoppingSession.cookie = :cookie AND c.productSku.sku = :sku")
     void deleteCartItemByCookieAndSku(String cookie, String sku);
 
+    /**
+     * Deletes all {@code CartItem} associated to a
+     * {@code ShoppingSession} id.
+     * */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("DELETE FROM CartItem c WHERE c.shoppingSession.shoppingSessionId = :id")
-    void deleteByParentId(long id);
+    void deleteCartItemsByShoppingSessionId(long id);
 
+    /**
+     * @param sessionId is associated to every device.
+     * @return List of {@code TotalPojo} which are select items needed
+     * to calculate the total in a users cart. The select items are
+     * qty, price, and weight.
+     * */
     @Query("""
     SELECT
     c.qty AS qty,
@@ -40,8 +51,22 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     INNER JOIN ProductDetail d ON ps.productDetail.productDetailId = d.productDetailId
     INNER JOIN Product p ON d.product.productId = p.productId
     INNER JOIN PriceCurrency pc ON p.productId = pc.product.productId
-    WHERE s.cookie = :cookie AND pc.currency = :currency
+    WHERE s.shoppingSessionId = :sessionId AND pc.currency = :currency
     """)
-    List<TotalPojo> totalAmountInDefaultCurrency(String cookie, SarreCurrency currency);
+    List<TotalPojo> totalPojoByShoppingSessionId(long sessionId, SarreCurrency currency);
 
+    @Query("""
+    SELECT c FROM CartItem c
+    INNER JOIN ShoppingSession s ON c.shoppingSession.shoppingSessionId = s.shoppingSessionId
+    WHERE s.shoppingSessionId = :id
+    """)
+    List<CartItem> cartItemsByShoppingSessionId(long id);
+
+    @Query("""
+    SELECT c FROM CartItem c
+    INNER JOIN ShoppingSession s ON c.shoppingSession.shoppingSessionId = s.shoppingSessionId
+    INNER JOIN ProductSku sk ON c.productSku.skuId = sk.skuId
+    WHERE s.shoppingSessionId = :id AND sk.sku = :sku
+    """)
+    Optional<CartItem> cartItemByShoppingSessionIdAndProductSkuSku(long id, String sku);
 }

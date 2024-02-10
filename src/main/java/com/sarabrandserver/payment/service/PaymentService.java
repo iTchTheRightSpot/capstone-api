@@ -93,68 +93,37 @@ public class PaymentService {
         Cookie cookie = CustomUtil.cookie(req, CART_COOKIE);
 
         if (cookie == null) {
-            throw new CustomNotFoundException("No cookie found. Kindly refresh window");
+            throw new CustomNotFoundException("no cookie found. kindly refresh window");
         }
 
-        String sessionId = cookie.getValue().split(this.SPLIT)[0];
+        var optionalShoppingSession = shoppingSessionRepo
+                .shoppingSessionByCookie(cookie.getValue().split(this.SPLIT)[0]);
 
-        var session = shoppingSessionRepo.shoppingSessionByCookie(sessionId);
-
-        if (session.isEmpty()) {
+        if (optionalShoppingSession.isEmpty()) {
             throw new CustomNotFoundException("invalid shopping session");
+        }
+
+        ShoppingSession session = optionalShoppingSession.get();
+        long sessionId = session.shoppingSessionId();
+
+        var carts = cartItemRepo.cartItemsByShoppingSessionId(sessionId);
+
+        if (carts.isEmpty()) {
+            throw new CustomNotFoundException("cart is empty");
         }
 
         var reservations = this.reservationRepo
                 .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
-                        session.get().getShoppingSessionId(),
+                        sessionId,
                         CustomUtil.toUTC(new Date()),
                         PENDING
                 );
 
-        long toExpire = Instant.now().plus(bound, ChronoUnit.MINUTES).toEpochMilli();
-        Date date = CustomUtil.toUTC(new Date(toExpire));
+        long instant = Instant.now().plus(bound, ChronoUnit.MINUTES).toEpochMilli();
+        Date toExpire = CustomUtil.toUTC(new Date(instant));
 
         // race condition impl
-        try {
-            if (reservations.isEmpty()) {
-                for (CartItem cart : session.get().getCartItems()) {
-                    if (cart.quantityIsGreaterThanProductSkuInventory()) {
-                        throw new OutOfStockException("an item in your cart is out of stock");
-                    }
-
-                    this.productSkuRepo
-                            .updateProductSkuInventoryBySubtractingFromExistingInventory(
-                                    cart.getProductSku().getSku(),
-                                    cart.getQty()
-                            );
-                    this.reservationRepo
-                            .save(new OrderReservation(
-                                            cart.getQty(),
-                                            PENDING,
-                                            date,
-                                            cart.getProductSku(),
-                                            session.get()
-                                    )
-                            );
-                }
-            } else {
-                Map<String, OrderReservation> map = reservations
-                        .stream()
-                        .collect(Collectors.toMap(
-                                reservation -> reservation.getProductSku().getSku(),
-                                orderReservation -> orderReservation)
-                        );
-                onPendingReservationsNotEmpty(
-                        session.get(),
-                        date,
-                        map,
-                        session.get().getCartItems().stream().toList()
-                );
-            }
-        } catch (RuntimeException e) {
-            log.error("race condition exception thrown. {}", e.getMessage());
-            throw new OutOfStockException("an item in your cart is out of stock");
-        }
+        raceConditionImpl(reservations, carts, toExpire, session);
 
         Shipping shipping = shippingService
                 .shippingByCountryElseReturnDefault(country);
@@ -181,6 +150,55 @@ public class PaymentService {
         );
     }
 
+    @Transactional
+    void raceConditionImpl(
+            List<OrderReservation> reservations,
+            List<CartItem> carts,
+            Date toExpire,
+            ShoppingSession session
+    ) {
+        try {
+            if (reservations.isEmpty()) {
+                for (CartItem cart : carts) {
+                    if (cart.quantityIsGreaterThanProductSkuInventory()) {
+                        throw new OutOfStockException("an item in your cart is out of stock");
+                    }
+
+                    this.productSkuRepo
+                            .updateProductSkuInventoryBySubtractingFromExistingInventory(
+                                    cart.getProductSku().getSku(),
+                                    cart.getQty()
+                            );
+                    this.reservationRepo
+                            .save(new OrderReservation(
+                                            cart.getQty(),
+                                            PENDING,
+                                    toExpire,
+                                            cart.getProductSku(),
+                                            session
+                                    )
+                            );
+                }
+            } else {
+                Map<String, OrderReservation> map = reservations
+                        .stream()
+                        .collect(Collectors.toMap(
+                                reservation -> reservation.getProductSku().getSku(),
+                                orderReservation -> orderReservation)
+                        );
+                onPendingReservationsNotEmpty(
+                        session,
+                        toExpire,
+                        map,
+                        carts
+                );
+            }
+        } catch (RuntimeException e) {
+            log.error("race condition exception thrown. {}", e.getMessage());
+            throw new OutOfStockException("an item in your cart is out of stock");
+        }
+    }
+
     BigDecimal calculateTotal(BigDecimal cartItemsTotal, double tax, BigDecimal shippingPrice) {
         var newTax = cartItemsTotal.multiply(BigDecimal.valueOf(tax));
         return cartItemsTotal
@@ -191,9 +209,9 @@ public class PaymentService {
     /**
      * Calculates the total for each item. Total = weight + (price * qty)
      * */
-    private BigDecimal cartItemsTotal(String sessionId, SarreCurrency currency) {
+    private BigDecimal cartItemsTotal(long sessionId, SarreCurrency currency) {
         return this.cartItemRepo
-                .totalAmountInDefaultCurrency(sessionId, currency)
+                .totalPojoByShoppingSessionId(sessionId, currency)
                 .stream()
                 .map(p -> {
                     BigDecimal mul = p.getPrice().multiply(BigDecimal.valueOf(p.getQty()));
@@ -211,7 +229,7 @@ public class PaymentService {
      * might be different to what is reserved.
      * 4. User tries checking out with some items removed from cart.
      *
-     * @param date the current date.
+     * @param toExpire the current toExpire.
      * @param map of {@code Map<String, OrderReservation>} where the key is
      *            a unique string assigned to a {@code ProductSku} and
      *            the value is {@code OrderReservation}.
@@ -227,7 +245,7 @@ public class PaymentService {
     @Transactional
     void onPendingReservationsNotEmpty(
             ShoppingSession session,
-            Date date,
+            Date toExpire,
             Map<String, OrderReservation> map,
             List<CartItem> cartItems
     ) {
@@ -244,8 +262,8 @@ public class PaymentService {
                             .deductFromProductSkuInventoryAndReplaceReservationQty(
                                     cart.getQty() - reservation.getQty(),
                                     cart.getQty(),
-                                    date,
-                                    session.getCookie(),
+                                    toExpire,
+                                    session.cookie(),
                                     cart.getProductSku().getSku(),
                                     PENDING
                             );
@@ -254,8 +272,8 @@ public class PaymentService {
                             .addToProductSkuInventoryAndReplaceReservationQty(
                                     reservation.getQty() - cart.getQty(),
                                     cart.getQty(),
-                                    date,
-                                    session.getCookie(),
+                                    toExpire,
+                                    session.cookie(),
                                     cart.getProductSku().getSku(),
                                     PENDING
                             );
@@ -269,7 +287,7 @@ public class PaymentService {
                                 cart.getQty()
                         );
                 this.reservationRepo
-                        .save(new OrderReservation(cart.getQty(), PENDING, date, cart.getProductSku(), session));
+                        .save(new OrderReservation(cart.getQty(), PENDING, toExpire, cart.getProductSku(), session));
             }
         }
 

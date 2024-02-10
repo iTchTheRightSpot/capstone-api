@@ -33,7 +33,7 @@ class TaxControllerTest extends AbstractIntegration {
     @WithMockUser(username = "hello@hello.com", password = "password", roles = {"WORKER"})
     void update() throws Exception {
         // given
-        var dto = new TaxDto(1L, "fish", 452.23);
+        var dto = new TaxDto(1L, "fish", 12.3256);
 
         // when
         this.MOCKMVC

@@ -28,7 +28,7 @@ public class ShippingService {
     private final ShippingRepo repository;
 
     /**
-     * Returns all {@code Shipping} from the db and
+     * Returns all {@code ShipSetting} from the db and
      * maps it to a {@code ShippingMapper}.
      * */
     public List<ShippingMapper> shipping() {
@@ -39,7 +39,7 @@ public class ShippingService {
     }
 
     /**
-     * Saves a Shipping object to the db.
+     * Saves a {@code ShipSetting} object to the db.
      *
      * @param dto is of {@code ShippingDto} which contains the
      *            necessary info to save a {@code Shipping} object.
@@ -56,7 +56,7 @@ public class ShippingService {
     }
 
     /**
-     * Updates a {@code Shipping} object.
+     * Updates a {@code ShipSetting} object.
      *
      * @param dto is of {@code ShippingMapper} which contains the
      *            necessary info to update a {@code Shipping} object.
@@ -66,7 +66,7 @@ public class ShippingService {
     public void update(final ShippingMapper dto) {
         try {
             repository
-                    .updateShippingById(
+                    .updateShipSettingById(
                             dto.id(),
                             dto.country().toLowerCase().trim(),
                             dto.ngn(),
@@ -78,7 +78,7 @@ public class ShippingService {
     }
 
     /**
-     * Deletes a {@code Shipping} by its primary key.
+     * Deletes a {@code ShipSetting} by its primary key.
      *
      * @param id is a primary key for a {@code Shipping} object.
      * @throws ResourceAttachedException if id is equal to 1.
@@ -87,7 +87,7 @@ public class ShippingService {
     public void delete(final long id) {
         if (id == 1)
             throw new ResourceAttachedException("cannot delete default country.");
-        repository.deleteShippingById(id);
+        repository.deleteShipSettingById(id);
     }
 
     public ShipSetting shippingByCountryElseReturnDefault(String country) {

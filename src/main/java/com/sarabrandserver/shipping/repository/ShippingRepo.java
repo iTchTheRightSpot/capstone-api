@@ -16,16 +16,37 @@ public interface ShippingRepo extends JpaRepository<ShipSetting, Long> {
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("DELETE FROM ShipSetting s WHERE s.shipId = :id")
-    void deleteShippingById(long id);
+    void deleteShipSettingById(long id);
 
+    /**
+     * Updates {@code ShipSetting} by id with the provided country and prices.
+     * <p>
+     * This method updates the {@code ShipSetting} identified by the given id with the
+     * specified country and prices. If the id matches a default value entered in
+     * db/migration/V13 set country to 'default'; otherwise, the provided country is used.
+     *
+     * @param id The ID of the shipping settings to update.
+     * @param country The country to set for the shipping settings.
+     * @param ngn The price in NGN (Nigerian Naira) to set for the shipping settings.
+     * @param usd The price in USD (United States Dollar) to set for the shipping settings.
+     */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
     UPDATE ShipSetting s
-    SET s.country = :country, s.ngnPrice = :ngn, s.usdPrice = :usd
+    SET
+    s.country = (
+        CASE WHEN
+            1 = :id
+            THEN 'default'
+            ELSE :country
+            END
+    ),
+    s.ngnPrice = :ngn,
+    s.usdPrice = :usd
     WHERE s.shipId = :id
     """)
-    void updateShippingById(long id, String country, BigDecimal ngn, BigDecimal usd);
+    void updateShipSettingById(long id, String country, BigDecimal ngn, BigDecimal usd);
 
     /**
      * Retrieves a {@code Shipping} entity based on the provided country.

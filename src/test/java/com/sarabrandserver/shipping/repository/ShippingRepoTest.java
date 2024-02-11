@@ -18,21 +18,21 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     private ShippingRepo shippingRepo;
 
     @Test
-    void deleteShippingById() {
+    void deleteShipSettingById() {
         // given
         var obj = shippingRepo
                 .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
         long id = obj.shipId();
 
         // when
-        shippingRepo.deleteShippingById(id);
+        shippingRepo.deleteShipSettingById(id);
 
         // then
         assertTrue(shippingRepo.findById(id).isEmpty());
     }
 
     @Test
-    void shouldThrowExceptionWhenCreatingAnExistingCountry() {
+    void shouldThrowExceptionWhenCreatingAnExistingShipSettingPropertyCountry() {
         // given
         shippingRepo
                 .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
@@ -50,7 +50,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void updateShippingById() {
+    void updateShipSettingById() {
         // given
         var obj = shippingRepo
                 .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
@@ -58,7 +58,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
 
         // when
         shippingRepo
-                .updateShippingById(id, "france", new BigDecimal("500"), new BigDecimal("5.50"));
+                .updateShipSettingById(id, "france", new BigDecimal("500"), new BigDecimal("5.50"));
 
         // then
         var optional = shippingRepo.findById(id);
@@ -71,7 +71,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void shouldThrowErrorWhenUpdatingACountry() {
+    void shouldThrowErrorWhenUpdatingShipSettingPropertyCountryToExistingCountry() {
         // given
         var obj = shippingRepo
                 .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
@@ -84,7 +84,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
         assertThrows(
                 DataIntegrityViolationException.class,
                 () -> shippingRepo
-                        .updateShippingById(
+                        .updateShipSettingById(
                                 id,
                                 "france",
                                 new BigDecimal("500"),
@@ -94,7 +94,28 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void shouldNotReturnDefaultShipping() {
+    void shouldNotUpdateDefaultShipSettingPropertyCountryButUpdateOtherProperties() {
+        // when
+        shippingRepo
+                .updateShipSettingById(
+                        1,
+                        "france",
+                        new BigDecimal("500"),
+                        new BigDecimal("5.50")
+                );
+
+        var optional = shippingRepo.findById(1L);
+        assertFalse(optional.isEmpty());
+
+        // then
+        ShipSetting ship = optional.get();
+        assertEquals("default", ship.country());
+        assertEquals(new BigDecimal("500.00"), ship.ngnPrice());
+        assertEquals(new BigDecimal("5.50"), ship.usdPrice());
+    }
+
+    @Test
+    void shouldNotReturnDefaultShipSetting() {
         // given
         var obj = shippingRepo
                 .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
@@ -109,7 +130,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void shouldReturnDefaultShippingInsertedInMigrationScriptV13() {
+    void shouldReturnDefaultShipSettingInsertedInMigrationScriptV13() {
         // given
         shippingRepo
                 .save(new ShipSetting("france", new BigDecimal("4500"), new BigDecimal("3.50")));

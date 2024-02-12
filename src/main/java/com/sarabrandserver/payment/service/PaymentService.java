@@ -112,7 +112,7 @@ public class PaymentService {
         BigDecimal total = CustomUtil
                 .calculateTotal(
                         CustomUtil.cartItemsTotal(list),
-                        obj.tax().percentage(),
+                        obj.tax().rate(),
                         currency.equals(SarreCurrency.USD)
                                 ? obj.ship().usdPrice()
                                 : obj.ship().ngnPrice()

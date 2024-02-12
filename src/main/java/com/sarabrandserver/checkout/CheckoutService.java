@@ -65,11 +65,11 @@ public class CheckoutService {
         BigDecimal total = CustomUtil
                 .calculateTotal(
                         CustomUtil.cartItemsTotal(list),
-                        obj.tax().percentage(),
+                        obj.tax().rate(),
                         ship
                 );
 
-        return new Checkout(ship, obj.tax().name(), obj.tax().percentage(), total);
+        return new Checkout(ship, obj.tax().name(), obj.tax().rate(), total);
     }
 
     /**

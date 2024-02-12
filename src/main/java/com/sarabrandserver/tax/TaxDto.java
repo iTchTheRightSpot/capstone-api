@@ -12,6 +12,6 @@ public record TaxDto(
         @NotEmpty
         String name,
         @NotNull
-        Double percentage
+        Double rate
 ) {
 }

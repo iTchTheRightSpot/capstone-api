@@ -17,7 +17,7 @@ public class Tax {
     private String name;
 
     @Column(nullable = false)
-    private double percentage;
+    private double rate;
 
     public Tax() {}
 
@@ -29,8 +29,8 @@ public class Tax {
         return name;
     }
 
-    public double percentage() {
-        return percentage;
+    public double rate() {
+        return rate;
     }
 
 }

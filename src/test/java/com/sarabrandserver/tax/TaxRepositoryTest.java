@@ -22,9 +22,9 @@ class TaxRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void updateByTaxId () {
+    void updateTaxByTaxId () {
         // when
-        repository.updateByTaxId(1, "name", 25.32);
+        repository.updateTaxByTaxId(1, "name", 25.32);
 
         // then
         var optional = repository.findById(1L);
@@ -32,25 +32,25 @@ class TaxRepositoryTest extends AbstractRepositoryTest {
 
         Tax tax = optional.get();
         assertEquals("name", tax.name());
-        assertEquals(25.32, tax.percentage());
+        assertEquals(25.32, tax.rate());
     }
 
     @Test
-    void shouldThrowErrorAsPercentageIsNotInTheRightFormat() {
+    void shouldThrowErrorAsTaxRateIsNotInTheRightFormat() {
         // when
         assertThrows(DataIntegrityViolationException.class,
                 () -> repository
-                        .updateByTaxId(1, "name", 225.32));
+                        .updateTaxByTaxId(1, "name", 225.32));
 
         assertThrows(DataIntegrityViolationException.class,
                 () -> repository
-                        .updateByTaxId(1, "frank", 225.32666));
+                        .updateTaxByTaxId(1, "frank", 225.32666));
     }
 
     @Test
     void shouldThrowErrorWhenUpdatingTaxBecauseOfLengthOfName() {
         assertThrows(DataIntegrityViolationException.class,
-                () -> repository.updateByTaxId(1,"hungary-tax", 10.2345)
+                () -> repository.updateTaxByTaxId(1,"hungary-tax", 10.2345)
         );
     }
 

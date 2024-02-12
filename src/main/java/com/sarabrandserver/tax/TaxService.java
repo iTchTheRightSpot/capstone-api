@@ -22,7 +22,7 @@ public class TaxService {
         return repository
                 .findAll()
                 .stream()
-                .map(t -> new TaxDto(t.taxId(), t.name(), t.percentage()))
+                .map(t -> new TaxDto(t.taxId(), t.name(), t.rate()))
                 .toList();
     }
 
@@ -37,7 +37,7 @@ public class TaxService {
     public void update(TaxDto dto) {
         try {
             repository
-                    .updateByTaxId(dto.id(), dto.name().toUpperCase().trim(), dto.percentage());
+                    .updateTaxByTaxId(dto.id(), dto.name().toUpperCase().trim(), dto.rate());
         } catch (DataIntegrityViolationException e) {
             log.error(e.getMessage());
             String error = dto.name().length() > 5

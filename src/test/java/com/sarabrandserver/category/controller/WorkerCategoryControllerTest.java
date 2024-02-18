@@ -86,7 +86,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Test successfully creating a ProductCategory when parent id is null")
+    @DisplayName(value = "Test successfully creating a ProductCategory when parentId categoryId is null")
     void create() throws Exception {
         // Given
         var dto = new CategoryDTO(new Faker().commerce().productName(), true, null);
@@ -103,7 +103,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Test successfully creating a ProductCategory when parent id isn't null")
+    @DisplayName(value = "Test successfully creating a ProductCategory when parentId categoryId isn't null")
     void create1() throws Exception {
         // Given
         var dto = new CategoryDTO(new Faker().commerce().productName(), true, category().getCategoryId());

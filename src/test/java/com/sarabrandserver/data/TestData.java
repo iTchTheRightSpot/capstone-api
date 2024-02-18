@@ -113,7 +113,7 @@ public class TestData {
             long categoryId,
             String productName,
             SizeInventoryDTO[] dtos,
-            PriceCurrencyDTO[] pcDto,
+            PriceCurrencyDto[] pcDto,
             String colour,
             double weight
     ) {
@@ -136,9 +136,9 @@ public class TestData {
             SizeInventoryDTO[] dtos,
             String colour
     ) {
-        PriceCurrencyDTO[] arr = {
-                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "USD"),
-                new PriceCurrencyDTO(new BigDecimal(new Faker().number().numberBetween(10000, 700000)), "NGN"),
+        PriceCurrencyDto[] arr = {
+                new PriceCurrencyDto(new BigDecimal(new Faker().commerce().price()), "USD"),
+                new PriceCurrencyDto(new BigDecimal(new Faker().number().numberBetween(10000, 700000)), "NGN"),
         };
 
         return new CreateProductDTO(
@@ -201,7 +201,7 @@ public class TestData {
     @NotNull
     public static void dummyProductsTestTotalAmount(
             ProductCategory cat,
-            PriceCurrencyDTO[] arr,
+            PriceCurrencyDto[] arr,
             int numOfProducts,
             int variantQty,
             double weight,

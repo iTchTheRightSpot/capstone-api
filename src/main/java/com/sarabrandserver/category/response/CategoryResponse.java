@@ -8,9 +8,9 @@ import java.util.List;
 
 public record CategoryResponse(
         @JsonProperty(value = "category_id")
-        long id,
+        long categoryId,
         @JsonProperty(value = "parent_id")
-        Long parent,
+        Long parentId,
         String name,
         boolean visible,
         List<CategoryResponse> children
@@ -20,12 +20,12 @@ public record CategoryResponse(
         this(-1, -1L, name);
     }
 
-    public CategoryResponse(long id, Long parent, String name, boolean visible) {
-        this(id, parent, name, visible, new ArrayList<>());
+    public CategoryResponse(long categoryId, Long parentId, String name, boolean visible) {
+        this(categoryId, parentId, name, visible, new ArrayList<>());
     }
 
-    public CategoryResponse(long id, Long parent, String name) {
-        this(id, parent, name, false);
+    public CategoryResponse(long categoryId, Long parentId, String name) {
+        this(categoryId, parentId, name, false);
     }
 
     public void addToChildren(CategoryResponse child) {

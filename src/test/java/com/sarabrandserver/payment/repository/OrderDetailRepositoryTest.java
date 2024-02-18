@@ -75,7 +75,7 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
                         .name(new Faker().name().fullName())
                         .email("hello@hello.com")
                         .phone("0000000000")
-                        .paymentId("unique-payment-id")
+                        .paymentId("unique-payment-categoryId")
                         .currency(SarreCurrency.USD)
                         .amount(new BigDecimal("50.65"))
                         .paymentProvider("Paystack")

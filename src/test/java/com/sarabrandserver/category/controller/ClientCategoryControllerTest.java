@@ -69,7 +69,7 @@ class ClientCategoryControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @DisplayName(value = "All Products by categoryId id")
+    @DisplayName(value = "All Products by categoryId categoryId")
     @Order(1)
     void productByCategory() throws Exception {
         var category = categoryRepository

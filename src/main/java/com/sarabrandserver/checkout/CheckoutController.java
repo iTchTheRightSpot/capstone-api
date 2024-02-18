@@ -26,7 +26,7 @@ public class CheckoutController {
             @NotNull @RequestParam("currency") String currency,
             HttpServletRequest req
     ) {
-        var c = SarreCurrency.valueOf(currency.toUpperCase().trim());
+        SarreCurrency c = SarreCurrency.valueOf(currency.toUpperCase());
         return service.checkout(req, country, c);
     }
 

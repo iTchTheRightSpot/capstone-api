@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-public record PriceCurrencyDTO (
+public record PriceCurrencyDto(
         @NotNull(message = "Please enter product price")
         @NotEmpty(message = "cannot be empty")
         BigDecimal price,

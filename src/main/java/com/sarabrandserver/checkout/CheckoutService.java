@@ -50,7 +50,8 @@ public class CheckoutService {
      * @param req      The {@link HttpServletRequest} representing the user's request.
      * @param country  The country entered by the user during checkout.
      * @param currency The currency selected by the user for checkout.
-     * @return A {@link Checkout} object containing shipping price, tax details, and total amount.
+     * @return A {@link Checkout} object containing shipping cost, tax name, tax rate,
+     * tax total and total cost to pay amount.
      * @throws CustomNotFoundException If any required information is missing or invalid.
      */
     public Checkout checkout(HttpServletRequest req, String country, SarreCurrency currency) {
@@ -63,16 +64,16 @@ public class CheckoutService {
                 ? obj.ship().usdPrice()
                 : obj.ship().ngnPrice();
 
+        BigDecimal subtotal = CustomUtil.cartItemsTotal(list);
+
         BigDecimal total = CustomUtil
                 .calculateTotal(
-                        CustomUtil.cartItemsTotal(list),
+                        subtotal,
                         obj.tax().rate(),
                         ship
                 );
 
-        // TODO add tax difference
-
-        return new Checkout(ship, obj.tax().name(), obj.tax().rate(), new BigDecimal(""), total);
+        return new Checkout(ship, obj.tax().name(), obj.tax().rate(), total.subtract(total), total);
     }
 
     /**
@@ -80,7 +81,7 @@ public class CheckoutService {
      * country.
      * <p>
      * This method retrieves custom cookie from the HttpServletRequest to find associated
-     * {@link ShoppingSession} for the device. It then retrieves the associated cart items
+     * {@link ShoppingSession} for the device. It then retrieves the associated {@link CartItem}(s)
      * and checks if the cart is empty. Next, it retrieves the shipping information based
      * on the provided country. Finally, it retrieves the tax information. Using this
      * information, it constructs and returns a {@link CustomObject} containing the
@@ -88,11 +89,11 @@ public class CheckoutService {
      *
      * @param req     The HttpServletRequest containing the {@link ShoppingSession} cookie.
      * @param country The country for which {@link ShipSetting} information is retrieved.
-     * @return A {@link CustomObject} containing the shopping session, cart items, shipping,
-     * and tax.
+     * @return A {@link CustomObject} containing the {@link ShoppingSession}, {@link CartItem}(s),
+     * {@link ShipSetting}, and {@link Tax}.
      * @throws CustomNotFoundException If custom cookie does not contain in
-     *                                 {@link HttpServletRequest}, the shopping session is invalid,
-     *                                 or the cart is empty.
+     *                                 {@link HttpServletRequest}, the {@link ShoppingSession} is
+     *                                 invalid, or {@link CartItem} is empty.
      */
     public CustomObject createCustomObjectForShoppingSession(HttpServletRequest req, String country) {
         Cookie cookie = CustomUtil.cookie(req, CART_COOKIE);

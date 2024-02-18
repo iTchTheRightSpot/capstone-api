@@ -81,7 +81,7 @@ public class ShippingService {
      * Deletes a {@code ShipSetting} by its primary key.
      *
      * @param id is a primary key for a {@code Shipping} object.
-     * @throws ResourceAttachedException if id is equal to 1.
+     * @throws ResourceAttachedException if categoryId is equal to 1.
      * */
     @Transactional
     public void delete(final long id) {

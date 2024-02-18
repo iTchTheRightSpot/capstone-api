@@ -9,7 +9,7 @@ import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.payment.repository.OrderDetailRepository;
 import com.sarabrandserver.payment.repository.OrderReservationRepo;
-import com.sarabrandserver.product.dto.PriceCurrencyDTO;
+import com.sarabrandserver.product.dto.PriceCurrencyDto;
 import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
@@ -312,9 +312,9 @@ class PaymentControllerTest extends AbstractIntegration {
                         new BigDecimal("45.19")
                 ));
 
-        PriceCurrencyDTO[] arr = {
-                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "USD"),
-                new PriceCurrencyDTO(new BigDecimal("75000"), "NGN"),
+        PriceCurrencyDto[] arr = {
+                new PriceCurrencyDto(new BigDecimal(new Faker().commerce().price()), "USD"),
+                new PriceCurrencyDto(new BigDecimal("75000"), "NGN"),
         };
 
         var category = categoryRepository
@@ -417,9 +417,9 @@ class PaymentControllerTest extends AbstractIntegration {
                         new BigDecimal("30.20")
                 ));
 
-        PriceCurrencyDTO[] arr = {
-                new PriceCurrencyDTO(new BigDecimal("150.55"), "USD"),
-                new PriceCurrencyDTO(new BigDecimal("75000"), "NGN"),
+        PriceCurrencyDto[] arr = {
+                new PriceCurrencyDto(new BigDecimal("150.55"), "USD"),
+                new PriceCurrencyDto(new BigDecimal("75000"), "NGN"),
         };
 
         var category = categoryRepository
@@ -478,9 +478,9 @@ class PaymentControllerTest extends AbstractIntegration {
 
     @Test
     void validateTotalAmountNGN() throws Exception {
-        PriceCurrencyDTO[] arr = {
-                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "USD"),
-                new PriceCurrencyDTO(new BigDecimal("75000"), "NGN"),
+        PriceCurrencyDto[] arr = {
+                new PriceCurrencyDto(new BigDecimal(new Faker().commerce().price()), "USD"),
+                new PriceCurrencyDto(new BigDecimal("75000"), "NGN"),
         };
 
         shippingRepo

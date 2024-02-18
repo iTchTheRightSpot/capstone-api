@@ -27,7 +27,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
 
     /**
      * Using native sql query, method retrieves {@code ProductCategory}
-     * by {@param id} and all of its children {@code ProductCategory}.
+     * by {@param categoryId} and all of its children {@code ProductCategory}.
      * From the resulting {@code ProductCategory}, we validate if
      * all categories have {@code Product attached}.
      *
@@ -62,12 +62,12 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
 
     /**
      * Validates if 1 or more rows depends on {@code ProductCategory} by
-     * {@param id} as its parent.
+     * {@param categoryId} as its parentId.
      *
      * @param id is {@code ProductCategory} property {@code categoryId}
      * @return {@code 0 or greater than 0} where 0 means it doesn't have a
      * child {@code ProductCategory} and greater than 0 means 1 or more rows
-     * depends on it as a parent.
+     * depends on it as a parentId.
      * */
     @Query(value = """
     SELECT COUNT (c.categoryId)
@@ -196,7 +196,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
 
     /**
      * Using native sql query and Spring Data projection, method returns all
-     * children of specified {@code ProductCategory} {@code id}.
+     * children of specified {@code ProductCategory} {@code categoryId}.
      * For more about using common table expression CTE visit
      * <a href="https://dev.mysql.com/doc/refman/8.0/en/with.html#common-table-expressions-recursive">...</a>
      *

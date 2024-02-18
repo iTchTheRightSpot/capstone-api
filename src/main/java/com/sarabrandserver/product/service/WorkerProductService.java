@@ -4,7 +4,7 @@ import com.sarabrandserver.category.service.WorkerCategoryService;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.*;
 import com.sarabrandserver.product.dto.CreateProductDTO;
-import com.sarabrandserver.product.dto.PriceCurrencyDTO;
+import com.sarabrandserver.product.dto.PriceCurrencyDto;
 import com.sarabrandserver.product.dto.UpdateProductDTO;
 import com.sarabrandserver.product.entity.PriceCurrency;
 import com.sarabrandserver.product.entity.Product;
@@ -209,7 +209,7 @@ public class WorkerProductService {
     /**
      * Retrieves the price based on the currency.
      * */
-    final BiFunction<PriceCurrencyDTO[], SarreCurrency, BigDecimal> truncateAmount = (arr, curr) -> Arrays
+    final BiFunction<PriceCurrencyDto[], SarreCurrency, BigDecimal> truncateAmount = (arr, curr) -> Arrays
                     .stream(arr)
                     .filter(priceCurrencyDTO -> priceCurrencyDTO.currency().equals(curr.name()))
                     .map(obj -> obj.price().setScale(2, FLOOR))

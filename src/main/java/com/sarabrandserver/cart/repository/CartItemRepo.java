@@ -27,7 +27,7 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
 
     /**
      * Deletes all {@link CartItem} associated to a
-     * {@link com.sarabrandserver.cart.entity.ShoppingSession} id.
+     * {@link com.sarabrandserver.cart.entity.ShoppingSession} categoryId.
      * */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)

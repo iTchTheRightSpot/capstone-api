@@ -3,7 +3,7 @@ package com.sarabrandserver.util;
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractUnitTest;
 import com.sarabrandserver.category.response.CategoryResponse;
-import com.sarabrandserver.product.dto.PriceCurrencyDTO;
+import com.sarabrandserver.product.dto.PriceCurrencyDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -43,9 +43,9 @@ class CustomUtilTest extends AbstractUnitTest {
 
     @Test
     void validate_contains_desired_currencies() {
-        PriceCurrencyDTO[] arr = {
-                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "USD"),
-                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "NGN"),
+        PriceCurrencyDto[] arr = {
+                new PriceCurrencyDto(new BigDecimal(new Faker().commerce().price()), "USD"),
+                new PriceCurrencyDto(new BigDecimal(new Faker().commerce().price()), "NGN"),
         };
 
         assertTrue(CustomUtil.validateContainsCurrencies(arr));
@@ -53,9 +53,9 @@ class CustomUtilTest extends AbstractUnitTest {
 
     @Test
     void error_thrown_from_negative_price() {
-        PriceCurrencyDTO[] arr = {
-                new PriceCurrencyDTO(new BigDecimal("-1"), "USD"),
-                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), "NGN"),
+        PriceCurrencyDto[] arr = {
+                new PriceCurrencyDto(new BigDecimal("-1"), "USD"),
+                new PriceCurrencyDto(new BigDecimal(new Faker().commerce().price()), "NGN"),
         };
 
         assertFalse(CustomUtil.validateContainsCurrencies(arr));
@@ -63,10 +63,10 @@ class CustomUtilTest extends AbstractUnitTest {
 
     @Test
     void can_only_be_ngn_and_usd() {
-        PriceCurrencyDTO[] arr = {
-                new PriceCurrencyDTO(new BigDecimal("9.99"), USD.name()),
-                new PriceCurrencyDTO(new BigDecimal("0"), USD.name()),
-                new PriceCurrencyDTO(new BigDecimal(new Faker().commerce().price()), NGN.name()),
+        PriceCurrencyDto[] arr = {
+                new PriceCurrencyDto(new BigDecimal("9.99"), USD.name()),
+                new PriceCurrencyDto(new BigDecimal("0"), USD.name()),
+                new PriceCurrencyDto(new BigDecimal(new Faker().commerce().price()), NGN.name()),
         };
 
         assertFalse(CustomUtil.validateContainsCurrencies(arr));
@@ -129,22 +129,22 @@ class CustomUtilTest extends AbstractUnitTest {
         // super parentId
         var category = new CategoryResponse(1L, null, "category", true);
 
-        var clothes = new CategoryResponse(2L, category.id(), "clothes", true);
+        var clothes = new CategoryResponse(2L, category.categoryId(), "clothes", true);
         category.addToChildren(clothes);
 
-        var top = new CategoryResponse(3L, clothes.id(), "top", true);
+        var top = new CategoryResponse(3L, clothes.categoryId(), "top", true);
         clothes.addToChildren(top);
 
-        top.addToChildren(new CategoryResponse(8L, top.id(), "long-sleeve", true));
+        top.addToChildren(new CategoryResponse(8L, top.categoryId(), "long-sleeve", true));
 
         // super parentId
         var collection = new CategoryResponse(4L, null, "collection", true);
 
-        var fall = new CategoryResponse(5L, collection.id(), "fall 2023", true);
+        var fall = new CategoryResponse(5L, collection.categoryId(), "fall 2023", true);
         collection.addToChildren(fall);
-        fall.addToChildren(new CategoryResponse(7L, fall.id(), "jacket fall 2023", true));
+        fall.addToChildren(new CategoryResponse(7L, fall.categoryId(), "jacket fall 2023", true));
 
-        var summer = new CategoryResponse(6L, collection.id(), "summer 2023", true);
+        var summer = new CategoryResponse(6L, collection.categoryId(), "summer 2023", true);
         collection.addToChildren(summer);
 
         return List.of(category, collection);

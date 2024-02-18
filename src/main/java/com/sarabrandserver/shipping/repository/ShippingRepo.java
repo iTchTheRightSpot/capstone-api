@@ -19,10 +19,10 @@ public interface ShippingRepo extends JpaRepository<ShipSetting, Long> {
     void deleteShipSettingById(long id);
 
     /**
-     * Updates {@code ShipSetting} by id with the provided country and prices.
+     * Updates {@code ShipSetting} by categoryId with the provided country and prices.
      * <p>
-     * This method updates the {@code ShipSetting} identified by the given id with the
-     * specified country and prices. If the id matches a default value entered in
+     * This method updates the {@code ShipSetting} identified by the given categoryId with the
+     * specified country and prices. If the categoryId matches a default value entered in
      * db/migration/V13 set country to 'default'; otherwise, the provided country is used.
      *
      * @param id The ID of the shipping settings to update.

@@ -26,7 +26,7 @@ public record CreateProductDTO(
         Double weight,
 
         @NotNull(message = "cannot be empty")
-        PriceCurrencyDTO[] priceCurrency,
+        PriceCurrencyDto[] priceCurrency,
 
         @NotNull(message = "Please choose if product should be visible")
         Boolean visible,

@@ -13,7 +13,7 @@ public interface TaxRepository extends JpaRepository<Tax, Long> {
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query ("""
     UPDATE Tax t
-    SET t.name = :name, t.rate = :percentage
+    SET t.name = :name, t.rate = :rate
     WHERE t.taxId = :id
     """)
     void updateTaxByTaxId(long id, String name, double rate);

@@ -9,6 +9,9 @@ public record Checkout (
         BigDecimal ship,
         @JsonProperty("tax_name")
         String tax,
-        double percentage,
+        @JsonProperty("tax_rate")
+        double rate,
+        @JsonProperty("tax_total")
+        BigDecimal taxTotal,
         BigDecimal total
 ) { }

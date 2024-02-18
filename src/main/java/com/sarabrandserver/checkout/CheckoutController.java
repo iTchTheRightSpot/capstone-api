@@ -21,7 +21,7 @@ public class CheckoutController {
      * checkout page.
      * */
     @GetMapping(produces = "application/json")
-    Checkout checkout(
+    public Checkout checkout(
             @NotNull @RequestParam("country") String country,
             @NotNull @RequestParam("currency") String currency,
             HttpServletRequest req

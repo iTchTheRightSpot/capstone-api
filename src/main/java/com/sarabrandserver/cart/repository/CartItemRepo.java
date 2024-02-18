@@ -26,8 +26,8 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     void deleteCartItemByCookieAndSku(String cookie, String sku);
 
     /**
-     * Deletes all {@code CartItem} associated to a
-     * {@code ShoppingSession} id.
+     * Deletes all {@link CartItem} associated to a
+     * {@link com.sarabrandserver.cart.entity.ShoppingSession} id.
      * */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -36,7 +36,7 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
 
     /**
      * @param sessionId is associated to every device.
-     * @return List of {@code TotalPojo} which are select items needed
+     * @return List of {@link TotalPojo} which are select items needed
      * to calculate the total in a users cart. The select items are
      * qty, price, and weight.
      * */

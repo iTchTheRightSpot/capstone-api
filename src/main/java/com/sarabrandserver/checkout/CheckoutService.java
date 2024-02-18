@@ -1,5 +1,6 @@
 package com.sarabrandserver.checkout;
 
+import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
@@ -41,15 +42,15 @@ public class CheckoutService {
      * Generates checkout information based on a user's country and selected currency.
      * <p>
      * This method processes the user's checkout request by retrieving necessary information
-     * such as the {@code ShoppingSession}, {@code CartItems}, {@code Shipping},
-     * and {@code Tax}. It then calculates the total amount for the checkout and constructs
-     * a {@code Checkout} object containing the shipping price, tax information, and total
+     * such as the {@link ShoppingSession}, {@link CartItem}, {@link ShipSetting},
+     * and {@link Tax}. It then calculates the total amount for the checkout and constructs
+     * a {@link Checkout} object containing the shipping price, tax information, and total
      * amount in the users choice of currency.
      *
-     * @param req      The HttpServletRequest representing the user's request.
+     * @param req      The {@link HttpServletRequest} representing the user's request.
      * @param country  The country entered by the user during checkout.
      * @param currency The currency selected by the user for checkout.
-     * @return A Checkout object containing shipping price, tax details, and total amount.
+     * @return A {@link Checkout} object containing shipping price, tax details, and total amount.
      * @throws CustomNotFoundException If any required information is missing or invalid.
      */
     public Checkout checkout(HttpServletRequest req, String country, SarreCurrency currency) {
@@ -69,26 +70,28 @@ public class CheckoutService {
                         ship
                 );
 
-        return new Checkout(ship, obj.tax().name(), obj.tax().rate(), total);
+        // TODO add tax difference
+
+        return new Checkout(ship, obj.tax().name(), obj.tax().rate(), new BigDecimal(""), total);
     }
 
     /**
-     * Creates a {@code CustomObject} based on the provided {@code HttpServletRequest} and
+     * Creates a {@link CustomObject} based on the provided {@link HttpServletRequest} and
      * country.
      * <p>
      * This method retrieves custom cookie from the HttpServletRequest to find associated
-     * {@code ShoppingSession} for the device. It then retrieves the associated cart items
+     * {@link ShoppingSession} for the device. It then retrieves the associated cart items
      * and checks if the cart is empty. Next, it retrieves the shipping information based
      * on the provided country. Finally, it retrieves the tax information. Using this
-     * information, it constructs and returns a {@code CustomObject} containing the
-     * {@code ShoppingSession}, cart items, shipping, and tax.
+     * information, it constructs and returns a {@link CustomObject} containing the
+     * {@link ShoppingSession}, {@link CartItem}, {@link ShipSetting}, and {@link Tax}.
      *
-     * @param req     The HttpServletRequest containing the {@code ShoppingSession} cookie.
-     * @param country The country for which {@code Shipping} information is retrieved.
-     * @return A {@code CustomObject} containing the shopping session, cart items, shipping,
+     * @param req     The HttpServletRequest containing the {@link ShoppingSession} cookie.
+     * @param country The country for which {@link ShipSetting} information is retrieved.
+     * @return A {@link CustomObject} containing the shopping session, cart items, shipping,
      * and tax.
      * @throws CustomNotFoundException If custom cookie does not contain in
-     *                                 {@code HttpServletRequest}, the shopping session is invalid,
+     *                                 {@link HttpServletRequest}, the shopping session is invalid,
      *                                 or the cart is empty.
      */
     public CustomObject createCustomObjectForShoppingSession(HttpServletRequest req, String country) {

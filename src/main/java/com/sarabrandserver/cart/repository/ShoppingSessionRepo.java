@@ -31,9 +31,11 @@ public interface ShoppingSessionRepo extends JpaRepository<ShoppingSession, Long
     @Query(value = """
     SELECT
     p.uuid AS uuid,
-    s.shoppingSessionId AS session,
     p.defaultKey AS key,
     p.name AS name,
+    p.weight AS weight,
+    p.weightType AS weightType,
+    s.shoppingSessionId AS session,
     cur.currency AS currency,
     cur.price AS price,
     d.colour AS colour,

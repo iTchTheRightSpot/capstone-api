@@ -23,9 +23,9 @@ public class PaymentController {
      * Called before payment page appears
      * */
     @ResponseStatus(OK)
-    @PostMapping(produces = APPLICATION_JSON_VALUE)
+    @GetMapping(produces = APPLICATION_JSON_VALUE)
     public PaymentResponse raceCondition(
-            @NotNull @RequestParam(name = "currency") String currency,
+            @NotNull @NotEmpty @RequestParam(name = "currency") String currency,
             @NotNull @NotEmpty @RequestParam(name = "country") String country,
             HttpServletRequest req
     ) {
@@ -34,7 +34,8 @@ public class PaymentController {
     }
 
     /**
-     * Api called by third party service
+     * Api called by Payment service to inform of a
+     * complete transaction.
      * */
     @ResponseStatus(OK)
     @PostMapping(path = "/webhook")

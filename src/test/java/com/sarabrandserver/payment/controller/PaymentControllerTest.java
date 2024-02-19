@@ -27,7 +27,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -177,7 +176,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         // request
         this.MOCKMVC
-                .perform(post(path)
+                .perform(get(path)
                         .param("currency", USD.getCurrency())
                         .param("country", "USA")
                         .with(csrf())
@@ -216,7 +215,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         // simulate user in payment component
         this.MOCKMVC
-                .perform(post(path)
+                .perform(get(path)
                         .param("currency", USD.getCurrency())
                         .param("country", "nigeria")
                         .with(csrf())
@@ -253,7 +252,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         // simulate user switching to pay in ngn
         this.MOCKMVC
-                .perform(post(path)
+                .perform(get(path)
                         .param("currency", NGN.getCurrency())
                         .param("country", "nigeria")
                         .with(csrf())
@@ -354,7 +353,7 @@ class PaymentControllerTest extends AbstractIntegration {
                     var c = curr % 2 == 0 ? USD.getCurrency() : NGN.getCurrency();
                     var country = curr % 2 == 0 ? "nigeria" : "Canada";
                     return this.MOCKMVC
-                            .perform(post(this.path)
+                            .perform(get(this.path)
                                     .param("currency", c)
                                     .param("country", country)
                                     .with(csrf())
@@ -448,32 +447,30 @@ class PaymentControllerTest extends AbstractIntegration {
 
         Cookie cookie = createNewShoppingSession();
 
-        // math = weight + (price * qty)
-        BigDecimal math = BigDecimal.valueOf(weight)
-                .add(arr[0].price().multiply(new BigDecimal(qty)));
-
         BigDecimal total = CustomUtil
                 .convertCurrency(
                         usdConversion,
                         USD,
                         // math + shipping cost
-                        math.add(new BigDecimal("30.20"))
-                ).setScale(2, RoundingMode.CEILING);
+                        arr[0].price()
+                                .multiply(new BigDecimal(qty))
+                                .add(new BigDecimal("30.20"))
+                );
 
         // access payment page
-        this.MOCKMVC
-                .perform(post(path)
+        String uri = path + "?currency=%s&country=%s"
+                .formatted(USD, "Canada");
+
+        super.MOCKMVC
+                .perform(get(path)
                         .param("currency", USD.getCurrency())
                         .param("country", "Canada")
-                        .with(csrf())
                         .cookie(cookie)
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpectAll(jsonPath("$.total").isNotEmpty());
-        // TODO validate why MockMvcResultMatchers is removing the ending 0
-//        org.hamcrest.Matchers.is(total)
-//                .andExpect(jsonPath("$.total").value(total));
+                .andExpectAll(jsonPath("$.total").isNotEmpty())
+                .andExpect(jsonPath("$.total").value(total));
     }
 
     @Test
@@ -515,25 +512,26 @@ class PaymentControllerTest extends AbstractIntegration {
 
         Cookie cookie = createNewShoppingSession();
 
-        // math = weight + (price * qty)
-        BigDecimal math = BigDecimal.valueOf(weight)
-                .add(arr[1].price().multiply(new BigDecimal(qty)));
-
         BigDecimal total = CustomUtil
                 .convertCurrency(
                         ngnConversion,
                         NGN,
-                        math.add(new BigDecimal("20000"))
+                        arr[1].price()
+                                .multiply(new BigDecimal(qty))
+                                .add(new BigDecimal("20000"))
                 );
 
         // access payment page
-        this.MOCKMVC
-                .perform(post(path)
+        String uri = path + "?currency=%s&country=%s"
+                .formatted(NGN, "nigeria");
+
+        super.MOCKMVC
+                .perform(get(path)
                         .param("currency", NGN.getCurrency())
                         .param("country", "nigeria")
-                        .with(csrf())
                         .cookie(cookie)
                 )
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpectAll(jsonPath("$.total").isNotEmpty())
                 .andExpect(jsonPath("$.total").value(total));

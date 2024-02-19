@@ -8,7 +8,7 @@ ALTER TABLE product
     ADD COLUMN weight FLOAT(5, 2) NOT NULL;
 
 ALTER TABLE product
-    ADD COLUMN weight_type VARCHAR(2) DEFAULT 'kg';
+    ADD COLUMN weight_type VARCHAR(2) NOT NULL DEFAULT 'kg';
 
 ALTER TABLE product_image
     DROP FOREIGN KEY product_image_ibfk_1;

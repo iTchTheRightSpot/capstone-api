@@ -120,7 +120,6 @@ public class SecurityConfig {
     ) throws Exception {
         var csrfTokenRepository = csrfRepo.apply(this.COOKIESECURE, this.SAMESITE);
         return http
-
                 // CSRF Config
                 // https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html
                 .csrf(csrf -> csrf

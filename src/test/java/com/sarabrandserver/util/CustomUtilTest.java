@@ -3,6 +3,8 @@ package com.sarabrandserver.util;
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractUnitTest;
 import com.sarabrandserver.category.response.CategoryResponse;
+import com.sarabrandserver.checkout.CheckoutPair;
+import com.sarabrandserver.payment.projection.TotalPojo;
 import com.sarabrandserver.product.dto.PriceCurrencyDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,57 @@ import static org.junit.jupiter.api.Assertions.*;
 class CustomUtilTest extends AbstractUnitTest {
 
     private record AmountConversion(BigDecimal given, BigDecimal expected) { }
+
+    private record HelperObj(int qty, BigDecimal price, double weight) implements TotalPojo {
+        @Override
+        public Integer getQty() {
+            return HelperObj.this.qty;
+        }
+
+        @Override
+        public BigDecimal getPrice() {
+            return HelperObj.this.price;
+        }
+
+        @Override
+        public Double getWeight() {
+            return HelperObj.this.weight;
+        }
+    }
+
+    @Test
+    public void testCartItemsTotalAndTotalWeightNGN() {
+        // given
+        List<TotalPojo> list = List.of(
+                new HelperObj(1, new BigDecimal("1800"), 2.5),
+                new HelperObj(5, new BigDecimal("20750"), 3.5),
+                new HelperObj(2, new BigDecimal("39065"), 5)
+        );
+
+        // when
+        CheckoutPair test = CustomUtil.cartItemsTotalAndTotalWeight(list);
+
+        // when
+        assertEquals(test.sumOfWeight(), 11);
+        assertEquals(test.total(), new BigDecimal("183680.00"));
+    }
+
+    @Test
+    public void testCartItemsTotalAndTotalWeightUSD() {
+        // given
+        List<TotalPojo> list = List.of(
+                new HelperObj(3, new BigDecimal("110.00"), 10.3),
+                new HelperObj(1, new BigDecimal("120.00"), 1.4),
+                new HelperObj(5, new BigDecimal("30.39"), 6.7)
+        );
+
+        // when
+        CheckoutPair test = CustomUtil.cartItemsTotalAndTotalWeight(list);
+
+        // when
+        assertEquals(test.sumOfWeight(), 18.4);
+        assertEquals(test.total(), new BigDecimal("601.95"));
+    }
 
     @Test
     void calculateTotalInNGN() {

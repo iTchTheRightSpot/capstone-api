@@ -21,6 +21,12 @@ public class Tax {
 
     public Tax() {}
 
+    public Tax(Long taxId, String name, double rate) {
+        this.taxId = taxId;
+        this.name = name;
+        this.rate = rate;
+    }
+
     public Long taxId() {
         return taxId;
     }

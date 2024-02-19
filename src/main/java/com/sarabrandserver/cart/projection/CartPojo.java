@@ -17,5 +17,7 @@ public interface CartPojo {
     String getSize();
     String getSku();
     Integer getQty();
+    Double getWeight();
+    String getWeightType();
 
 }

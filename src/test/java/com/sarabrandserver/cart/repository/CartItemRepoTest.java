@@ -80,7 +80,7 @@ class CartItemRepoTest extends AbstractRepositoryTest {
         CartItem cart = cartItemRepo.save(new CartItem(sku.getInventory() - 1, session, sku));
 
         // when
-        cartItemRepo.updateCartQtyByCartId(cart.getCartId(), 1);
+        cartItemRepo.updateCartItemQtyByCartId(cart.getCartId(), 1);
 
         Optional<CartItem> optional = cartItemRepo.findById(cart.getCartId());
         assertFalse(optional.isEmpty());

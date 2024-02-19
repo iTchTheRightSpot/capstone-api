@@ -39,7 +39,7 @@ public class Product implements Serializable {
     @Column(nullable = false)
     private double weight;
 
-    @Column(name = "weight_type")
+    @Column(name = "weight_type", nullable = false)
     private String weightType; // default injected in migration script
 
     @ManyToOne

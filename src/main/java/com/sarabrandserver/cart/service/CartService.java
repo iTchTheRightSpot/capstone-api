@@ -143,7 +143,9 @@ public class CartService {
                             pojo.getColour(),
                             pojo.getSize(),
                             pojo.getSku(),
-                            pojo.getQty()
+                            pojo.getQty(),
+                            pojo.getWeight(),
+                            pojo.getWeightType()
                     );
                 }) //
                 .toList();
@@ -226,7 +228,7 @@ public class CartService {
             this.cartItemRepo.save(new CartItem(qty, session, sku));
         } else {
             // update quantity if cart is present
-            this.cartItemRepo.updateCartQtyByCartId(optional.get().getCartId(), qty);
+            this.cartItemRepo.updateCartItemQtyByCartId(optional.get().getCartId(), qty);
         }
     }
 

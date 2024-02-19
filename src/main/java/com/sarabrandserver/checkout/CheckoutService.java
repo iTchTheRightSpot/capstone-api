@@ -34,7 +34,7 @@ public class CheckoutService {
     private String SPLIT;
 
     private final ShippingService shippingService;
-    private final TaxService service;
+    private final TaxService taxService;
     private final ShoppingSessionRepo shoppingSessionRepo;
     private final CartItemRepo cartItemRepo;
 
@@ -50,8 +50,7 @@ public class CheckoutService {
      * @param req      The {@link HttpServletRequest} representing the user's request.
      * @param country  The country entered by the user during checkout.
      * @param currency The currency selected by the user for checkout.
-     * @return A {@link Checkout} object containing shipping cost, tax name, tax rate,
-     * tax total and total cost to pay amount.
+     * @return A {@link Checkout} object containing objects needed to be sent to the UI.
      * @throws CustomNotFoundException If any required information is missing or invalid.
      */
     public Checkout checkout(HttpServletRequest req, String country, SarreCurrency currency) {
@@ -60,20 +59,28 @@ public class CheckoutService {
         List<TotalPojo> list = this.cartItemRepo
                 .totalPojoByShoppingSessionId(obj.session().shoppingSessionId(), currency);
 
-        BigDecimal ship = currency.equals(SarreCurrency.USD)
+        BigDecimal shipCost = currency.equals(SarreCurrency.USD)
                 ? obj.ship().usdPrice()
                 : obj.ship().ngnPrice();
 
-        BigDecimal subtotal = CustomUtil.cartItemsTotal(list);
+        CheckoutPair subtotal = CustomUtil.cartItemsTotalAndTotalWeight(list);
 
         BigDecimal total = CustomUtil
                 .calculateTotal(
-                        subtotal,
+                        subtotal.total(),
                         obj.tax().rate(),
-                        ship
+                        shipCost
                 );
 
-        return new Checkout(ship, obj.tax().name(), obj.tax().rate(), total.subtract(total), total);
+        return new Checkout(
+                "%skg".formatted(subtotal.sumOfWeight()),
+                shipCost,
+                obj.tax().name(),
+                obj.tax().rate(),
+                total.subtract(total),
+                subtotal.total(),
+                total
+        );
     }
 
     /**
@@ -121,7 +128,7 @@ public class CheckoutService {
         ShipSetting ship = shippingService
                 .shippingByCountryElseReturnDefault(country);
 
-        Tax tax = service.taxById(1);
+        Tax tax = taxService.taxById(1);
 
         return new CustomObject(session, carts, ship, tax);
     }

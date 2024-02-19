@@ -141,6 +141,8 @@ class ShoppingSessionRepoTest extends AbstractRepositoryTest {
             assertNotNull(p.getSize());
             assertNotNull(p.getSku());
             assertNotNull(p.getQty());
+            assertNotNull(p.getWeight());
+            assertNotNull(p.getWeightType());
         }
 
         for (CartPojo p : ngn) {
@@ -155,6 +157,8 @@ class ShoppingSessionRepoTest extends AbstractRepositoryTest {
             assertNotNull(p.getSize());
             assertNotNull(p.getSku());
             assertNotNull(p.getQty());
+            assertNotNull(p.getWeight());
+            assertNotNull(p.getWeightType());
         }
     }
 

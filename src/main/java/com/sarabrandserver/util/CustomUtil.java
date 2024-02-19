@@ -3,6 +3,7 @@ package com.sarabrandserver.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.category.response.CategoryResponse;
+import com.sarabrandserver.checkout.CheckoutPair;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.payment.projection.TotalPojo;
 import com.sarabrandserver.product.dto.PriceCurrencyDto;
@@ -230,6 +231,35 @@ public class CustomUtil {
                     return BigDecimal.valueOf(p.getWeight()).add(mul);
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Calculates the total weight and cost for each item in a
+     * users shopping cart.
+     * <p>
+     * The total cost for each item is calculated by using the
+     * formula: total = weight + (price * quantity).
+     * <p>
+     * This method takes a lis of {@link TotalPojo} objects,
+     * where each object represents an item in the shopping
+     * cart with information about quantity, price, and weight.
+     *
+     * @param list The list of {@link TotalPojo} items for which
+     *             to calculate the total price and weights.
+     * @return A {@link CheckoutPair} object containing the total
+     * of weight and the total price of the {@code list}.
+     */
+    public static CheckoutPair cartItemsTotalAndTotalWeight(List<TotalPojo> list) {
+        double sumOfWeight = list.stream()
+                .mapToDouble(TotalPojo::getWeight)
+                .sum();
+
+        BigDecimal total = list.stream()
+                .map(p -> p.getPrice().multiply(BigDecimal.valueOf(p.getQty())))
+                .reduce(ZERO, BigDecimal::add)
+                .setScale(2, FLOOR);
+
+        return new CheckoutPair(sumOfWeight, total);
     }
 
 }

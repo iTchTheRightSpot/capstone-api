@@ -18,7 +18,7 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("UPDATE CartItem c SET c.qty = :qty WHERE c.cartId = :id")
-    void updateCartQtyByCartId(long id, int qty);
+    void updateCartItemQtyByCartId(long id, int qty);
 
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)

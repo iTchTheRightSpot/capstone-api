@@ -9,6 +9,8 @@ import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.payment.repository.OrderDetailRepository;
 import com.sarabrandserver.payment.repository.OrderReservationRepo;
+import com.sarabrandserver.payment.response.PaymentResponse;
+import com.sarabrandserver.payment.service.PaymentService;
 import com.sarabrandserver.product.dto.PriceCurrencyDto;
 import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
@@ -24,7 +26,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -78,6 +82,8 @@ class PaymentControllerTest extends AbstractIntegration {
     private OrderReservationRepo reservationRepo;
     @Autowired
     private CartItemRepo cartItemRepo;
+    @Autowired
+    private PaymentService paymentService;
 
     @BeforeEach
     void before() {
@@ -524,6 +530,19 @@ class PaymentControllerTest extends AbstractIntegration {
         // access payment page
         String uri = path + "?currency=%s&country=%s"
                 .formatted(NGN, "nigeria");
+
+        WebTestClient client = MockMvcWebTestClient
+                .bindToController(new PaymentController(paymentService))
+                .build();
+
+        client
+                .get()
+                .uri(uri)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(PaymentResponse.class)
+                .isEqualTo(new PaymentResponse("", NGN, total));
 
         super.MOCKMVC
                 .perform(get(path)

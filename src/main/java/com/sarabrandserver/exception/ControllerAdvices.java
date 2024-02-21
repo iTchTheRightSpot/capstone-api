@@ -103,4 +103,10 @@ public class ControllerAdvices {
         return new ResponseEntity<>(res, BAD_REQUEST);
     }
 
+    @ExceptionHandler(CustomServerError.class)
+    public ResponseEntity<ExceptionResponse> serverException(Exception e) {
+        var res = new ExceptionResponse(e.getMessage(), INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(res, INTERNAL_SERVER_ERROR);
+    }
+
 }

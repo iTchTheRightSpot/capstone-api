@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
@@ -17,25 +18,24 @@ import java.util.HashSet;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Transactional
 class ClientCategoryControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}client/category")
-    private String requestParam;
+    private String path;
 
     @Autowired
-    private WorkerProductService workerProductService;
+    private WorkerProductService service;
     @Autowired
-    private CategoryRepository categoryRepository;
+    private CategoryRepository repository;
 
     @Test
-    @Order(2)
     void allCategories() throws Exception {
-        var category = categoryRepository
+        var category = repository
                 .save(
                         ProductCategory.builder()
                                 .name("category")
@@ -46,9 +46,9 @@ class ClientCategoryControllerTest extends AbstractIntegration {
                                 .build()
                 );
 
-        TestData.dummyProducts(category, 2, workerProductService);
+        TestData.dummyProducts(category, 2, service);
 
-        var clothes = categoryRepository
+        var clothes = repository
                 .save(
                         ProductCategory.builder()
                                 .name("clothes")
@@ -59,20 +59,18 @@ class ClientCategoryControllerTest extends AbstractIntegration {
                                 .build()
                 );
 
-        TestData.dummyProducts(clothes, 5, workerProductService);
+        TestData.dummyProducts(clothes, 5, service);
 
-        this.MOCKMVC
-                .perform(get(requestParam).contentType(APPLICATION_JSON))
+        this.mockMvc
+                .perform(get(path).contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].category", notNullValue()))
                 .andExpect(jsonPath("$[*].category_id", notNullValue()));
     }
 
     @Test
-    @DisplayName(value = "All Products by categoryId categoryId")
-    @Order(1)
-    void productByCategory() throws Exception {
-        var category = categoryRepository
+    void allProductsByCategoryId() throws Exception {
+        var category = repository
                 .save(
                         ProductCategory.builder()
                                 .name("category")
@@ -83,50 +81,22 @@ class ClientCategoryControllerTest extends AbstractIntegration {
                                 .build()
                 );
 
-        TestData.dummyProducts(category, 2, workerProductService);
+        TestData.dummyProducts(category, 10, service);
 
-        var clothes = categoryRepository
-                .save(
-                        ProductCategory.builder()
-                                .name("clothes")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        TestData.dummyProducts(clothes, 5, workerProductService);
-
-        var furniture = categoryRepository
-                .save(
-                        ProductCategory.builder()
-                                .name("furniture")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        TestData.dummyProducts(furniture, 1, workerProductService);
-
-        // Given
-        ProductCategory id = this.categoryRepository
-                .findById(category.getCategoryId())
-                .orElse(null);
-        assertNotNull(id);
-
-        this.MOCKMVC
-                .perform(get(requestParam + "/products")
-                        .param("category_id", String.valueOf(id.getCategoryId()))
-                        .contentType(APPLICATION_JSON)
+        MvcResult result = super.mockMvc
+                .perform(get(path + "/products")
+                        .param("category_id", String.valueOf(category.getCategoryId()))
                 )
+                .andExpect(request().asyncStarted())
                 .andExpect(status().isOk())
+                .andReturn();
+
+        super.mockMvc
+                .perform(asyncDispatch(result))
+                .andExpect(content().contentType("application/json"))
                 .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content[*].name", notNullValue()))
-                .andExpect(jsonPath("$.content[*].desc", notNullValue()))
-                .andExpect(jsonPath("$.content[*].product_id", notNullValue()));
+                .andExpect(jsonPath("$.content").isNotEmpty())
+                .andExpect(jsonPath("$.content.size()").value(10));
     }
 
 }

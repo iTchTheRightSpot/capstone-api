@@ -1,19 +1,25 @@
 package com.sarabrandserver.category.service;
 
 import com.sarabrandserver.aws.S3Service;
+import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.projection.CategoryPojo;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.product.projection.ProductPojo;
 import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +29,7 @@ public class ClientCategoryService {
     private String BUCKET;
 
     private final CategoryRepository repository;
-    private final S3Service s3Service;
+    private final S3Service service;
 
     /**
      * Returns a list of {@code CategoryResponse}
@@ -40,25 +46,54 @@ public class ClientCategoryService {
         return CustomUtil.createCategoryHierarchy(list);
     }
 
-    public Page<ProductResponse> allProductsByCategoryId(
+    /**
+     * Asynchronously retrieves a {@link Page} of
+     * {@link ProductResponse} objects associated with a
+     * specific category.
+     *
+     * @param currency    The currency in which prices are displayed.
+     * @param categoryId  The primary key of a {@link ProductCategory}.
+     * @param page        The page number for pagination.
+     * @param size        The page size for pagination.
+     * @return A {@link CompletableFuture} representing a {@link Page}
+     * of {@link ProductResponse}.
+     */
+    public CompletableFuture<Page<ProductResponse>> allProductsByCategoryId(
             SarreCurrency currency,
-            long id,
+            long categoryId,
             int page,
             int size
     ) {
-        return this.repository
-                .allProductsByCategoryIdWhereInStockAndIsVisible(id, currency, PageRequest.of(page, size)) //
-                .map(pojo -> {
-                    var url = this.s3Service.preSignedUrl(BUCKET, pojo.getImage());
-                    return ProductResponse.builder()
-                            .id(pojo.getUuid())
-                            .name(pojo.getName())
-                            .desc(pojo.getDescription())
-                            .price(pojo.getPrice())
-                            .currency(pojo.getCurrency())
-                            .imageUrl(url)
-                            .build();
-                });
+        Page<ProductPojo> dbRes = this.repository
+                .allProductsByCategoryIdWhereInStockAndIsVisible(categoryId, currency, PageRequest.of(page, size));
+
+        List<Supplier<ProductResponse>> futures = createTasks(dbRes);
+
+        return CustomUtil.asynchronousTasks(futures)
+                .thenApply(v -> new PageImpl<>(
+                        v.stream().map(Supplier::get).toList(),
+                        dbRes.getPageable(),
+                        dbRes.getTotalElements()
+                ));
+    }
+
+    private List<Supplier<ProductResponse>> createTasks(Page<ProductPojo> dbRes) {
+        List<Supplier<ProductResponse>> futures = new ArrayList<>();
+
+        for (ProductPojo p : dbRes) {
+            futures.add(() -> {
+                var url = service.preSignedUrl(BUCKET, p.getImage());
+                return new ProductResponse(
+                        p.getUuid(),
+                        p.getName(),
+                        p.getDescription(),
+                        p.getPrice(),
+                        p.getCurrency(),
+                        url
+                );
+            });
+        }
+        return futures;
     }
 
 }

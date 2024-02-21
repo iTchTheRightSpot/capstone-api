@@ -10,7 +10,6 @@ import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.payment.repository.OrderDetailRepository;
 import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.payment.response.PaymentResponse;
-import com.sarabrandserver.payment.service.PaymentService;
 import com.sarabrandserver.product.dto.PriceCurrencyDto;
 import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
@@ -28,7 +27,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -82,8 +80,6 @@ class PaymentControllerTest extends AbstractIntegration {
     private OrderReservationRepo reservationRepo;
     @Autowired
     private CartItemRepo cartItemRepo;
-    @Autowired
-    private PaymentService paymentService;
 
     @BeforeEach
     void before() {
@@ -150,7 +146,7 @@ class PaymentControllerTest extends AbstractIntegration {
     }
 
     private Cookie createNewShoppingSessionCookie() throws Exception {
-        MvcResult result = this.MOCKMVC
+        MvcResult result = this.mockMvc
                 .perform(get(cartPath).with(csrf()))
                 .andReturn();
 
@@ -159,10 +155,10 @@ class PaymentControllerTest extends AbstractIntegration {
 
         var sku = productSku();
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER
+                        .content(this.objectMapper
                                 .writeValueAsString(new CartDTO(sku.getSku(), sku.getInventory()))
                         )
                         .with(csrf())
@@ -181,7 +177,7 @@ class PaymentControllerTest extends AbstractIntegration {
         Cookie cookie = createNewShoppingSessionCookie();
 
         // request
-        this.MOCKMVC
+        this.mockMvc
                 .perform(get(path)
                         .param("currency", USD.getCurrency())
                         .param("country", "USA")
@@ -198,7 +194,7 @@ class PaymentControllerTest extends AbstractIntegration {
         var list = this.productSkuRepo.findAll();
 
         // Retrieve cookie unique to every device
-        MvcResult result = this.MOCKMVC
+        MvcResult result = this.mockMvc
                 .perform(get(cartPath).with(csrf()))
                 .andReturn();
 
@@ -208,10 +204,10 @@ class PaymentControllerTest extends AbstractIntegration {
         var sku = list.getFirst();
 
         // simulate adding to cart
-        this.MOCKMVC
+        this.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER
+                        .content(this.objectMapper
                                 .writeValueAsString(new CartDTO(sku.getSku(), sku.getInventory() - 1))
                         )
                         .with(csrf())
@@ -220,7 +216,7 @@ class PaymentControllerTest extends AbstractIntegration {
                 .andExpect(status().isCreated());
 
         // simulate user in payment component
-        this.MOCKMVC
+        this.mockMvc
                 .perform(get(path)
                         .param("currency", USD.getCurrency())
                         .param("country", "nigeria")
@@ -230,10 +226,10 @@ class PaymentControllerTest extends AbstractIntegration {
                 .andExpect(status().isOk());
 
         // simulate returning back to checkout component to update cart
-        this.MOCKMVC
+        this.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER
+                        .content(this.objectMapper
                                 .writeValueAsString(new CartDTO(sku.getSku(), 1))
                         )
                         .with(csrf())
@@ -244,10 +240,10 @@ class PaymentControllerTest extends AbstractIntegration {
         // simulate adding more items
         for (int i = 1; i < list.size(); i++) {
             ProductSku s = list.get(i);
-            this.MOCKMVC
+            this.mockMvc
                     .perform(post(cartPath)
                             .contentType(APPLICATION_JSON)
-                            .content(this.MAPPER
+                            .content(this.objectMapper
                                     .writeValueAsString(new CartDTO(s.getSku(), s.getInventory()))
                             )
                             .with(csrf())
@@ -257,7 +253,7 @@ class PaymentControllerTest extends AbstractIntegration {
         }
 
         // simulate user switching to pay in ngn
-        this.MOCKMVC
+        this.mockMvc
                 .perform(get(path)
                         .param("currency", NGN.getCurrency())
                         .param("country", "nigeria")
@@ -275,7 +271,7 @@ class PaymentControllerTest extends AbstractIntegration {
         Cookie[] cookies = new Cookie[num];
 
         for (int i = 0; i < num; i++) {
-            Cookie cookie = this.MOCKMVC
+            Cookie cookie = this.mockMvc
                     .perform(get(cartPath).with(csrf()))
                     .andReturn()
                     .getResponse()
@@ -287,10 +283,10 @@ class PaymentControllerTest extends AbstractIntegration {
 
         for (Cookie cookie : cookies) {
             // simulate num of users adding the last item to cart
-            this.MOCKMVC
+            this.mockMvc
                     .perform(post(cartPath)
                             .contentType(APPLICATION_JSON)
-                            .content(this.MAPPER
+                            .content(this.objectMapper
                                     .writeValueAsString(new CartDTO(sku.getSku(), 1))
                             )
                             .with(csrf())
@@ -358,7 +354,7 @@ class PaymentControllerTest extends AbstractIntegration {
                 try {
                     var c = curr % 2 == 0 ? USD.getCurrency() : NGN.getCurrency();
                     var country = curr % 2 == 0 ? "nigeria" : "Canada";
-                    return this.MOCKMVC
+                    return this.mockMvc
                             .perform(get(this.path)
                                     .param("currency", c)
                                     .param("country", country)
@@ -390,7 +386,7 @@ class PaymentControllerTest extends AbstractIntegration {
     }
 
     private Cookie createNewShoppingSession() throws Exception {
-        MvcResult result = this.MOCKMVC
+        MvcResult result = this.mockMvc
                 .perform(get(cartPath).with(csrf()))
                 .andReturn();
 
@@ -399,10 +395,10 @@ class PaymentControllerTest extends AbstractIntegration {
 
         var sku = productSku();
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER
+                        .content(this.objectMapper
                                 .writeValueAsString(new CartDTO(sku.getSku(), sku.getInventory()))
                         )
                         .with(csrf())
@@ -467,7 +463,7 @@ class PaymentControllerTest extends AbstractIntegration {
         String uri = path + "?currency=%s&country=%s"
                 .formatted(USD, "Canada");
 
-        super.MOCKMVC
+        super.mockMvc
                 .perform(get(path)
                         .param("currency", USD.getCurrency())
                         .param("country", "Canada")
@@ -528,23 +524,19 @@ class PaymentControllerTest extends AbstractIntegration {
                 );
 
         // access payment page
-        String uri = path + "?currency=%s&country=%s"
+        String uri = "/api/v1/payment?currency=%s&country=%s"
                 .formatted(NGN, "nigeria");
 
-        WebTestClient client = MockMvcWebTestClient
-                .bindToController(new PaymentController(paymentService))
-                .build();
+//        super.client
+//                .get()
+//                .uri(uri)
+//                .exchange()
+//                .expectStatus()
+//                .isOk()
+//                .expectBody(PaymentResponse.class)
+//                .isEqualTo(new PaymentResponse("", NGN, total));
 
-        client
-                .get()
-                .uri(uri)
-                .exchange()
-                .expectStatus()
-                .isOk()
-                .expectBody(PaymentResponse.class)
-                .isEqualTo(new PaymentResponse("", NGN, total));
-
-        super.MOCKMVC
+        super.mockMvc
                 .perform(get(path)
                         .param("currency", NGN.getCurrency())
                         .param("country", "nigeria")

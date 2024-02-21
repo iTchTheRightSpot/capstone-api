@@ -8,6 +8,7 @@ import com.sarabrandserver.product.dto.PriceCurrencyDto;
 import com.sarabrandserver.product.dto.UpdateProductDTO;
 import com.sarabrandserver.product.entity.PriceCurrency;
 import com.sarabrandserver.product.entity.Product;
+import com.sarabrandserver.product.projection.ProductPojo;
 import com.sarabrandserver.product.repository.PriceCurrencyRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.response.ProductResponse;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +31,9 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
@@ -37,12 +41,12 @@ import static java.math.RoundingMode.FLOOR;
 
 @Service
 @RequiredArgsConstructor
-@Setter
 public class WorkerProductService {
 
     private static final Logger log = LoggerFactory.getLogger(WorkerProductService.class);
 
     @Value(value = "${aws.bucket}")
+    @Setter
     private String BUCKET;
 
     private final PriceCurrencyRepo currencyRepo;
@@ -53,35 +57,84 @@ public class WorkerProductService {
     private final HelperService helperService;
 
     /**
-     * Method returns a list of ProductResponse. Note fetchAllProductsWorker query method returns a list of
-     * ProductPojo using spring jpa projection. It only returns a Product not Including its details.
+     * Sample issue
+     * <p>
+     * We have a {@link org.springframework.data.domain.Page} of {@link ProductPojo}
+     * we need to map to a {@link ProductResponse}. The caveat is whilst mapping
+     * to a {@link ProductResponse}, we need to make a call to S3 to
+     * retrieve a pre-signed url for each {@link ProductResponse} object.
+     * Because we want to achieve this concurrently to improve performance
+     * we need to make use of java multithreading feature. We are going
+     * to use java 21 VirtualThread feature to take advantage of high
+     * through put and to rely on the jvm to manage thread creation instead of
+     * us creating Platform threads.
+     * <p>
+     * 1. Retrieve the {@link Page} of {@link ProductPojo} from db.
+     * <p>
+     * 2. Instantiate a VirtualThread executor.
+     * <p>
+     * 3. Iterate the contents of {@link Page} whilst assigning tasks to
+     * executor/thread.
+     * <p>
+     * 4. Do not block each thread by manually calling join instead we wait
+     * for all completion before calling join.
+     * <p>
+     * 5. We wait for all executions to complete by using
+     * {@link CompletableFuture} property allOf.
+     * <p>
+     * 6. Return the response to the UI.
      *
-     * @param currency is of SarreCurrency
-     * @param page is the UI page number
-     * @param size is the max amount to be displayed on a page
-     * @return Page of ProductResponse
+     * @param currency The users choice of currency to return for each {@link Product}.
+     * @param page     the page used of construct a {@link PageRequest}.
+     * @param size     the size used of construct a {@link PageRequest}.
+     * @return a {@link CompletableFuture} of {@link Page} of {@link ProductResponse}.
      */
-    public Page<ProductResponse> allProducts(SarreCurrency currency, int page, int size) {
-        return this.productRepo
-                .allProductsAdminFront(currency, PageRequest.of(page, size))
-                .map(pojo -> {
-                    var url = this.helperService.preSignedURL(BUCKET, pojo.getImage());
-                    return ProductResponse.builder()
-                            .category(pojo.getCategory())
-                            .id(pojo.getUuid())
-                            .name(pojo.getName())
-                            .desc(pojo.getDescription())
-                            .price(pojo.getPrice())
-                            .currency(pojo.getCurrency())
-                            .imageUrl(url)
-                            .weight(pojo.getWeight())
-                            .weightType(pojo.getWeightType())
-                            .build();
-                });
+    public CompletableFuture<Page<ProductResponse>> allProducts(SarreCurrency currency, int page, int size) {
+        Page<ProductPojo> dbRes = this.productRepo
+                .allProductsForAdminFront(currency, PageRequest.of(page, size));
+
+        List<Supplier<ProductResponse>> futures = createTasks(dbRes);
+
+        return CustomUtil.asynchronousTasks(futures)
+                .thenApply(v -> new PageImpl<>(
+                        v.stream().map(Supplier::get).toList(),
+                        dbRes.getPageable(),
+                        dbRes.getTotalElements()
+                ));
     }
 
     /**
-     * Create a new Product.
+     * Creates a list of Suppliers representing tasks to asynchronously generate
+     * {@link ProductResponse} objects. Each Supplier encapsulates the creation
+     * logic for a single {@link ProductResponse} object.
+     *
+     * @param dbRes The page of {@link ProductPojo} objects from which to generate
+     *              {@link ProductResponse} objects.
+     * @return A list of {@link Supplier}, each representing a task to create a
+     * {@link ProductResponse} object.
+     */
+    private List<Supplier<ProductResponse>> createTasks(Page<ProductPojo> dbRes) {
+        List<Supplier<ProductResponse>> futures = new ArrayList<>();
+        for (ProductPojo p : dbRes) {
+            futures.add(() -> {
+                var url = helperService.preSignedUrl(BUCKET, p.getImage());
+                return new ProductResponse(
+                        p.getUuid(),
+                        p.getName(),
+                        p.getDescription(),
+                        p.getPrice(),
+                        p.getCurrency(),
+                        url,
+                        p.getWeight(),
+                        p.getWeightType()
+                );
+            });
+        }
+        return futures;
+    }
+
+    /**
+     * Create a new {@link Product}.
      *
      * @param files of type MultipartFile
      * @param dto   of type CreateProductDTO
@@ -181,11 +234,11 @@ public class WorkerProductService {
     }
 
     /**
-     * Permanently deletes a {@code Product}.
+     * Permanently deletes a {@link Product}.
      *
-     * @param uuid is a property of {@code Product}
-     * @throws ResourceAttachedException is thrown if Product has ProductDetails attached
-     * @throws S3Exception               is thrown when deleting from s3
+     * @param uuid is a unique string for every {@link Product}.
+     * @throws ResourceAttachedException is thrown if Product has ProductDetails attached.
+     * @throws S3Exception               is thrown when an error occurs when deleting from s3.
      */
     @Transactional
     public void delete(final String uuid) {

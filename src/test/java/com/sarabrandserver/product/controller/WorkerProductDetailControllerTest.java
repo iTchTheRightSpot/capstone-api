@@ -85,7 +85,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
         assertFalse(list.isEmpty());
 
         // based on setUp
-        this.MOCKMVC
+        this.mockMvc
                 .perform(get(requestMapping)
                         .param("id", list.getFirst().getUuid())
                 )
@@ -113,7 +113,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
                 "dto",
                 null,
                 "application/json",
-                this.MAPPER.writeValueAsString(dto).getBytes()
+                this.objectMapper.writeValueAsString(dto).getBytes()
         );
 
         // request
@@ -123,7 +123,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
             builder.file(file);
         }
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(builder.contentType(MULTIPART_FORM_DATA).with(csrf()))
                 .andExpect(status().isCreated());
     }
@@ -145,10 +145,10 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
         );
 
         // Then
-        this.MOCKMVC
+        this.mockMvc
                 .perform(put(requestMapping)
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(dto))
+                        .content(this.objectMapper.writeValueAsString(dto))
                         .with(csrf())
                 )
                 .andExpect(status().isNoContent());

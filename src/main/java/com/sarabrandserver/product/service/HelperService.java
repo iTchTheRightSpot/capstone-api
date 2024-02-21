@@ -2,10 +2,13 @@ package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.exception.CustomAwsException;
+import com.sarabrandserver.exception.CustomServerError;
+import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.entity.ProductDetail;
 import com.sarabrandserver.product.entity.ProductImage;
 import com.sarabrandserver.product.repository.ProductImageRepo;
 import com.sarabrandserver.product.response.CustomMultiPart;
+import com.sarabrandserver.util.CustomUtil;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -20,6 +23,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
@@ -27,39 +32,57 @@ class HelperService {
 
     private static final Logger log = LoggerFactory.getLogger(HelperService.class);
 
-    private final ProductImageRepo productImageRepo;
-    private final S3Service s3Service;
+    private final ProductImageRepo repository;
+    private final S3Service service;
 
-    public String preSignedURL(@NotNull String bucket, @NotNull String key) {
-        return this.s3Service.preSignedUrl(bucket, key);
+    public String preSignedUrl(@NotNull String bucket, @NotNull String key) {
+        return this.service.preSignedUrl(bucket, key);
     }
 
     public void deleteFromS3(List<ObjectIdentifier> keys, String bucket) {
-        this.s3Service.deleteFromS3(keys, bucket);
+        this.service.deleteFromS3(keys, bucket);
     }
 
     /**
-     * Save to s3 before Create ProductImage
+     * Concurrently uploads multiple product images to Amazon S3 and
+     * saves their details to the database. This method leverages
+     * multithreading by creating multiple callables, each responsible
+     * for uploading and saving one image.
      *
-     * @throws CustomAwsException if there is an error uploading to S3
+     * @param detail The {@link ProductDetail} associated with the images.
+     * @param files An array of {@link CustomMultiPart} objects representing
+     *              the images to be uploaded.
+     * @param bucket The name of the Amazon S3 bucket to which the images will
+     *               be uploaded.
+     * @throws CustomAwsException if there is an error uploading the images to
+     * Amazon S3.
+     * @throws CustomServerError if there is an error executing the tasks.
      */
     public void productImages(ProductDetail detail, CustomMultiPart[] files, String bucket) {
-        for (var file : files) {
-            // Upload image to S3 if in desired profile
-            this.s3Service.uploadToS3(file.file(), file.metadata(), bucket, file.key());
+        List<Callable<Void>> callables = new ArrayList<>();
 
-            // Save ProductImage
-            this.productImageRepo.save(new ProductImage(file.key(), file.file().getAbsolutePath(), detail));
+        for (CustomMultiPart file : files) {
+            callables.add(() -> {
+                this.service
+                        .uploadToS3(file.file(), file.metadata(), bucket, file.key());
+
+                this.repository
+                        .save(new ProductImage(file.key(), file.file().getAbsolutePath(), detail));
+                return null;
+            });
         }
+
+        CustomUtil.asynchronousTasks(callables);
     }
 
     /**
      * Validates if items in MultipartFile array are all images, else an error is thrown.
-     * Note I am returning an array as it is a bit more efficient than arraylist in terms of memory
+     * Note I am returning an array as it is a bit more efficient than arraylist in
+     * terms of memory.
      *
-     * @param multipartFiles is an array of MultipartFile
-     * @param defaultKey is Product param default key
-     * @return CustomMultiPart array
+     * @param multipartFiles is an array of {@link MultipartFile}.
+     * @param defaultKey A property of {@link Product}.
+     * @return A custom {@link CustomMultiPart} array.
      */
     public CustomMultiPart[] customMultiPartFiles(MultipartFile[] multipartFiles, StringBuilder defaultKey) {
         return Arrays.stream(multipartFiles)

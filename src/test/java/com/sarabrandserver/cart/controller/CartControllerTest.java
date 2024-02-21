@@ -82,7 +82,7 @@ class CartControllerTest extends AbstractIntegration {
 
     @Test
     void list_cart_items_anonymous_user() throws Exception {
-        this.MOCKMVC
+        this.mockMvc
                 .perform(get(path)
                         .param("currency", "usd")
                         .with(csrf())
@@ -92,7 +92,7 @@ class CartControllerTest extends AbstractIntegration {
 
     @Test
     void create_new_shopping_session() throws Exception {
-        MvcResult result = this.MOCKMVC
+        MvcResult result = this.mockMvc
                 .perform(get(path).with(csrf()))
                 .andReturn();
 
@@ -103,10 +103,10 @@ class CartControllerTest extends AbstractIntegration {
 
         var dto = new CartDTO(sku.getSku(), sku.getInventory());
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(post(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(dto))
+                        .content(this.objectMapper.writeValueAsString(dto))
                         .with(csrf())
                         .cookie(cookie)
                 )
@@ -119,7 +119,7 @@ class CartControllerTest extends AbstractIntegration {
 
     @Test
     void add_to_existing_shopping_session() throws Exception {
-        MvcResult result1 = this.MOCKMVC
+        MvcResult result1 = this.mockMvc
                 .perform(get(path).with(csrf()))
                 .andDo(print())
                 .andReturn();
@@ -130,20 +130,20 @@ class CartControllerTest extends AbstractIntegration {
         var sku = productSku();
         var dto = new CartDTO(sku.getSku(), sku.getInventory());
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(post(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(dto))
+                        .content(this.objectMapper.writeValueAsString(dto))
                         .with(csrf())
                         .cookie(cookie1)
                 )
                 .andExpect(status().isCreated());
 
         // method add_to_existing_shopping_session
-        this.MOCKMVC
+        this.mockMvc
                 .perform(post(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(dto))
+                        .content(this.objectMapper.writeValueAsString(dto))
                         .with(csrf())
                         .cookie(cookie1)
                 )

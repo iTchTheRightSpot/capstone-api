@@ -13,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.concurrent.CompletableFuture;
+
 import static org.springframework.http.HttpStatus.*;
 
 @RestController
@@ -31,7 +33,7 @@ public class WorkerCategoryController {
 
     @ResponseStatus(OK)
     @GetMapping(path = "/products", produces = "application/json")
-    public Page<ProductResponse> allProductByCategory(
+    public CompletableFuture<Page<ProductResponse>> allProductByCategory(
             @NotNull @RequestParam(name = "category_id") Long id,
             @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam(name = "size", defaultValue = "20") Integer size,

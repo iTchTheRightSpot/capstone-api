@@ -32,7 +32,7 @@ public class ClientProductController {
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
         var sc = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.service.allProductsByUUID(sc, page, Math.min(size, 20));
+        return this.service.allProductsByProductUuid(sc, page, Math.min(size, 20));
     }
 
     /**

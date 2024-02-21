@@ -46,10 +46,10 @@ class ClientAuthControllerTest extends AbstractIntegration {
                 password
         );
 
-        return this.MOCKMVC
+        return this.mockMvc
                 .perform(post(this.path + "register")
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(dto))
+                        .content(this.objectMapper.writeValueAsString(dto))
                         .with(csrf())
                 )
                 .andExpect(status().isCreated())
@@ -67,9 +67,9 @@ class ClientAuthControllerTest extends AbstractIntegration {
         Cookie c = cookie(principal, password);
         assertNotNull(c);
 
-        String dto = this.MAPPER.writeValueAsString(new LoginDto(principal, password));
+        String dto = this.objectMapper.writeValueAsString(new LoginDto(principal, password));
 
-        MvcResult login = this.MOCKMVC
+        MvcResult login = this.mockMvc
                 .perform(post(this.path + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
@@ -82,7 +82,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
 
         assertNotNull(cookie);
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(get("/test/client").cookie(cookie))
                 .andExpect(status().isOk());
     }
@@ -90,9 +90,9 @@ class ClientAuthControllerTest extends AbstractIntegration {
     @Test
     @Order(2)
     void simulate_logging_in_with_none_existent_user() throws Exception {
-        String dto = this.MAPPER
+        String dto = this.objectMapper
                 .writeValueAsString(new LoginDto("admin@admin.com", "password123"));
-        this.MOCKMVC
+        this.mockMvc
                 .perform(post(this.path + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
@@ -110,9 +110,9 @@ class ClientAuthControllerTest extends AbstractIntegration {
         Cookie c = cookie(principal, password);
         assertNotNull(c);
 
-        String dto = this.MAPPER.writeValueAsString(new LoginDto(principal, password));
+        String dto = this.objectMapper.writeValueAsString(new LoginDto(principal, password));
 
-        MvcResult login = this.MOCKMVC
+        MvcResult login = this.mockMvc
                 .perform(post(this.path + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
@@ -125,7 +125,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
 
         assertNotNull(cookie);
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(get("/test/worker").cookie(cookie))
                 .andExpect(status().isForbidden());
     }

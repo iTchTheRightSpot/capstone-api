@@ -2,7 +2,11 @@ package com.sarabrandserver.product.projection;
 
 import java.math.BigDecimal;
 
-// Spring data projection
+/**
+ * Using Spring Data Projection, {@link ProductPojo}
+ * maps desired {@link com.sarabrandserver.product.entity.Product}
+ * from the database.
+ * */
 public interface ProductPojo {
     String getUuid();
     String getName();

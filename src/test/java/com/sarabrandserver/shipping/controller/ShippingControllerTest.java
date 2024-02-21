@@ -31,10 +31,10 @@ class ShippingControllerTest extends AbstractIntegration {
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void create() throws Exception {
-        this.MOCKMVC
+        this.mockMvc
                 .perform(post("/" + path)
                         .with(csrf())
-                        .content(this.MAPPER.writeValueAsString(
+                        .content(this.objectMapper.writeValueAsString(
                                 new ShippingDto(
                                         "Canada",
                                         new BigDecimal("10100"),
@@ -52,10 +52,10 @@ class ShippingControllerTest extends AbstractIntegration {
         var shipping = shippingRepo
                 .save(new ShipSetting("Japan", new BigDecimal("25750"), new BigDecimal("35.55")));
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(put("/" + path)
                         .with(csrf())
-                        .content(this.MAPPER.writeValueAsString(
+                        .content(this.objectMapper.writeValueAsString(
                                 new ShippingMapper(
                                         shipping.shipId(),
                                         shipping.country(),
@@ -74,7 +74,7 @@ class ShippingControllerTest extends AbstractIntegration {
         var shipping = shippingRepo
                 .save(new ShipSetting("France", new BigDecimal("25750"), new BigDecimal("35.55")));
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(delete("/" + path + "/" + shipping.shipId())
                         .with(csrf())
                 )
@@ -90,7 +90,7 @@ class ShippingControllerTest extends AbstractIntegration {
         assertFalse(optional.isEmpty());
 
         // then
-        this.MOCKMVC
+        this.mockMvc
                 .perform(delete("/" + path + "/" + optional.get().shipId())
                         .with(csrf())
                 )

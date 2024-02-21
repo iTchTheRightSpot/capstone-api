@@ -6,7 +6,6 @@ import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,8 +35,7 @@ class ClientProductControllerTest extends AbstractIntegration {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    @BeforeEach
-    void before() {
+    private void dummy() {
         var category = categoryRepository
                 .save(
                         ProductCategory.builder()
@@ -68,7 +66,7 @@ class ClientProductControllerTest extends AbstractIntegration {
     @Test
     void search_functionality() throws Exception {
         char c = (char) ('a' + new Random().nextInt(26));
-        this.MOCKMVC
+        this.mockMvc
                 .perform(get(path + "/find")
                         .param("search", String.valueOf(c))
                         .param("currency", "usd")
@@ -79,18 +77,23 @@ class ClientProductControllerTest extends AbstractIntegration {
 
     @Test
     void list_products_ngn_currency() throws Exception {
-        this.MOCKMVC.perform(get(path)).andExpect(status().isOk());
+        dummy();
+        this.mockMvc.perform(get(path)).andExpect(status().isOk());
     }
 
     @Test
     void list_products_usd_currency() throws Exception {
-        this.MOCKMVC
+        dummy();
+
+        this.mockMvc
                 .perform(get(path).param("currency", "usd"))
                 .andExpect(status().isOk());
     }
 
     @Test
     void fetchProductDetails() throws Exception {
+        dummy();
+
         var list = this.productRepo.findAll();
         assertFalse(list.isEmpty());
         String id = list.getFirst().getUuid();
@@ -98,7 +101,7 @@ class ClientProductControllerTest extends AbstractIntegration {
         String[] arr = new String[3];
         Arrays.fill(arr, "0");
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(get(path + "/detail").param("product_id", id))
                 .andExpect(content().contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())

@@ -67,11 +67,11 @@ class WorkerAuthControllerTest extends AbstractIntegration {
         );
 
         // when
-        MvcResult login = this.MOCKMVC
+        MvcResult login = this.mockMvc
                 .perform(post(route + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(new LoginDto(PRINCIPAL, PASSWORD)))
+                        .content(this.objectMapper.writeValueAsString(new LoginDto(PRINCIPAL, PASSWORD)))
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -86,11 +86,11 @@ class WorkerAuthControllerTest extends AbstractIntegration {
                 "A;D@#$13245eifdkj"
         );
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(post(route + "register")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(dto))
+                        .content(this.objectMapper.writeValueAsString(dto))
                         .cookie(login.getResponse().getCookie(JSESSIONID))
                 )
                 .andExpect(status().isCreated());
@@ -117,11 +117,11 @@ class WorkerAuthControllerTest extends AbstractIntegration {
         );
 
         // when
-        MvcResult login = this.MOCKMVC
+        MvcResult login = this.mockMvc
                 .perform(post(route + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(new LoginDto(PRINCIPAL, PASSWORD)))
+                        .content(this.objectMapper.writeValueAsString(new LoginDto(PRINCIPAL, PASSWORD)))
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -135,11 +135,11 @@ class WorkerAuthControllerTest extends AbstractIntegration {
                 PASSWORD
         );
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(post(route + "register")
                         .contentType(APPLICATION_JSON)
                         .with(csrf())
-                        .content(this.MAPPER.writeValueAsString(dto))
+                        .content(this.objectMapper.writeValueAsString(dto))
                         .cookie(login.getResponse().getCookie(JSESSIONID))
                 )
                 .andExpect(result -> assertInstanceOf(DuplicateException.class, result.getResolvedException()));
@@ -163,9 +163,9 @@ class WorkerAuthControllerTest extends AbstractIntegration {
         );
 
         // when
-        String payload = this.MAPPER
+        String payload = this.objectMapper
                 .writeValueAsString(new LoginDto(PRINCIPAL, "fFeubfrom@#$%^124234"));
-        this.MOCKMVC
+        this.mockMvc
                 .perform(post(route + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
@@ -196,11 +196,11 @@ class WorkerAuthControllerTest extends AbstractIntegration {
         );
 
         // then
-        MvcResult login = this.MOCKMVC
+        MvcResult login = this.mockMvc
                 .perform(post(route + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(new LoginDto(PRINCIPAL, PASSWORD)))
+                        .content(this.objectMapper.writeValueAsString(new LoginDto(PRINCIPAL, PASSWORD)))
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -210,7 +210,7 @@ class WorkerAuthControllerTest extends AbstractIntegration {
         assertNotNull(cookie);
 
         // Logout
-        MvcResult logout = this.MOCKMVC
+        MvcResult logout = this.mockMvc
                 .perform(post("/api/v1/logout").cookie(cookie).with(csrf()))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -218,7 +218,7 @@ class WorkerAuthControllerTest extends AbstractIntegration {
         cookie = logout.getResponse().getCookie(JSESSIONID); // This should be empty
 
         // Access protected route with invalid cookie
-        this.MOCKMVC
+        this.mockMvc
                 .perform(get("/test/worker").cookie(cookie))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message")

@@ -11,6 +11,7 @@ import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.exception.ResourceAttachedException;
+import com.sarabrandserver.product.projection.ProductPojo;
 import com.sarabrandserver.product.response.ProductResponse;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.transaction.Transactional;
@@ -20,10 +21,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
@@ -34,17 +40,17 @@ public class WorkerCategoryService {
     @Value(value = "${aws.bucket}")
     private String BUCKET;
 
-    private final CategoryRepository categoryRepo;
-    private final S3Service s3Service;
+    private final CategoryRepository repository;
+    private final S3Service service;
 
     /**
-     * Returns a {@code WorkerCategoryResponse}
+     * Returns a list {@link WorkerCategoryResponse}
      * */
     public WorkerCategoryResponse allCategories() {
-        var category = this.categoryRepo.allCategories();
+        var category = this.repository.allCategories();
 
         // table
-        var table = this.categoryRepo
+        var table = this.repository
                 .allCategories()
                 .stream()
                 .map(CategoryResponse::workerList)
@@ -60,37 +66,54 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Returns a page of {@code ProductResponse} based on categoryId
+     * Asynchronously retrieves a {@link Page} of
+     * {@link ProductResponse} objects associated with a
+     * specific category.
      *
-     * @param categoryId {@code ProductCategory} categoryId
-     * @param page pagination
-     * @param size pagination
-     * @return Page of {@code ProductResponse}
-     * */
-    public Page<ProductResponse> allProductsByCategoryId(
+     * @param currency    The currency in which prices are displayed.
+     * @param categoryId  The primary key of a {@link ProductCategory}.
+     * @param page        The page number for pagination.
+     * @param size        The page size for pagination.
+     * @return A {@link CompletableFuture} representing a {@link Page}
+     * of {@link ProductResponse}.
+     */
+    public CompletableFuture<Page<ProductResponse>> allProductsByCategoryId(
             SarreCurrency currency,
             long categoryId,
             int page,
             int size
     ) {
-        return this.categoryRepo
-                .allProductsByCategoryIdAdminFront(categoryId, currency, PageRequest.of(page, size))
-                .map(pojo -> {
-                    var url = this.s3Service.preSignedUrl(this.BUCKET, pojo.getImage());
-                    return ProductResponse.builder()
-                            .id(pojo.getUuid())
-                            .name(pojo.getName())
-                            .price(pojo.getPrice())
-                            .currency(pojo.getCurrency())
-                            .imageUrl(url)
-                            .build();
-                });
+        Page<ProductPojo> dbRes = this.repository
+                .allProductsByCategoryIdAdminFront(categoryId, currency, PageRequest.of(page, size));
+
+        List<Supplier<ProductResponse>> futures = new ArrayList<>();
+
+        for (ProductPojo p : dbRes) {
+            futures.add(() -> {
+                var url = service.preSignedUrl(BUCKET, p.getImage());
+                return new ProductResponse(
+                        p.getUuid(),
+                        p.getName(),
+                        p.getPrice(),
+                        p.getCurrency(),
+                        url
+                );
+            });
+        }
+
+        return CustomUtil.asynchronousTasks(futures)
+                .thenApply(v -> new PageImpl<>(
+                        v.stream().map(Supplier::get).toList(),
+                        dbRes.getPageable(),
+                        dbRes.getTotalElements()
+                ));
     }
 
     /**
-     * The logic to creating a new ProductCategory object is a worker can either add dto.name
-     * (child {@code ProductCategory}) to an existing dto.parentId (parentId {@code ProductCategory})
-     * or create new ProductCategory who has no parentId.
+     * The logic to creating a new {@link ProductCategory} object
+     * is a worker can either add dto.name (child {@link ProductCategory})
+     * to an existing dto.parentId (parentId {@link ProductCategory}) or
+     * create new {@link ProductCategory} who has no parentId.
      *
      * @param dto of type CategoryDTO
      * @throws DuplicateException when dto.name exists
@@ -98,7 +121,7 @@ public class WorkerCategoryService {
      * */
     @Transactional
     public void create(CategoryDTO dto) {
-        if (this.categoryRepo.findByName(dto.name().trim()).isPresent()) {
+        if (this.repository.findByName(dto.name().trim()).isPresent()) {
             throw new DuplicateException(dto.name() + " exists");
         }
 
@@ -106,7 +129,7 @@ public class WorkerCategoryService {
                 ? parentCategoryIsNull(dto)
                 : parentCategoryNotNull(dto);
 
-        this.categoryRepo.save(category);
+        this.repository.save(category);
     }
 
     private ProductCategory parentCategoryIsNull(CategoryDTO dto) {
@@ -138,7 +161,7 @@ public class WorkerCategoryService {
      * */
     @Transactional
     public void update(UpdateCategoryDTO dto) {
-        boolean bool = this.categoryRepo
+        boolean bool = this.repository
                 .onDuplicateCategoryName(dto.id(), dto.name().trim()) > 0;
 
         if (bool) {
@@ -146,15 +169,15 @@ public class WorkerCategoryService {
         }
 
         if (!dto.visible()) {
-            categoryRepo.updateAllChildrenVisibilityToFalse(dto.id());
+            repository.updateAllChildrenVisibilityToFalse(dto.id());
         }
 
         if (dto.parentId() != null) {
-            categoryRepo
+            repository
                     .updateCategoryParentIdBasedOnCategoryId(dto.id(), dto.parentId());
         }
 
-        this.categoryRepo
+        this.repository
                 .update(dto.name().trim(), dto.visible(), dto.id());
     }
 
@@ -168,15 +191,15 @@ public class WorkerCategoryService {
     @Transactional
     public void delete(final long id) {
         try {
-            this.categoryRepo.deleteProductCategoryById(id);
+            this.repository.deleteProductCategoryById(id);
         } catch (DataIntegrityViolationException e) {
             log.error("tried deleting a category with children attached {}", e.getMessage());
             throw new ResourceAttachedException("resource attached to category");
         }
     }
 
-    public ProductCategory findById(long id) {
-        return this.categoryRepo.findById(id)
+    public ProductCategory findById(final long id) {
+        return this.repository.findById(id)
                 .orElseThrow(() -> new CustomNotFoundException("does not exist"));
     }
 

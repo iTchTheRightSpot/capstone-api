@@ -43,19 +43,19 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     p.uuid AS uuid,
     p.name AS name,
     p.description AS description,
-    c.currency AS currency,
-    c.price AS price,
     p.defaultKey AS image,
     p.weight AS weight,
     p.weightType AS weightType,
+    c.currency AS currency,
+    c.price AS price,
     cat.name AS category
     FROM Product p
     INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId
     INNER JOIN PriceCurrency c ON p.productId = c.product.productId
     WHERE c.currency = :currency
-    GROUP BY p.uuid, p.name, p.description, p.defaultKey, c.currency, c.price, cat.name
+    GROUP BY p.uuid, p.name, p.description, p.defaultKey, p.weight, p.weightType, c.currency, c.price, cat.name
     """)
-    Page<ProductPojo> allProductsAdminFront(SarreCurrency currency, Pageable pageable);
+    Page<ProductPojo> allProductsForAdminFront(SarreCurrency currency, Pageable pageable);
 
     /**
      * Returns a Product based non default currency
@@ -109,6 +109,8 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     """)
     List<ImagePojo> productImagesByProductUuid(@Param(value = "uuid") String uuid);
 
+    // SQL LIKE Operator
+    // https://www.w3schools.com/sql/sql_like.asp
     @Query("""
     SELECT
     p.uuid AS uuid,

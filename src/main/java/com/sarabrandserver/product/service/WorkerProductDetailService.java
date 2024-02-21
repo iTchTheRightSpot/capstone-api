@@ -50,7 +50,7 @@ public class WorkerProductDetailService {
                 .map(pojo -> {
                     var urls = Arrays
                             .stream(pojo.getImage().split(","))
-                            .map(key -> this.helperService.preSignedURL(BUCKET, key))
+                            .map(key -> this.helperService.preSignedUrl(BUCKET, key))
                             .toList();
 
                     Variant[] variants = CustomUtil

@@ -109,7 +109,7 @@ class ProductRepoTest extends AbstractRepositoryTest {
 
         // then
         Page<ProductPojo> page = productRepo
-                .allProductsAdminFront(NGN, PageRequest.of(0, 20));
+                .allProductsForAdminFront(NGN, PageRequest.of(0, 20));
 
         assertNotEquals(0, page.getTotalElements());
 

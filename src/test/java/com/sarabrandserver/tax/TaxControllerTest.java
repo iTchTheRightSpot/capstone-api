@@ -22,7 +22,7 @@ class TaxControllerTest extends AbstractIntegration {
     @Test
     @WithMockUser(username = "hello@hello.com", password = "password", roles = {"WORKER"})
     void taxes() throws Exception {
-        this.MOCKMVC
+        this.mockMvc
                 .perform(get( "/" + path).with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("*").isArray())
@@ -36,10 +36,10 @@ class TaxControllerTest extends AbstractIntegration {
         var dto = new TaxDto(1L, "fish", 12.3256);
 
         // when
-        this.MOCKMVC
+        this.mockMvc
                 .perform(put( "/" + path)
                         .with(csrf())
-                        .content(this.MAPPER.writeValueAsString(dto))
+                        .content(this.objectMapper.writeValueAsString(dto))
                         .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isNoContent());

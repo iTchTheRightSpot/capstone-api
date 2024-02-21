@@ -11,13 +11,12 @@ import com.sarabrandserver.product.dto.SizeInventoryDTO;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,13 +27,15 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Transactional
 class WorkerProductControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}worker/product")
-    private String requestMapping;
+    private String path;
 
     @Autowired
     private WorkerProductService workerProductService;
@@ -45,8 +46,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    @BeforeEach
-    void before() {
+    void dummy() {
         var category = categoryRepository
                 .save(
                         ProductCategory.builder()
@@ -94,23 +94,47 @@ class WorkerProductControllerTest extends AbstractIntegration {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Simulates fetching all Products")
-    void fetchAll() throws Exception {
-        // Then
-        this.MOCKMVC
-                .perform(get(requestMapping)
+    void allProducts() throws Exception {
+        // given
+        var category = categoryRepository
+                .save(
+                        ProductCategory.builder()
+                                .name("category")
+                                .isVisible(true)
+                                .parentCategory(null)
+                                .categories(new HashSet<>())
+                                .product(new HashSet<>())
+                                .build()
+                );
+
+        TestData.dummyProducts(category, 50, workerProductService);
+
+        // https://stackoverflow.com/questions/42069226/mockmvc-perform-post-test-to-async-service
+        // perform the asynchronous call
+        MvcResult result = this.mockMvc
+                .perform(get(path)
                         .param("page", "0")
-                        .param("size", "50")
+                        .param("size", "30")
                 )
-                .andExpect(content().contentType("application/json"))
+                .andDo(print())
+                .andExpect(request().asyncStarted())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray());
+                .andReturn();
+
+        this.mockMvc
+                .perform(asyncDispatch(result))
+                .andDo(print())
+                .andExpect(content().contentType("application/json"))
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content").isNotEmpty())
+                .andExpect(jsonPath("$.content.size()").value(20));
     }
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Create a product")
-    void create() throws Exception {
+    void shouldSuccessfullyCreateAProduct() throws Exception {
+        dummy();
+
         // payload
         SizeInventoryDTO[] dtos = {
                 new SizeInventoryDTO(10, "small"),
@@ -129,25 +153,26 @@ class WorkerProductControllerTest extends AbstractIntegration {
                 "dto",
                 null,
                 "application/json",
-                this.MAPPER.writeValueAsString(dto).getBytes()
+                this.objectMapper.writeValueAsString(dto).getBytes()
         );
 
         // request
-        MockMultipartHttpServletRequestBuilder requestBuilder = multipart(requestMapping).file(payload);
+        MockMultipartHttpServletRequestBuilder requestBuilder = multipart(path).file(payload);
 
         for (MockMultipartFile file : TestData.files()) {
             requestBuilder.file(file);
         }
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(requestBuilder.contentType(MULTIPART_FORM_DATA).with(csrf()))
                 .andExpect(status().isCreated());
     }
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Validate SizeInventoryDTO[] size is 1")
-    void val() throws Exception {
+    void validateProductIsCreatedWhenSizeInventoryDTOArrayIsOne() throws Exception {
+        dummy();
+
         // given
         var dto = TestData
                 .createProductDTO(
@@ -160,17 +185,17 @@ class WorkerProductControllerTest extends AbstractIntegration {
                 "dto",
                 null,
                 "application/json",
-                this.MAPPER.writeValueAsString(dto).getBytes()
+                this.objectMapper.writeValueAsString(dto).getBytes()
         );
 
         // request
-        MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
+        MockMultipartHttpServletRequestBuilder builder = multipart(path).file(payload);
 
         for (MockMultipartFile file : TestData.files()) {
             builder.file(file);
         }
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(builder
                         .contentType(MULTIPART_FORM_DATA)
                         .with(csrf())
@@ -180,11 +205,9 @@ class WorkerProductControllerTest extends AbstractIntegration {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = """
-    Validates duplicate exception is thrown on creation of a new product.
-    Exception is cause from duplicate product colour
-    """)
-    void ex() throws Exception {
+    void shouldThrowErrorBecauseProductColourIsADuplicate() throws Exception {
+        dummy();
+
         // Given
         SizeInventoryDTO[] dtos = {
                 new SizeInventoryDTO(10, "small"),
@@ -204,17 +227,17 @@ class WorkerProductControllerTest extends AbstractIntegration {
                 "dto",
                 null,
                 "application/json",
-                this.MAPPER.writeValueAsString(dto).getBytes()
+                this.objectMapper.writeValueAsString(dto).getBytes()
         );
 
         // Then
-        MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
+        MockMultipartHttpServletRequestBuilder builder = multipart(path).file(payload);
 
         for (MockMultipartFile file : TestData.files()) {
             builder.file(file);
         }
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(builder
                         .contentType(MULTIPART_FORM_DATA)
                         .with(csrf())
@@ -224,8 +247,9 @@ class WorkerProductControllerTest extends AbstractIntegration {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Validates bad request because sizeInventory JsonProperty is not present")
-    void exThrown() throws Exception {
+    void shouldThrowErrorAsSizeInventoryIsNotPresentInRequest() throws Exception {
+        dummy();
+
         var dto = TestData
                 .productDTO(
                         categoryId(),
@@ -238,17 +262,17 @@ class WorkerProductControllerTest extends AbstractIntegration {
                 "dto",
                 null,
                 "application/json",
-                this.MAPPER.writeValueAsString(dto).getBytes()
+                this.objectMapper.writeValueAsString(dto).getBytes()
         );
 
         // Then
-        MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
+        MockMultipartHttpServletRequestBuilder builder = multipart(path).file(payload);
 
         for (MockMultipartFile file : TestData.files()) {
             builder.file(file);
         }
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(builder
                         .contentType(MULTIPART_FORM_DATA)
                         .with(csrf())
@@ -258,8 +282,9 @@ class WorkerProductControllerTest extends AbstractIntegration {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Update Product. Ex thrown because product name exists")
-    void updateEx() throws Exception {
+    void shouldThrowErrorAsProductNameExists() throws Exception {
+        dummy();
+
         // Given
         var product = this.productRepo.findAll();
         assertFalse(product.isEmpty());
@@ -278,10 +303,10 @@ class WorkerProductControllerTest extends AbstractIntegration {
                 );
 
         // Then
-        this.MOCKMVC
-                .perform(put(requestMapping)
+        this.mockMvc
+                .perform(put(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(dto))
+                        .content(this.objectMapper.writeValueAsString(dto))
                         .with(csrf())
                 )
                 .andExpect(status().isConflict())
@@ -290,8 +315,10 @@ class WorkerProductControllerTest extends AbstractIntegration {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    void updateProduct() throws Exception {
-        // Given
+    void shouldSuccessfullyUpdateAProduct() throws Exception {
+        dummy();
+
+        // given
         var product = this.productRepo.findAll();
         assertFalse(product.isEmpty());
 
@@ -308,10 +335,10 @@ class WorkerProductControllerTest extends AbstractIntegration {
                 );
 
         // Then
-        this.MOCKMVC
-                .perform(put(requestMapping)
+        this.mockMvc
+                .perform(put(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.MAPPER.writeValueAsString(dto))
+                        .content(this.objectMapper.writeValueAsString(dto))
                         .with(csrf())
                 )
                 .andExpect(status().isNoContent());
@@ -320,13 +347,15 @@ class WorkerProductControllerTest extends AbstractIntegration {
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void deleteProductButExceptionIsThrownDueToResourcesAttached() throws Exception {
+        dummy();
+
         var products = this.productRepo.findAll();
         assertFalse(products.isEmpty());
         var product = products.getFirst();
         assertNotNull(product);
 
-        this.MOCKMVC
-                .perform(delete(requestMapping)
+        this.mockMvc
+                .perform(delete(path)
                         .param("id", product.getUuid())
                         .with(csrf())
                 )

@@ -44,7 +44,7 @@ class CheckoutControllerTest extends AbstractIntegration {
 
     @Test
     void checkoutShouldThrowNotFoundError() throws Exception {
-        super.MOCKMVC
+        super.mockMvc
                 .perform(get("/" + path)
                         .with(csrf())
                         .param("country", "nigeria")
@@ -72,7 +72,7 @@ class CheckoutControllerTest extends AbstractIntegration {
     }
 
     private Cookie createNewShoppingSessionCookie() throws Exception {
-        MvcResult result = super.MOCKMVC
+        MvcResult result = super.mockMvc
                 .perform(get(cartPath).with(csrf()))
                 .andReturn();
 
@@ -81,10 +81,10 @@ class CheckoutControllerTest extends AbstractIntegration {
 
         var sku = productSku();
 
-        this.MOCKMVC
+        this.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(super.MAPPER
+                        .content(super.objectMapper
                                 .writeValueAsString(new CartDTO(sku.getSku(), sku.getInventory()))
                         )
                         .with(csrf())
@@ -101,7 +101,7 @@ class CheckoutControllerTest extends AbstractIntegration {
         Cookie cooke = createNewShoppingSessionCookie();
 
         // when
-        super.MOCKMVC
+        super.mockMvc
                 .perform(get("/" + path)
                         .with(csrf())
                         .param("country", "nigeria")

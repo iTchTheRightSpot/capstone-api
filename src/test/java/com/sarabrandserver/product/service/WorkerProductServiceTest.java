@@ -49,8 +49,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     }
 
     @Test
-    @DisplayName(value = "Create a new product. Product name none existing")
-    void create() {
+    void shouldSuccessfullyCreateAProduct() {
         // Given
         var sizeDtoArray = TestData.sizeInventoryDTOArray(3);
         var files = TestData.files();
@@ -70,8 +69,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     }
 
     @Test
-    @DisplayName(value = "Create a new product. Exception is Product name exists")
-    void createE() {
+    void shouldThrowExceptionWhenCreatingANewProductDueToDuplicateName() {
         // Given
         var sizeDtoArray = TestData.sizeInventoryDTOArray(3);
         var files = TestData.files();
@@ -91,8 +89,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
     }
 
     @Test
-    @DisplayName(value = "Update a new product. categoryId and collection are present in the payload")
-    void update() {
+    void shouldSuccessfullyUpdateAProduct() {
         // Given
         var payload = TestData
                 .updateProductDTO(

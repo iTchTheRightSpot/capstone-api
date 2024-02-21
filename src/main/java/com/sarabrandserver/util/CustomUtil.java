@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.checkout.CheckoutPair;
 import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.exception.CustomServerError;
 import com.sarabrandserver.payment.projection.TotalPojo;
 import com.sarabrandserver.product.dto.PriceCurrencyDto;
 import com.sarabrandserver.product.response.Variant;
@@ -15,6 +16,9 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
@@ -65,8 +69,6 @@ public class CustomUtil {
         if (bool) {
             return false;
         }
-
-//        SarreCurrency[] values = SarreCurrency.values();
 
         boolean ngn = Arrays.stream(dto)
                 .anyMatch(d -> d.currency().toUpperCase().equals(NGN.name()));
@@ -209,31 +211,6 @@ public class CustomUtil {
     }
 
     /**
-     * Calculates the total cost for each item in a users shopping cart.
-     * <p>
-     * The total cost for each item is calculated using the formula:
-     * Total = weight + (price * quantity)
-     * <p>
-     * This method takes a list of {@link TotalPojo} objects, where each
-     * object represents an item in the shopping cart with information
-     * about its quantity, price, and weight.
-     *
-     * @param list A list containing objects of {@link TotalPojo}
-     *             representing items in the shopping cart.
-     * @return The total cost calculated for all items in the shopping
-     * cart as a BigDecimal value.
-     */
-    public static BigDecimal cartItemsTotal(List<TotalPojo> list) {
-        return list
-                .stream()
-                .map(p -> {
-                    BigDecimal mul = p.getPrice().multiply(BigDecimal.valueOf(p.getQty()));
-                    return BigDecimal.valueOf(p.getWeight()).add(mul);
-                })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    /**
      * Calculates the total weight and cost for each item in a
      * users shopping cart.
      * <p>
@@ -260,6 +237,33 @@ public class CustomUtil {
                 .setScale(2, FLOOR);
 
         return new CheckoutPair(sumOfWeight, total);
+    }
+
+    /**
+     * Executes a list of tasks asynchronously and returns a {@link CompletableFuture}
+     * where all the tasks are complete. Each task is executed independently and
+     * concurrently, leveraging the Virtual Thread.
+     *
+     * @param schedules The list of tasks to execute asynchronously.
+     * @param <T>       The type of the tasks to be executed.
+     * @return A CompletableFuture holding a list of results from all completed tasks.
+     */
+    public static <T> CompletableFuture<List<T>> asynchronousTasks(List<T> schedules) {
+        List<CompletableFuture<T>> futures = new ArrayList<>();
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            for (T s : schedules) {
+                futures.add(CompletableFuture
+                        .supplyAsync(() -> s, executor)
+                        .exceptionally(e -> {
+                            log.error(e.getMessage());
+                            throw new CustomServerError(e.getMessage());
+                        })
+                );
+            }
+        }
+        return CompletableFuture
+                .allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
     }
 
 }

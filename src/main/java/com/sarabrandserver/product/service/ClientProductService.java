@@ -2,7 +2,6 @@ package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.enumeration.SarreCurrency;
-import com.sarabrandserver.product.projection.DetailPojo;
 import com.sarabrandserver.product.repository.PriceCurrencyRepo;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
@@ -34,32 +33,33 @@ public class ClientProductService {
     private final S3Service s3Service;
 
     /**
-     * Returns a page of ProductResponse
+     * Returns a page of {@link ProductResponse}
      *
-     * @param currency of type {@code SarreBrandCurrency}
+     * @param currency of type {@link SarreCurrency}
      * @param page number
      * @param size number of ProductResponse for each page
-     * @return a Page of {@code ProductResponse}
+     * @return a Page of {@link ProductResponse}
      */
-    public Page<ProductResponse> allProductsByUUID(SarreCurrency currency, int page, int size) {
+    public Page<ProductResponse> allProductsByProductUuid(SarreCurrency currency, int page, int size) {
         return this.productRepo
                 .allProductsByCurrencyClient(currency, PageRequest.of(page, size)) //
-                .map(pojo -> {
-                    var url = this.s3Service.preSignedUrl(BUCKET, pojo.getImage());
-                    return ProductResponse.builder()
-                            .category(pojo.getCategory())
-                            .id(pojo.getUuid())
-                            .name(pojo.getName())
-                            .desc(pojo.getDescription())
-                            .price(pojo.getPrice())
-                            .currency(pojo.getCurrency())
-                            .imageUrl(url)
-                            .build();
+                .map(p -> {
+                    var url = this.s3Service.preSignedUrl(BUCKET, p.getImage());
+                    return new ProductResponse(
+                            p.getUuid(),
+                            p.getName(),
+                            p.getDescription(),
+                            p.getPrice(),
+                            p.getCurrency(),
+                            url,
+                            p.getCategory()
+                    );
                 });
     }
 
     /**
-     * Returns a list of ProductDetails based on Product property UUID
+     * Returns a list of {@link com.sarabrandserver.product.entity.ProductDetail} based on
+     * {@link com.sarabrandserver.product.entity.Product} uuid.
      * */
     public List<DetailResponse> productDetailsByProductUUID(String uuid, SarreCurrency currency) {
         var object = this.priceCurrencyRepo
@@ -93,12 +93,12 @@ public class ClientProductService {
     }
 
     /**
-     * Returns a list of ProductResponse based on user search param.
+     * Returns a list of {@link ProductResponse} based on user search param.
      * Initially a Page of page size 10 is returned to increase efficiency.
      *
-     * @param param is the user input
-     * @param currency is of type SarreCurrency. default is NGN
-     * @return List of ProductResponse
+     * @param param is the user input.
+     * @param currency is of type {@link SarreCurrency}.
+     * @return A List of {@link ProductResponse}.
      * */
     public List<ProductResponse> search(String param, SarreCurrency currency) {
         // SQL LIKE Operator
@@ -106,16 +106,16 @@ public class ClientProductService {
         return this.productRepo
                 .productsByNameAndCurrency(param + "%", currency, PageRequest.of(0, 10))
                 .stream()
-                .map(pojo -> {
-                    var url = this.s3Service.preSignedUrl(BUCKET, pojo.getImage());
-                    return ProductResponse.builder()
-                            .category(pojo.getCategory())
-                            .id(pojo.getUuid())
-                            .name(pojo.getName())
-                            .price(pojo.getPrice())
-                            .currency(pojo.getCurrency())
-                            .imageUrl(url)
-                            .build();
+                .map(p -> {
+                    var url = this.s3Service.preSignedUrl(BUCKET, p.getImage());
+                    return new ProductResponse(
+                            p.getUuid(),
+                            p.getName(),
+                            p.getPrice(),
+                            p.getCurrency(),
+                            url,
+                            p.getCategory()
+                    );
                 })
                 .toList();
     }

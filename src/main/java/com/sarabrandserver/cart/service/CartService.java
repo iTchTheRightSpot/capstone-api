@@ -166,7 +166,7 @@ public class CartService {
             throw new CustomNotFoundException("No cookie found. Kindly refresh window");
         }
 
-        var productSku = this.productSKUService.productSkuBySKU(dto.sku());
+        var productSku = this.productSKUService.productSkuBySku(dto.sku());
 
         int qty = productSku.getInventory();
 

@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -21,44 +22,36 @@ public class ClientProductController {
 
     private final ClientProductService service;
 
-    /**
-     * Returns a Page of ProductResponse objects
-     * */
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public Page<ProductResponse> allProducts(
+    public CompletableFuture<Page<ProductResponse>> allProducts(
             @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
         var sc = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.service.allProductsByProductUuid(sc, page, Math.min(size, 20));
+        return this.service.allProductsByCurrency(sc, page, Math.min(size, 20));
     }
 
-    /**
-     * Returns a Page of ProductResponse objects
-     * */
     @ResponseStatus(OK)
     @GetMapping(path = "/find", produces = APPLICATION_JSON_VALUE)
-    public List<ProductResponse> search(
+    public CompletableFuture<Page<ProductResponse>> search(
             @NotNull @RequestParam(name = "search") String search,
+            @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
         var c = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.service.search(search, c);
+        return this.service.search(search, c, size);
     }
 
-    /**
-     * Returns a list of DetailResponse objects
-     */
     @ResponseStatus(OK)
     @GetMapping(path = "/detail", produces = APPLICATION_JSON_VALUE)
-    public List<DetailResponse> productDetailsByProductUUID(
+    public CompletableFuture<List<DetailResponse>> productDetailsByProductUuid(
             @NotNull @RequestParam(value = "product_id") String uuid,
             @RequestParam(value = "currency", defaultValue = "ngn") String currency
     ) {
         var c = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.service.productDetailsByProductUUID(uuid, c);
+        return this.service.productDetailsByProductUuid(uuid, c);
     }
 
 }

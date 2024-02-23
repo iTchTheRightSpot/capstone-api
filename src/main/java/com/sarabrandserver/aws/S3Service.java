@@ -94,11 +94,11 @@ public class S3Service {
     }
 
     /**
-     * Returns a pre-signed url from s3
+     * Returns a pre-signed url from s3.
      *
-     * @param bucket is the bucket name
-     * @param key is the object key
-     * @return String
+     * @param bucket is the bucket name.
+     * @param key is the object key.
+     * @return An aws pre-signed url.
      * */
     public String preSignedUrl(@NotNull String bucket, @NotNull String key) {
         if (PROFILE) {

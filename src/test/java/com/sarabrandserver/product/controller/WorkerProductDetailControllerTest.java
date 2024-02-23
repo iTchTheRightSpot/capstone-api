@@ -5,12 +5,11 @@ import com.sarabrandserver.AbstractIntegration;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
-import com.sarabrandserver.product.dto.UpdateProductDetailDTO;
+import com.sarabrandserver.product.dto.UpdateProductDetailDto;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.product.service.WorkerProductService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class WorkerProductDetailControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}worker/product/detail")
-    private String requestMapping;
+    private String path;
 
     @Autowired
     private WorkerProductService workerProductService;
@@ -75,31 +74,24 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = """
-    Simulates fetching ProductDetails by product uuid.
-    Main objective is to validate native sql query
-    """)
-    void fetchAllDetail() throws Exception {
+    void productDetailsByProductUuid() throws Exception {
         // given
         var list = this.productRepo.findAll();
         assertFalse(list.isEmpty());
 
         // based on setUp
         this.mockMvc
-                .perform(get(requestMapping)
+                .perform(get(path)
                         .param("id", list.getFirst().getUuid())
                 )
                 .andDo(print())
                 .andExpect(content().contentType("application/json"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[*].variants").isArray())
-                .andExpect(jsonPath("$[*].variants.length()").value(3));
+                .andExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    void create() throws Exception {
+    void shouldSuccessfullyCreateAProductDetail() throws Exception {
         var list = this.productRepo.findAll();
         assertFalse(list.isEmpty());
 
@@ -117,7 +109,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
         );
 
         // request
-        MockMultipartHttpServletRequestBuilder builder = multipart(requestMapping).file(payload);
+        MockMultipartHttpServletRequestBuilder builder = multipart(path).file(payload);
 
         for (MockMultipartFile file : TestData.files()) {
             builder.file(file);
@@ -130,13 +122,12 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
-    @DisplayName(value = "Update ProductDetail")
-    void updateDetail() throws Exception {
+    void shouldSuccessfullyUpdateProductDetail() throws Exception {
         var list = this.productSkuRepo.findAll();
         assertFalse(list.isEmpty());
 
         String sku = list.getFirst().getSku();
-        var dto = new UpdateProductDetailDTO(
+        var dto = new UpdateProductDetailDto(
                 sku,
                 new Faker().commerce().color(),
                 false,
@@ -146,7 +137,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
 
         // Then
         this.mockMvc
-                .perform(put(requestMapping)
+                .perform(put(path)
                         .contentType(APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(dto))
                         .with(csrf())

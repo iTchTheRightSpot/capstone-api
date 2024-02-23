@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
-public record UpdateProductDetailDTO(
+public record UpdateProductDetailDto(
         @NotNull(message = "cannot be empty")
         @NotEmpty(message = "cannot be empty")
         String sku,

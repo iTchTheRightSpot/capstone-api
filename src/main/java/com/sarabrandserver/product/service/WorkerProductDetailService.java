@@ -2,10 +2,11 @@ package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.exception.CustomNotFoundException;
 import com.sarabrandserver.exception.DuplicateException;
-import com.sarabrandserver.product.dto.ProductDetailDTO;
-import com.sarabrandserver.product.dto.UpdateProductDetailDTO;
+import com.sarabrandserver.product.dto.ProductDetailDto;
+import com.sarabrandserver.product.dto.UpdateProductDetailDto;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.entity.ProductDetail;
+import com.sarabrandserver.product.projection.DetailPojo;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductImageRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
@@ -38,12 +39,19 @@ public class WorkerProductDetailService {
     private final HelperService helperService;
 
     /**
-     * Returns a List of ProductDetail based on Product uuid
+     * Returns a list of {@link ProductDetail} based
+     * on {@link Product} uuid.
      *
-     * @param uuid is the uuid of the product
-     * @return List of DetailResponse
+     * @param uuid string associated to a {@link Product}.
+     * @return A List of {@link DetailResponse}.
      */
     public List<DetailResponse> productDetailsByProductUuid(String uuid) {
+        List<DetailPojo> dbRes = detailRepo
+                .productDetailsByProductUuidWorker(uuid);
+
+        List<String> list = dbRes.stream()
+                .map(DetailPojo::getImage).toList();
+
         return this.detailRepo
                 .productDetailsByProductUuidWorker(uuid) //
                 .stream() //
@@ -56,25 +64,25 @@ public class WorkerProductDetailService {
                     Variant[] variants = CustomUtil
                             .toVariantArray(pojo.getVariants(), WorkerProductDetailService.class);
 
-                    return DetailResponse.builder()
-                            .isVisible(pojo.getVisible())
-                            .colour(pojo.getColour())
-                            .url(urls)
-                            .variants(variants)
-                            .build();
+                    return new DetailResponse(
+                            pojo.getVisible(),
+                            pojo.getColour(),
+                            urls,
+                            variants
+                    );
                 })
                 .toList();
     }
 
     /**
-     * Create new ProductDetail
+     * Create new {@link ProductDetail}
      *
-     * @param dto of type ProductDetailDTO
+     * @param dto of type {@link ProductDetailDto}
      * @throws CustomNotFoundException is thrown if product uuid does not exist
      * @throws DuplicateException      is thrown if product colour exists
      */
     @Transactional
-    public void create(ProductDetailDTO dto, MultipartFile[] multipartFiles) {
+    public void create(ProductDetailDto dto, MultipartFile[] multipartFiles) {
         var product = this.productRepo
                 .productByUuid(dto.uuid())
                 .orElseThrow(() -> new CustomNotFoundException("Product does not exist"));
@@ -106,12 +114,7 @@ public class WorkerProductDetailService {
         // Save ProductSKUs
         this.skuService.save(dto.sizeInventory(), saved);
 
-        // Save ProductImages (save to s3)
-        this.helperService.productImages(
-                detail,
-                files,
-                BUCKET
-        );
+        this.helperService.saveProductImages(detail, files, BUCKET);
     }
 
     /**
@@ -120,7 +123,7 @@ public class WorkerProductDetailService {
      * @param dto of type DetailDTO
      */
     @Transactional
-    public void update(final UpdateProductDetailDTO dto) {
+    public void update(final UpdateProductDetailDto dto) {
         this.detailRepo.updateProductSkuAndProductDetailByProductSku(
                 dto.sku(),
                 dto.colour(),

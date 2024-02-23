@@ -190,7 +190,7 @@ public class WorkerProductService {
         this.skuService.save(dto.sizeInventory(), detail);
 
         // build and save ProductImages (save to s3)
-        this.helperService.productImages(detail, file, BUCKET);
+        this.helperService.saveProductImages(detail, file, BUCKET);
     }
 
     /**

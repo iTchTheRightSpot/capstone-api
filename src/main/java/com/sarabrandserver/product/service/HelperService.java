@@ -23,7 +23,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 @Service
@@ -58,21 +57,24 @@ class HelperService {
      * Amazon S3.
      * @throws CustomServerError if there is an error executing the tasks.
      */
-    public void productImages(ProductDetail detail, CustomMultiPart[] files, String bucket) {
-        List<Callable<Void>> callables = new ArrayList<>();
+    public void saveProductImages(ProductDetail detail, CustomMultiPart[] files, String bucket) {
+        List<Supplier<CustomMultiPart>> callables = new ArrayList<>();
 
+        // asynchronously save to s3.
         for (CustomMultiPart file : files) {
             callables.add(() -> {
                 this.service
                         .uploadToS3(file.file(), file.metadata(), bucket, file.key());
-
-                this.repository
-                        .save(new ProductImage(file.key(), file.file().getAbsolutePath(), detail));
-                return null;
+                return file;
             });
         }
 
-        CustomUtil.asynchronousTasks(callables);
+        // save all images as long as we have successfully saved to s3
+        CustomUtil.asynchronousTasks(callables).join().forEach(e -> {
+            CustomMultiPart obj = e.get();
+            this.repository
+                    .save(new ProductImage(obj.key(), obj.file().getAbsolutePath(), detail));
+        });
     }
 
     /**

@@ -2,6 +2,8 @@ package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.product.projection.PriceCurrencyPojo;
+import com.sarabrandserver.product.projection.ProductPojo;
 import com.sarabrandserver.product.repository.PriceCurrencyRepo;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
@@ -12,11 +14,15 @@ import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 import static java.math.RoundingMode.FLOOR;
 
@@ -33,91 +39,131 @@ public class ClientProductService {
     private final S3Service s3Service;
 
     /**
-     * Returns a page of {@link ProductResponse}
+     * Returns a {@link Page} of {@link ProductResponse}
      *
      * @param currency of type {@link SarreCurrency}
      * @param page number
      * @param size number of ProductResponse for each page
      * @return a Page of {@link ProductResponse}
      */
-    public Page<ProductResponse> allProductsByProductUuid(SarreCurrency currency, int page, int size) {
-        return this.productRepo
-                .allProductsByCurrencyClient(currency, PageRequest.of(page, size)) //
-                .map(p -> {
-                    var url = this.s3Service.preSignedUrl(BUCKET, p.getImage());
-                    return new ProductResponse(
-                            p.getUuid(),
-                            p.getName(),
-                            p.getDescription(),
-                            p.getPrice(),
-                            p.getCurrency(),
-                            url,
-                            p.getCategory()
-                    );
-                });
+    public CompletableFuture<Page<ProductResponse>> allProductsByCurrency(SarreCurrency currency, int page, int size) {
+        Page<ProductPojo> dbRes = productRepo
+                .allProductsByCurrencyClient(currency, PageRequest.of(page, size));
+
+        List<Supplier<ProductResponse>> futures = createPageTasks(dbRes);
+
+        return CustomUtil.asynchronousTasks(futures)
+                .thenApply(v -> new PageImpl<>(
+                        v.stream().map(Supplier::get).toList(),
+                        dbRes.getPageable(),
+                        dbRes.getTotalElements()
+                ));
     }
 
-    /**
-     * Returns a list of {@link com.sarabrandserver.product.entity.ProductDetail} based on
-     * {@link com.sarabrandserver.product.entity.Product} uuid.
-     * */
-    public List<DetailResponse> productDetailsByProductUUID(String uuid, SarreCurrency currency) {
-        var object = this.priceCurrencyRepo
-                .priceCurrencyByProductUuidAndCurrency(uuid, currency)
-                .orElse(null);
+    private List<Supplier<ProductResponse>> createPageTasks(Page<ProductPojo> dbRes) {
+        List<Supplier<ProductResponse>> futures = new ArrayList<>();
 
-        if (object == null) return List.of();
+        for (ProductPojo p : dbRes) {
+            futures.add(() -> {
+                var url = s3Service.preSignedUrl(BUCKET, p.getImage());
+                return new ProductResponse(
+                        p.getUuid(),
+                        p.getName(),
+                        p.getDescription(),
+                        p.getPrice(),
+                        p.getCurrency(),
+                        url,
+                        p.getCategory()
+                );
+            });
+        }
+        return futures;
+    }
 
-        return this.productDetailRepo
-                .productDetailsByProductUuidClient(uuid) //
-                .stream() //
-                .map(pojo -> {
-                    var urls = Arrays.stream(pojo.getImage().split(","))
-                            .map(key -> this.s3Service.preSignedUrl(BUCKET, key))
+    public CompletableFuture<List<DetailResponse>> productDetailsByProductUuid(
+            String uuid,
+            SarreCurrency currency
+    ) {
+        var optional = this.priceCurrencyRepo
+                .priceCurrencyByProductUuidAndCurrency(uuid, currency);
+
+        if (optional.isEmpty())
+            return CompletableFuture.completedFuture(List.of());
+
+        PriceCurrencyPojo object = optional.get();
+
+        List<CompletableFuture<DetailResponse>> futures = productDetailRepo
+                .productDetailsByProductUuidClient(uuid)
+                .stream()
+                .map(pojo -> CompletableFuture.supplyAsync(() ->  {
+                    List<Supplier<String>> req = Arrays
+                            .stream(pojo.getImage().split(","))
+                            .map(key -> (Supplier<String>) () -> s3Service.preSignedUrl(BUCKET, key))
                             .toList();
+
+                    List<String> urls = CustomUtil.asynchronousTasks(req) //
+                            .thenApply(v -> v.stream().map(Supplier::get).toList()) //
+                            .join();
 
                     Variant[] variants = CustomUtil
                             .toVariantArray(pojo.getVariants(), ClientProductService.class);
 
-                    return DetailResponse.builder()
-                            .name(object.getName())
-                            .currency(object.getCurrency().name())
-                            .price(object.getPrice().setScale(2, FLOOR))
-                            .desc(object.getDescription())
-                            .colour(pojo.getColour())
-                            .url(urls)
-                            .variants(variants)
-                            .build();
-                }) //
+                    return new DetailResponse(
+                            object.getName(),
+                            object.getCurrency().name(),
+                            object.getPrice().setScale(2, FLOOR),
+                            object.getDescription(),
+                            pojo.getColour(),
+                            urls,
+                            variants
+                    );
+                }))
                 .toList();
+
+        return CustomUtil.asynchronousTasks(futures)
+                .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
     }
 
     /**
-     * Returns a list of {@link ProductResponse} based on user search param.
-     * Initially a Page of page size 10 is returned to increase efficiency.
+     * Returns a {@link Page} of {@link ProductResponse} asynchronously.
      *
      * @param param is the user input.
      * @param currency is of type {@link SarreCurrency}.
-     * @return A List of {@link ProductResponse}.
+     * @return A {@link CompletableFuture} of {@link Page} containing
+     * {@link ProductResponse}.
      * */
-    public List<ProductResponse> search(String param, SarreCurrency currency) {
+    public CompletableFuture<Page<ProductResponse>> search(String param, SarreCurrency currency, int size) {
         // SQL LIKE Operator
         // https://www.w3schools.com/sql/sql_like.asp
-        return this.productRepo
-                .productsByNameAndCurrency(param + "%", currency, PageRequest.of(0, 10))
-                .stream()
-                .map(p -> {
-                    var url = this.s3Service.preSignedUrl(BUCKET, p.getImage());
-                    return new ProductResponse(
-                            p.getUuid(),
-                            p.getName(),
-                            p.getPrice(),
-                            p.getCurrency(),
-                            url,
-                            p.getCategory()
-                    );
-                })
-                .toList();
+        Page<ProductPojo> dbRes = productRepo
+                .productsByNameAndCurrency(param + "%", currency, PageRequest.of(0, size));
+
+        List<Supplier<ProductResponse>> futures = createTasks(dbRes);
+
+        return CustomUtil.asynchronousTasks(futures)
+                .thenApply(v -> new PageImpl<>(
+                        v.stream().map(Supplier::get).toList(),
+                        dbRes.getPageable(),
+                        dbRes.getTotalElements()
+                ));
+    }
+
+    private List<Supplier<ProductResponse>> createTasks(Page<ProductPojo> dbRes) {
+        List<Supplier<ProductResponse>> futures = new ArrayList<>();
+        for (ProductPojo p : dbRes) {
+            futures.add(() -> {
+                var url = s3Service.preSignedUrl(BUCKET, p.getImage());
+                return new ProductResponse(
+                        p.getUuid(),
+                        p.getName(),
+                        p.getPrice(),
+                        p.getCurrency(),
+                        url,
+                        p.getCategory()
+                );
+            });
+        }
+        return futures;
     }
 
 }

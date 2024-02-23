@@ -1,32 +1,37 @@
 package com.sarabrandserver.product.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Data
-@Builder
-public class DetailResponse implements Serializable {
+public record DetailResponse (
+        String name,
+        String currency,
+        BigDecimal price,
+        String desc,
+        @JsonProperty(value = "is_visible")
+        boolean isVisible,
+        String colour,
+        List<String> urls,
+        Variant[] variants
+) implements Serializable {
 
-    // product
-    private String name;
-    private String currency;
-    private BigDecimal price;
-    private String desc;
+    public DetailResponse (
+            String name,
+            String currency,
+            BigDecimal price,
+            String desc,
+            String colour,
+            List<String> urls,
+            Variant[] variants
+    ) {
+        this(name, currency, price, desc, false, colour, urls, variants);
+    }
 
-    // details
-    @JsonProperty(value = "is_visible")
-    private boolean isVisible;
-    private String colour;
-    private List<String> url;
-    private Variant[] variants;
+    public DetailResponse (boolean isVisible, String colour, List<String> urls, Variant[] variants) {
+        this("", "", new BigDecimal("0"), "", isVisible, colour, urls, variants);
+    }
 
 }

@@ -154,8 +154,8 @@ public class TestData {
     }
 
     @NotNull
-    public static ProductDetailDTO productDetailDTO(String productID, String colour, SizeInventoryDTO[] dtos) {
-        return new ProductDetailDTO(productID, false, colour, dtos);
+    public static ProductDetailDto productDetailDTO(String productID, String colour, SizeInventoryDTO[] dtos) {
+        return new ProductDetailDto(productID, false, colour, dtos);
     }
 
     @NotNull

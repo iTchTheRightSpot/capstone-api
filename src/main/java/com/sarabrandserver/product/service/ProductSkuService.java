@@ -22,15 +22,15 @@ public class ProductSkuService {
 
     private static final Logger log = LoggerFactory.getLogger(ProductSkuService.class);
 
-    private final ProductSkuRepo productSkuRepo;
+    private final ProductSkuRepo repository;
 
     /**
-     * Save Product sku. Look in db diagram in read me in case of confusion
+     * Save {@link ProductSku}.
      */
     @Transactional
     public void save(SizeInventoryDTO[] arr, ProductDetail detail) {
         for (var dto : arr) {
-            this.productSkuRepo
+            this.repository
                     .save(
                             ProductSku.builder()
                                     .sku(UUID.randomUUID().toString())
@@ -48,21 +48,21 @@ public class ProductSkuService {
     /**
      * Deletes ProductSku by sku.
      *
-     * @throws org.springframework.dao.DataIntegrityViolationException if {@code ProductSku}
+     * @throws ResourceAttachedException if {@link ProductSku}
      * has children entities attached to it.
      * */
     @Transactional
     public void delete(final String sku) {
         try {
-            this.productSkuRepo.deleteProductSkuBySku(sku);
+            this.repository.deleteProductSkuBySku(sku);
         } catch (DataIntegrityViolationException e) {
             log.error("tried deleting a category with children attached {}", e.getMessage());
             throw new ResourceAttachedException("resource(s) attached to product");
         }
     }
 
-    public ProductSku productSkuBySKU(final String sku) {
-        return this.productSkuRepo
+    public ProductSku productSkuBySku(final String sku) {
+        return this.repository
                 .findBySku(sku)
                 .orElseThrow(() -> new CustomNotFoundException("sku %s does not exist".formatted(sku)));
     }

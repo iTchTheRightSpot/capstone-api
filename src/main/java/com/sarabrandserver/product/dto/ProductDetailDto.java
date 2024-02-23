@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
-public record ProductDetailDTO(
+public record ProductDetailDto(
         @JsonProperty(value = "product_id")
         @NotNull(message = "UUID cannot be empty")
         @NotEmpty(message = "UUID cannot be empty")

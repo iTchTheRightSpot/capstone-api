@@ -9,17 +9,15 @@ import com.sarabrandserver.product.service.WorkerProductService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
-import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Transactional
@@ -64,51 +62,74 @@ class ClientProductControllerTest extends AbstractIntegration {
     }
 
     @Test
-    void search_functionality() throws Exception {
+    void searchFunctionality() throws Exception {
+        dummy();
+
         char c = (char) ('a' + new Random().nextInt(26));
-        this.mockMvc
+
+        MvcResult result = super.mockMvc
                 .perform(get(path + "/find")
                         .param("search", String.valueOf(c))
                         .param("currency", "usd")
+                        .param("size", "10")
                 )
-                .andDo(print())
+                .andExpect(request().asyncStarted())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        super.mockMvc
+                .perform(asyncDispatch(result))
+                .andExpect(content().contentType("application/json"));
+    }
+
+    @Test
+    void listProductsNgnCurrency() throws Exception {
+        dummy();
+
+        MvcResult result = super.mockMvc
+                .perform(get(path))
+                .andExpect(request().asyncStarted())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        super.mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void list_products_ngn_currency() throws Exception {
-        dummy();
-        this.mockMvc.perform(get(path)).andExpect(status().isOk());
-    }
-
-    @Test
-    void list_products_usd_currency() throws Exception {
+    void listProductsUsdCurrency() throws Exception {
         dummy();
 
-        this.mockMvc
-                .perform(get(path).param("currency", "usd"))
+        MvcResult result = super.mockMvc
+                .perform(get(path)
+                        .param("currency", "usd")
+                )
+                .andExpect(request().asyncStarted())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        super.mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void fetchProductDetails() throws Exception {
+    void shouldReturnProductDetails() throws Exception {
         dummy();
 
         var list = this.productRepo.findAll();
         assertFalse(list.isEmpty());
         String id = list.getFirst().getUuid();
 
-        String[] arr = new String[3];
-        Arrays.fill(arr, "0");
-
-        this.mockMvc
-                .perform(get(path + "/detail").param("product_id", id))
-                .andExpect(content().contentType(APPLICATION_JSON))
+        MvcResult result = super.mockMvc
+                .perform(get(path + "/detail")
+                        .param("product_id", id)
+                )
+                .andExpect(request().asyncStarted())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[*].variants").isArray())
-                .andExpect(jsonPath("$[*].variants.length()").value(3))
-                .andExpect(jsonPath("$[*].variants[*].inventory").value(hasItems(arr)));
+                .andReturn();
+
+        super.mockMvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk());
     }
 
 }

@@ -197,7 +197,7 @@ class ProductDetailRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void findProductDetailsByProductUuidWorker() {
+    void productDetailsByProductUuidWorker() {
         // given
         var cat = categoryRepo
                 .save(ProductCategory.builder()

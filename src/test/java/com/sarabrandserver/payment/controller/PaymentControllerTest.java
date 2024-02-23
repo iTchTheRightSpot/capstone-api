@@ -459,10 +459,6 @@ class PaymentControllerTest extends AbstractIntegration {
                                 .add(new BigDecimal("30.20"))
                 );
 
-        // access payment page
-        String uri = path + "?currency=%s&country=%s"
-                .formatted(USD, "Canada");
-
         super.mockMvc
                 .perform(get(path)
                         .param("currency", USD.getCurrency())
@@ -522,19 +518,6 @@ class PaymentControllerTest extends AbstractIntegration {
                                 .multiply(new BigDecimal(qty))
                                 .add(new BigDecimal("20000"))
                 );
-
-        // access payment page
-        String uri = "/api/v1/payment?currency=%s&country=%s"
-                .formatted(NGN, "nigeria");
-
-//        super.client
-//                .get()
-//                .uri(uri)
-//                .exchange()
-//                .expectStatus()
-//                .isOk()
-//                .expectBody(PaymentResponse.class)
-//                .isEqualTo(new PaymentResponse("", NGN, total));
 
         super.mockMvc
                 .perform(get(path)

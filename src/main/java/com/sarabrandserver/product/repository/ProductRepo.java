@@ -115,11 +115,11 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     SELECT
     p.uuid AS uuid,
     p.name AS name,
-    c.price AS price,
-    c.currency AS currency,
     p.defaultKey AS image,
     p.weight AS weight,
     p.weightType AS weightType,
+    c.price AS price,
+    c.currency AS currency,
     cat.name AS category
     FROM Product p
     INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId
@@ -127,7 +127,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
     INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
     WHERE p.name LIKE :name AND sku.inventory > 0 AND c.currency = :currency
-    GROUP BY p.uuid, p.name, p.defaultKey, c.currency, c.price, cat.name
+    GROUP BY p.uuid, p.name, p.defaultKey, p.weight, p.weightType, c.currency, c.price, cat.name
     """)
     Page<ProductPojo> productsByNameAndCurrency(String name, SarreCurrency currency, Pageable page);
 

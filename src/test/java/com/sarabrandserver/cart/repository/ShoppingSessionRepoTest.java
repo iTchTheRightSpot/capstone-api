@@ -1,16 +1,14 @@
 package com.sarabrandserver.cart.repository;
 
-import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractRepositoryTest;
 import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.cart.projection.CartPojo;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.data.TestData;
+import com.sarabrandserver.data.RepositoryTestData;
 import com.sarabrandserver.product.entity.ProductSku;
-import com.sarabrandserver.product.repository.ProductSkuRepo;
-import com.sarabrandserver.product.service.WorkerProductService;
+import com.sarabrandserver.product.repository.*;
 import com.sarabrandserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,9 +33,15 @@ class ShoppingSessionRepoTest extends AbstractRepositoryTest {
     @Autowired
     private CategoryRepository categoryRepo;
     @Autowired
-    private WorkerProductService service;
-    @Autowired
     private ProductSkuRepo skuRepo;
+    @Autowired
+    private ProductRepo productRepo;
+    @Autowired
+    private ProductDetailRepo detailRepo;
+    @Autowired
+    private PriceCurrencyRepo priceCurrencyRepo;
+    @Autowired
+    private ProductImageRepo imageRepo;
 
     @Test
     void shoppingSessionByCookie() {
@@ -93,16 +97,8 @@ class ShoppingSessionRepoTest extends AbstractRepositoryTest {
                         .build()
                 );
 
-        // create 3 ProductSku objects
-        service
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         var skus = skuRepo.findAll();
         assertEquals(3, skus.size());

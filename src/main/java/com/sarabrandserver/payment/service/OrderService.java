@@ -52,6 +52,7 @@ public class OrderService {
      * Maps from string to PayloadMapper[]
      * param str is in format [ { "name" : "", "key" : "", "colour" : "" } ]
      * */
+    // TODO leverage multithreading
     public static PayloadMapper[] transform(S3Service s3Service, String bucketName, String str) {
         try {
             PayloadMapper[] arr = new ObjectMapper().readValue(str, PayloadMapper[].class);

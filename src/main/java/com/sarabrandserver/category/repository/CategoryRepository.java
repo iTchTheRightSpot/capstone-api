@@ -74,7 +74,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     FROM ProductCategory c
     WHERE c.parentCategory.categoryId = :id
     """)
-    int validate_category_is_a_parent(long id);
+    int validateCategoryIsAParent(long id);
 
     @Query(value = """
     SELECT

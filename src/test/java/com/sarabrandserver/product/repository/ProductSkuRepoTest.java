@@ -1,6 +1,5 @@
 package com.sarabrandserver.product.repository;
 
-import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractRepositoryTest;
 import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.cart.entity.ShoppingSession;
@@ -8,7 +7,7 @@ import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.data.TestData;
+import com.sarabrandserver.data.RepositoryTestData;
 import com.sarabrandserver.enumeration.PaymentStatus;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.payment.entity.OrderDetail;
@@ -18,7 +17,6 @@ import com.sarabrandserver.payment.repository.OrderDetailRepository;
 import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.payment.repository.PaymentRepo;
 import com.sarabrandserver.product.entity.ProductSku;
-import com.sarabrandserver.product.service.WorkerProductService;
 import com.sarabrandserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +39,13 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
     @Autowired
     private CategoryRepository categoryRepo;
     @Autowired
-    private WorkerProductService productService;
+    private ProductRepo productRepo;
+    @Autowired
+    private ProductDetailRepo detailRepo;
+    @Autowired
+    private PriceCurrencyRepo priceCurrencyRepo;
+    @Autowired
+    private ProductImageRepo imageRepo;
     @Autowired
     private ProductSkuRepo skuRepo;
     @Autowired
@@ -66,15 +70,8 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
                         .product(new HashSet<>())
                         .build());
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         var paymentDetail = paymentRepo
                 .save(
@@ -116,15 +113,8 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
                         .build()
                 );
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         var skus = skuRepo.findAll();
         assertFalse(skus.isEmpty());
@@ -149,15 +139,8 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
                         .product(new HashSet<>())
                         .build());
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         var skus = skuRepo.findAll();
         assertFalse(skus.isEmpty());
@@ -182,15 +165,8 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
                         .product(new HashSet<>())
                         .build());
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         var paymentDetail = paymentRepo
                 .save(
@@ -265,15 +241,8 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
                         .product(new HashSet<>())
                         .build());
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         // when
         var skus = skuRepo.findAll();

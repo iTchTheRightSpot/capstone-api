@@ -3,12 +3,10 @@ package com.sarabrandserver.category.repository;
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractRepositoryTest;
 import com.sarabrandserver.category.entity.ProductCategory;
-import com.sarabrandserver.data.TestData;
+import com.sarabrandserver.data.RepositoryTestData;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.product.entity.Product;
-import com.sarabrandserver.product.repository.ProductRepo;
-import com.sarabrandserver.product.service.WorkerProductService;
-import org.junit.jupiter.api.DisplayName;
+import com.sarabrandserver.product.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -28,7 +26,13 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private ProductRepo productRepo;
     @Autowired
-    private WorkerProductService productService;
+    private ProductSkuRepo skuRepo;
+    @Autowired
+    private ProductDetailRepo detailRepo;
+    @Autowired
+    private PriceCurrencyRepo priceCurrencyRepo;
+    @Autowired
+    private ProductImageRepo imageRepo;
 
     @Test
     void allCategories() {
@@ -141,15 +145,9 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                                 .build()
                 );
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                category.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, category, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
+
 
         // then
         assertThrows(DataIntegrityViolationException.class,
@@ -157,8 +155,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    @DisplayName("validate categoryId has 1 subcategory attached")
-    void on1SubCategory() {
+    void shouldValidateCategoryHasOneSubCategory() {
         // given
         var category = categoryRepo
                 .save(
@@ -192,13 +189,12 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                                 .build()
                 );
 
-        assertEquals(1, categoryRepo.validate_category_is_a_parent(category.getCategoryId()));
-        assertEquals(1, categoryRepo.validate_category_is_a_parent(clothes.getCategoryId()));
+        assertEquals(1, categoryRepo.validateCategoryIsAParent(category.getCategoryId()));
+        assertEquals(1, categoryRepo.validateCategoryIsAParent(clothes.getCategoryId()));
     }
 
     @Test
-    @DisplayName("validate categoryId has 1 or more subcategory attached")
-    void onMultipleSubCategory() {
+    void shouldValidateCategoryHasMoreThanOneSubCategory() {
         // given
         var category = categoryRepo
                 .save(
@@ -232,12 +228,11 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                                 .build()
                 );
 
-        assertEquals(2, categoryRepo.validate_category_is_a_parent(category.getCategoryId()));
+        assertEquals(2, categoryRepo.validateCategoryIsAParent(category.getCategoryId()));
     }
 
     @Test
-    @DisplayName("validate categoryId has 1 or more products attached")
-    void onProduct() {
+    void shouldValidateCategoryHasMoreThanOneProductAttached() {
         var category = categoryRepo
                 .save(
                         ProductCategory.builder()
@@ -269,11 +264,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    @DisplayName("""
-    validate categoryId has 1 or more sub-categoryId and products
-    attached.
-    """)
-    void validateOnDelete() {
+    void shouldValidateCategoryHasMoreThanOneSubCategoryAndProduct() {
         var category = categoryRepo
                 .save(
                         ProductCategory.builder()
@@ -316,11 +307,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    @DisplayName("""
-    testing query to return all nested child subcategories based on id.
-    Visibility for some subcategories are false. Admin front
-    """)
-    void all_categories_admin_front() {
+    void shouldReturnAllNestedSubCategoryOfParentCategory() {
         // given
         var category = categoryRepo
                 .save(
@@ -399,27 +386,13 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                 );
 
         for (int i = 0; i < 5; i++) {
-            productService
-                    .create(
-                            TestData.createProductDTO(
-                                    new Faker().commerce().productName() + i,
-                                    category.getCategoryId(),
-                                    TestData.sizeInventoryDTOArray(3)
-                            ),
-                            TestData.files()
-                    );
+            RepositoryTestData
+                    .createProduct(3, category, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
         }
 
         for (int i = 0; i < 3; i++) {
-            productService
-                    .create(
-                            TestData.createProductDTO(
-                                    new Faker().commerce().productName() + (i + 30),
-                                    clothes.getCategoryId(),
-                                    TestData.sizeInventoryDTOArray(3)
-                            ),
-                            TestData.files()
-                    );
+            RepositoryTestData
+                    .createProduct(3, clothes, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
         }
 
         var page = categoryRepo
@@ -500,11 +473,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    @DisplayName("""
-    tests custom query to update a ProductCategory
-    parentId
-    """)
-    void up () {
+    void shouldUpdateCategoryParentId () {
         // given
         var category = categoryRepo
                 .save(
@@ -544,9 +513,9 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                 );
 
         // then
-        assertEquals(0, categoryRepo.validate_category_is_a_parent(category.getCategoryId()));
-        assertEquals(0, categoryRepo.validate_category_is_a_parent(clothes.getCategoryId()));
-        assertEquals(1, categoryRepo.validate_category_is_a_parent(collection.getCategoryId()));
+        assertEquals(0, categoryRepo.validateCategoryIsAParent(category.getCategoryId()));
+        assertEquals(0, categoryRepo.validateCategoryIsAParent(clothes.getCategoryId()));
+        assertEquals(1, categoryRepo.validateCategoryIsAParent(collection.getCategoryId()));
     }
 
     @Test
@@ -563,15 +532,8 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                 );
 
         for (int i = 0; i < 5; i++) {
-            productService
-                    .create(
-                            TestData.createProductDTO(
-                                    new Faker().commerce().productName() + i,
-                                    category.getCategoryId(),
-                                    TestData.sizeInventoryDTOArray(3)
-                            ),
-                            TestData.files()
-                    );
+            RepositoryTestData
+                    .createProduct(3, category, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
         }
 
         var page = categoryRepo

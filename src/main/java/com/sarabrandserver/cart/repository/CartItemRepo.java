@@ -53,7 +53,7 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     INNER JOIN PriceCurrency pc ON p.productId = pc.product.productId
     WHERE s.shoppingSessionId = :sessionId AND pc.currency = :currency
     """)
-    List<TotalPojo> totalPojoByShoppingSessionId(long sessionId, SarreCurrency currency);
+    List<TotalPojo> customCartItemsByShoppingSessionId(long sessionId, SarreCurrency currency);
 
     @Query("""
     SELECT c FROM CartItem c

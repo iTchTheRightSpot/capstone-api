@@ -1,12 +1,10 @@
 package com.sarabrandserver.product.repository;
 
-import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractRepositoryTest;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.data.TestData;
+import com.sarabrandserver.data.RepositoryTestData;
 import com.sarabrandserver.product.projection.PriceCurrencyPojo;
-import com.sarabrandserver.product.service.WorkerProductService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +24,13 @@ class PriceCurrencyRepoTest extends AbstractRepositoryTest {
     @Autowired
     private ProductRepo productRepo;
     @Autowired
-    private WorkerProductService productService;
+    private ProductDetailRepo detailRepo;
+    @Autowired
+    private PriceCurrencyRepo priceCurrencyRepo;
+    @Autowired
+    private ProductImageRepo imageRepo;
+    @Autowired
+    private ProductSkuRepo skuRepo;
     @Autowired
     private PriceCurrencyRepo currencyRepo;
 
@@ -40,15 +44,9 @@ class PriceCurrencyRepoTest extends AbstractRepositoryTest {
                         .categories(new HashSet<>())
                         .product(new HashSet<>())
                         .build());
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         // when
         var products = productRepo.findAll();
@@ -76,15 +74,8 @@ class PriceCurrencyRepoTest extends AbstractRepositoryTest {
                         .categories(new HashSet<>())
                         .product(new HashSet<>())
                         .build());
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         // when
         var products = productRepo.findAll();

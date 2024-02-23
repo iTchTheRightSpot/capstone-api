@@ -7,9 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import static jakarta.persistence.FetchType.EAGER;
-import static jakarta.persistence.FetchType.LAZY;
-
 @Table(name = "cart_item")
 @Entity
 @NoArgsConstructor
@@ -26,11 +23,11 @@ public class CartItem {
     @Column(nullable = false)
     private int qty;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne
     @JoinColumn(name = "session_id", referencedColumnName = "session_id", nullable = false)
     private ShoppingSession shoppingSession;
 
-    @ManyToOne(fetch = EAGER)
+    @ManyToOne
     @JoinColumn(name = "sku_id", referencedColumnName = "sku_id", nullable = false)
     private ProductSku productSku;
 

@@ -57,7 +57,7 @@ public class CheckoutService {
         CustomObject obj = createCustomObjectForShoppingSession(req, country);
 
         List<TotalPojo> list = this.cartItemRepo
-                .totalPojoByShoppingSessionId(obj.session().shoppingSessionId(), currency);
+                .customCartItemsByShoppingSessionId(obj.session().shoppingSessionId(), currency);
 
         BigDecimal shipCost = currency.equals(SarreCurrency.USD)
                 ? obj.ship().usdPrice()

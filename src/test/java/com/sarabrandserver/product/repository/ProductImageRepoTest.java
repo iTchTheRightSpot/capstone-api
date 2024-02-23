@@ -1,18 +1,14 @@
 package com.sarabrandserver.product.repository;
 
-import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractRepositoryTest;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.data.TestData;
-import com.sarabrandserver.product.entity.ProductImage;
-import com.sarabrandserver.product.service.WorkerProductService;
+import com.sarabrandserver.data.RepositoryTestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -22,11 +18,15 @@ class ProductImageRepoTest extends AbstractRepositoryTest {
     @Autowired
     private CategoryRepository categoryRepo;
     @Autowired
-    private WorkerProductService productService;
+    private ProductRepo productRepo;
+    @Autowired
+    private ProductSkuRepo skuRepo;
     @Autowired
     private ProductImageRepo imageRepo;
     @Autowired
     private ProductDetailRepo detailRepo;
+    @Autowired
+    private PriceCurrencyRepo priceCurrencyRepo;
 
     @Test
     void imagesByProductDetailId() {
@@ -38,15 +38,8 @@ class ProductImageRepoTest extends AbstractRepositoryTest {
                         .categories(new HashSet<>())
                         .product(new HashSet<>())
                         .build());
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         // when
         var details = detailRepo.findAll();

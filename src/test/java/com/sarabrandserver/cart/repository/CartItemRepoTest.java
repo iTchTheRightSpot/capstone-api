@@ -1,16 +1,14 @@
 package com.sarabrandserver.cart.repository;
 
-import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractRepositoryTest;
 import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.data.TestData;
+import com.sarabrandserver.data.RepositoryTestData;
 import com.sarabrandserver.payment.projection.TotalPojo;
 import com.sarabrandserver.product.entity.ProductSku;
-import com.sarabrandserver.product.repository.ProductSkuRepo;
-import com.sarabrandserver.product.service.WorkerProductService;
+import com.sarabrandserver.product.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,9 +33,15 @@ class CartItemRepoTest extends AbstractRepositoryTest {
     @Autowired
     private CategoryRepository categoryRepo;
     @Autowired
-    private WorkerProductService service;
-    @Autowired
     private ProductSkuRepo skuRepo;
+    @Autowired
+    private ProductRepo productRepo;
+    @Autowired
+    private ProductDetailRepo detailRepo;
+    @Autowired
+    private PriceCurrencyRepo priceCurrencyRepo;
+    @Autowired
+    private ProductImageRepo imageRepo;
 
     @Test
     void updateCartQtyByCartId() {
@@ -52,15 +56,8 @@ class CartItemRepoTest extends AbstractRepositoryTest {
                 );
 
         // create 2 ProductSku objects
-        service
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(2)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(2, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         var skus = skuRepo.findAll();
         assertEquals(2, skus.size());
@@ -101,15 +98,8 @@ class CartItemRepoTest extends AbstractRepositoryTest {
                 );
 
         // create 2 ProductSku objects
-        service
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(2)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(2, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         var skus = skuRepo.findAll();
         assertEquals(2, skus.size());
@@ -147,16 +137,8 @@ class CartItemRepoTest extends AbstractRepositoryTest {
                         .build()
                 );
 
-        // create 3 ProductSku objects
-        service
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         var skus = skuRepo.findAll();
         assertEquals(3, skus.size());
@@ -173,15 +155,15 @@ class CartItemRepoTest extends AbstractRepositoryTest {
                 );
 
         for (ProductSku sku : skus) {
-            cartItemRepo.save(new CartItem(sku.getInventory() - 1, saved, sku));
+            cartItemRepo.save(new CartItem(sku.getInventory(), saved, sku));
         }
 
         // when
-        var usd = cartItemRepo.totalPojoByShoppingSessionId(saved.shoppingSessionId(), USD);
-        var ngn = cartItemRepo.totalPojoByShoppingSessionId(saved.shoppingSessionId(), NGN);
+        var usd = cartItemRepo.customCartItemsByShoppingSessionId(saved.shoppingSessionId(), USD);
+        var ngn = cartItemRepo.customCartItemsByShoppingSessionId(saved.shoppingSessionId(), NGN);
 
-        assertFalse(usd.isEmpty());
         assertFalse(ngn.isEmpty());
+        assertFalse(usd.isEmpty());
 
         for (TotalPojo pojo : usd) {
             assertNotNull(pojo.getQty());
@@ -209,15 +191,8 @@ class CartItemRepoTest extends AbstractRepositoryTest {
                 );
 
         // create 3 ProductSku objects
-        service
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         var skus = skuRepo.findAll();
         assertEquals(3, skus.size());
@@ -252,16 +227,8 @@ class CartItemRepoTest extends AbstractRepositoryTest {
                         .build()
                 );
 
-        // create 2 ProductSku objects
-        service
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         var skus = skuRepo.findAll();
         assertEquals(3, skus.size());
@@ -310,16 +277,8 @@ class CartItemRepoTest extends AbstractRepositoryTest {
                         .build()
                 );
 
-        // create 2 ProductSku objects
-        service
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         var skus = skuRepo.findAll();
         assertEquals(3, skus.size());
@@ -362,16 +321,8 @@ class CartItemRepoTest extends AbstractRepositoryTest {
                         .build()
                 );
 
-        // create 2 ProductSku objects
-        service
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(2)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(2, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         var skus = skuRepo.findAll();
         assertEquals(2, skus.size());
@@ -393,12 +344,6 @@ class CartItemRepoTest extends AbstractRepositoryTest {
         cartItemRepo.save(new CartItem(3, session, second));
 
         // when
-        var optional = cartItemRepo
-                .cartItemByShoppingSessionIdAndProductSkuSku(
-                        session.shoppingSessionId(),
-                        second.getSku()
-                );
-
         assertFalse(cartItemRepo
                 .cartItemByShoppingSessionIdAndProductSkuSku(
                         session.shoppingSessionId(),

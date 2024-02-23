@@ -9,7 +9,6 @@ import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.payment.repository.OrderDetailRepository;
 import com.sarabrandserver.payment.repository.OrderReservationRepo;
-import com.sarabrandserver.payment.response.PaymentResponse;
 import com.sarabrandserver.product.dto.PriceCurrencyDto;
 import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
@@ -25,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;

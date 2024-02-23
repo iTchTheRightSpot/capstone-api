@@ -1,23 +1,21 @@
 package com.sarabrandserver.payment.repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractRepositoryTest;
-import com.sarabrandserver.aws.S3Service;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.data.TestData;
+import com.sarabrandserver.data.RepositoryTestData;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.payment.dto.PayloadMapper;
 import com.sarabrandserver.payment.entity.Address;
 import com.sarabrandserver.payment.entity.OrderDetail;
 import com.sarabrandserver.payment.entity.PaymentDetail;
 import com.sarabrandserver.payment.projection.OrderPojo;
-import com.sarabrandserver.payment.service.OrderService;
-import com.sarabrandserver.product.repository.ProductSkuRepo;
-import com.sarabrandserver.product.service.WorkerProductService;
+import com.sarabrandserver.product.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -30,13 +28,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @Transactional
 class OrderDetailRepositoryTest extends AbstractRepositoryTest {
 
-    @Value(value = "${aws.bucket}")
-    private String BUCKET;
-
     @Autowired
     private CategoryRepository categoryRepo;
     @Autowired
-    private WorkerProductService productService;
+    private ProductRepo productRepo;
+    @Autowired
+    private ProductDetailRepo detailRepo;
+    @Autowired
+    private PriceCurrencyRepo priceCurrencyRepo;
+    @Autowired
+    private ProductImageRepo imageRepo;
     @Autowired
     private ProductSkuRepo skuRepo;
     @Autowired
@@ -45,11 +46,9 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
     private OrderDetailRepository orderDetailRepository;
     @Autowired
     private AddressRepo addressRepo;
-    @Autowired
-    private S3Service s3Service;
 
     @Test
-    void orderHistoryByPrincipal() {
+    void orderHistoryByPrincipal() throws JsonProcessingException {
         // given
         var cat = categoryRepo
                 .save(ProductCategory.builder()
@@ -60,15 +59,8 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
                         .build()
                 );
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(2, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         var paymentDetail = paymentRepo
                 .save(PaymentDetail.builder()
@@ -117,8 +109,7 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
             assertNotNull(pojo.getTotal());
             assertNotNull(pojo.getPaymentId());
 
-            PayloadMapper[] arr = OrderService
-                    .transform(s3Service, BUCKET, pojo.getDetail());
+            PayloadMapper[] arr = new ObjectMapper().readValue(pojo.getDetail(), PayloadMapper[].class);
             assertNotNull(arr);
 
             for (PayloadMapper mapper : arr) {

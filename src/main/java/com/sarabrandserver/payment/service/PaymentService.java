@@ -107,7 +107,7 @@ public class PaymentService {
         raceConditionImpl(reservations, obj.cartItems(), toExpire, obj.session());
 
         List<TotalPojo> list = this.cartItemRepo
-                .totalPojoByShoppingSessionId(obj.session().shoppingSessionId(), currency);
+                .customCartItemsByShoppingSessionId(obj.session().shoppingSessionId(), currency);
 
         BigDecimal total = CustomUtil
                 .calculateTotal(

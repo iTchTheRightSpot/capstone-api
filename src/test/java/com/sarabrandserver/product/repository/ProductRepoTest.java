@@ -4,12 +4,11 @@ import com.github.javafaker.Faker;
 import com.sarabrandserver.AbstractRepositoryTest;
 import com.sarabrandserver.category.entity.ProductCategory;
 import com.sarabrandserver.category.repository.CategoryRepository;
-import com.sarabrandserver.data.TestData;
+import com.sarabrandserver.data.RepositoryTestData;
 import com.sarabrandserver.product.entity.PriceCurrency;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.projection.ImagePojo;
 import com.sarabrandserver.product.projection.ProductPojo;
-import com.sarabrandserver.product.service.WorkerProductService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -31,9 +30,15 @@ class ProductRepoTest extends AbstractRepositoryTest {
     @Autowired
     private CategoryRepository categoryRepo;
     @Autowired
-    private WorkerProductService productService;
-    @Autowired
     private ProductRepo productRepo;
+    @Autowired
+    private ProductDetailRepo detailRepo;
+    @Autowired
+    private PriceCurrencyRepo priceCurrencyRepo;
+    @Autowired
+    private ProductSkuRepo skuRepo;
+    @Autowired
+    private ProductImageRepo imageRepo;
     @Autowired
     private PriceCurrencyRepo currencyRepo;
 
@@ -48,25 +53,10 @@ class ProductRepoTest extends AbstractRepositoryTest {
                         .product(new HashSet<>())
                         .build());
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
-
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName() + 1,
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         // when
         var products = productRepo.findAll();
@@ -93,15 +83,8 @@ class ProductRepoTest extends AbstractRepositoryTest {
                         .product(new HashSet<>())
                         .build());
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         // when
         var products = productRepo.findAll();
@@ -137,15 +120,8 @@ class ProductRepoTest extends AbstractRepositoryTest {
                         .product(new HashSet<>())
                         .build());
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         // when
         var products = productRepo.findAll();
@@ -189,15 +165,8 @@ class ProductRepoTest extends AbstractRepositoryTest {
                         .product(new HashSet<>())
                         .build());
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         // when
         var products = productRepo.findAll();
@@ -236,15 +205,8 @@ class ProductRepoTest extends AbstractRepositoryTest {
                         .product(new HashSet<>())
                         .build());
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         // when
         var products = productRepo.findAll();
@@ -269,15 +231,8 @@ class ProductRepoTest extends AbstractRepositoryTest {
                         .product(new HashSet<>())
                         .build());
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         // when
         var products = productRepo.findAll();
@@ -317,15 +272,8 @@ class ProductRepoTest extends AbstractRepositoryTest {
                         .product(new HashSet<>())
                         .build());
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
         // when
         var products = productRepo.findAll();

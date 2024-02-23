@@ -95,7 +95,7 @@ public class ClientProductService {
         List<CompletableFuture<DetailResponse>> futures = productDetailRepo
                 .productDetailsByProductUuidClientFront(uuid)
                 .stream()
-                .map(pojo -> CompletableFuture.supplyAsync(() ->  {
+                .map(pojo -> CompletableFuture.supplyAsync(() -> {
                     var suppliers = Arrays
                             .stream(pojo.getImage().split(","))
                             .map(key -> (Supplier<String>) () -> s3Service.preSignedUrl(BUCKET, key))

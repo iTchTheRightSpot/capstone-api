@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -24,7 +25,7 @@ public class OrderController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public List<OrderHistoryDTO> orderHistory() {
+    public CompletableFuture<List<OrderHistoryDTO>> orderHistory() {
         return this.orderService.orderHistory();
     }
 

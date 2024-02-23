@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,12 +81,15 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
         assertFalse(list.isEmpty());
 
         // based on setUp
-        this.mockMvc
+        MvcResult result = super.mockMvc
                 .perform(get(path)
                         .param("id", list.getFirst().getUuid())
                 )
-                .andDo(print())
-                .andExpect(content().contentType("application/json"))
+                .andExpect(request().asyncStarted())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        super.mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk());
     }
 

@@ -7,6 +7,7 @@ import com.sarabrandserver.category.repository.CategoryRepository;
 import com.sarabrandserver.data.TestData;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.entity.ProductDetail;
+import com.sarabrandserver.product.entity.ProductImage;
 import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.projection.DetailPojo;
 import com.sarabrandserver.product.response.Variant;
@@ -16,7 +17,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,6 +37,8 @@ class ProductDetailRepoTest extends AbstractRepositoryTest {
     private ProductDetailRepo detailRepo;
     @Autowired
     private ProductSkuRepo skuRepo;
+    @Autowired
+    private ProductImageRepo imageRepo;
 
     @Test
     void productDetailByProductSku() {
@@ -208,30 +214,102 @@ class ProductDetailRepoTest extends AbstractRepositoryTest {
                         .build()
                 );
 
-        productService
-                .create(
-                        TestData.createProductDTO(
-                                new Faker().commerce().productName(),
-                                cat.getCategoryId(),
-                                TestData.sizeInventoryDTOArray(3)
-                        ),
-                        TestData.files()
-                );
+        var product = productRepo.save(
+                Product.builder()
+                        .uuid("prod-uuid")
+                        .name("product 1")
+                        .description(new Faker().lorem().fixedString(500))
+                        .defaultKey("default-key")
+                        .weight(2.5)
+                        .weightType("kg")
+                        .productCategory(cat)
+                        .productDetails(new HashSet<>())
+                        .priceCurrency(new HashSet<>())
+                        .build()
+        );
 
-        // when
-        var products = productRepo.findAll();
-        assertFalse(products.isEmpty());
-        Product product = products.getFirst();
+        // check 1
+        var detail = detailRepo.save(
+                ProductDetail.builder()
+                        .colour("red")
+                        .isVisible(true)
+                        .createAt(new Date())
+                        .product(product)
+                        .productImages(new HashSet<>())
+                        .skus(new HashSet<>())
+                        .build()
+        );
 
-        // then
-        var details = detailRepo
+        for (int i = 0; i < 5; i++) {
+            imageRepo.save(
+                    new ProductImage(UUID.randomUUID().toString(), "path", detail)
+            );
+        }
+
+        for (int i = 0; i < 3; i++) {
+            skuRepo.save(
+                    ProductSku.builder()
+                            .sku("sku " + i)
+                            .size(new Faker().bothify(""))
+                            .inventory(i + 3)
+                            .productDetail(detail)
+                            .orderDetails(new HashSet<>())
+                            .reservations(new HashSet<>())
+                            .cartItems(new HashSet<>())
+                            .build()
+            );
+        }
+
+        // check 2
+        var detail2 = detailRepo.save(
+                ProductDetail.builder()
+                        .colour("red")
+                        .isVisible(true)
+                        .createAt(new Date())
+                        .product(product)
+                        .productImages(new HashSet<>())
+                        .skus(new HashSet<>())
+                        .build()
+        );
+
+        for (int i = 0; i < 2; i++) {
+            imageRepo.save(
+                    new ProductImage(UUID.randomUUID().toString(), "path " + (i + 10), detail2)
+            );
+        }
+
+        for (int i = 0; i < 7; i++) {
+            skuRepo.save(
+                    ProductSku.builder()
+                            .sku(UUID.randomUUID().toString())
+                            .size(new Faker().bothify(""))
+                            .inventory(i + 3)
+                            .productDetail(detail2)
+                            .orderDetails(new HashSet<>())
+                            .reservations(new HashSet<>())
+                            .cartItems(new HashSet<>())
+                            .build()
+            );
+        }
+
+        var res2 = detailRepo
                 .productDetailsByProductUuidWorker(product.getUuid());
-        assertFalse(details.isEmpty());
+        assertFalse(res2.isEmpty());
+        assertEquals(2, res2.size());
 
-        for (DetailPojo pojo : details) {
+        for (int i = 0; i < res2.size(); i++) {
+            DetailPojo pojo = res2.get(i);
+
             assertNotNull(pojo.getVisible());
             assertNotNull(pojo.getColour());
             assertNotNull(pojo.getImage());
+            int size = Arrays.stream(pojo.getImage().split(",")).toList().size();
+            if (i == 0) {
+                assertEquals(5, size);
+            } else {
+                assertEquals(2, size);
+            }
+
             assertNotNull(pojo.getVariants());
             assertFalse(pojo.getVariants().isEmpty());
 
@@ -239,6 +317,12 @@ class ProductDetailRepoTest extends AbstractRepositoryTest {
                     .toVariantArray(pojo.getVariants(), ProductDetailRepoTest.class);
 
             assertNotNull(array);
+
+            if (i == 0) {
+                assertEquals(3, array.length);
+            } else {
+                assertEquals(7, array.length);
+            }
 
             for (Variant variant : array) {
                 assertFalse(variant.sku().isEmpty());
@@ -248,6 +332,7 @@ class ProductDetailRepoTest extends AbstractRepositoryTest {
                 assertFalse(variant.size().isEmpty());
             }
         }
+
     }
 
 }

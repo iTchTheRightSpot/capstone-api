@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -29,7 +30,7 @@ public class WorkerProductDetailController {
 
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public List<DetailResponse> productDetails(
+    public CompletableFuture<List<DetailResponse>> productDetails(
             @NotNull @RequestParam(value = "id") String uuid
     ) {
         return this.detailService.productDetailsByProductUuid(uuid);

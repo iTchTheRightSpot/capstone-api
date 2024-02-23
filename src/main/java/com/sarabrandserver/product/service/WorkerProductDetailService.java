@@ -23,6 +23,10 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
+
+import static java.math.RoundingMode.FLOOR;
 
 @Service
 @RequiredArgsConstructor
@@ -38,28 +42,19 @@ public class WorkerProductDetailService {
     private final ProductRepo productRepo;
     private final HelperService helperService;
 
-    /**
-     * Returns a list of {@link ProductDetail} based
-     * on {@link Product} uuid.
-     *
-     * @param uuid string associated to a {@link Product}.
-     * @return A List of {@link DetailResponse}.
-     */
-    public List<DetailResponse> productDetailsByProductUuid(String uuid) {
-        List<DetailPojo> dbRes = detailRepo
-                .productDetailsByProductUuidWorker(uuid);
-
-        List<String> list = dbRes.stream()
-                .map(DetailPojo::getImage).toList();
-
-        return this.detailRepo
-                .productDetailsByProductUuidWorker(uuid) //
-                .stream() //
-                .map(pojo -> {
-                    var urls = Arrays
+    public CompletableFuture<List<DetailResponse>> productDetailsByProductUuid(String uuid) {
+        List<CompletableFuture<DetailResponse>> futures = detailRepo
+                .productDetailsByProductUuidWorker(uuid)
+                .stream()
+                .map(pojo -> CompletableFuture.supplyAsync(() ->  {
+                    List<Supplier<String>> req = Arrays
                             .stream(pojo.getImage().split(","))
-                            .map(key -> this.helperService.preSignedUrl(BUCKET, key))
+                            .map(key -> (Supplier<String>) () -> helperService.preSignedUrl(BUCKET, key))
                             .toList();
+
+                    List<String> urls = CustomUtil.asynchronousTasks(req) //
+                            .thenApply(v -> v.stream().map(Supplier::get).toList()) //
+                            .join();
 
                     Variant[] variants = CustomUtil
                             .toVariantArray(pojo.getVariants(), WorkerProductDetailService.class);
@@ -70,8 +65,11 @@ public class WorkerProductDetailService {
                             urls,
                             variants
                     );
-                })
+                }))
                 .toList();
+
+        return CustomUtil.asynchronousTasks(futures)
+                .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
     }
 
     /**

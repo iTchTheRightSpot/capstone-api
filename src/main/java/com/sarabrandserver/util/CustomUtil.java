@@ -28,7 +28,6 @@ import static java.math.RoundingMode.FLOOR;
 public class CustomUtil {
 
     private static final Logger log = LoggerFactory.getLogger(CustomUtil.class);
-    private static final ExecutorService virtualThread = Executors.newVirtualThreadPerTaskExecutor();
 
     /**
      * Converts date to UTC Date
@@ -251,7 +250,7 @@ public class CustomUtil {
      */
     public static <T> CompletableFuture<List<T>> asynchronousTasks(List<T> schedules) {
         List<CompletableFuture<T>> futures = new ArrayList<>();
-        try (ExecutorService executor = virtualThread) {
+        try (final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
             for (T s : schedules) {
                 futures.add(CompletableFuture
                         .supplyAsync(() -> s, executor)

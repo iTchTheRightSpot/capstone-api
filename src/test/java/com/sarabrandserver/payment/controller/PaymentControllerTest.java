@@ -155,7 +155,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         var sku = productSku();
 
-        this.mockMvc
+        super.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
                         .content(this.objectMapper
@@ -177,7 +177,7 @@ class PaymentControllerTest extends AbstractIntegration {
         Cookie cookie = createNewShoppingSessionCookie();
 
         // request
-        this.mockMvc
+        super.mockMvc
                 .perform(get(path)
                         .param("currency", USD.getCurrency())
                         .param("country", "USA")
@@ -194,7 +194,7 @@ class PaymentControllerTest extends AbstractIntegration {
         var list = this.productSkuRepo.findAll();
 
         // Retrieve cookie unique to every device
-        MvcResult result = this.mockMvc
+        MvcResult result = super.mockMvc
                 .perform(get(cartPath).with(csrf()))
                 .andReturn();
 
@@ -204,7 +204,7 @@ class PaymentControllerTest extends AbstractIntegration {
         var sku = list.getFirst();
 
         // simulate adding to cart
-        this.mockMvc
+        super.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
                         .content(this.objectMapper
@@ -216,7 +216,7 @@ class PaymentControllerTest extends AbstractIntegration {
                 .andExpect(status().isCreated());
 
         // simulate user in payment component
-        this.mockMvc
+        super.mockMvc
                 .perform(get(path)
                         .param("currency", USD.getCurrency())
                         .param("country", "nigeria")
@@ -226,7 +226,7 @@ class PaymentControllerTest extends AbstractIntegration {
                 .andExpect(status().isOk());
 
         // simulate returning back to checkout component to update cart
-        this.mockMvc
+        super.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
                         .content(this.objectMapper
@@ -240,7 +240,7 @@ class PaymentControllerTest extends AbstractIntegration {
         // simulate adding more items
         for (int i = 1; i < list.size(); i++) {
             ProductSku s = list.get(i);
-            this.mockMvc
+            super.mockMvc
                     .perform(post(cartPath)
                             .contentType(APPLICATION_JSON)
                             .content(this.objectMapper
@@ -253,7 +253,7 @@ class PaymentControllerTest extends AbstractIntegration {
         }
 
         // simulate user switching to pay in ngn
-        this.mockMvc
+        super.mockMvc
                 .perform(get(path)
                         .param("currency", NGN.getCurrency())
                         .param("country", "nigeria")
@@ -271,7 +271,7 @@ class PaymentControllerTest extends AbstractIntegration {
         Cookie[] cookies = new Cookie[num];
 
         for (int i = 0; i < num; i++) {
-            Cookie cookie = this.mockMvc
+            Cookie cookie = super.mockMvc
                     .perform(get(cartPath).with(csrf()))
                     .andReturn()
                     .getResponse()
@@ -283,7 +283,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         for (Cookie cookie : cookies) {
             // simulate num of users adding the last item to cart
-            this.mockMvc
+            super.mockMvc
                     .perform(post(cartPath)
                             .contentType(APPLICATION_JSON)
                             .content(this.objectMapper
@@ -354,7 +354,7 @@ class PaymentControllerTest extends AbstractIntegration {
                 try {
                     var c = curr % 2 == 0 ? USD.getCurrency() : NGN.getCurrency();
                     var country = curr % 2 == 0 ? "nigeria" : "Canada";
-                    return this.mockMvc
+                    return super.mockMvc
                             .perform(get(this.path)
                                     .param("currency", c)
                                     .param("country", country)
@@ -386,7 +386,7 @@ class PaymentControllerTest extends AbstractIntegration {
     }
 
     private Cookie createNewShoppingSession() throws Exception {
-        MvcResult result = this.mockMvc
+        MvcResult result = super.mockMvc
                 .perform(get(cartPath).with(csrf()))
                 .andReturn();
 
@@ -395,7 +395,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         var sku = productSku();
 
-        this.mockMvc
+        super.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
                         .content(this.objectMapper
@@ -468,7 +468,9 @@ class PaymentControllerTest extends AbstractIntegration {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpectAll(jsonPath("$.total").isNotEmpty())
-                .andExpect(jsonPath("$.total").value(total));
+                // because trailing zero is removed
+                // https://stackoverflow.com/questions/70076401/assert-bigdecimal-with-two-trailing-zeros-using-mockito
+                .andExpect(jsonPath("$.total").value(total.doubleValue()));
     }
 
     @Test
@@ -528,7 +530,9 @@ class PaymentControllerTest extends AbstractIntegration {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpectAll(jsonPath("$.total").isNotEmpty())
-                .andExpect(jsonPath("$.total").value(total));
+                // because trailing zero is removed
+                // https://stackoverflow.com/questions/70076401/assert-bigdecimal-with-two-trailing-zeros-using-mockito
+                .andExpect(jsonPath("$.total").value(total.doubleValue()));
     }
 
 }

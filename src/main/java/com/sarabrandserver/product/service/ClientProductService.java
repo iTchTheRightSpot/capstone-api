@@ -96,12 +96,12 @@ public class ClientProductService {
                 .productDetailsByProductUuidClientFront(uuid)
                 .stream()
                 .map(pojo -> CompletableFuture.supplyAsync(() ->  {
-                    List<Supplier<String>> req = Arrays
+                    var suppliers = Arrays
                             .stream(pojo.getImage().split(","))
                             .map(key -> (Supplier<String>) () -> s3Service.preSignedUrl(BUCKET, key))
                             .toList();
 
-                    List<String> urls = CustomUtil.asynchronousTasks(req) //
+                    List<String> urls = CustomUtil.asynchronousTasks(suppliers) //
                             .thenApply(v -> v.stream().map(Supplier::get).toList()) //
                             .join();
 

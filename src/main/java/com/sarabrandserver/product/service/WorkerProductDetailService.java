@@ -1,6 +1,7 @@
 package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.exception.CustomNotFoundException;
+import com.sarabrandserver.exception.CustomServerError;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.product.dto.ProductDetailDto;
 import com.sarabrandserver.product.dto.UpdateProductDetailDto;
@@ -39,6 +40,17 @@ public class WorkerProductDetailService {
     private final ProductRepo productRepo;
     private final HelperService helperService;
 
+    /**
+     * Retrieves {@link ProductDetail} asynchronously by the specified {@link Product} uuid.
+     * Each {@link ProductDetail} consists of various attributes such as visibility, color,
+     * URLs, and variants.
+     *
+     * @param uuid The uuid of the {@link Product} for which details are to be retrieved.
+     * @return A {@link CompletableFuture} containing a list of {@link DetailResponse} objects,
+     * representing the {@link ProductDetail}. Each {@link DetailResponse} object encapsulates
+     * information such as visibility, color, URLs, and variants.
+     * @throws CustomServerError if an error occurs during the asynchronous processing.
+     */
     public CompletableFuture<List<DetailResponse>> productDetailsByProductUuid(String uuid) {
         List<CompletableFuture<DetailResponse>> futures = detailRepo
                 .productDetailsByProductUuidAdminFront(uuid)
@@ -56,12 +68,7 @@ public class WorkerProductDetailService {
                     Variant[] variants = CustomUtil
                             .toVariantArray(pojo.getVariants(), WorkerProductDetailService.class);
 
-                    return new DetailResponse(
-                            pojo.getVisible(),
-                            pojo.getColour(),
-                            urls,
-                            variants
-                    );
+                    return new DetailResponse(pojo.getVisible(), pojo.getColour(), urls, variants);
                 }))
                 .toList();
 
@@ -72,9 +79,9 @@ public class WorkerProductDetailService {
     /**
      * Create new {@link ProductDetail}
      *
-     * @param dto of type {@link ProductDetailDto}
-     * @throws CustomNotFoundException is thrown if product uuid does not exist
-     * @throws DuplicateException      is thrown if product colour exists
+     * @param dto of type {@link ProductDetailDto}.
+     * @throws CustomNotFoundException is thrown if product uuid does not exist.
+     * @throws DuplicateException      is thrown if product colour exists.
      */
     @Transactional
     public void create(ProductDetailDto dto, MultipartFile[] multipartFiles) {
@@ -85,7 +92,6 @@ public class WorkerProductDetailService {
         Optional<ProductDetail> exist = this.detailRepo.productDetailByColour(dto.colour());
 
         if (exist.isPresent()) {
-            // Create new ProductSKU
             this.skuService.save(dto.sizeInventory(), exist.get());
             return;
         }

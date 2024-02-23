@@ -1,6 +1,7 @@
 package com.sarabrandserver.payment.repository;
 
 import com.sarabrandserver.payment.entity.OrderDetail;
+import com.sarabrandserver.payment.entity.PaymentDetail;
 import com.sarabrandserver.payment.projection.OrderPojo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,9 +16,11 @@ import java.util.List;
 public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> {
 
     /**
-     * @param principal is the email property of a {@code PaymentDetail}
-     * @return a {@code java.util.List} of {@code OrderPojo}.
-     * */
+     * Retrieves the order history for a given user principal email.
+     *
+     * @param principal the email associated to a {@link PaymentDetail}.
+     * @return a list of {@link OrderPojo} representing the order history.
+     */
     @Query(nativeQuery = true, value = """
     SELECT
     p.created_at AS time,

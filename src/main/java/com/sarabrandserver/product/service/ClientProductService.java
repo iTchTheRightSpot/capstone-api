@@ -93,7 +93,7 @@ public class ClientProductService {
         PriceCurrencyPojo object = optional.get();
 
         List<CompletableFuture<DetailResponse>> futures = productDetailRepo
-                .productDetailsByProductUuidClient(uuid)
+                .productDetailsByProductUuidClientFront(uuid)
                 .stream()
                 .map(pojo -> CompletableFuture.supplyAsync(() ->  {
                     List<Supplier<String>> req = Arrays

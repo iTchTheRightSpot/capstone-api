@@ -6,7 +6,6 @@ import com.sarabrandserver.product.dto.ProductDetailDto;
 import com.sarabrandserver.product.dto.UpdateProductDetailDto;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.entity.ProductDetail;
-import com.sarabrandserver.product.projection.DetailPojo;
 import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductImageRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
@@ -26,8 +25,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-import static java.math.RoundingMode.FLOOR;
-
 @Service
 @RequiredArgsConstructor
 @Setter
@@ -44,7 +41,7 @@ public class WorkerProductDetailService {
 
     public CompletableFuture<List<DetailResponse>> productDetailsByProductUuid(String uuid) {
         List<CompletableFuture<DetailResponse>> futures = detailRepo
-                .productDetailsByProductUuidWorker(uuid)
+                .productDetailsByProductUuidAdminFront(uuid)
                 .stream()
                 .map(pojo -> CompletableFuture.supplyAsync(() ->  {
                     List<Supplier<String>> req = Arrays

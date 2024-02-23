@@ -81,7 +81,7 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     WHERE p.uuid = :uuid AND d.is_visible = true
     GROUP BY d.is_visible, d.colour
     """)
-    List<DetailPojo> productDetailsByProductUuidClient(@Param(value = "uuid") String uuid);
+    List<DetailPojo> productDetailsByProductUuidClientFront(@Param(value = "uuid") String uuid);
 
     @Query(nativeQuery = true, value = """
     SELECT
@@ -104,6 +104,6 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     WHERE p.uuid = :uuid
     GROUP BY d.is_visible, d.colour
     """)
-    List<DetailPojo> productDetailsByProductUuidWorker(@Param(value = "uuid") String uuid);
+    List<DetailPojo> productDetailsByProductUuidAdminFront(@Param(value = "uuid") String uuid);
 
 }

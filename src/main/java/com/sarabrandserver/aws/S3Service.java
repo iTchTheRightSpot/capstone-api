@@ -28,7 +28,7 @@ public class S3Service {
     private final S3Presigner s3Presigner;
     private final boolean PROFILE;
 
-    public S3Service (S3Client s3Client, S3Presigner s3Presigner) {
+    public S3Service (S3Client s3Client, S3Presigner s3Presigner, Environment env) {
     	this.s3Client = s3client;
 	this.s3Presigner = s3Presigner;
     	this.PROFILE = env.getProperty("spring.profiles.active", "default");

@@ -50,8 +50,7 @@ public class WorkerCategoryService {
         var category = this.repository.allCategories();
 
         // table
-        var table = this.repository
-                .allCategories()
+        var table = category
                 .stream()
                 .map(CategoryResponse::workerList)
                 .toList();

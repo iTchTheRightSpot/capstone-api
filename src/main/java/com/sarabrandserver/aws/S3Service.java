@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -20,26 +20,19 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class S3Service {
 
     private static final Logger log = LoggerFactory.getLogger(S3Service.class);
-    private static final boolean PROFILE;
 
-    static {
-        String profile = new StandardEnvironment()
-                .getProperty("spring.profiles.active", "test");
-
-        log.info("S3Service current active profile {}", profile);
-
-        PROFILE = profile.equals("test");
-    }
-
-    /**
-     * constructor injected
-     * */
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
+    private final boolean PROFILE;
+
+    public S3Service (S3Client s3Client, S3Presigner s3Presigner) {
+    	this.s3Client = s3client;
+	this.s3Presigner = s3Presigner;
+    	this.PROFILE = env.getProperty("spring.profiles.active", "default");
+    }
 
     public void uploadToS3(File file, Map<String, String> metadata, String bucket, String key) {
         if (PROFILE) {

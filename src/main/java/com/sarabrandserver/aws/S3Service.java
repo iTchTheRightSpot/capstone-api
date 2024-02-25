@@ -2,7 +2,6 @@ package com.sarabrandserver.aws;
 
 import com.sarabrandserver.exception.CustomAwsException;
 import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -26,16 +25,17 @@ public class S3Service {
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
-    private final boolean PROFILE;
+    private final boolean profile;
 
     public S3Service (S3Client s3Client, S3Presigner s3Presigner, Environment env) {
-    	this.s3Client = s3client;
-	this.s3Presigner = s3Presigner;
-    	this.PROFILE = env.getProperty("spring.profiles.active", "default");
+        this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
+    	this.profile = env.getProperty("spring.profiles.active", "default")
+                .equals("test");
     }
 
     public void uploadToS3(File file, Map<String, String> metadata, String bucket, String key) {
-        if (PROFILE) {
+        if (profile) {
             return;
         }
         this.uploadToS3Impl(file, metadata, bucket, key);
@@ -62,7 +62,7 @@ public class S3Service {
     }
 
     public void deleteFromS3(List<ObjectIdentifier> keys, String bucket) {
-        if (PROFILE) {
+        if (profile) {
             return;
         }
         this.deleteFromS3Impl(keys, bucket);
@@ -94,7 +94,7 @@ public class S3Service {
      * @return An aws pre-signed url.
      * */
     public String preSignedUrl(@NotNull String bucket, @NotNull String key) {
-        if (PROFILE) {
+        if (profile) {
             return "";
         }
         return preSignedUrlImpl(bucket, key);

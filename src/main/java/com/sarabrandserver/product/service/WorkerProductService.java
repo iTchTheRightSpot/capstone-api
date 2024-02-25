@@ -125,6 +125,7 @@ public class WorkerProductService {
                         p.getPrice(),
                         p.getCurrency(),
                         url,
+                        p.getCategory(),
                         p.getWeight(),
                         p.getWeightType()
                 );

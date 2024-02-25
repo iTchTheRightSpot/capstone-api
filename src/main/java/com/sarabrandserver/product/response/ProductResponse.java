@@ -17,7 +17,6 @@ public record ProductResponse (
         double weight,
         @JsonProperty("weight_type")
         String weightType
-
 ) {
 
     public ProductResponse(

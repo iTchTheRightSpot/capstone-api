@@ -28,7 +28,6 @@ import static java.math.RoundingMode.FLOOR;
 public class CustomUtil {
 
     private static final Logger log = LoggerFactory.getLogger(CustomUtil.class);
-    private static final ExecutorService virtualThread = Executors.newVirtualThreadPerTaskExecutor();
 
     /**
      * Converts date to UTC Date

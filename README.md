@@ -6,9 +6,7 @@ An ecommerce application still in development.
 1. docker
 
 ```
-After or If docker is installed, cd into root directory and enter
-in your command line 
-
+To run application
 ./mvnw clean spring-boot:test-run
 or
 mvn clean spring-boot:test-run

@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS order_reservation
 (
     reservation_id BIGINT      NOT NULL UNIQUE AUTO_INCREMENT,
     sku            VARCHAR(36) NOT NULL,
+    reference  VARCHAR(36) NOT NULL,
     qty            INTEGER     NOT NULL,
     status         VARCHAR(10) NOT NULL,
     expire_at      DATETIME    NOT NULL,

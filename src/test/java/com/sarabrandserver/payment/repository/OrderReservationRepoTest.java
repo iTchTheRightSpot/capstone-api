@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
 import static java.time.temporal.ChronoUnit.HOURS;
@@ -78,6 +79,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
         var reservation = reservationRepo
                 .save(
                         new OrderReservation(
+                                UUID.randomUUID().toString(),
                                 first.getInventory() - 1,
                                 PENDING,
                                 CustomUtil.toUTC(
@@ -97,6 +99,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
                 .deductFromProductSkuInventoryAndReplaceReservationQty(
                         reservation.getQty(),
                         2,
+                        "update",
                         CustomUtil.toUTC(
                                 new Date(current
                                         .toInstant()
@@ -154,6 +157,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
         var reservation = reservationRepo
                 .save(
                         new OrderReservation(
+                                UUID.randomUUID().toString(),
                                 first.getInventory() - 1,
                                 PENDING,
                                 CustomUtil.toUTC(
@@ -173,6 +177,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
                 .addToProductSkuInventoryAndReplaceReservationQty(
                         reservation.getQty(),
                         5,
+                        "new-reference",
                         CustomUtil.toUTC(
                                 new Date(current
                                         .toInstant()
@@ -230,6 +235,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
             reservationRepo
                     .save(
                             new OrderReservation(
+                                    UUID.randomUUID().toString(),
                                     sku.getInventory() - 1,
                                     PENDING,
                                     CustomUtil.toUTC(
@@ -291,6 +297,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
             reservationRepo
                     .save(
                             new OrderReservation(
+                                    UUID.randomUUID().toString(),
                                     curr.getInventory() - 1,
                                     PENDING,
                                     CustomUtil.toUTC(temp),
@@ -347,6 +354,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
         var reservation = reservationRepo
                 .save(
                         new OrderReservation(
+                                UUID.randomUUID().toString(),
                                 first.getInventory() - 1,
                                 PENDING,
                                 CustomUtil.toUTC(
@@ -402,6 +410,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
         var reservation = reservationRepo
                 .save(
                         new OrderReservation(
+                                UUID.randomUUID().toString(),
                                 first.getInventory() - 1,
                                 PENDING,
                                 CustomUtil.toUTC(

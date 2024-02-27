@@ -28,6 +28,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.UUID;
 
 import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
 import static java.time.temporal.ChronoUnit.HOURS;
@@ -209,6 +210,7 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
         reservationRepo
                 .save(
                         new OrderReservation(
+                                UUID.randomUUID().toString(),
                                 sku.getInventory() - 1,
                                 PENDING,
                                 CustomUtil.toUTC(

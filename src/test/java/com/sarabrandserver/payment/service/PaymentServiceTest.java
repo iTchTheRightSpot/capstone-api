@@ -17,10 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
@@ -85,6 +82,7 @@ class PaymentServiceTest extends AbstractUnitTest {
         var reservations = Set.of(
                 new OrderReservation(
                         1L,
+                        UUID.randomUUID().toString(),
                         5,
                         PENDING,
                         expire,
@@ -108,6 +106,7 @@ class PaymentServiceTest extends AbstractUnitTest {
         assertThrows(OutOfStockException.class,
                 () -> paymentService
                         .onPendingReservationsNotEmpty(
+                                "",
                                 session,
                                 date,
                                 reservations
@@ -161,6 +160,7 @@ class PaymentServiceTest extends AbstractUnitTest {
         var reservations = Set.of(
                 new OrderReservation(
                         1L,
+                        UUID.randomUUID().toString(),
                         5,
                         PENDING,
                         expire,
@@ -169,6 +169,7 @@ class PaymentServiceTest extends AbstractUnitTest {
                 ),
                 new OrderReservation(
                         2L,
+                        UUID.randomUUID().toString(),
                         2,
                         PENDING,
                         expire,
@@ -199,6 +200,7 @@ class PaymentServiceTest extends AbstractUnitTest {
         // then
         paymentService
                 .onPendingReservationsNotEmpty(
+                        "",
                         session,
                         date,
                         reservations
@@ -214,9 +216,25 @@ class PaymentServiceTest extends AbstractUnitTest {
                 );
 
         verify(reservationRepo, times(0))
-                .addToProductSkuInventoryAndReplaceReservationQty(anyInt(), anyInt(), any(Date.class), anyString(), anyString(), any(ReservationStatus.class));
+                .addToProductSkuInventoryAndReplaceReservationQty(
+                        anyInt(),
+                        anyInt(),
+                        anyString(),
+                        any(Date.class),
+                        anyString(),
+                        anyString(),
+                        any(ReservationStatus.class)
+                );
         verify(reservationRepo, times(0))
-                .deductFromProductSkuInventoryAndReplaceReservationQty(anyInt(), anyInt(), any(Date.class), anyString(), anyString(), any(ReservationStatus.class));
+                .deductFromProductSkuInventoryAndReplaceReservationQty(
+                        anyInt(),
+                        anyInt(),
+                        anyString(),
+                        any(Date.class),
+                        anyString(),
+                        anyString(),
+                        any(ReservationStatus.class)
+                );
 
         verify(skuRepo, times(0))
                 .updateProductSkuInventoryBySubtractingFromExistingInventory(anyString(), anyInt());
@@ -267,6 +285,7 @@ class PaymentServiceTest extends AbstractUnitTest {
         var reservations = Set.of(
                 new OrderReservation(
                         1L,
+                        UUID.randomUUID().toString(),
                         8,
                         PENDING,
                         expire,
@@ -296,6 +315,7 @@ class PaymentServiceTest extends AbstractUnitTest {
         // then
         paymentService
                 .onPendingReservationsNotEmpty(
+                        "",
                         session,
                         date,
                         reservations
@@ -311,9 +331,25 @@ class PaymentServiceTest extends AbstractUnitTest {
                 );
 
         verify(reservationRepo, times(1))
-                .addToProductSkuInventoryAndReplaceReservationQty(anyInt(), anyInt(), any(Date.class), anyString(), anyString(), any(ReservationStatus.class));
+                .addToProductSkuInventoryAndReplaceReservationQty(
+                        anyInt(),
+                        anyInt(),
+                        anyString(),
+                        any(Date.class),
+                        anyString(),
+                        anyString(),
+                        any(ReservationStatus.class)
+                );
         verify(reservationRepo, times(0))
-                .deductFromProductSkuInventoryAndReplaceReservationQty(anyInt(), anyInt(), any(Date.class), anyString(), anyString(), any(ReservationStatus.class));
+                .deductFromProductSkuInventoryAndReplaceReservationQty(
+                        anyInt(),
+                        anyInt(),
+                        anyString(),
+                        any(Date.class),
+                        anyString(),
+                        anyString(),
+                        any(ReservationStatus.class)
+                );
 
         verify(skuRepo, times(1))
                 .updateProductSkuInventoryBySubtractingFromExistingInventory(anyString(), anyInt());
@@ -363,6 +399,7 @@ class PaymentServiceTest extends AbstractUnitTest {
         var reservations = Set.of(
                 new OrderReservation(
                         1L,
+                        UUID.randomUUID().toString(),
                         3,
                         PENDING,
                         expire,
@@ -392,6 +429,7 @@ class PaymentServiceTest extends AbstractUnitTest {
         // then
         paymentService
                 .onPendingReservationsNotEmpty(
+                        "",
                         session,
                         date,
                         reservations
@@ -407,9 +445,25 @@ class PaymentServiceTest extends AbstractUnitTest {
                 );
 
         verify(reservationRepo, times(0))
-                .addToProductSkuInventoryAndReplaceReservationQty(anyInt(), anyInt(), any(Date.class), anyString(), anyString(), any(ReservationStatus.class));
+                .addToProductSkuInventoryAndReplaceReservationQty(
+                        anyInt(),
+                        anyInt(),
+                        anyString(),
+                        any(Date.class),
+                        anyString(),
+                        anyString(),
+                        any(ReservationStatus.class)
+                );
         verify(reservationRepo, times(1))
-                .deductFromProductSkuInventoryAndReplaceReservationQty(anyInt(), anyInt(), any(Date.class), anyString(), anyString(), any(ReservationStatus.class));
+                .deductFromProductSkuInventoryAndReplaceReservationQty(
+                        anyInt(),
+                        anyInt(),
+                        anyString(),
+                        any(Date.class),
+                        anyString(),
+                        anyString(),
+                        any(ReservationStatus.class)
+                );
 
         verify(skuRepo, times(1))
                 .updateProductSkuInventoryBySubtractingFromExistingInventory(anyString(), anyInt());
@@ -459,6 +513,7 @@ class PaymentServiceTest extends AbstractUnitTest {
         var reservations = Set.of(
                 new OrderReservation(
                         1L,
+                        UUID.randomUUID().toString(),
                         3,
                         PENDING,
                         expire,
@@ -467,6 +522,7 @@ class PaymentServiceTest extends AbstractUnitTest {
                 ),
                 new OrderReservation(
                         2L,
+                        UUID.randomUUID().toString(),
                         3,
                         PENDING,
                         expire,
@@ -479,6 +535,7 @@ class PaymentServiceTest extends AbstractUnitTest {
         // then
         paymentService
                 .onPendingReservationsNotEmpty(
+                        "",
                         session,
                         date,
                         reservations
@@ -494,9 +551,25 @@ class PaymentServiceTest extends AbstractUnitTest {
                 );
 
         verify(reservationRepo, times(0))
-                .addToProductSkuInventoryAndReplaceReservationQty(anyInt(), anyInt(), any(Date.class), anyString(), anyString(), any(ReservationStatus.class));
+                .addToProductSkuInventoryAndReplaceReservationQty(
+                        anyInt(),
+                        anyInt(),
+                        anyString(),
+                        any(Date.class),
+                        anyString(),
+                        anyString(),
+                        any(ReservationStatus.class)
+                );
         verify(reservationRepo, times(0))
-                .deductFromProductSkuInventoryAndReplaceReservationQty(anyInt(), anyInt(), any(Date.class), anyString(), anyString(), any(ReservationStatus.class));
+                .deductFromProductSkuInventoryAndReplaceReservationQty(
+                        anyInt(),
+                        anyInt(),
+                        anyString(),
+                        any(Date.class),
+                        anyString(),
+                        anyString(),
+                        any(ReservationStatus.class)
+                );
 
         verify(skuRepo, times(0))
                 .updateProductSkuInventoryBySubtractingFromExistingInventory(anyString(), anyInt());

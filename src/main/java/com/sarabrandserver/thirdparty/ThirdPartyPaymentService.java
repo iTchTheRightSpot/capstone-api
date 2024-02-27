@@ -39,19 +39,6 @@ public class ThirdPartyPaymentService {
         return impl(awsSecretId, PaymentCredentialObj.class);
     }
 
-    /**
-     * returns Flutterwave pub, secret and encryption keys
-     * */
-    final PaymentCredentialObj flutterWaveCredentials() {
-        if (this.env.getProperty("spring.profiles.active", "").equals("test")) {
-            String pubKey = this.env.getProperty("flutter.pub.key", "");
-            String secretKey = this.env.getProperty("flutter.secret.key", "");
-            String encryptionKey = this.env.getProperty("flutter.encryption.key", "");
-            return new PaymentCredentialObj(pubKey, secretKey, encryptionKey);
-        }
-        return impl("flutter-credentials", PaymentCredentialObj.class);
-    }
-
     final <T> T impl(String secretId, Class<T> clazz) {
         var build = GetSecretValueRequest.builder().secretId(secretId).build();
         try {

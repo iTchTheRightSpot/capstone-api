@@ -1,7 +1,9 @@
 package com.sarabrandserver.payment.repository;
 
+import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.enumeration.ReservationStatus;
 import com.sarabrandserver.payment.entity.OrderReservation;
+import com.sarabrandserver.product.entity.ProductSku;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,20 +21,20 @@ import java.util.List;
 public interface OrderReservationRepo extends JpaRepository<OrderReservation, Long> {
 
     /**
-     * Updates a {@code ProductSku} by adding to its existing inventory and replaces
-     * the qty of a {@code OrderReservation}.
+     * Updates a {@link ProductSku} by adding to its existing inventory and replaces
+     * the qty of a {@link OrderReservation}.
      *
-     * @param productSkuQty is the number of type {@code int} to be added to a
-     * {@code ProductSku} inventory.
-     * @param reservationQty replaces a {@code OrderReservation} qty.
-     * @param expire replaces the expire_at property of a {@code ShoppingSession}.
-     * @param cookie is a unique string property of {@code ShoppingSession}
+     * @param productSkuQty is the number of type int to be added to a
+     * {@link ProductSku} inventory.
+     * @param reservationQty replaces a {@link OrderReservation} qty.
+     * @param expire replaces the expire_at property of a {@link ShoppingSession}.
+     * @param cookie is a unique string property of {@link ShoppingSession}
      *               that is unique to every device that visits our application. It
-     *               is needed to find the {@code OrderReservation} and
-     *               {@code ProductSku} associated to the device.
-     * @param sku is a unique string for every {@code ProductSku}. It is needed
-     *            to find the associated {@code ProductSku} to update
-     * @param status is of {@code ReservationStatus} and it always has to be PENDING.
+     *               is needed to find the {@link OrderReservation} and
+     *               {@link ProductSku} associated to the device.
+     * @param sku is a unique string for every {@link ProductSku}. It is needed
+     *            to find the associated {@link ProductSku} to update
+     * @param status is of {@link ReservationStatus} and it always has to be PENDING.
      * */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -43,12 +45,14 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     SET
     s.inventory = (s.inventory - :productSkuQty),
     o.qty = :reservationQty,
+    o.reference = :reference,
     o.expire_at = :expire
     WHERE s.sku = :sku AND sh.cookie = :cookie AND o.status = :#{#status.name()}
     """)
     void deductFromProductSkuInventoryAndReplaceReservationQty(
             int productSkuQty,
             int reservationQty,
+            String reference,
             Date expire,
             String cookie,
             String sku,
@@ -56,20 +60,20 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     );
 
     /**
-     * Updates a {@code ProductSku} by adding to its existing inventory and replaces
-     * the qty of a {@code OrderReservation}.
+     * Updates a {@link ProductSku} by adding to its existing inventory and replaces
+     * the qty of a {@link OrderReservation}.
      *
-     * @param productSkuQty is the number of type {@code int} to be added to a
-     * {@code ProductSku} inventory.
-     * @param reservationQty replaces a {@code OrderReservation} qty.
-     * @param expire replaces the expire_at property of a {@code ShoppingSession}.
-     * @param cookie is a unique string property of {@code ShoppingSession}
+     * @param productSkuQty is the number of type int to be added to a
+     * {@link ProductSku} inventory.
+     * @param reservationQty replaces a {@link OrderReservation} qty.
+     * @param expire replaces the expire_at property of a {@link ShoppingSession}.
+     * @param cookie is a unique string property of {@link ShoppingSession}
      *               that is unique to every device that visits our application. It
      *               is needed to find the {@code OrderReservation} and
-     *               {@code ProductSku} associated to the device.
-     * @param sku is a unique string for every {@code ProductSku}. It is needed
-     *            to find the associated {@code ProductSku} to update
-     * @param status is of {@code ReservationStatus} and it always has to be PENDING.
+     *               {@link ProductSku} associated to the device.
+     * @param sku is a unique string for every {@link ProductSku}. It is needed
+     *            to find the associated {@link ProductSku} to update
+     * @param status is of {@link ReservationStatus} and it always has to be PENDING.
      * */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -80,12 +84,14 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     SET
     s.inventory = (s.inventory + :productSkuQty),
     o.qty = :reservationQty,
+    o.reference = :reference,
     o.expire_at = :expire
     WHERE sh.cookie = :cookie AND s.sku = :sku AND o.status = :#{#status.name()}
     """)
     void addToProductSkuInventoryAndReplaceReservationQty(
             int productSkuQty,
             int reservationQty,
+            String reference,
             Date expire,
             String cookie,
             String sku,

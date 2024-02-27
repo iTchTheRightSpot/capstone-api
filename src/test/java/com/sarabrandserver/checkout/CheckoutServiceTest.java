@@ -109,7 +109,7 @@ class CheckoutServiceTest extends AbstractUnitTest {
 
         // method to test
         CustomObject obj = checkoutService
-                .createCustomObjectForShoppingSession(req, "nigeria");
+                .validateCurrentShoppingSession(req, "nigeria");
 
         // then
         assertEquals(obj.session(), session);

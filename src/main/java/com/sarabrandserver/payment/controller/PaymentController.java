@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -37,7 +38,7 @@ public class PaymentController {
      * Api called by Payment service to inform of a
      * complete transaction.
      * */
-    @ResponseStatus(OK)
+    @ResponseStatus(CREATED)
     @PostMapping(path = "/webhook")
     public void order(HttpServletRequest req) {
         this.paymentService.order(req);

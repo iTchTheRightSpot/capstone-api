@@ -9,11 +9,13 @@ import com.sarabrandserver.checkout.CheckoutService;
 import com.sarabrandserver.checkout.CustomObject;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
+import com.sarabrandserver.exception.CustomServerError;
 import com.sarabrandserver.exception.OutOfStockException;
 import com.sarabrandserver.payment.entity.OrderReservation;
 import com.sarabrandserver.payment.projection.TotalPojo;
 import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.payment.response.PaymentResponse;
+import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
 import com.sarabrandserver.util.CustomUtil;
@@ -36,6 +38,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
@@ -76,12 +79,13 @@ public class PaymentService {
      *
      * @param req The HttpServletRequest passed from the PaymentController.
      * @param country The country of the user would like to ship to which corresponds
-     *                to {@code Shipping}.
+     *                to {@link com.sarabrandserver.shipping.entity.ShipSetting}.
      * @param currency The currency selected for the payment, of type SarreCurrency.
      * @return A PaymentResponse containing payment details for the user.
-     * @throws OutOfStockException If the inventory of a ProductSku becomes negative after
-     * reservation.
-     * @throws CustomNotFoundException If required information for checkout cannot be retrieved.
+     * @throws OutOfStockException If {@link CartItem} quantity is greater
+     * {@link ProductSku} inventory.
+     * @throws CustomNotFoundException if an exception occurs from the method
+     * {@link checkoutService.validateCurrentShoppingSession}.
      */
     @Transactional
     public PaymentResponse raceCondition(
@@ -90,7 +94,7 @@ public class PaymentService {
             final SarreCurrency currency
     ) {
         CustomObject obj = checkoutService
-                .createCustomObjectForShoppingSession(req, country.toLowerCase().trim());
+                .validateCurrentShoppingSession(req, country.toLowerCase().trim());
 
         var reservations = this.reservationRepo
                 .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
@@ -99,15 +103,17 @@ public class PaymentService {
                         PENDING
                 );
 
+        String reference = UUID.randomUUID().toString();
+
         long instant = Instant.now()
                 .plus(bound, ChronoUnit.MINUTES)
                 .toEpochMilli();
         Date toExpire = CustomUtil.toUTC(new Date(instant));
 
-        raceConditionImpl(reservations, obj.cartItems(), toExpire, obj.session());
+        raceConditionImpl(reference, reservations, obj.cartItems(), toExpire, obj.session());
 
         List<TotalPojo> list = this.cartItemRepo
-                .customCartItemsByShoppingSessionId(obj.session().shoppingSessionId(), currency);
+                .amountToPayForAllCartItemsForShoppingSession(obj.session().shoppingSessionId(), currency);
 
         BigDecimal total = CustomUtil
                 .calculateTotal(
@@ -120,6 +126,7 @@ public class PaymentService {
 
         var secret = this.thirdPartyService.payStackCredentials();
         return new PaymentResponse(
+                reference,
                 secret.pubKey(),
                 currency,
                 CustomUtil.convertCurrency(
@@ -150,6 +157,7 @@ public class PaymentService {
      */
     @Transactional
     void raceConditionImpl(
+            String reference,
             List<OrderReservation> reservations,
             List<CartItem> carts,
             Date toExpire,
@@ -169,22 +177,20 @@ public class PaymentService {
                             );
                     this.reservationRepo
                             .save(new OrderReservation(
-                                            cart.getQty(),
-                                            PENDING,
-                                    toExpire,
-                                            cart.getProductSku(),
-                                            session
-                                    )
+                                    reference,
+                                    cart.getQty(),
+                                    PENDING, toExpire, cart.getProductSku(), session)
                             );
                 }
             } else {
-                Map<String, OrderReservation> map = reservations
-                        .stream()
-                        .collect(Collectors.toMap(
+                Map<String, OrderReservation> map = reservations.stream()
+                        .collect(
+                                Collectors.toMap(
                                 reservation -> reservation.getProductSku().getSku(),
                                 orderReservation -> orderReservation)
                         );
                 onPendingReservationsNotEmpty(
+                        reference,
                         session,
                         toExpire,
                         map,
@@ -206,20 +212,22 @@ public class PaymentService {
      * adjusting inventory quantities and replacing reservation quantities based
      * on the current state of the cart items and existing reservations.
      *
-     * @param session The {@code ShoppingSession} associated with the user's
+     * @param reference a unique property for
+     * @param session The {@link ShoppingSession} associated with the user's
      *                device.
      * @param toExpire The expiration date for the reservations.
-     * @param map A map of existing {@code OrderReservations} indexed by
-     *            {@code ProductSku} property sku.
-     * @param cartItems A list of {@code CartItem} representing items in the
+     * @param map A map of existing {@link OrderReservation} indexed by
+     *            {@link ProductSku} property sku.
+     * @param cartItems A list of {@link CartItem} representing items in the
      *                  user's cart.
-     * @throws OutOfStockException if {@code CartItem} property qty is greater
+     * @throws OutOfStockException if {@link CartItem} property qty is greater
      * than {@code ProductSku} property inventory.
-     * @throws org.springframework.orm.jpa.JpaSystemException if {@code ProductSku}
+     * @throws org.springframework.orm.jpa.JpaSystemException if {@link ProductSku}
      * property inventory becomes.
      * */
     @Transactional
     void onPendingReservationsNotEmpty(
+            String reference,
             ShoppingSession session,
             Date toExpire,
             Map<String, OrderReservation> map,
@@ -238,6 +246,7 @@ public class PaymentService {
                             .deductFromProductSkuInventoryAndReplaceReservationQty(
                                     cart.getQty() - reservation.getQty(),
                                     cart.getQty(),
+                                    reference,
                                     toExpire,
                                     session.cookie(),
                                     cart.getProductSku().getSku(),
@@ -248,6 +257,7 @@ public class PaymentService {
                             .addToProductSkuInventoryAndReplaceReservationQty(
                                     reservation.getQty() - cart.getQty(),
                                     cart.getQty(),
+                                    reference,
                                     toExpire,
                                     session.cookie(),
                                     cart.getProductSku().getSku(),
@@ -257,56 +267,66 @@ public class PaymentService {
 
                 map.remove(cart.getProductSku().getSku());
             } else {
-                this.productSkuRepo
-                        .updateProductSkuInventoryBySubtractingFromExistingInventory(
-                                cart.getProductSku().getSku(),
-                                cart.getQty()
-                        );
+                this.productSkuRepo.updateProductSkuInventoryBySubtractingFromExistingInventory(
+                        cart.getProductSku().getSku(),
+                        cart.getQty()
+                );
                 this.reservationRepo
-                        .save(new OrderReservation(cart.getQty(), PENDING, toExpire, cart.getProductSku(), session));
+                        .save(new OrderReservation(
+                                reference,
+                                cart.getQty(),
+                                PENDING, toExpire, cart.getProductSku(), session)
+                        );
             }
         }
 
         for (Map.Entry<String, OrderReservation> entry : map.entrySet()) {
             OrderReservation value = entry.getValue();
-            this.productSkuRepo
-                    .updateProductSkuInventoryByAddingToExistingInventory(
-                            value.getProductSku().getSku(),
-                            value.getQty()
-                    );
+            this.productSkuRepo.updateProductSkuInventoryByAddingToExistingInventory(
+                    value.getProductSku().getSku(),
+                    value.getQty()
+            );
             this.reservationRepo.deleteOrderReservationByReservationId(value.getReservationId());
         }
     }
 
+    record Pair(JsonNode node, String validate) {
+    }
+
     /**
-     * method retrieves info sent from Flutterwave via webhook
+     * method retrieves info sent from 3rd party via webhook
      * */
     @Transactional
     public void order(HttpServletRequest req) {
-        String body = null;
         try {
-            body = requestBody(req);
-            log.info("Request body Paystack {}", body);
+            log.info("webhook received");
+            String body = requestBody(req);
+
+            var secret = this.thirdPartyService.payStackCredentials();
+            Pair pair = validateRequestFromPayStack(secret.secretKey(), body);
+
+            if (!pair.validate().toLowerCase().equals(req.getHeader("x-paystack-signature"))) {
+                log.error("invalid request from paystack");
+                throw new CustomServerError("invalid webhook from paystack");
+            }
+
+            JsonNode status = pair.node().get("status");
+            JsonNode data = pair.node().get("data");
+            JsonNode metadata = pair.node().get("metadata");
+
+            // TODO verify payment came from paystack
+            // https://paystack.com/docs/payments/verify-payments/
+            // TODO update order reservation table
+            // TODO save to PaymentDetail, OrderDetail and Address
+
+
         } catch (IOException e) {
-            log.error("Error retrieving body from HttpServletRequest {}", e.getMessage());
+            log.error("error parsing request {}", e.getMessage());
+            throw new CustomServerError("error parsing request");
+        } catch (CustomServerError e) {
+            log.error("error from paystack webhook {}", e.getMessage());
+            throw new CustomServerError(e.getMessage());
         }
-
-        if (body == null) return;
-
-        var secret = this.thirdPartyService.payStackCredentials();
-        String header = req.getHeader("x-paystack-signature");
-        String validate = validateRequestFromPayStack(secret.secretKey(), body);
-
-        log.info("Validate request came from Paystack {}", validate);
-
-        if (!validate.toLowerCase().equals(header)) {
-            return;
-        }
-
-        // TODO verify payment came from paystack
-        // https://paystack.com/docs/payments/verify-payments/
-        // TODO update order reservation table
-        // TODO save to PaymentDetail, OrderDetail and Address
     }
 
     /**
@@ -325,17 +345,18 @@ public class PaymentService {
      * Validates if request came from paystack
      * <a href="https://paystack.com/docs/payments/webhooks/">...</a>
      * */
-    private String validateRequestFromPayStack(String secretKey, String body) {
+    private Pair validateRequestFromPayStack(String secretKey, String body) {
         String hmac = "HmacSHA512";
         try {
             JsonNode node = new ObjectMapper().readValue(body, JsonNode.class);
             Mac sha512_HMAC = Mac.getInstance(hmac);
             sha512_HMAC.init(new SecretKeySpec(secretKey.getBytes(UTF_8), hmac));
-            return DatatypeConverter
+            String validate = DatatypeConverter
                     .printHexBinary(sha512_HMAC.doFinal(node.toString().getBytes(UTF_8)));
+            return new Pair(node, validate);
         } catch (Exception e) {
-            log.info("Error validating request from paystack {}", e.getMessage());
-            return "";
+            log.error("webhook did not come from paystack {}", e.getMessage());
+            throw new CustomServerError("webhook did not come from paystack");
         }
     }
 

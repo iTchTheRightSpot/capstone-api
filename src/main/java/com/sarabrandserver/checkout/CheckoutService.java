@@ -54,10 +54,10 @@ public class CheckoutService {
      * @throws CustomNotFoundException If any required information is missing or invalid.
      */
     public Checkout checkout(HttpServletRequest req, String country, SarreCurrency currency) {
-        CustomObject obj = createCustomObjectForShoppingSession(req, country);
+        CustomObject obj = validateCurrentShoppingSession(req, country);
 
         List<TotalPojo> list = this.cartItemRepo
-                .customCartItemsByShoppingSessionId(obj.session().shoppingSessionId(), currency);
+                .amountToPayForAllCartItemsForShoppingSession(obj.session().shoppingSessionId(), currency);
 
         BigDecimal shipCost = currency.equals(SarreCurrency.USD)
                 ? obj.ship().usdPrice()
@@ -102,7 +102,7 @@ public class CheckoutService {
      *                                 {@link HttpServletRequest}, the {@link ShoppingSession} is
      *                                 invalid, or {@link CartItem} is empty.
      */
-    public CustomObject createCustomObjectForShoppingSession(HttpServletRequest req, String country) {
+    public CustomObject validateCurrentShoppingSession(HttpServletRequest req, String country) {
         Cookie cookie = CustomUtil.cookie(req, CART_COOKIE);
 
         if (cookie == null) {

@@ -63,7 +63,7 @@ public class ControllerAdvices {
         return new ResponseEntity<>(res, PAYLOAD_TOO_LARGE);
     }
 
-    @ExceptionHandler({S3Exception.class, CustomAwsException.class})
+    @ExceptionHandler({S3Exception.class, CustomAwsException.class, CustomServerError.class})
     public ResponseEntity<ExceptionResponse> awsException(Exception ex) {
         var res = new ExceptionResponse(ex.getMessage(), INTERNAL_SERVER_ERROR);
         return new ResponseEntity<>(res, INTERNAL_SERVER_ERROR);
@@ -101,12 +101,6 @@ public class ControllerAdvices {
     public ResponseEntity<ExceptionResponse> currencyException() {
         var res = new ExceptionResponse("invalid currency type", BAD_REQUEST);
         return new ResponseEntity<>(res, BAD_REQUEST);
-    }
-
-    @ExceptionHandler(CustomServerError.class)
-    public ResponseEntity<ExceptionResponse> serverException(Exception e) {
-        var res = new ExceptionResponse(e.getMessage(), INTERNAL_SERVER_ERROR);
-        return new ResponseEntity<>(res, INTERNAL_SERVER_ERROR);
     }
 
 }

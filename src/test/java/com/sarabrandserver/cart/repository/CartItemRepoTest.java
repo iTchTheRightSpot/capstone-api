@@ -159,8 +159,8 @@ class CartItemRepoTest extends AbstractRepositoryTest {
         }
 
         // when
-        var usd = cartItemRepo.customCartItemsByShoppingSessionId(saved.shoppingSessionId(), USD);
-        var ngn = cartItemRepo.customCartItemsByShoppingSessionId(saved.shoppingSessionId(), NGN);
+        var usd = cartItemRepo.amountToPayForAllCartItemsForShoppingSession(saved.shoppingSessionId(), USD);
+        var ngn = cartItemRepo.amountToPayForAllCartItemsForShoppingSession(saved.shoppingSessionId(), NGN);
 
         assertFalse(ngn.isEmpty());
         assertFalse(usd.isEmpty());

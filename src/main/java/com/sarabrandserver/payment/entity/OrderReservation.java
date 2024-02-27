@@ -24,6 +24,9 @@ public class OrderReservation {
     @Column(name = "reservation_id", nullable = false, unique = true)
     private Long reservationId;
 
+    @Column(nullable = false, length = 36)
+    private String reference;
+
     @Column(nullable = false)
     private int qty;
 
@@ -34,21 +37,23 @@ public class OrderReservation {
     @Column(name = "expire_at", nullable = false)
     private Date expireAt;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "sku_id", referencedColumnName = "sku_id", nullable = false)
     private ProductSku productSku;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "session_id", referencedColumnName = "session_id")
     private ShoppingSession shoppingSession;
 
     public OrderReservation(
+            String reference,
             int qty,
             ReservationStatus status,
             Date expireAt,
             ProductSku sku,
             ShoppingSession session
     ) {
+        this.reference = reference;
         this.qty = qty;
         this.status = status;
         this.expireAt = expireAt;

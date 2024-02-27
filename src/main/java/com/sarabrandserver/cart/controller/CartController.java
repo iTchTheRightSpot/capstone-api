@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
@@ -26,7 +27,7 @@ class CartController {
 
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public List<CartResponse> cartItems(
+    public CompletableFuture<List<CartResponse>> cartItems(
             @RequestParam(name = "currency", defaultValue = "ngn") String currency,
             HttpServletRequest req,
             HttpServletResponse res

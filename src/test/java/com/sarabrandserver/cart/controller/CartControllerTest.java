@@ -23,10 +23,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Transactional
 class CartControllerTest extends AbstractIntegration {
@@ -34,7 +34,7 @@ class CartControllerTest extends AbstractIntegration {
     @Value(value = "/${api.endpoint.baseurl}cart")
     private String path;
     @Value("${cart.cookie.name}")
-    private String CART_COOKIE;
+    private String CARTCOOKIE;
 
     @Autowired
     private ShoppingSessionRepo shoppingSessionRepo;
@@ -81,29 +81,34 @@ class CartControllerTest extends AbstractIntegration {
     }
 
     @Test
-    void list_cart_items_anonymous_user() throws Exception {
-        this.mockMvc
+    void listCartItemsAnonymousUser() throws Exception {
+        MvcResult result = super.mockMvc
                 .perform(get(path)
                         .param("currency", "usd")
-                        .with(csrf())
                 )
-                .andExpect(status().isOk());
+                .andExpect(request().asyncStarted())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        super.mockMvc
+                .perform(asyncDispatch(result))
+                .andExpect(content().contentType("application/json"));
     }
 
     @Test
-    void create_new_shopping_session() throws Exception {
+    void createNewShoppingSession() throws Exception {
         MvcResult result = this.mockMvc
                 .perform(get(path).with(csrf()))
                 .andReturn();
 
-        Cookie cookie = result.getResponse().getCookie(CART_COOKIE);
+        Cookie cookie = result.getResponse().getCookie(CARTCOOKIE);
         assertNotNull(cookie);
 
         var sku = productSku();
 
         var dto = new CartDTO(sku.getSku(), sku.getInventory());
 
-        this.mockMvc
+        super.mockMvc
                 .perform(post(path)
                         .contentType(APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(dto))
@@ -118,19 +123,19 @@ class CartControllerTest extends AbstractIntegration {
     }
 
     @Test
-    void add_to_existing_shopping_session() throws Exception {
+    void addToExistingShoppingSession() throws Exception {
         MvcResult result1 = this.mockMvc
                 .perform(get(path).with(csrf()))
                 .andDo(print())
                 .andReturn();
 
-        Cookie cookie1 = result1.getResponse().getCookie(CART_COOKIE);
+        Cookie cookie1 = result1.getResponse().getCookie(CARTCOOKIE);
         assertNotNull(cookie1);
 
         var sku = productSku();
         var dto = new CartDTO(sku.getSku(), sku.getInventory());
 
-        this.mockMvc
+        super.mockMvc
                 .perform(post(path)
                         .contentType(APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(dto))
@@ -140,7 +145,7 @@ class CartControllerTest extends AbstractIntegration {
                 .andExpect(status().isCreated());
 
         // method add_to_existing_shopping_session
-        this.mockMvc
+        super.mockMvc
                 .perform(post(path)
                         .contentType(APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(dto))

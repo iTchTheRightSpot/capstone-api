@@ -30,6 +30,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
@@ -111,10 +112,21 @@ public class CartService {
     }
 
     /**
-     * Returns a list of CartResponse
+     * Retrieves all {@link CartItem} objects asynchronously. These objects are all
+     * of the {@link ProductSku} that contain in a users shopping cart.
+     * <p>
+     * If a cart cookie exists in the request, the method retrieves the cart items associated
+     * with the cookie.If custom cookie exists, a new cookie is created and added to the
+     * response.
+     *
+     * @param currency the currency for which cart items should be retrieved
+     * @param req the HttpServletRequest object to retrieve the cart cookie
+     * @param res the HttpServletResponse object to add the new cart cookie if needed
+     * @return a {@link CompletableFuture} containing a list of {@link CartResponse} objects
+     * representing the {@link CartItem}.
+     * @throws CustomInvalidFormatException if the cart cookie value is invalid or cannot be parsed
      */
-    // TODO leverage multithreading
-    public List<CartResponse> cartItems(
+    public CompletableFuture<List<CartResponse>> cartItems(
             SarreCurrency currency,
             HttpServletRequest req,
             HttpServletResponse res
@@ -136,33 +148,36 @@ public class CartService {
 
             res.addCookie(c);
 
-            return new ArrayList<>();
+            return CompletableFuture.completedFuture(List.of());
         }
 
         validateCookieExpiration(res, cookie);
 
         String[] arr = cookie.getValue().split(split);
 
-        return this.shoppingSessionRepo
-                .cartItemsByCookieValue(currency, arr[0]) //
-                .stream() //
-                .map(pojo -> {
-                    String url = this.s3Service.preSignedUrl(BUCKET, pojo.getKey());
+        List<CompletableFuture<CartResponse>> futures = this.shoppingSessionRepo
+                .cartItemsByCookieValue(currency, arr[0])
+                .stream()
+                .map(db -> CompletableFuture.supplyAsync(() -> {
+                    String url = this.s3Service.preSignedUrl(BUCKET, db.getKey());
                     return new CartResponse(
-                            pojo.getUuid(),
+                            db.getUuid(),
                             url,
-                            pojo.getName(),
-                            pojo.getPrice(),
-                            pojo.getCurrency(),
-                            pojo.getColour(),
-                            pojo.getSize(),
-                            pojo.getSku(),
-                            pojo.getQty(),
-                            pojo.getWeight(),
-                            pojo.getWeightType()
+                            db.getName(),
+                            db.getPrice(),
+                            db.getCurrency(),
+                            db.getColour(),
+                            db.getSize(),
+                            db.getSku(),
+                            db.getQty(),
+                            db.getWeight(),
+                            db.getWeightType()
                     );
-                }) //
+                }))
                 .toList();
+
+        return CustomUtil.asynchronousTasks(futures)
+                .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
     }
 
     /**

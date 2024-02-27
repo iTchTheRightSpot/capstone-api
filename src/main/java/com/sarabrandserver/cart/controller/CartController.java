@@ -20,7 +20,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}cart")
 @RequiredArgsConstructor
-public class CartController {
+class CartController {
 
     private final CartService cartService;
 

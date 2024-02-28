@@ -8,8 +8,8 @@ import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
 
-@Configuration
+@Component
 @RequiredArgsConstructor
 public class CronJobs {
 

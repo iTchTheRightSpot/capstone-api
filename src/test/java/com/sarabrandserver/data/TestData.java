@@ -31,7 +31,6 @@ public class TestData {
                 .phoneNumber(new Faker().phoneNumber().phoneNumber())
                 .password(new Faker().phoneNumber().phoneNumber())
                 .enabled(true)
-                .paymentDetails(new HashSet<>())
                 .build();
         client.setClientRole(Set.of(new ClientRole(CLIENT, client)));
         return client;
@@ -45,7 +44,6 @@ public class TestData {
                 .phoneNumber(new Faker().phoneNumber().phoneNumber())
                 .password(new Faker().phoneNumber().phoneNumber())
                 .enabled(true)
-                .paymentDetails(new HashSet<>())
                 .build();
         client.setClientRole(
                 Set.of(new ClientRole(CLIENT, client), new ClientRole(WORKER, client))

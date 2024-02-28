@@ -1,6 +1,9 @@
 ALTER TABLE product
     MODIFY COLUMN description VARCHAR(1000);
 
+ALTER TABLE product_sku
+    ADD CONSTRAINT validate_inventory_is_always_greater_than_zero CHECK ( inventory >= 0 );
+
 ALTER TABLE order_detail
     DROP COLUMN created_at;
 
@@ -37,9 +40,7 @@ CREATE TABLE IF NOT EXISTS payment_detail
     payment_status     VARCHAR(10)    NOT NULL,
     created_at         DATETIME       NOT NULL,
     client_id BIGINT,
-    PRIMARY KEY (payment_detail_id),
-    CONSTRAINT `payment_detail_clientz_fk` FOREIGN KEY (client_id)
-        REFERENCES clientz (client_id) ON DELETE SET NULL
+    PRIMARY KEY (payment_detail_id)
 );
 
 ALTER TABLE order_detail
@@ -55,11 +56,9 @@ CREATE TABLE IF NOT EXISTS address
     country       VARCHAR(100) NOT NULL,
     delivery_info VARCHAR(1000),
     PRIMARY KEY (address_id),
-    FOREIGN KEY (address_id) REFERENCES payment_detail (payment_detail_id)
+    CONSTRAINT `payment_detail_address_fk` FOREIGN KEY (address_id)
+        REFERENCES payment_detail (payment_detail_id) ON DELETE RESTRICT
 );
-
-ALTER TABLE product_sku
-    ADD CONSTRAINT validate_inventory_is_always_greater_than_zero CHECK ( inventory >= 0 );
 
 CREATE TABLE IF NOT EXISTS order_reservation
 (
@@ -73,4 +72,24 @@ CREATE TABLE IF NOT EXISTS order_reservation
     PRIMARY KEY (reservation_id),
     CONSTRAINT `shopping_session_fk` FOREIGN KEY (session_id)
         REFERENCES shopping_session (session_id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS payment_authorization
+(
+    authorization_id   BIGINT       NOT NULL UNIQUE,
+    authorization_code VARCHAR(50) NOT NULL,
+    bin                VARCHAR(50) NOT NULL,
+    card_last_4_digits VARCHAR(5)   NOT NULL,
+    exp_month          VARCHAR(2)   NOT NULL,
+    exp_year           VARCHAR(6)   NOT NULL,
+    channel            VARCHAR(10)   NOT NULL,
+    card_type          VARCHAR(20)   NOT NULL,
+    bank               VARCHAR(100)   NOT NULL,
+    country_code       VARCHAR(10)   NOT NULL,
+    brand              VARCHAR(20)      NOT NULL,
+    is_reusable        boolean   NOT NULL,
+    signature          VARCHAR(50)   NOT NULL,
+    PRIMARY KEY (authorization_id),
+    CONSTRAINT `payment_detail_payment_authorization_fk` FOREIGN KEY (authorization_id)
+        REFERENCES payment_detail (payment_detail_id) ON DELETE RESTRICT
 );

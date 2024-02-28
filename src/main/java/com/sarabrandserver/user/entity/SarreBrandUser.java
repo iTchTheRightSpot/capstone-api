@@ -1,6 +1,5 @@
 package com.sarabrandserver.user.entity;
 
-import com.sarabrandserver.payment.entity.PaymentDetail;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,7 +8,6 @@ import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.EAGER;
-import static jakarta.persistence.FetchType.LAZY;
 
 @Table(name = "clientz")
 @Entity
@@ -45,8 +43,5 @@ public class SarreBrandUser implements Serializable {
 
     @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "sarreBrandUser", orphanRemoval = true)
     private Set<ClientRole> clientRole;
-
-    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "user")
-    private Set<PaymentDetail> paymentDetails;
 
 }

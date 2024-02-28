@@ -169,7 +169,6 @@ public class AuthService {
                         .phoneNumber(dto.phone().trim())
                         .password(passwordEncoder.encode(dto.password()))
                         .enabled(true)
-                        .paymentDetails(new HashSet<>())
                         .clientRole(new HashSet<>())
                         .build()
                 );

@@ -1,5 +1,6 @@
 package com.sarabrandserver.payment.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.cart.entity.CartItem;
@@ -15,12 +16,14 @@ import com.sarabrandserver.payment.entity.OrderReservation;
 import com.sarabrandserver.payment.projection.TotalPojo;
 import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.payment.response.PaymentResponse;
+import com.sarabrandserver.payment.util.WebhookAuthorization;
+import com.sarabrandserver.payment.util.WebhookConstruct;
+import com.sarabrandserver.payment.util.WebhookMetaData;
 import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
 import com.sarabrandserver.util.CustomUtil;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.xml.bind.DatatypeConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -29,8 +32,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -42,7 +43,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Service
 @RequiredArgsConstructor
@@ -290,74 +290,52 @@ public class PaymentService {
         }
     }
 
-    record Pair(JsonNode node, String validate) {
-    }
-
     /**
      * method retrieves info sent from 3rd party via webhook
+     * <a href="https://paystack.com/docs/payments/verify-payments/">...</a>
      * */
     @Transactional
     public void order(HttpServletRequest req) {
         try {
             log.info("webhook received");
-            String body = requestBody(req);
+            String body = CustomUtil.httpServletRequestToString(req);
 
-            var secret = this.thirdPartyService.payStackCredentials();
-            Pair pair = validateRequestFromPayStack(secret.secretKey(), body);
+            WebhookConstruct pair = CustomUtil
+                    .validateRequestFromPayStack(thirdPartyService.payStackCredentials().secretKey(), body);
 
             if (!pair.validate().toLowerCase().equals(req.getHeader("x-paystack-signature"))) {
                 log.error("invalid request from paystack");
                 throw new CustomServerError("invalid webhook from paystack");
             }
 
-            JsonNode status = pair.node().get("status");
-            JsonNode data = pair.node().get("data");
-            JsonNode metadata = pair.node().get("metadata");
-
-            // TODO verify payment came from paystack
-            // https://paystack.com/docs/payments/verify-payments/
-            // TODO update order reservation table
-            // TODO save to PaymentDetail, OrderDetail and Address
-
-
+            if (pair.node().get("event").textValue().equals("charge.success")) {
+                onSuccessWebHook(pair.node().get("data"));
+            }
         } catch (IOException e) {
             log.error("error parsing request {}", e.getMessage());
             throw new CustomServerError("error parsing request");
         } catch (CustomServerError e) {
             log.error("error from paystack webhook {}", e.getMessage());
             throw new CustomServerError(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.error("error converting to custom object {}", e.getMessage());
+            throw new CustomServerError(e.getMessage());
         }
     }
 
-    /**
-     * Transforms request body into a string
-     * */
-    private String requestBody(HttpServletRequest req) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = req.getReader().readLine()) != null) {
-            sb.append(line);
-        }
-        return sb.toString();
-    }
+    @Transactional
+    void onSuccessWebHook(JsonNode data) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
 
-    /**
-     * Validates if request came from paystack
-     * <a href="https://paystack.com/docs/payments/webhooks/">...</a>
-     * */
-    private Pair validateRequestFromPayStack(String secretKey, String body) {
-        String hmac = "HmacSHA512";
-        try {
-            JsonNode node = new ObjectMapper().readValue(body, JsonNode.class);
-            Mac sha512_HMAC = Mac.getInstance(hmac);
-            sha512_HMAC.init(new SecretKeySpec(secretKey.getBytes(UTF_8), hmac));
-            String validate = DatatypeConverter
-                    .printHexBinary(sha512_HMAC.doFinal(node.toString().getBytes(UTF_8)));
-            return new Pair(node, validate);
-        } catch (Exception e) {
-            log.error("webhook did not come from paystack {}", e.getMessage());
-            throw new CustomServerError("webhook did not come from paystack");
-        }
+        String domain = data.get("domain").textValue();
+        BigDecimal amount = BigDecimal.valueOf(data.get("amount").asDouble());
+        SarreCurrency currency = SarreCurrency.valueOf(data.get("currency").textValue());
+        String reference = data.get("reference").textValue().substring(4);
+        WebhookMetaData metadata = mapper.treeToValue(data.get("metadata"), WebhookMetaData.class);
+        WebhookAuthorization authorization = mapper
+                .treeToValue(data.get("authorization"), WebhookAuthorization.class);
+
+        log.info("called {}", data);
     }
 
 }

@@ -75,7 +75,7 @@ public class CartService {
      */
     public void validateCookieExpiration(HttpServletResponse res, Cookie cookie) {
         try {
-            String[] arr = cookie.getValue().split(this.split);
+            String[] arr = cookie.getValue().split(split);
 
             Date now = CustomUtil.toUTC(new Date());
             long parsed = Long.parseLong(arr[1]);
@@ -119,12 +119,12 @@ public class CartService {
      * with the cookie.If custom cookie exists, a new cookie is created and added to the
      * response.
      *
-     * @param currency the currency for which cart items should be retrieved
-     * @param req the HttpServletRequest object to retrieve the cart cookie
-     * @param res the HttpServletResponse object to add the new cart cookie if needed
+     * @param currency the currency for which cart items should be retrieved.
+     * @param req the HttpServletRequest object to retrieve the cart cookie.
+     * @param res the HttpServletResponse object to add the new cart cookie if needed.
      * @return a {@link CompletableFuture} containing a list of {@link CartResponse} objects
      * representing the {@link CartItem}.
-     * @throws CustomInvalidFormatException if the cart cookie value is invalid or cannot be parsed
+     * @throws CustomInvalidFormatException if the cart cookie value is invalid or cannot be parsed.
      */
     public CompletableFuture<List<CartResponse>> cartItems(
             SarreCurrency currency,
@@ -181,11 +181,25 @@ public class CartService {
     }
 
     /**
-     * Creates a new shopping session or persists details into an existing shopping session.
+     * Adds a {@link ProductSku} to a user's shopping cart by creating or updating a
+     * {@link ShoppingSession}.
+     * <p>
+     * Retrieves a unique cookie associated to a user's device from the {@link HttpServletRequest}.
+     * This cookie is used to identify the user's {@link ShoppingSession}.
+     * <p>
+     * If the specified {@link ProductSku} does not exist, a {@link CustomNotFoundException}
+     * is thrown. If the {@link com.sarabrandserver.product.entity.Product} is out of stock
+     * or the requested quantity exceeds available inventory, an {@link OutOfStockException}
+     * is thrown.
      *
-     * @throws CustomNotFoundException if dto property sku does not exist
-     * @throws OutOfStockException if dto property qty is greater than inventory
-     * @throws CustomInvalidFormatException if cookie is in invalid format
+     * @param dto the {@link CartDTO} containing information about the {@link ProductSku}
+     *            and quantity.
+     * @param req the {@link HttpServletRequest} containing the unique cookie associated with
+     *            the user's device.
+     * @throws CustomNotFoundException      if the specified {@link ProductSku} does not exist.
+     * @throws OutOfStockException          if the {@link ProductSku} is out of stock or the
+     * requested quantity exceeds available inventory.
+     * @throws CustomInvalidFormatException if the cookie is invalid.
      */
     @Transactional
     public void create(CartDTO dto, HttpServletRequest req) {
@@ -262,10 +276,11 @@ public class CartService {
     }
 
     /**
-     * Deletes a CartItem from ShoppingSession based on
-     * sku and user ip address
+     * Deletes a {@link CartItem} from associated to a {@link ShoppingSession}.
      *
-     * @param sku unique ProductSku
+     * @param req the HttpServletRequest object containing a unique cookie for
+     *            every device that visit out application.
+     * @param sku unique {@link ProductSku}.
      * */
     @Transactional
     public void deleteFromCart(HttpServletRequest req, String sku) {
@@ -275,7 +290,7 @@ public class CartService {
             return;
         }
 
-        String[] arr = cookie.getValue().split(this.split);
+        String[] arr = cookie.getValue().split(split);
 
         this.cartItemRepo.deleteCartItemByCookieAndSku(arr[0], sku);
     }

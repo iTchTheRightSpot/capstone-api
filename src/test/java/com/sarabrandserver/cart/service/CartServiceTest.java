@@ -93,7 +93,7 @@ class CartServiceTest extends AbstractUnitTest {
         cartService.validateCookieExpiration(res, cookie);
 
         // then
-        verify(this.shoppingSessionRepo, times(0))
+        verify(shoppingSessionRepo, times(0))
                 .updateShoppingSessionExpiry(anyString(), any(Date.class));
     }
 

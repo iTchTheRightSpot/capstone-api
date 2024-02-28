@@ -39,7 +39,7 @@ public class PaymentController {
      * complete transaction.
      * */
     @ResponseStatus(CREATED)
-    @PostMapping(path = "/webhook")
+    @PostMapping
     public void order(HttpServletRequest req) {
         this.paymentService.order(req);
     }

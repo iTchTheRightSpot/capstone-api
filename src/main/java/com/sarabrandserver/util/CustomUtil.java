@@ -1,25 +1,19 @@
 package com.sarabrandserver.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.checkout.CheckoutPair;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomServerError;
 import com.sarabrandserver.payment.projection.TotalPojo;
-import com.sarabrandserver.payment.util.WebhookConstruct;
 import com.sarabrandserver.product.dto.PriceCurrencyDto;
 import com.sarabrandserver.product.response.Variant;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.xml.bind.DatatypeConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -30,7 +24,6 @@ import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
 import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.FLOOR;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class CustomUtil {
 
@@ -271,37 +264,6 @@ public class CustomUtil {
         return CompletableFuture
                 .allOf(futures.toArray(new CompletableFuture[0]))
                 .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
-    }
-
-    /**
-     * Transforms request body into a string
-     * */
-    public static String httpServletRequestToString(HttpServletRequest req) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = req.getReader().readLine()) != null) {
-            sb.append(line);
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Validates if request came from paystack
-     * <a href="https://paystack.com/docs/payments/webhooks/">...</a>
-     * */
-    public static WebhookConstruct validateRequestFromPayStack(String secretKey, String body) {
-        String hmac = "HmacSHA512";
-        try {
-            JsonNode node = new ObjectMapper().readValue(body, JsonNode.class);
-            Mac sha512_HMAC = Mac.getInstance(hmac);
-            sha512_HMAC.init(new SecretKeySpec(secretKey.getBytes(UTF_8), hmac));
-            String validate = DatatypeConverter
-                    .printHexBinary(sha512_HMAC.doFinal(node.toString().getBytes(UTF_8)));
-            return new WebhookConstruct(node, validate);
-        } catch (Exception e) {
-            log.error("webhook did not come from paystack {}", e.getMessage());
-            throw new CustomServerError("webhook did not come from paystack");
-        }
     }
 
 }

@@ -16,6 +16,7 @@ import com.sarabrandserver.payment.entity.OrderReservation;
 import com.sarabrandserver.payment.projection.TotalPojo;
 import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.payment.response.PaymentResponse;
+import com.sarabrandserver.payment.util.WebHookUtil;
 import com.sarabrandserver.payment.util.WebhookAuthorization;
 import com.sarabrandserver.payment.util.WebhookConstruct;
 import com.sarabrandserver.payment.util.WebhookMetaData;
@@ -291,16 +292,16 @@ public class PaymentService {
     }
 
     /**
-     * method retrieves info sent from 3rd party via webhook
+     * Processes a payment received via webhook
      * <a href="https://paystack.com/docs/payments/verify-payments/">...</a>
      * */
     @Transactional
     public void order(HttpServletRequest req) {
         try {
             log.info("webhook received");
-            String body = CustomUtil.httpServletRequestToString(req);
+            String body = WebHookUtil.httpServletRequestToString(req);
 
-            WebhookConstruct pair = CustomUtil
+            WebhookConstruct pair = WebHookUtil
                     .validateRequestFromPayStack(thirdPartyService.payStackCredentials().secretKey(), body);
 
             if (!pair.validate().toLowerCase().equals(req.getHeader("x-paystack-signature"))) {
@@ -328,14 +329,13 @@ public class PaymentService {
         ObjectMapper mapper = new ObjectMapper();
 
         String domain = data.get("domain").textValue();
-        BigDecimal amount = BigDecimal.valueOf(data.get("amount").asDouble());
+        BigDecimal amount = WebHookUtil
+                .fromNumberToBigDecimal(mapper.treeToValue(data.get("amount"), Number.class));
         SarreCurrency currency = SarreCurrency.valueOf(data.get("currency").textValue());
         String reference = data.get("reference").textValue().substring(4);
         WebhookMetaData metadata = mapper.treeToValue(data.get("metadata"), WebhookMetaData.class);
         WebhookAuthorization authorization = mapper
                 .treeToValue(data.get("authorization"), WebhookAuthorization.class);
-
-        log.info("called {}", data);
     }
 
 }

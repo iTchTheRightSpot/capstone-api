@@ -1,6 +1,7 @@
 package com.sarabrandserver.payment.util;
 
 public record WebhookMetaData(
+        String principal,
         String email,
         String name,
         String phone,

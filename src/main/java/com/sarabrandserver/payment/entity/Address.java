@@ -1,16 +1,14 @@
 package com.sarabrandserver.payment.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.Serializable;
 
 @Table(name = "address")
 @Entity
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Getter
 @Setter
 public class Address implements Serializable {
 
@@ -40,5 +38,55 @@ public class Address implements Serializable {
     @MapsId
     @JoinColumn(name = "address_id")
     private PaymentDetail paymentDetail;
+
+    public Address(
+            String address,
+            String city,
+            String state,
+            String postcode,
+            String country,
+            String deliveryInfo,
+            PaymentDetail paymentDetail
+    ) {
+        this.address = address;
+        this.city = city;
+        this.state = state;
+        this.postcode = postcode;
+        this.country = country;
+        this.deliveryInfo = deliveryInfo;
+        this.paymentDetail = paymentDetail;
+    }
+
+    public Long addressId() {
+        return addressId;
+    }
+
+    public String address() {
+        return address;
+    }
+
+    public String city() {
+        return city;
+    }
+
+    public String state() {
+        return state;
+    }
+
+    public String postcode() {
+        return postcode;
+    }
+
+    public String country() {
+        return country;
+    }
+
+    public String deliveryInfo() {
+        return deliveryInfo;
+    }
+
+    public PaymentDetail paymentDetail() {
+        return paymentDetail;
+    }
 
 }

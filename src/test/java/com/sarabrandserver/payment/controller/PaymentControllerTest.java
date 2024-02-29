@@ -32,8 +32,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
@@ -205,7 +203,7 @@ class PaymentControllerTest extends AbstractIntegration {
         super.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper
+                        .content(super.objectMapper
                                 .writeValueAsString(new CartDTO(sku.getSku(), sku.getInventory() - 1))
                         )
                         .with(csrf())
@@ -227,7 +225,7 @@ class PaymentControllerTest extends AbstractIntegration {
         super.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper
+                        .content(super.objectMapper
                                 .writeValueAsString(new CartDTO(sku.getSku(), 1))
                         )
                         .with(csrf())
@@ -241,7 +239,7 @@ class PaymentControllerTest extends AbstractIntegration {
             super.mockMvc
                     .perform(post(cartPath)
                             .contentType(APPLICATION_JSON)
-                            .content(this.objectMapper
+                            .content(super.objectMapper
                                     .writeValueAsString(new CartDTO(s.getSku(), s.getInventory()))
                             )
                             .with(csrf())
@@ -284,7 +282,7 @@ class PaymentControllerTest extends AbstractIntegration {
             super.mockMvc
                     .perform(post(cartPath)
                             .contentType(APPLICATION_JSON)
-                            .content(this.objectMapper
+                            .content(super.objectMapper
                                     .writeValueAsString(new CartDTO(sku.getSku(), 1))
                             )
                             .with(csrf())
@@ -328,51 +326,51 @@ class PaymentControllerTest extends AbstractIntegration {
                 );
 
         // create a product of one variant where inventory is 1
-        TestData
-                .dummyProductsTestTotalAmount(
-                        category,
-                        arr,
-                        1, // 1 product
-                        1, // variant qty
-                        5.5, // 5.5kg
-                        productService
-                );
+        TestData.dummyProductsTestTotalAmount(
+                category,
+                arr,
+                1, // 1 product
+                1, // variant qty
+                5.5, // 5.5kg
+                productService
+        );
 
         int numOfUsers = 5;
 
         // numOfUsers add last item to their cart
         Cookie[] cookies = impl(numOfUsers);
-        ExecutorService executor = Executors.newFixedThreadPool(numOfUsers);
 
-        CompletableFuture<?>[] futures = new CompletableFuture<?>[numOfUsers];
+        List<CompletableFuture<MvcResult>> futures = new ArrayList<>();
 
         for (int i = 0; i < cookies.length; i++) {
-            int curr = i;
-            futures[i] = CompletableFuture.supplyAsync(() -> {
-                try {
-                    var c = curr % 2 == 0 ? USD.getCurrency() : NGN.getCurrency();
-                    var country = curr % 2 == 0 ? "nigeria" : "Canada";
-                    return super.mockMvc
-                            .perform(get(this.path)
-                                    .param("currency", c)
-                                    .param("country", country)
-                                    .with(csrf())
-                                    .cookie(cookies[curr])
-                            )
-                            .andReturn();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }, executor);
+            final int curr = i;
+            futures.add(
+                    CompletableFuture.supplyAsync(() -> {
+                                try {
+                                    var c = curr % 2 == 0 ? USD.getCurrency() : NGN.getCurrency();
+                                    var country = curr % 2 == 0 ? "nigeria" : "Canada";
+                                    return super.mockMvc
+                                            .perform(get(path)
+                                                    .param("currency", c)
+                                                    .param("country", country)
+                                                    .with(csrf())
+                                                    .cookie(cookies[curr])
+                                            )
+                                            .andReturn();
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                    ));
         }
 
-        // Wait for all CompletableFuture to complete
-        CompletableFuture.allOf(futures).get();
+        // complete all CompletableFuture
+        CustomUtil.asynchronousTasks(futures);
+
         List<Integer> results = new ArrayList<>();
 
-        for (CompletableFuture<?> future : futures) {
-            MvcResult join = (MvcResult) future.join();
-            results.add(join.getResponse().getStatus());
+        for (CompletableFuture<MvcResult> future : futures) {
+            results.add(future.join().getResponse().getStatus());
         }
 
         assertEquals(1, Collections.frequency(results, 200));

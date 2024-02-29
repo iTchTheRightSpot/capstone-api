@@ -1,11 +1,9 @@
 package com.sarabrandserver.user.controller;
 
 import com.sarabrandserver.user.res.UserResponse;
-import com.sarabrandserver.user.service.WorkerService;
-import jakarta.validation.constraints.NotNull;
+import com.sarabrandserver.user.service.SarreBrandUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,14 +18,14 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @PreAuthorize(value = "hasRole('ROLE_WORKER')")
 public class WorkerController {
 
-    private final WorkerService workerService;
+    private final SarreBrandUserService service;
 
     @GetMapping(produces = APPLICATION_JSON_VALUE)
     public Page<UserResponse> allUsers(
-            @NotNull @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size
+            @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @RequestParam(name = "size", defaultValue = "20") Integer size
     ) {
-        return this.workerService.allUsers(page, Math.min(size, 20));
+        return this.service.allUsers(page, Math.min(size, 20));
     }
 
 }

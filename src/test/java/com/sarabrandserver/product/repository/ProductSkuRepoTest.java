@@ -15,7 +15,7 @@ import com.sarabrandserver.payment.entity.OrderReservation;
 import com.sarabrandserver.payment.entity.PaymentDetail;
 import com.sarabrandserver.payment.repository.OrderDetailRepository;
 import com.sarabrandserver.payment.repository.OrderReservationRepo;
-import com.sarabrandserver.payment.repository.PaymentRepo;
+import com.sarabrandserver.payment.repository.PaymentDetailRepo;
 import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
@@ -52,7 +52,7 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
     @Autowired
     private OrderDetailRepository orderRepository;
     @Autowired
-    private PaymentRepo paymentRepo;
+    private PaymentDetailRepo paymentDetailRepo;
     @Autowired
     private OrderReservationRepo reservationRepo;
     @Autowired
@@ -74,13 +74,13 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
         RepositoryTestData
                 .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
-        var paymentDetail = paymentRepo
+        var paymentDetail = paymentDetailRepo
                 .save(
                         PaymentDetail.builder()
                                 .name("James Frank")
                                 .email("james@email.com")
                                 .phone("0000000000")
-                                .paymentId("unique-payment-categoryId")
+                                .referenceId("unique-payment-categoryId")
                                 .paymentProvider("PayStack")
                                 .currency(SarreCurrency.NGN)
                                 .amount(new BigDecimal("25750"))
@@ -169,13 +169,13 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
         RepositoryTestData
                 .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
-        var paymentDetail = paymentRepo
+        var paymentDetail = paymentDetailRepo
                 .save(
                         PaymentDetail.builder()
                                 .name("James Frank")
                                 .email("james@email.com")
                                 .phone("0000000000")
-                                .paymentId("unique-payment-categoryId")
+                                .referenceId("unique-payment-categoryId")
                                 .paymentProvider("PayStack")
                                 .currency(SarreCurrency.NGN)
                                 .amount(new BigDecimal("25750"))

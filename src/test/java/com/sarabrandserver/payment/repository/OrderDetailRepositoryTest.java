@@ -41,7 +41,7 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private ProductSkuRepo skuRepo;
     @Autowired
-    private PaymentRepo paymentRepo;
+    private PaymentDetailRepo paymentDetailRepo;
     @Autowired
     private OrderDetailRepository orderDetailRepository;
     @Autowired
@@ -62,12 +62,12 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
         RepositoryTestData
                 .createProduct(2, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
 
-        var paymentDetail = paymentRepo
+        var paymentDetail = paymentDetailRepo
                 .save(PaymentDetail.builder()
                         .name(new Faker().name().fullName())
                         .email("hello@hello.com")
                         .phone("0000000000")
-                        .paymentId("unique-payment-categoryId")
+                        .referenceId("unique-payment-categoryId")
                         .currency(SarreCurrency.USD)
                         .amount(new BigDecimal("50.65"))
                         .paymentProvider("Paystack")
@@ -76,17 +76,15 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
                         .build()
                 );
 
-        addressRepo
-                .save(Address.builder()
-                        .address("address boulevard")
-                        .city("city")
-                        .state("state")
-                        .postcode("5n32p0")
-                        .country("Transylvania")
-                        .paymentDetail(paymentDetail)
-                        .deliveryInfo(new Faker().lorem().characters(500))
-                        .build()
-                );
+        addressRepo.save(new Address(
+                "address boulevard",
+                "city",
+                "state",
+                "postcode",
+                "Transylvania",
+                new Faker().lorem().characters(500),
+                paymentDetail)
+        );
 
 
         // when

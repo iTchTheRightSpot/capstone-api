@@ -1,8 +1,5 @@
 package com.sarabrandserver.payment.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarabrandserver.cart.entity.CartItem;
 import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.cart.repository.CartItemRepo;
@@ -10,16 +7,11 @@ import com.sarabrandserver.checkout.CheckoutService;
 import com.sarabrandserver.checkout.CustomObject;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomNotFoundException;
-import com.sarabrandserver.exception.CustomServerError;
 import com.sarabrandserver.exception.OutOfStockException;
 import com.sarabrandserver.payment.entity.OrderReservation;
 import com.sarabrandserver.payment.projection.TotalPojo;
 import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.payment.response.PaymentResponse;
-import com.sarabrandserver.payment.util.WebHookUtil;
-import com.sarabrandserver.payment.util.WebhookAuthorization;
-import com.sarabrandserver.payment.util.WebhookConstruct;
-import com.sarabrandserver.payment.util.WebhookMetaData;
 import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
@@ -33,7 +25,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -289,53 +280,6 @@ public class PaymentService {
             );
             this.reservationRepo.deleteOrderReservationByReservationId(value.getReservationId());
         }
-    }
-
-    /**
-     * Processes a payment received via webhook
-     * <a href="https://paystack.com/docs/payments/verify-payments/">...</a>
-     * */
-    @Transactional
-    public void order(HttpServletRequest req) {
-        try {
-            log.info("webhook received");
-            String body = WebHookUtil.httpServletRequestToString(req);
-
-            WebhookConstruct pair = WebHookUtil
-                    .validateRequestFromPayStack(thirdPartyService.payStackCredentials().secretKey(), body);
-
-            if (!pair.validate().toLowerCase().equals(req.getHeader("x-paystack-signature"))) {
-                log.error("invalid request from paystack");
-                throw new CustomServerError("invalid webhook from paystack");
-            }
-
-            if (pair.node().get("event").textValue().equals("charge.success")) {
-                onSuccessWebHook(pair.node().get("data"));
-            }
-        } catch (IOException e) {
-            log.error("error parsing request {}", e.getMessage());
-            throw new CustomServerError("error parsing request");
-        } catch (CustomServerError e) {
-            log.error("error from paystack webhook {}", e.getMessage());
-            throw new CustomServerError(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            log.error("error converting to custom object {}", e.getMessage());
-            throw new CustomServerError(e.getMessage());
-        }
-    }
-
-    @Transactional
-    void onSuccessWebHook(JsonNode data) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-
-        String domain = data.get("domain").textValue();
-        BigDecimal amount = WebHookUtil
-                .fromNumberToBigDecimal(mapper.treeToValue(data.get("amount"), Number.class));
-        SarreCurrency currency = SarreCurrency.valueOf(data.get("currency").textValue());
-        String reference = data.get("reference").textValue().substring(4);
-        WebhookMetaData metadata = mapper.treeToValue(data.get("metadata"), WebhookMetaData.class);
-        WebhookAuthorization authorization = mapper
-                .treeToValue(data.get("authorization"), WebhookAuthorization.class);
     }
 
 }

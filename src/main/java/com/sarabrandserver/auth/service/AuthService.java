@@ -170,6 +170,7 @@ public class AuthService {
                         .password(passwordEncoder.encode(dto.password()))
                         .enabled(true)
                         .clientRole(new HashSet<>())
+                        .paymentDetail(new HashSet<>())
                         .build()
                 );
 

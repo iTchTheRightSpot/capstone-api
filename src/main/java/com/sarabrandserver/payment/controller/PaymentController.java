@@ -3,6 +3,7 @@ package com.sarabrandserver.payment.controller;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.payment.response.PaymentResponse;
 import com.sarabrandserver.payment.service.PaymentService;
+import com.sarabrandserver.payment.service.WebhookService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -19,6 +20,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final WebhookService webhookService;
 
     /**
      * Called before payment page appears
@@ -40,8 +42,8 @@ public class PaymentController {
      * */
     @ResponseStatus(CREATED)
     @PostMapping
-    public void order(HttpServletRequest req) {
-        this.paymentService.order(req);
+    public void webhook(HttpServletRequest req) {
+        this.webhookService.webhook(req);
     }
 
 }

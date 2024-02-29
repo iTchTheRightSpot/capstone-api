@@ -122,4 +122,7 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     @Query("DELETE FROM OrderReservation o WHERE o.expireAt <= :date AND o.status = :status")
     void deleteExpiredOrderReservations(Date date, ReservationStatus status);
 
+    @Query("SELECT o FROM OrderReservation o WHERE o.reference = :refence")
+    List<OrderReservation> allReservationsByReference(String reference);
+
 }

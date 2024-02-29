@@ -26,7 +26,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> 
     p.created_at AS time,
     p.currency as currency,
     p.amount as total,
-    p.payment_id AS paymentId,
+    p.reference_id AS paymentId,
     CONCAT('[',
         GROUP_CONCAT(DISTINCT
             JSON_OBJECT(
@@ -42,7 +42,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> 
     INNER JOIN product_detail d ON s.detail_id = d.detail_id
     INNER JOIN product prod ON d.product_id = prod.product_id
     WHERE p.email = :principal
-    GROUP BY p.payment_id
+    GROUP BY p.reference_id
     """)
     List<OrderPojo> orderHistoryByPrincipal(String principal);
 

@@ -2,6 +2,7 @@ package com.sarabrandserver.payment.entity;
 
 import com.sarabrandserver.enumeration.PaymentStatus;
 import com.sarabrandserver.enumeration.SarreCurrency;
+import com.sarabrandserver.user.entity.SarreBrandUser;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,7 +14,12 @@ import java.util.Set;
 import static jakarta.persistence.CascadeType.*;
 import static jakarta.persistence.FetchType.LAZY;
 
-@Table(name = "payment_detail")
+@Table(name = "payment_detail",
+        indexes = @Index(
+                name = "IX_payment_detail_email_reference_id",
+                columnList = "email, reference_id"
+        )
+)
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -36,8 +42,8 @@ public class PaymentDetail implements Serializable {
     @Column(nullable = false, length = 20)
     private String phone;
 
-    @Column(name = "payment_id", nullable = false, unique = true)
-    private String paymentId;
+    @Column(name = "reference_id", nullable = false, unique = true)
+    private String referenceId; // equivalent to reference id
 
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
@@ -53,6 +59,9 @@ public class PaymentDetail implements Serializable {
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
+    @Column(name = "paid_at")
+    private String paidAt;
+
     @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createAt;
@@ -64,6 +73,10 @@ public class PaymentDetail implements Serializable {
     @OneToOne(mappedBy = "paymentDetail", cascade = {PERSIST, MERGE, REFRESH})
     @PrimaryKeyJoinColumn
     private PaymentAuthorization paymentAuthorization;
+
+    @ManyToOne
+    @JoinColumn(name = "client_id", referencedColumnName = "client_id")
+    private SarreBrandUser user;
 
     @OneToMany(fetch = LAZY, cascade = { PERSIST, MERGE, REFRESH }, mappedBy = "paymentDetail")
     private Set<OrderDetail> orderDetails;

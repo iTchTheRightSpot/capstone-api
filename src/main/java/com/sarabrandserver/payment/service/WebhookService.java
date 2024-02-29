@@ -21,6 +21,7 @@ import com.sarabrandserver.payment.util.WebHookUtil;
 import com.sarabrandserver.payment.util.WebhookAuthorization;
 import com.sarabrandserver.payment.util.WebhookConstruct;
 import com.sarabrandserver.payment.util.WebhookMetaData;
+import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
 import com.sarabrandserver.user.service.SarreBrandUserService;
 import com.sarabrandserver.util.CustomUtil;
@@ -36,6 +37,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -84,7 +86,6 @@ public class WebhookService {
         }
     }
 
-    @Transactional
     void onSuccessWebHook(JsonNode data) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
 
@@ -99,10 +100,7 @@ public class WebhookService {
         PaymentDetail detail = paymentDetail(data, metadata, reference, amount);
         address(metadata, detail);
         paymentAuthorization(webAuth, detail);
-
-        // TODO
         orderReservations(reference.substring(4));
-
     }
 
     private PaymentDetail paymentDetail(JsonNode data, WebhookMetaData metadata, String reference, BigDecimal amount) {
@@ -161,12 +159,21 @@ public class WebhookService {
     }
 
     private void orderReservations(String reference) {
-        List<OrderReservation> list = orderReservationRepo.allReservationsByReference(reference);
-        ShoppingSession session = list.getFirst().getShoppingSession();
+        List<OrderReservation> reservations = orderReservationRepo.allReservationsByReference(reference);
 
-        // delete all from cart that reservation equal
-        List<CartItem> carts = cartItemRepo.cartItemsByShoppingSessionId(session.shoppingSessionId());
+        // delete CartItems with the same ProductSku
+        reservations.stream().map(OrderReservation::getProductSku)
+                .toList()
+                .stream()
+                .flatMap(s -> cartItemRepo
+                        .cartItemsByShoppingSessionId(reservations.getFirst().getShoppingSession().shoppingSessionId())
+                        .stream()
+                        .filter(c -> Objects.equals(c.getProductSku().getSku(), s.getSku()))
+                )
+                .forEach(cartItem -> cartItemRepo.deleteCartItemByCartItemId(cartItem.getCartId()));
 
+        // delete OrderReservations
+        reservations.forEach(o -> orderReservationRepo.deleteOrderReservationByReservationId(o.getReservationId()));
     }
 
 }

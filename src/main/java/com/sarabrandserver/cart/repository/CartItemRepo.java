@@ -69,4 +69,10 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     WHERE s.shoppingSessionId = :id AND sk.sku = :sku
     """)
     Optional<CartItem> cartItemByShoppingSessionIdAndProductSkuSku(long id, String sku);
+
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM CartItem c WHERE c.cartId = :id")
+    void deleteCartItemByCartItemId(long id);
+
 }

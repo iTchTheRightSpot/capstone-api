@@ -3,25 +3,16 @@ package com.sarabrandserver.payment.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sarabrandserver.cart.entity.CartItem;
-import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.enumeration.PaymentStatus;
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomServerError;
-import com.sarabrandserver.payment.entity.Address;
-import com.sarabrandserver.payment.entity.OrderReservation;
-import com.sarabrandserver.payment.entity.PaymentAuthorization;
-import com.sarabrandserver.payment.entity.PaymentDetail;
-import com.sarabrandserver.payment.repository.AddressRepo;
-import com.sarabrandserver.payment.repository.OrderReservationRepo;
-import com.sarabrandserver.payment.repository.PaymentAuthorizationRepo;
-import com.sarabrandserver.payment.repository.PaymentDetailRepo;
+import com.sarabrandserver.payment.entity.*;
+import com.sarabrandserver.payment.repository.*;
 import com.sarabrandserver.payment.util.WebHookUtil;
 import com.sarabrandserver.payment.util.WebhookAuthorization;
 import com.sarabrandserver.payment.util.WebhookConstruct;
 import com.sarabrandserver.payment.util.WebhookMetaData;
-import com.sarabrandserver.product.entity.ProductSku;
 import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
 import com.sarabrandserver.user.service.SarreBrandUserService;
 import com.sarabrandserver.util.CustomUtil;
@@ -52,10 +43,15 @@ public class WebhookService {
     private final PaymentAuthorizationRepo paymentAuthorizationRepo;
     private final OrderReservationRepo orderReservationRepo;
     private final CartItemRepo cartItemRepo;
+    private final OrderDetailRepository orderDetailRepository;
 
     /**
-     * Processes a payment received via webhook
-     * <a href="https://paystack.com/docs/payments/verify-payments/">...</a>
+     * Processes a payment received via webhook from Paystack.
+     * Reference documentation <a href="https://paystack.com/docs/payments/verify-payments/">...</a>
+     *
+     * @param req the {@link HttpServletRequest} containing the webhook data.
+     * @throws CustomServerError if there is an error parsing the request or an invalid request
+     * is received from Paystack.
      */
     @Transactional
     public void webhook(HttpServletRequest req) {
@@ -86,6 +82,12 @@ public class WebhookService {
         }
     }
 
+    /**
+     * Processes the webhook data when a payment is successful.
+     *
+     * @param data The {@link JsonNode} containing the webhook data.
+     * @throws JsonProcessingException if there is an error occurs transforming data to a custom object.
+     */
     void onSuccessWebHook(JsonNode data) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
 
@@ -100,12 +102,24 @@ public class WebhookService {
         PaymentDetail detail = paymentDetail(data, metadata, reference, amount);
         address(metadata, detail);
         paymentAuthorization(webAuth, detail);
-        orderReservations(reference.substring(4));
+        processPaymentOrderReservations(detail, reference.substring(4));
     }
 
+    /**
+     * Creates and saves a {@link PaymentDetail} object based on the webhook metadata, transaction data,
+     * and user information.
+     *
+     * @param data      The {@link JsonNode} containing transaction data.
+     * @param metadata  The metadata extracted from the webhook containing customer information.
+     * @param reference The reference ID associated with the payment.
+     * @param amount    The amount of the payment.
+     * @return The saved {@link PaymentDetail} object.
+     */
     private PaymentDetail paymentDetail(JsonNode data, WebhookMetaData metadata, String reference, BigDecimal amount) {
         // find user
         var user = userService.userByPrincipal(metadata.principal()).orElse(null);
+
+        SarreCurrency currency = SarreCurrency.valueOf(data.get("currency").textValue().toUpperCase());
 
         // save PaymentDetail
         return paymentDetailRepo.save(
@@ -114,8 +128,8 @@ public class WebhookService {
                         .email(metadata.email())
                         .phone(metadata.phone())
                         .referenceId(reference)
-                        .currency(SarreCurrency.valueOf(data.get("currency").textValue().toUpperCase()))
-                        .amount(amount) // TODO convert bach to currency
+                        .currency(currency)
+                        .amount(WebHookUtil.fromLowestCurrencyFormToCurrency(amount, currency))
                         .paymentProvider("Paystack")
                         .paymentStatus(PaymentStatus.CONFIRMED)
                         .paidAt(data.get("paid_at").textValue())
@@ -126,18 +140,31 @@ public class WebhookService {
         );
     }
 
-    private void address(WebhookMetaData d, PaymentDetail detail) {
+    /**
+     * Saves an {@link Address} object based on the {@link WebhookMetaData} and {@link PaymentDetail}.
+     *
+     * @param metadata The metadata extracted from the webhook containing customer information.
+     * @param detail   an associated property of an {@link Address}.
+     */
+    private void address(WebhookMetaData metadata, PaymentDetail detail) {
         addressRepo.save(new Address(
-                d.address(),
-                d.city(),
-                d.state(),
-                d.postcode(),
-                d.country(),
-                d.deliveryInfo(),
+                metadata.address(),
+                metadata.city(),
+                metadata.state(),
+                metadata.postcode(),
+                metadata.country(),
+                metadata.deliveryInfo(),
                 detail)
         );
     }
 
+    /**
+     * Saves an {@link PaymentAuthorization} object based on the {@link WebhookAuthorization} and
+     * {@link PaymentDetail}.
+     *
+     * @param auth  The metadata extracted from the webhook containing payment information.
+     * @param detail an associated property of an {@link PaymentAuthorization}.
+     */
     private void paymentAuthorization(WebhookAuthorization auth, PaymentDetail detail) {
         paymentAuthorizationRepo.save(
                 PaymentAuthorization.builder()
@@ -158,8 +185,22 @@ public class WebhookService {
         );
     }
 
-    private void orderReservations(String reference) {
+    /**
+     * After processing a {@link PaymentDetail}, we create process the {@link OrderDetail} by
+     * retrieving all of PENDING {@link OrderReservation}s by the reference. After which we
+     * delete all {@link OrderReservation}s and {@link com.sarabrandserver.cart.entity.CartItem}s
+     * by {@link com.sarabrandserver.cart.entity.ShoppingSession}.
+     *
+     * @param detail    The {@link PaymentDetail} associated with the order.
+     * @param reference The reference id associated to an {@link OrderReservation}.
+     */
+    private void processPaymentOrderReservations(PaymentDetail detail, String reference) {
         List<OrderReservation> reservations = orderReservationRepo.allReservationsByReference(reference);
+
+        // save OrderDetails
+        reservations.stream()
+                .map(o -> new OrderDetail(o.getQty(), o.getProductSku(), detail))
+                .forEach(orderDetailRepository::save);
 
         // delete CartItems with the same ProductSku
         reservations.stream().map(OrderReservation::getProductSku)

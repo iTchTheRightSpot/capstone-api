@@ -12,6 +12,7 @@ import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
@@ -96,7 +98,7 @@ class CheckoutControllerTest extends AbstractIntegration {
     }
 
     @Test
-    void checkoutShouldReturn200Status() throws Exception {
+    void shouldSuccessfullyReturnCheckoutDetailsWithPrincipalPropertyEmpty() throws Exception {
         // given
         Cookie cooke = createNewShoppingSessionCookie();
 
@@ -108,7 +110,26 @@ class CheckoutControllerTest extends AbstractIntegration {
                         .param("currency", "usd")
                         .cookie(cooke)
                 )
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.principal").isEmpty());
+    }
+
+    @Test
+    @WithMockUser(username = "client@client.com", password = "password", roles = {"CLIENT"})
+    void shouldSuccessfullyReturnCheckoutDetailsWithPrincipalPropertyNotEmpty() throws Exception {
+        // given
+        Cookie cooke = createNewShoppingSessionCookie();
+
+        // when
+        super.mockMvc
+                .perform(get("/" + path)
+                        .with(csrf())
+                        .param("country", "nigeria")
+                        .param("currency", "usd")
+                        .cookie(cooke)
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.principal").value("client@client.com"));
     }
 
 }

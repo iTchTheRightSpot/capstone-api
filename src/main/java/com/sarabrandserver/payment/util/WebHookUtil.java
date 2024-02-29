@@ -2,6 +2,7 @@ package com.sarabrandserver.payment.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.exception.CustomServerError;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.xml.bind.DatatypeConverter;
@@ -12,6 +13,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -23,8 +25,16 @@ public class WebHookUtil {
         return new BigDecimal(number.toString());
     }
 
+    public static BigDecimal fromLowestCurrencyFormToCurrency(BigDecimal amount, SarreCurrency currency) {
+        return switch (currency) {
+            // 1 kobo = 7.93 naira as per https://www.coinbase.com/en-gb/converter/kobo/ngn
+            case NGN -> amount.multiply(new BigDecimal("7.93"));
+            case USD -> amount.divide(new BigDecimal("100"), RoundingMode.FLOOR);
+        };
+    }
+
     /**
-     * Transforms request body into a string
+     * Transforms {@link HttpServletRequest} into a string.
      * */
     public static String httpServletRequestToString(HttpServletRequest req) throws IOException {
         StringBuilder sb = new StringBuilder();
@@ -32,11 +42,12 @@ public class WebHookUtil {
         while ((line = req.getReader().readLine()) != null) {
             sb.append(line);
         }
+        log.info("successfully transformed HttpServletRequest to a String");
         return sb.toString();
     }
 
     /**
-     * Validates if request came from paystack
+     * Validates if request came from paystack.
      * <a href="https://paystack.com/docs/payments/webhooks/">...</a>
      * */
     public static WebhookConstruct validateRequestFromPayStack(String secretKey, String body) {

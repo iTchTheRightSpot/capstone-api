@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 
 public record Checkout (
+        String principal,
         @JsonProperty("weight_detail")
         String weightDetail,
         @JsonProperty("ship_cost")

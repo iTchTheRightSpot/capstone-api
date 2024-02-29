@@ -17,10 +17,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -72,7 +75,16 @@ public class CheckoutService {
                         shipCost
                 );
 
+        var optional = Optional
+                .ofNullable(SecurityContextHolder.getContext().getAuthentication());
+
+        String principal = optional.isEmpty() ? "" : switch (optional.get()) {
+            case AnonymousAuthenticationToken ignored -> "";
+            default -> optional.get().getName();
+        };
+
         return new Checkout(
+                principal,
                 "%skg".formatted(subtotal.sumOfWeight()),
                 shipCost,
                 obj.tax().name(),

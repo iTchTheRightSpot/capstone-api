@@ -38,9 +38,9 @@ import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
 
 @Service
 @RequiredArgsConstructor
-public class PaymentService {
+public class RaceConditionService {
 
-    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+    private static final Logger log = LoggerFactory.getLogger(RaceConditionService.class);
 
     @Setter
     @Value("${sarre.usd.to.cent}")

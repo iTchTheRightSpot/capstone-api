@@ -28,9 +28,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-class PaymentServiceTest extends AbstractUnitTest {
+class RaceConditionServiceTest extends AbstractUnitTest {
 
-    private PaymentService paymentService;
+    private RaceConditionService raceConditionService;
 
     @Mock
     private ProductSkuRepo skuRepo;
@@ -45,7 +45,7 @@ class PaymentServiceTest extends AbstractUnitTest {
 
     @BeforeEach
     void setUp() {
-        paymentService = new PaymentService(
+        raceConditionService = new RaceConditionService(
                 skuRepo,
                 cartItemRepo,
                 reservationRepo,
@@ -104,7 +104,7 @@ class PaymentServiceTest extends AbstractUnitTest {
 
         // then
         assertThrows(OutOfStockException.class,
-                () -> paymentService
+                () -> raceConditionService
                         .onPendingReservationsNotEmpty(
                                 "",
                                 session,
@@ -198,7 +198,7 @@ class PaymentServiceTest extends AbstractUnitTest {
         session.setCartItems(items);
 
         // then
-        paymentService
+        raceConditionService
                 .onPendingReservationsNotEmpty(
                         "",
                         session,
@@ -313,7 +313,7 @@ class PaymentServiceTest extends AbstractUnitTest {
         session.setCartItems(items);
 
         // then
-        paymentService
+        raceConditionService
                 .onPendingReservationsNotEmpty(
                         "",
                         session,
@@ -427,7 +427,7 @@ class PaymentServiceTest extends AbstractUnitTest {
         session.setCartItems(items);
 
         // then
-        paymentService
+        raceConditionService
                 .onPendingReservationsNotEmpty(
                         "",
                         session,
@@ -533,7 +533,7 @@ class PaymentServiceTest extends AbstractUnitTest {
         session.setReservations(reservations);
 
         // then
-        paymentService
+        raceConditionService
                 .onPendingReservationsNotEmpty(
                         "",
                         session,

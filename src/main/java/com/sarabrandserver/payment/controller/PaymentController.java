@@ -2,7 +2,7 @@ package com.sarabrandserver.payment.controller;
 
 import com.sarabrandserver.enumeration.SarreCurrency;
 import com.sarabrandserver.payment.response.PaymentResponse;
-import com.sarabrandserver.payment.service.PaymentService;
+import com.sarabrandserver.payment.service.RaceConditionService;
 import com.sarabrandserver.payment.service.WebhookService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotEmpty;
@@ -19,7 +19,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequiredArgsConstructor
 public class PaymentController {
 
-    private final PaymentService paymentService;
+    private final RaceConditionService raceConditionService;
     private final WebhookService webhookService;
 
     /**
@@ -33,7 +33,7 @@ public class PaymentController {
             HttpServletRequest req
     ) {
         var sc = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.paymentService.raceCondition(req, country, sc);
+        return this.raceConditionService.raceCondition(req, country, sc);
     }
 
     /**

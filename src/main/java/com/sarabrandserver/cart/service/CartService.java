@@ -155,7 +155,7 @@ public class CartService {
 
         String[] arr = cookie.getValue().split(split);
 
-        List<CompletableFuture<CartResponse>> futures = this.shoppingSessionRepo
+        List<CompletableFuture<CartResponse>> futures = shoppingSessionRepo
                 .cartItemsByCookieValue(currency, arr[0])
                 .stream()
                 .map(db -> CompletableFuture.supplyAsync(() -> {
@@ -243,16 +243,15 @@ public class CartService {
      * Creates a new shopping session
      */
     private void createNewShoppingSession(String cookie, Date expiration, int qty, ProductSku sku) {
-        var session = this.shoppingSessionRepo
-                .save(
-                        new ShoppingSession(
-                                cookie,
-                                CustomUtil.toUTC(new Date()),
-                                CustomUtil.toUTC(expiration),
-                                new HashSet<>(),
-                                new HashSet<>()
-                        )
-                );
+        var session = this.shoppingSessionRepo.save(
+                new ShoppingSession(
+                        cookie,
+                        CustomUtil.toUTC(new Date()),
+                        CustomUtil.toUTC(expiration),
+                        new HashSet<>(),
+                        new HashSet<>()
+                )
+        );
 
         this.cartItemRepo.save(new CartItem(qty, session, sku));
     }
@@ -270,7 +269,6 @@ public class CartService {
         if (optional.isEmpty()) {
             this.cartItemRepo.save(new CartItem(qty, session, sku));
         } else {
-            // update quantity if cart is present
             this.cartItemRepo.updateCartItemQtyByCartId(optional.get().getCartId(), qty);
         }
     }

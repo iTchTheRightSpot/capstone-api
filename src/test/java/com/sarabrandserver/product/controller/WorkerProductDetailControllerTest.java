@@ -148,7 +148,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
                 )
                 .andExpect(status().isNoContent());
 
-        var findDetail = this.productSkuRepo.findBySku(sku).orElse(null);
+        var findDetail = this.productSkuRepo.productSkuBySku(sku).orElse(null);
 
         assertNotNull(findDetail);
 

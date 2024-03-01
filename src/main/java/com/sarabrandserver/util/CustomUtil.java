@@ -33,7 +33,7 @@ public class CustomUtil {
      * Converts date to UTC Date
      *
      * @param date of type java.util.date
-     * @return {@link java.util.Date} in utc
+     * @return {@link Date} in utc
      */
     public static Date toUTC(Date date) {
         Calendar calendar = Calendar.getInstance();
@@ -261,8 +261,7 @@ public class CustomUtil {
                 );
             }
         }
-        return CompletableFuture
-                .allOf(futures.toArray(new CompletableFuture[0]))
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
                 .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
     }
 

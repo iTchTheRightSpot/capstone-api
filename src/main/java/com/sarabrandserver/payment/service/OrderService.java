@@ -81,8 +81,7 @@ public class OrderService {
                         );
                     } catch (JsonProcessingException e) {
                         log.error("error retrieving customer %s order history \n %s"
-                                .formatted(principal, e.getMessage())
-                        );
+                                .formatted(principal, e.getMessage()));
                         throw new CustomServerError(
                                 """
                                 An error occurred retrieving your order history.

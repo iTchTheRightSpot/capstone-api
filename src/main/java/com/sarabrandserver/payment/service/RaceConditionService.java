@@ -22,6 +22,7 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,7 +65,7 @@ public class RaceConditionService {
      * <p>
      * This method is used to prevent race conditions or overselling scenarios by
      * temporarily deducting the quantity in a users cart (represented as
-     * {@code CartItem}) from the inventory of corresponding {@code ProductSku} items.
+     * {@link CartItem}) from the inventory of corresponding {@link ProductSku} items.
      * It creates reservations for the items in the cart to ensure that they are not
      * oversold. The method also generates payment information based on the user's
      * country and selected currency, preparing the response for payment.
@@ -74,12 +75,12 @@ public class RaceConditionService {
      *                to {@link com.sarabrandserver.shipping.entity.ShipSetting}.
      * @param currency The currency selected for the payment, of type SarreCurrency.
      * @return A PaymentResponse containing payment details for the user.
-     * @throws OutOfStockException If {@link CartItem} quantity is greater
-     * {@link ProductSku} inventory.
-     * @throws CustomNotFoundException if an exception occurs from the method
-     * {@link checkoutService.validateCurrentShoppingSession}.
+     * @throws CustomNotFoundException If custom cookie does not contain in {@link HttpServletRequest},
+     * the {@link ShoppingSession} is invalid, or {@link CartItem} is empty.
+     * @throws OutOfStockException If {@link CartItem} quantity is greater {@link ProductSku} inventory.
+     * @throws JpaSystemException if {@link ProductSku} property 'inventory' is negative.
      */
-    @Transactional
+    @Transactional(rollbackFor = { CustomNotFoundException.class, OutOfStockException.class, JpaSystemException.class })
     public PaymentResponse raceCondition(
             HttpServletRequest req,
             final String country,
@@ -136,15 +137,15 @@ public class RaceConditionService {
      * <p>
      * This method ensures data consistency and prevents race conditions or overselling
      * by temporarily deducting the quantity of items in the user's cart from the inventory
-     * of corresponding {@code ProductSku} items. It creates {@code OrderReservations} for
+     * of corresponding {@link ProductSku} items. It creates {@link OrderReservation} for
      * the items in the cart to ensure that they are not oversold. If any inconsistency occurs,
-     * such as inventory becoming negative, it throws an OutOfStockException.
+     * such as inventory becoming negative, it throws an {@link OutOfStockException}.
      *
      * @param reservations A list of existing {@code OrderReservations} associated with
-     *                     the {@code ShoppingSession}.
-     * @param carts        A list of {@code CartItem} representing items in the user's cart.
+     *                     the {@link ShoppingSession}.
+     * @param carts        A list of {@link CartItem} representing items in the user's cart.
      * @param toExpire     The expiration date for the reservations.
-     * @param session      The {@code ShoppingSession} associated with the user's device.
+     * @param session      The {@link ShoppingSession} associated with the user's device.
      * @throws OutOfStockException If inventory becomes negative due to reservations.
      */
     void raceConditionImpl(
@@ -158,7 +159,12 @@ public class RaceConditionService {
             if (reservations.isEmpty()) {
                 for (CartItem cart : carts) {
                     if (cart.quantityIsGreaterThanProductSkuInventory()) {
-                        throw new OutOfStockException("an item in your cart is out of stock");
+                        var optional = productSkuRepo.productByProductSku(cart.getProductSku().getSku());
+
+                        String name = optional.isPresent() ? optional.get().getName() : "";
+
+                        throw new OutOfStockException("%s %s is out of stock"
+                                .formatted(name, cart.getProductSku().getSize()));
                     }
 
                     this.productSkuRepo
@@ -188,8 +194,11 @@ public class RaceConditionService {
                         carts
                 );
             }
-        } catch (RuntimeException e) {
-            log.error("race condition exception thrown. {}", e.getMessage());
+        } catch (OutOfStockException e) {
+            log.error(e.getMessage());
+            throw new OutOfStockException(e.getMessage());
+        } catch (JpaSystemException e) {
+            log.error("{}", e.getMessage());
             throw new OutOfStockException("an item in your cart is out of stock");
         }
     }
@@ -213,8 +222,7 @@ public class RaceConditionService {
      *                  user's cart.
      * @throws OutOfStockException if {@link CartItem} property qty is greater
      * than {@code ProductSku} property inventory.
-     * @throws org.springframework.orm.jpa.JpaSystemException if {@link ProductSku}
-     * property inventory becomes.
+     * @throws JpaSystemException if {@link ProductSku} property 'inventory' is negative.
      * */
     void onPendingReservationsNotEmpty(
             String reference,
@@ -225,7 +233,12 @@ public class RaceConditionService {
     ) {
         for (CartItem cart : cartItems) {
             if (cart.quantityIsGreaterThanProductSkuInventory()) {
-                throw new OutOfStockException("");
+                var optional = productSkuRepo.productByProductSku(cart.getProductSku().getSku());
+
+                String name = optional.isPresent() ? optional.get().getName() : "";
+
+                throw new OutOfStockException("%s %s is out of stock"
+                        .formatted(name, cart.getProductSku().getSize()));
             }
 
             if (map.containsKey(cart.getProductSku().getSku())) {
@@ -261,12 +274,13 @@ public class RaceConditionService {
                         cart.getProductSku().getSku(),
                         cart.getQty()
                 );
-                this.reservationRepo
-                        .save(new OrderReservation(
-                                reference,
-                                cart.getQty(),
-                                PENDING, toExpire, cart.getProductSku(), session)
-                        );
+                this.reservationRepo.save(new OrderReservation(
+                        reference,
+                        cart.getQty(),
+                        PENDING, toExpire,
+                        cart.getProductSku(),
+                        session)
+                );
             }
         }
 

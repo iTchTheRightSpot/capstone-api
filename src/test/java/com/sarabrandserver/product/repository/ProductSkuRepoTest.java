@@ -61,49 +61,6 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
     private CartItemRepo cartItemRepo;
 
     @Test
-    void itemBeenBought() {
-        // given
-        var cat = categoryRepo
-                .save(ProductCategory.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build());
-
-        RepositoryTestData
-                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
-
-        var paymentDetail = paymentDetailRepo
-                .save(
-                        PaymentDetail.builder()
-                                .name("James Frank")
-                                .email("james@email.com")
-                                .phone("0000000000")
-                                .referenceId("unique-payment-categoryId")
-                                .paymentProvider("PayStack")
-                                .currency(SarreCurrency.NGN)
-                                .amount(new BigDecimal("25750"))
-                                .paymentStatus(PaymentStatus.CONFIRMED)
-                                .createAt(new Date())
-                                .address(null)
-                                .orderDetails(new HashSet<>())
-                                .build()
-                );
-
-        // then
-        var skus = skuRepo.findAll();
-        assertFalse(skus.isEmpty());
-        var sku = skus.getFirst();
-
-        assertEquals(0, skuRepo.skuHasBeenPurchased(sku.getSku()));
-        orderRepository
-                .save(new OrderDetail(sku.getInventory(), sku, paymentDetail));
-
-        assertEquals(1, skuRepo.skuHasBeenPurchased(sku.getSku()));
-    }
-
-    @Test
     void updateInventoryOnMakingReservation() {
         var cat = categoryRepo
                 .save(ProductCategory.builder()
@@ -125,7 +82,7 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
 
         skuRepo.updateProductSkuInventoryBySubtractingFromExistingInventory(sku.getSku(), sku.getInventory());
 
-        var optional = skuRepo.findBySku(sku.getSku());
+        var optional = skuRepo.productSkuBySku(sku.getSku());
         assertFalse(optional.isEmpty());
         assertEquals(0, optional.get().getInventory());
     }
@@ -151,7 +108,7 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
 
         skuRepo.updateProductSkuInventoryByAddingToExistingInventory(sku.getSku(), sku.getInventory());
 
-        var optional = skuRepo.findBySku(sku.getSku());
+        var optional = skuRepo.productSkuBySku(sku.getSku());
         assertFalse(optional.isEmpty());
         assertTrue(optional.get().getInventory() > sku.getInventory());
     }
@@ -256,6 +213,30 @@ class ProductSkuRepoTest extends AbstractRepositoryTest {
                         -100
                 )
         );
+    }
+
+    @Test
+    void shouldReturnAProductByProductSku() {
+        // given
+        var cat = categoryRepo
+                .save(ProductCategory.builder()
+                        .name("category")
+                        .isVisible(true)
+                        .categories(new HashSet<>())
+                        .product(new HashSet<>())
+                        .build());
+
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
+
+        var skus = skuRepo.findAll();
+        assertFalse(skus.isEmpty());
+
+        // when
+        var optional = skuRepo.productByProductSku(skus.getFirst().getSku());
+
+        // then
+        assertTrue(optional.isPresent());
     }
 
 }

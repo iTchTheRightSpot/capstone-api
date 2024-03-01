@@ -93,7 +93,7 @@ class ProductDetailRepoTest extends AbstractRepositoryTest {
                         "medium size"
                 );
 
-        var optional = skuRepo.findBySku(sku.getSku());
+        var optional = skuRepo.productSkuBySku(sku.getSku());
         assertFalse(optional.isEmpty());
         ProductSku temp = optional.get();
 

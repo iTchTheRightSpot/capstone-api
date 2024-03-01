@@ -295,7 +295,7 @@ class PaymentControllerTest extends AbstractIntegration {
     }
 
     @Test
-    void multipleUserTryPurchasingTheLastItemButOnlyIsAllowedAndTheRestGetA409() throws Exception {
+    void multipleUserTryPurchasingTheLastItemButOnlyOneUserOrRequestIsSuccessfully() throws Exception {
         shippingRepo
                 .save(new ShipSetting(
                         new Faker().country().name(),

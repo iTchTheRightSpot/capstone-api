@@ -1,5 +1,6 @@
 package com.sarabrandserver.product.repository;
 
+import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.entity.ProductSku;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -12,22 +13,21 @@ import java.util.Optional;
 @Repository
 public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
 
+    /**
+     * Retrieves a {@link ProductSku} based on the provided sku.
+     *
+     * @param sku The property of a {@link ProductSku}.
+     * @return An {@link Optional} containing the matching {@link ProductSku},
+     *         or empty if no {@link ProductSku} is found with the provided sku.
+     */
     @Query(value = "SELECT p FROM ProductSku p WHERE p.sku = :sku")
-    Optional<ProductSku> findBySku(String sku);
-
-    @Query("""
-    SELECT COUNT (s.skuId)
-    FROM ProductSku s
-    INNER JOIN OrderDetail o ON s.skuId = o.sku.skuId
-    WHERE s.sku = :sku
-    """)
-    int skuHasBeenPurchased(String sku);
+    Optional<ProductSku> productSkuBySku(String sku);
 
     /**
-     * Update a {@code ProductSku} qty property by deducting from current qty.
+     * Update a {@link ProductSku} qty property by deducting from current qty.
      *
-     * @param sku is a unique string for every {@code ProductSku}.
-     * @param qty is the number to add to an existing {@code ProductSku}.
+     * @param sku is a unique string for every {@link ProductSku}.
+     * @param qty is the number to add to an existing {@link ProductSku}.
      * */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -40,7 +40,7 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     void updateProductSkuInventoryBySubtractingFromExistingInventory(String sku, int qty);
 
     /**
-     * Update a {@code ProductSku} qty property by adding from current qty.
+     * Updates a {@link ProductSku} qty property by adding from current qty.
      *
      * @param sku is a unique string for every {@code ProductSku}.
      * @param qty is the number to add to an existing {@code ProductSku}.
@@ -56,11 +56,30 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     void updateProductSkuInventoryByAddingToExistingInventory(String sku, int qty);
 
     /**
-     * Deletes ProductSku from db
+     * Deletes a {@link ProductSku} by its property 'sku'.
      * */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("DELETE FROM ProductSku s WHERE s.sku = :sku")
     void deleteProductSkuBySku(String sku);
+
+    /**
+     * Retrieves a {@link Product} based on the provided sku.
+     * <p>
+     * This method returns a {@link Product} entity by querying
+     * its relationship with a {@link ProductSku}. It filters
+     * products based on the sku associated with the {@link ProductSku}.
+     *
+     * @param sku The property of a {@link ProductSku}.
+     * @return An {@link Optional} containing the matching {@link Product},
+     *         or empty if no {@link Product} is found with the provided sku.
+     */
+    @Query("""
+    SELECT p FROM Product p
+    INNER JOIN ProductDetail d ON p.productId = d.product.productId
+    INNER JOIN ProductSku s ON d.productDetailId = s.productDetail.productDetailId
+    WHERE s.sku = :sku
+    """)
+    Optional<Product> productByProductSku(String sku);
 
 }

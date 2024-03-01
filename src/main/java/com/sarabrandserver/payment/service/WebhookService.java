@@ -25,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -53,7 +55,10 @@ public class WebhookService {
      * @throws CustomServerError if there is an error parsing the request or an invalid request
      * is received from Paystack.
      */
-    @Transactional
+    @Transactional(rollbackFor = {
+            IOException.class, CustomServerError.class, JsonProcessingException.class,
+            InvalidKeyException.class
+    })
     public void webhook(HttpServletRequest req) {
         try {
             log.info("webhook received");
@@ -69,15 +74,18 @@ public class WebhookService {
 
             if (pair.node().get("event").textValue().equals("charge.success")) {
                 onSuccessWebHook(pair.node().get("data"));
+                log.info("successfully performed business logic on successful webhook request.");
+            } else {
+                log.info("failed payment");
             }
         } catch (IOException e) {
             log.error("error parsing request {}", e.getMessage());
             throw new CustomServerError("error parsing request");
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            log.error("error constructing WebhookConstruct {}", e.getMessage());
+            throw new CustomServerError("error constructing WebhookConstruct");
         } catch (CustomServerError e) {
             log.error("error from paystack webhook {}", e.getMessage());
-            throw new CustomServerError(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            log.error("error converting to custom object {}", e.getMessage());
             throw new CustomServerError(e.getMessage());
         }
     }
@@ -89,9 +97,11 @@ public class WebhookService {
      * @throws JsonProcessingException if there is an error occurs transforming data to a custom object.
      */
     void onSuccessWebHook(JsonNode data) throws JsonProcessingException {
+        // TODO only process in production
+        String domain = data.get("domain").textValue();
+
         ObjectMapper mapper = new ObjectMapper();
 
-        String domain = data.get("domain").textValue();
         BigDecimal amount = WebHookUtil
                 .fromNumberToBigDecimal(mapper.treeToValue(data.get("amount"), Number.class));
         String reference = data.get("reference").textValue();

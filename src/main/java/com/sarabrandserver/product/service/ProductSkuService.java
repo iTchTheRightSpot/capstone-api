@@ -25,7 +25,7 @@ public class ProductSkuService {
     private final ProductSkuRepo repository;
 
     /**
-     * Save {@link ProductSku}.
+     * Saves {@link ProductSku} based on {@link SizeInventoryDTO} array.
      */
     @Transactional
     public void save(SizeInventoryDTO[] arr, ProductDetail detail) {
@@ -45,7 +45,7 @@ public class ProductSkuService {
     }
 
     /**
-     * Deletes ProductSku by sku.
+     * Deletes a {@link ProductSku} by sku.
      *
      * @throws ResourceAttachedException if {@link ProductSku}
      * has children entities attached to it.
@@ -62,7 +62,7 @@ public class ProductSkuService {
 
     public ProductSku productSkuBySku(final String sku) {
         return this.repository
-                .findBySku(sku)
+                .productSkuBySku(sku)
                 .orElseThrow(() -> new CustomNotFoundException("sku %s does not exist".formatted(sku)));
     }
 

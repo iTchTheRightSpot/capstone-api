@@ -38,11 +38,11 @@ class WebHookUtilTest extends AbstractUnitTest {
         BigDecimal kobo = new BigDecimal("5000");
         BigDecimal cents = new BigDecimal("10000");
 
-        assertEquals(new BigDecimal("39450.63"), WebHookUtil
+        assertEquals(new BigDecimal("39650.00"), WebHookUtil
                 .fromLowestCurrencyFormToCurrency(kobo, SarreCurrency.NGN)
         );
 
-        assertEquals(new BigDecimal("100"), WebHookUtil
+        assertEquals(new BigDecimal("100.00"), WebHookUtil
                 .fromLowestCurrencyFormToCurrency(cents, SarreCurrency.USD)
         );
     }

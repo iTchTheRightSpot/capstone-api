@@ -147,7 +147,6 @@ public class RaceConditionService {
      * @param session      The {@code ShoppingSession} associated with the user's device.
      * @throws OutOfStockException If inventory becomes negative due to reservations.
      */
-    @Transactional
     void raceConditionImpl(
             String reference,
             List<OrderReservation> reservations,
@@ -217,7 +216,6 @@ public class RaceConditionService {
      * @throws org.springframework.orm.jpa.JpaSystemException if {@link ProductSku}
      * property inventory becomes.
      * */
-    @Transactional
     void onPendingReservationsNotEmpty(
             String reference,
             ShoppingSession session,

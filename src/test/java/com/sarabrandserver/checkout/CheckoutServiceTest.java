@@ -49,7 +49,7 @@ class CheckoutServiceTest extends AbstractUnitTest {
                 sessionRepo,
                 cartItemRepo
         );
-        checkoutService.setCART_COOKIE("cartcookie");
+        checkoutService.setCARTCOOKIE("cartcookie");
         checkoutService.setSPLIT("%");
     }
 

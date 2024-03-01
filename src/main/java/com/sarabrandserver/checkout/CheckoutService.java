@@ -31,7 +31,7 @@ public class CheckoutService {
 
     @Setter
     @Value("${cart.cookie.name}")
-    private String CART_COOKIE;
+    private String CARTCOOKIE;
     @Setter
     @Value(value = "${cart.split}")
     private String SPLIT;
@@ -115,7 +115,7 @@ public class CheckoutService {
      *                                 invalid, or {@link CartItem} is empty.
      */
     public CustomObject validateCurrentShoppingSession(HttpServletRequest req, String country) {
-        Cookie cookie = CustomUtil.cookie(req, CART_COOKIE);
+        Cookie cookie = CustomUtil.cookie(req, CARTCOOKIE);
 
         if (cookie == null) {
             throw new CustomNotFoundException("no cookie found. kindly refresh window");

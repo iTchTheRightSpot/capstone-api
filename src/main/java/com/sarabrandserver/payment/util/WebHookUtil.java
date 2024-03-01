@@ -13,8 +13,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
+import static java.math.RoundingMode.FLOOR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class WebHookUtil {
@@ -28,8 +28,8 @@ public class WebHookUtil {
     public static BigDecimal fromLowestCurrencyFormToCurrency(BigDecimal amount, SarreCurrency currency) {
         return switch (currency) {
             // 1 kobo = 7.93 naira as per https://www.coinbase.com/en-gb/converter/kobo/ngn
-            case NGN -> amount.multiply(new BigDecimal("7.93"));
-            case USD -> amount.divide(new BigDecimal("100"), RoundingMode.FLOOR);
+            case NGN -> amount.multiply(new BigDecimal("7.93")).setScale(2, FLOOR);
+            case USD -> amount.divide(new BigDecimal("100"), FLOOR).setScale(2, FLOOR);
         };
     }
 

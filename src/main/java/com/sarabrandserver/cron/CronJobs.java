@@ -1,30 +1,56 @@
 package com.sarabrandserver.cron;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.sarabrandserver.cart.entity.ShoppingSession;
 import com.sarabrandserver.cart.repository.CartItemRepo;
 import com.sarabrandserver.cart.repository.ShoppingSessionRepo;
 import com.sarabrandserver.payment.entity.OrderReservation;
 import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
+import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
 import com.sarabrandserver.util.CustomUtil;
-import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClient;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
 
-@Component
-@RequiredArgsConstructor
+@Service
 public class CronJobs {
 
+    private final RestClient restClient;
     private final ProductSkuRepo skuRepo;
     private final OrderReservationRepo reservationRepo;
     private final ShoppingSessionRepo sessionRepo;
     private final CartItemRepo cartItemRepo;
+
+    public CronJobs(
+            RestClient.Builder clientBuilder,
+            ProductSkuRepo skuRepo,
+            OrderReservationRepo reservationRepo,
+            ShoppingSessionRepo sessionRepo,
+            CartItemRepo cartItemRepo,
+            ThirdPartyPaymentService paymentService
+    ) {
+        this.skuRepo = skuRepo;
+        this.reservationRepo = reservationRepo;
+        this.sessionRepo = sessionRepo;
+        this.cartItemRepo = cartItemRepo;
+        this.restClient = clientBuilder
+                .baseUrl("https://api.paystack.co/transaction/verify")
+                .defaultHeader("Authorization", "Bearer %s"
+                        .formatted(paymentService.payStackCredentials().secretKey())
+                )
+                .build();
+    }
 
     /**
      * Schedule deletion for expired ShoppingSession every 10 mins
@@ -48,6 +74,8 @@ public class CronJobs {
         var list = this.reservationRepo
                 .allPendingExpiredReservations(date, PENDING);
 
+        // verify status of pending reservation before deleting
+
         for (OrderReservation r : list) {
             this.skuRepo
                     .updateProductSkuInventoryByAddingToExistingInventory(r.getProductSku().getSku(), r.getQty());
@@ -55,6 +83,21 @@ public class CronJobs {
                     .deleteOrderReservationByReservationId(r.getReservationId());
         }
         this.reservationRepo.deleteExpiredOrderReservations(date, PENDING);
+    }
+
+    /**
+     * <a href="https://paystack.com/docs/payments/verify-payments/">...</a>
+     */
+    private List<JsonNode> verifyAllReferences(List<String> references) {
+        List<Supplier<JsonNode>> futures = new ArrayList<>();
+
+        for (String ref : references) {
+            futures.add(() -> restClient.get().uri("/", ref).retrieve().body(JsonNode.class));
+        }
+
+        return CustomUtil.asynchronousTasks(futures)
+                .thenApply(n -> n.stream().map(Supplier::get).toList())
+                .join();
     }
 
     /**

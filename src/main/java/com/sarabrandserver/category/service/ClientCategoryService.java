@@ -69,7 +69,7 @@ public class ClientCategoryService {
 
         List<Supplier<ProductResponse>> futures = createTasks(dbRes);
 
-        return CustomUtil.asynchronousTasks(futures)
+        return CustomUtil.asynchronousTasks(futures, ClientCategoryService.class)
                 .thenApply(v -> new PageImpl<>(
                         v.stream().map(Supplier::get).toList(),
                         dbRes.getPageable(),

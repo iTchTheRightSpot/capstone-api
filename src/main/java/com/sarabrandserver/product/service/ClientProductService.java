@@ -18,7 +18,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -43,8 +42,8 @@ public class ClientProductService {
      *
      * @param currency of type {@link SarreCurrency}
      * @param page number
-     * @param size number of ProductResponse for each page
-     * @return a Page of {@link ProductResponse}
+     * @param size number of ProductResponse for each page.
+     * @return a Page of {@link ProductResponse}.
      */
     public CompletableFuture<Page<ProductResponse>> allProductsByCurrency(SarreCurrency currency, int page, int size) {
         Page<ProductPojo> dbRes = productRepo
@@ -52,7 +51,7 @@ public class ClientProductService {
 
         List<Supplier<ProductResponse>> futures = createPageTasks(dbRes);
 
-        return CustomUtil.asynchronousTasks(futures)
+        return CustomUtil.asynchronousTasks(futures, ClientProductService.class)
                 .thenApply(v -> new PageImpl<>(
                         v.stream().map(Supplier::get).toList(),
                         dbRes.getPageable(),
@@ -60,24 +59,18 @@ public class ClientProductService {
                 ));
     }
 
-    private List<Supplier<ProductResponse>> createPageTasks(Page<ProductPojo> dbRes) {
-        List<Supplier<ProductResponse>> futures = new ArrayList<>();
-
-        for (ProductPojo p : dbRes) {
-            futures.add(() -> {
-                var url = s3Service.preSignedUrl(BUCKET, p.getImage());
-                return new ProductResponse(
+    private List<Supplier<ProductResponse>> createPageTasks(Page<ProductPojo> page) {
+        return page.stream()
+                .map(p -> (Supplier<ProductResponse>) () -> new ProductResponse(
                         p.getUuid(),
                         p.getName(),
                         p.getDescription(),
                         p.getPrice(),
                         p.getCurrency(),
-                        url,
+                        s3Service.preSignedUrl(BUCKET, p.getImage()),
                         p.getCategory()
-                );
-            });
-        }
-        return futures;
+                ))
+                .toList();
     }
 
     public CompletableFuture<List<DetailResponse>> productDetailsByProductUuid(
@@ -101,8 +94,9 @@ public class ClientProductService {
                             .map(key -> (Supplier<String>) () -> s3Service.preSignedUrl(BUCKET, key))
                             .toList();
 
-                    List<String> urls = CustomUtil.asynchronousTasks(suppliers) //
-                            .thenApply(v -> v.stream().map(Supplier::get).toList()) //
+                    List<String> urls = CustomUtil
+                            .asynchronousTasks(suppliers, ClientProductService.class)
+                            .thenApply(v -> v.stream().map(Supplier::get).toList())
                             .join();
 
                     Variant[] variants = CustomUtil
@@ -120,7 +114,7 @@ public class ClientProductService {
                 }))
                 .toList();
 
-        return CustomUtil.asynchronousTasks(futures)
+        return CustomUtil.asynchronousTasks(futures, ClientProductService.class)
                 .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
     }
 
@@ -140,7 +134,7 @@ public class ClientProductService {
 
         List<Supplier<ProductResponse>> futures = createTasks(dbRes);
 
-        return CustomUtil.asynchronousTasks(futures)
+        return CustomUtil.asynchronousTasks(futures, ClientProductService.class)
                 .thenApply(v -> new PageImpl<>(
                         v.stream().map(Supplier::get).toList(),
                         dbRes.getPageable(),
@@ -148,22 +142,17 @@ public class ClientProductService {
                 ));
     }
 
-    private List<Supplier<ProductResponse>> createTasks(Page<ProductPojo> dbRes) {
-        List<Supplier<ProductResponse>> futures = new ArrayList<>();
-        for (ProductPojo p : dbRes) {
-            futures.add(() -> {
-                var url = s3Service.preSignedUrl(BUCKET, p.getImage());
-                return new ProductResponse(
+    private List<Supplier<ProductResponse>> createTasks(Page<ProductPojo> page) {
+        return page.stream()
+                .map(p -> (Supplier<ProductResponse>) () -> new ProductResponse(
                         p.getUuid(),
                         p.getName(),
                         p.getPrice(),
                         p.getCurrency(),
-                        url,
+                        s3Service.preSignedUrl(BUCKET, p.getImage()),
                         p.getCategory()
-                );
-            });
-        }
-        return futures;
+                ))
+                .toList();
     }
 
 }

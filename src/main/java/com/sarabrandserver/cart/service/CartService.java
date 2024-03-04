@@ -176,7 +176,7 @@ public class CartService {
                 }))
                 .toList();
 
-        return CustomUtil.asynchronousTasks(futures)
+        return CustomUtil.asynchronousTasks(futures, CartService.class)
                 .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
     }
 

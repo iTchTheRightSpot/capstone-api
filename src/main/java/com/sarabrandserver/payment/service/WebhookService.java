@@ -49,7 +49,7 @@ public class WebhookService {
 
     /**
      * Processes a payment received via webhook from Paystack.
-     * Reference documentation <a href="https://paystack.com/docs/payments/verify-payments/">...</a>
+     * Reference <a href="https://paystack.com/docs/payments/webhooks/">documentation</a>
      *
      * @param req the {@link HttpServletRequest} containing the webhook data.
      * @throws CustomServerError if there is an error parsing the request or an invalid request
@@ -72,7 +72,9 @@ public class WebhookService {
                 throw new CustomServerError("invalid webhook from paystack");
             }
 
-            if (pair.node().get("event").textValue().equals("charge.success")) {
+            if (pair.node().get("event").textValue().equals("charge.success")
+                    && pair.node().get("data").get("status").textValue().equals("success")
+            ) {
                 onSuccessWebHook(pair.node().get("data"));
                 log.info("successfully performed business logic on successful webhook request.");
             } else {

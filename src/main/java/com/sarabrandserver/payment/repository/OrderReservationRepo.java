@@ -117,11 +117,6 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     @Query("DELETE FROM OrderReservation o WHERE o.reservationId = :id")
     void deleteOrderReservationByReservationId(long id);
 
-    @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query("DELETE FROM OrderReservation o WHERE o.expireAt <= :date AND o.status = :status")
-    void deleteExpiredOrderReservations(Date date, ReservationStatus status);
-
     @Query("SELECT o FROM OrderReservation o WHERE o.reference = :reference")
     List<OrderReservation> allReservationsByReference(String reference);
 

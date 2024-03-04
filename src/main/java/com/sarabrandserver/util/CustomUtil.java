@@ -245,17 +245,22 @@ public class CustomUtil {
      * concurrently, leveraging the Virtual Thread.
      *
      * @param schedules The list of tasks to execute asynchronously.
-     * @param <T>       The type of the tasks to be executed.
-     * @return A {@link CompletableFuture} holding a list of results from all completed tasks.
+     * @param clazz The class that called this method.
+     * @return A {@link CompletableFuture} holding a list of results from all completed
+     * tasks.
+     * @throws CustomServerError if an error occurs when performing an asynchronous
+     * task.
      */
-    public static <T> CompletableFuture<List<T>> asynchronousTasks(List<T> schedules) {
+    public static <T, C> CompletableFuture<List<T>> asynchronousTasks(
+            List<T> schedules, Class<C> clazz
+    ) {
         List<CompletableFuture<T>> futures = new ArrayList<>();
         try (final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
             for (T s : schedules) {
                 futures.add(CompletableFuture
                         .supplyAsync(() -> s, executor)
                         .exceptionally(e -> {
-                            log.error(e.getMessage());
+                            log.error("%s thrown %s".formatted(clazz.getName(), e.getMessage()));
                             throw new CustomServerError(e.getMessage());
                         })
                 );

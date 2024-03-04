@@ -70,11 +70,12 @@ class HelperService {
         }
 
         // save all images as long as we have successfully saved to s3
-        CustomUtil.asynchronousTasks(callables).join().forEach(e -> {
-            CustomMultiPart obj = e.get();
-            this.repository
-                    .save(new ProductImage(obj.key(), obj.file().getAbsolutePath(), detail));
-        });
+        CustomUtil.asynchronousTasks(callables, HelperService.class).join()
+                .forEach(e -> {
+                    CustomMultiPart obj = e.get();
+                    this.repository
+                            .save(new ProductImage(obj.key(), obj.file().getAbsolutePath(), detail));
+                });
     }
 
     /**

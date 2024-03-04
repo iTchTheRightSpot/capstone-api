@@ -42,8 +42,8 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     /**
      * Updates a {@link ProductSku} qty property by adding from current qty.
      *
-     * @param sku is a unique string for every {@code ProductSku}.
-     * @param qty is the number to add to an existing {@code ProductSku}.
+     * @param sku is a unique string for every {@link ProductSku}.
+     * @param qty is the number to add to an existing {@link ProductSku}.
      * */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)

@@ -28,10 +28,10 @@ import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
-@Setter
 public class WorkerProductDetailService {
 
     @Value(value = "${aws.bucket}")
+    @Setter
     private String BUCKET;
 
     private final ProductDetailRepo detailRepo;
@@ -61,8 +61,9 @@ public class WorkerProductDetailService {
                             .map(key -> (Supplier<String>) () -> helperService.preSignedUrl(BUCKET, key))
                             .toList();
 
-                    List<String> urls = CustomUtil.asynchronousTasks(req) //
-                            .thenApply(v -> v.stream().map(Supplier::get).toList()) //
+                    List<String> urls = CustomUtil
+                            .asynchronousTasks(req, WorkerProductDetailService.class)
+                            .thenApply(v -> v.stream().map(Supplier::get).toList())
                             .join();
 
                     Variant[] variants = CustomUtil
@@ -72,7 +73,7 @@ public class WorkerProductDetailService {
                 }))
                 .toList();
 
-        return CustomUtil.asynchronousTasks(futures)
+        return CustomUtil.asynchronousTasks(futures, WorkerProductDetailService.class)
                 .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
     }
 

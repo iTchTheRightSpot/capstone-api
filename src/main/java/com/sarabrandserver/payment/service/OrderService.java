@@ -68,7 +68,8 @@ public class OrderService {
                                 )
                                 .toList();
 
-                        PayloadMapper[] asyncResponse = CustomUtil.asynchronousTasks(supplierList)
+                        PayloadMapper[] asyncResponse = CustomUtil
+                                .asynchronousTasks(supplierList, OrderService.class)
                                 .thenApply(v -> v.stream().map(Supplier::get).toArray(PayloadMapper[]::new)) //
                                 .join();
 
@@ -92,7 +93,7 @@ public class OrderService {
                 }))
                 .toList();
 
-        return CustomUtil.asynchronousTasks(jobs)
+        return CustomUtil.asynchronousTasks(jobs, OrderService.class)
                 .thenApply(v -> jobs.stream().map(CompletableFuture::join).toList());
     }
 

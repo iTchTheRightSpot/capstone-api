@@ -376,61 +376,6 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void deleteExpired() {
-        // given
-        var cat = categoryRepo
-                .save(ProductCategory.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
-
-        // create 3 ProductSku objects
-        RepositoryTestData
-                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
-
-        var skus = skuRepo.findAll();
-        assertEquals(3, skus.size());
-
-        var session = this.sessionRepo
-                .save(
-                        new ShoppingSession(
-                                "cookie",
-                                new Date(),
-                                CustomUtil.toUTC(new Date(Instant.now().plus(1, HOURS).toEpochMilli())),
-                                new HashSet<>(),
-                                new HashSet<>()
-                        )
-                );
-
-        Date current = new Date();
-        ProductSku first = skus.getFirst();
-        var reservation = reservationRepo
-                .save(
-                        new OrderReservation(
-                                UUID.randomUUID().toString(),
-                                first.getInventory() - 1,
-                                PENDING,
-                                CustomUtil.toUTC(
-                                        new Date(current
-                                                .toInstant()
-                                                .minus(5, HOURS)
-                                                .toEpochMilli()
-                                        )
-                                ),
-                                first,
-                                session
-                        )
-                );
-
-        // when
-        reservationRepo.deleteExpiredOrderReservations(CustomUtil.toUTC(new Date()), PENDING);
-        assertTrue(reservationRepo.findById(reservation.getReservationId()).isEmpty());
-    }
-
-    @Test
     void allReservationsByReference() {
         // given
         var cat = categoryRepo

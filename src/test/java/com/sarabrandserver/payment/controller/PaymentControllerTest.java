@@ -365,7 +365,7 @@ class PaymentControllerTest extends AbstractIntegration {
         }
 
         // complete all CompletableFuture
-        CustomUtil.asynchronousTasks(futures);
+        CustomUtil.asynchronousTasks(futures, PaymentControllerTest.class);
 
         List<Integer> results = new ArrayList<>();
 

@@ -95,7 +95,7 @@ public class WorkerProductService {
 
         List<Supplier<ProductResponse>> futures = createTasks(dbRes);
 
-        return CustomUtil.asynchronousTasks(futures)
+        return CustomUtil.asynchronousTasks(futures, WorkerProductService.class)
                 .thenApply(v -> new PageImpl<>(
                         v.stream().map(Supplier::get).toList(),
                         dbRes.getPageable(),

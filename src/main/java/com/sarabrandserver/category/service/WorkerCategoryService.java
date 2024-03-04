@@ -100,7 +100,7 @@ public class WorkerCategoryService {
             });
         }
 
-        return CustomUtil.asynchronousTasks(futures)
+        return CustomUtil.asynchronousTasks(futures, WorkerCategoryService.class)
                 .thenApply(v -> new PageImpl<>(
                         v.stream().map(Supplier::get).toList(),
                         dbRes.getPageable(),

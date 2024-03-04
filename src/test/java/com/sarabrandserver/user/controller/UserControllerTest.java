@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
-class WorkerControllerTest extends AbstractIntegration {
+class UserControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}worker")
     private String path;

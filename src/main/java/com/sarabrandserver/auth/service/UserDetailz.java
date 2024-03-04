@@ -1,5 +1,6 @@
-package com.sarabrandserver.user.entity;
+package com.sarabrandserver.auth.service;
 
+import com.sarabrandserver.user.entity.SarreBrandUser;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -7,11 +8,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-public record UserDetailz(SarreBrandUser user) implements UserDetails {
+record UserDetailz(SarreBrandUser user) implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.user
+        return user
                 .getClientRole()
                 .stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.role().toString()))
@@ -20,12 +21,12 @@ public record UserDetailz(SarreBrandUser user) implements UserDetails {
 
     @Override
     public String getPassword() {
-        return this.user.getPassword();
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return this.user.getEmail();
+        return user.getEmail();
     }
 
     @Override
@@ -45,7 +46,7 @@ public record UserDetailz(SarreBrandUser user) implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return this.user.isEnabled();
+        return user.isEnabled();
     }
 
 }

@@ -26,7 +26,7 @@ class DummyData {
         return args -> {
             extracted(catService, workerProductService);
 
-            if (repository.findByPrincipal("admin@admin.com").isEmpty()) {
+            if (repository.userByPrincipal("admin@admin.com").isEmpty()) {
                 var dto = new RegisterDto(
                         "SEJU",
                         "Development",

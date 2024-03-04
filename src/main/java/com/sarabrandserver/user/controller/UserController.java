@@ -16,7 +16,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequestMapping(path = "${api.endpoint.baseurl}worker/user")
 @RequiredArgsConstructor
 @PreAuthorize(value = "hasRole('ROLE_WORKER')")
-public class WorkerController {
+public class UserController {
 
     private final SarreBrandUserService service;
 
@@ -25,7 +25,7 @@ public class WorkerController {
             @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam(name = "size", defaultValue = "20") Integer size
     ) {
-        return this.service.allUsers(page, Math.min(size, 20));
+        return service.allUsers(page, Math.min(size, 20));
     }
 
 }

@@ -18,7 +18,7 @@ public class SarreBrandUserService {
 
 
     public Optional<SarreBrandUser> userByPrincipal(String principal) {
-        return userRepository.findByPrincipal(principal);
+        return userRepository.userByPrincipal(principal);
     }
 
     /**

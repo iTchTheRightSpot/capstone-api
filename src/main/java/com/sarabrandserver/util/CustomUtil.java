@@ -30,7 +30,7 @@ public class CustomUtil {
     private static final Logger log = LoggerFactory.getLogger(CustomUtil.class);
 
     /**
-     * Converts date to UTC Date
+     * Converts date to UTC {@link Date}.
      *
      * @param date of type java.util.date
      * @return {@link Date} in utc

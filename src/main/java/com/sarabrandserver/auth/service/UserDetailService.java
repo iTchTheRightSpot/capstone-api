@@ -1,6 +1,5 @@
 package com.sarabrandserver.auth.service;
 
-import com.sarabrandserver.user.entity.UserDetailz;
 import com.sarabrandserver.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +16,7 @@ public class UserDetailService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) {
         return this.userRepository
-                .findByPrincipal(email)
+                .userByPrincipal(email)
                 .map(UserDetailz::new)
                 .orElseThrow(() -> new UsernameNotFoundException(email + " not found"));
     }

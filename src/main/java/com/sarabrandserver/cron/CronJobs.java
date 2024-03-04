@@ -53,8 +53,8 @@ class CronJobs {
                 .forEach(reservation -> {
                     skuRepo.updateProductSkuInventoryByAddingToExistingInventory(
                             reservation.getProductSku().getSku(), reservation.getQty());
-                    reservationRepo
-                            .deleteOrderReservationByReservationId(reservation.getReservationId());
+                    reservationRepo.deleteOrderReservationByReservationId(
+                                    reservation.getReservationId());
                 });
     }
 
@@ -68,8 +68,8 @@ class CronJobs {
     public void scheduleDeleteShoppingSession() {
         sessionRepo.allExpiredShoppingSession(CustomUtil.toUTC(new Date()))
                 .forEach(session -> {
-                    this.cartItemRepo
-                            .deleteCartItemsByShoppingSessionId(session.shoppingSessionId());
+                    this.cartItemRepo.deleteCartItemsByShoppingSessionId(
+                            session.shoppingSessionId());
                     this.sessionRepo.deleteById(session.shoppingSessionId());
                 });
     }

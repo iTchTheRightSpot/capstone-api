@@ -71,7 +71,7 @@ class AuthServiceTest extends AbstractUnitTest {
         );
 
         // When
-        when(this.userRepository.findByPrincipal(anyString()))
+        when(this.userRepository.userByPrincipal(anyString()))
                 .thenReturn(Optional.empty());
 
         // Then
@@ -97,7 +97,7 @@ class AuthServiceTest extends AbstractUnitTest {
         );
 
         // When
-        when(this.userRepository.findByPrincipal(anyString()))
+        when(this.userRepository.userByPrincipal(anyString()))
                 .thenReturn(Optional.of(worker));
 
         // Then
@@ -122,7 +122,7 @@ class AuthServiceTest extends AbstractUnitTest {
         );
 
         // When
-        when(this.userRepository.findByPrincipal(anyString()))
+        when(this.userRepository.userByPrincipal(anyString()))
                 .thenReturn(Optional.of(client));
 
         // Then
@@ -184,7 +184,7 @@ class AuthServiceTest extends AbstractUnitTest {
         HttpServletResponse res = mock(HttpServletResponse.class);
 
         // When
-        when(this.userRepository.findByPrincipal(anyString())).thenReturn(Optional.empty());
+        when(this.userRepository.userByPrincipal(anyString())).thenReturn(Optional.empty());
         when(this.passwordEncoder.encode(anyString())).thenReturn(dto.password());
         when(this.userRepository.save(any(SarreBrandUser.class))).thenReturn(user);
 
@@ -211,7 +211,7 @@ class AuthServiceTest extends AbstractUnitTest {
         HttpServletResponse res = mock(HttpServletResponse.class);
 
         // When
-        when(this.userRepository.findByPrincipal(anyString()))
+        when(this.userRepository.userByPrincipal(anyString()))
                 .thenReturn(Optional
                         .of(SarreBrandUser.builder()
                                 .firstname(dto.firstname())

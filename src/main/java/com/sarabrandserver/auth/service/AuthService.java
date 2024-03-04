@@ -7,7 +7,6 @@ import com.sarabrandserver.enumeration.RoleEnum;
 import com.sarabrandserver.exception.DuplicateException;
 import com.sarabrandserver.user.entity.ClientRole;
 import com.sarabrandserver.user.entity.SarreBrandUser;
-import com.sarabrandserver.user.entity.UserDetailz;
 import com.sarabrandserver.user.repository.UserRepository;
 import com.sarabrandserver.user.repository.UserRoleRepository;
 import jakarta.servlet.http.Cookie;
@@ -76,7 +75,7 @@ public class AuthService {
      * @throws DuplicateException when user principal exists and has a role of worker
      */
     void workerRegister(RegisterDto dto) {
-        var optional = this.userRepository.findByPrincipal(dto.email().trim());
+        var optional = this.userRepository.userByPrincipal(dto.email().trim());
 
         if (optional.isPresent() && optional.get().getClientRole().stream()
                 .anyMatch(role -> role.role().equals(WORKER))
@@ -96,7 +95,7 @@ public class AuthService {
      * @throws DuplicateException when user principal exists
      */
     void clientRegister(RegisterDto dto, HttpServletResponse response) {
-        if (this.userRepository.findByPrincipal(dto.email().trim()).isPresent()) {
+        if (this.userRepository.userByPrincipal(dto.email().trim()).isPresent()) {
             throw new DuplicateException(dto.email() + " exists");
         }
 

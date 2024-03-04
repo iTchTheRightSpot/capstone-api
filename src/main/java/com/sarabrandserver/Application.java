@@ -37,7 +37,7 @@ public class Application {
     @Profile(value = "default")
     public CommandLineRunner commandLineRunner(AuthService service, UserRepository repository) {
         return args -> {
-            if (repository.findByPrincipal(principal).isEmpty()) {
+            if (repository.userByPrincipal(principal).isEmpty()) {
                 var dto = new RegisterDto(
                         "SEJU",
                         "Development",

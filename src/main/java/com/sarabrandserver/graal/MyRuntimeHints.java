@@ -3,9 +3,12 @@ package com.sarabrandserver.graal;
 import com.sarabrandserver.auth.dto.LoginDto;
 import com.sarabrandserver.auth.dto.RegisterDto;
 import com.sarabrandserver.cart.dto.CartDTO;
+import com.sarabrandserver.cart.response.CartResponse;
 import com.sarabrandserver.category.dto.CategoryDTO;
 import com.sarabrandserver.category.dto.UpdateCategoryDTO;
 import com.sarabrandserver.category.response.WorkerCategoryResponse;
+import com.sarabrandserver.checkout.CheckoutPair;
+import com.sarabrandserver.checkout.CustomObject;
 import com.sarabrandserver.payment.dto.OrderHistoryDTO;
 import com.sarabrandserver.payment.dto.PaymentDTO;
 import com.sarabrandserver.payment.dto.SkuQtyDTO;
@@ -14,12 +17,14 @@ import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.Variant;
 import com.sarabrandserver.shipping.ShippingDto;
 import com.sarabrandserver.shipping.ShippingMapper;
+import com.sarabrandserver.tax.TaxDto;
+import com.sarabrandserver.thirdparty.PaymentCredentialObj;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 
 /**
- * As per docs
- * <a href="https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html#native-image.advanced.custom-hints">...</a>
+ * As per
+ * <a href="https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html#native-image.advanced.custom-hints">docs</a>
  * */
 public class MyRuntimeHints implements RuntimeHintsRegistrar {
 
@@ -29,8 +34,9 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
         // migration
         hints.resources().registerPattern("db/migration/*");
 
-        // shopping session
+        // cart
         hints.serialization().registerType(CartDTO.class);
+        hints.serialization().registerType(CartResponse.class);
 
         // Auth
         hints.serialization().registerType(LoginDto.class);
@@ -61,6 +67,17 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
         // shipping
         hints.serialization().registerType(ShippingDto.class);
         hints.serialization().registerType(ShippingMapper.class);
+
+        // third-party package
+        hints.serialization().registerType(PaymentCredentialObj.class);
+
+        // Checkout
+        hints.serialization().registerType(CheckoutPair.class);
+        hints.serialization().registerType(CustomObject.class);
+
+        // Tax
+        hints.serialization().registerType(TaxDto.class);
+
     }
 
 }

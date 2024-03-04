@@ -5,12 +5,10 @@ import com.sarabrandserver.AbstractRepositoryTest;
 import com.sarabrandserver.user.entity.SarreBrandUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,8 +17,6 @@ class UserRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
     private UserRepository repository;
-    @Autowired
-    private UserRoleRepository roleRepository;
 
     @Test
     void userByPrincipal() {
@@ -37,6 +33,7 @@ class UserRepositoryTest extends AbstractRepositoryTest {
                         .lastname(new Faker().name().lastName())
                         .email(principal)
                         .phoneNumber("0000000000")
+                        .password("password")
                         .enabled(true)
                         .clientRole(new HashSet<>())
                         .paymentDetail(new HashSet<>())
@@ -70,6 +67,7 @@ class UserRepositoryTest extends AbstractRepositoryTest {
                         .lastname(new Faker().name().lastName())
                         .email("fk@fk.com")
                         .phoneNumber("0000000000")
+                        .password("password")
                         .enabled(true)
                         .clientRole(new HashSet<>())
                         .paymentDetail(new HashSet<>())

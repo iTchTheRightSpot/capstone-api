@@ -3,6 +3,7 @@ package com.sarabrandserver.cart.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sarabrandserver.enumeration.SarreCurrency;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 public record CartResponse(
@@ -18,4 +19,4 @@ public record CartResponse(
         double weight,
         @JsonProperty("weight_type")
         String weightType
-) { }
+) implements Serializable { }

@@ -31,6 +31,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
@@ -155,29 +156,26 @@ public class CartService {
 
         String[] arr = cookie.getValue().split(split);
 
-        List<CompletableFuture<CartResponse>> futures = shoppingSessionRepo
+        var futures = shoppingSessionRepo
                 .cartItemsByCookieValue(currency, arr[0])
                 .stream()
-                .map(db -> CompletableFuture.supplyAsync(() -> {
-                    String url = this.s3Service.preSignedUrl(BUCKET, db.getKey());
-                    return new CartResponse(
-                            db.getUuid(),
-                            url,
-                            db.getName(),
-                            db.getPrice(),
-                            db.getCurrency(),
-                            db.getColour(),
-                            db.getSize(),
-                            db.getSku(),
-                            db.getQty(),
-                            db.getWeight(),
-                            db.getWeightType()
-                    );
-                }))
+                .map(db -> (Supplier<CartResponse>) () -> new CartResponse(
+                        db.getUuid(),
+                        s3Service.preSignedUrl(BUCKET, db.getKey()),
+                        db.getName(),
+                        db.getPrice(),
+                        db.getCurrency(),
+                        db.getColour(),
+                        db.getSize(),
+                        db.getSku(),
+                        db.getQty(),
+                        db.getWeight(),
+                        db.getWeightType()
+                ))
                 .toList();
 
         return CustomUtil.asynchronousTasks(futures, CartService.class)
-                .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
+                .thenApply(v -> v.stream().map(Supplier::get).toList());
     }
 
     /**

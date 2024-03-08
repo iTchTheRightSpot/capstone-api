@@ -9,7 +9,6 @@ import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.response.DetailResponse;
 import com.sarabrandserver.product.response.ProductResponse;
-import com.sarabrandserver.product.response.Variant;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -88,7 +87,7 @@ public class ClientProductService {
         var futures = productDetailRepo
                 .productDetailsByProductUuidClientFront(uuid)
                 .stream()
-                .map(pojo -> CompletableFuture.supplyAsync(() -> {
+                .map(pojo -> (Supplier<DetailResponse>) () -> {
                     var suppliers = Arrays
                             .stream(pojo.getImage().split(","))
                             .map(key -> (Supplier<String>) () -> s3Service.preSignedUrl(BUCKET, key))
@@ -99,7 +98,7 @@ public class ClientProductService {
                             .thenApply(v -> v.stream().map(Supplier::get).toList())
                             .join();
 
-                    Variant[] variants = CustomUtil
+                    var variants = CustomUtil
                             .toVariantArray(pojo.getVariants(), ClientProductService.class);
 
                     return new DetailResponse(
@@ -111,11 +110,11 @@ public class ClientProductService {
                             urls,
                             variants
                     );
-                }))
+                })
                 .toList();
 
         return CustomUtil.asynchronousTasks(futures, ClientProductService.class)
-                .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
+                .thenApply(v -> v.stream().map(Supplier::get).toList());
     }
 
     /**

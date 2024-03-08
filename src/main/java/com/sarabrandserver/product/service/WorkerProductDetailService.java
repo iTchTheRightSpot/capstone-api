@@ -51,10 +51,10 @@ public class WorkerProductDetailService {
      * @throws CustomServerError if an error occurs during the asynchronous processing.
      */
     public CompletableFuture<List<DetailResponse>> productDetailsByProductUuid(String uuid) {
-        List<CompletableFuture<DetailResponse>> futures = detailRepo
+        var futures = detailRepo
                 .productDetailsByProductUuidAdminFront(uuid)
                 .stream()
-                .map(pojo -> CompletableFuture.supplyAsync(() ->  {
+                .map(pojo -> (Supplier<DetailResponse>) () -> {
                     var req = Arrays
                             .stream(pojo.getImage().split(","))
                             .map(key -> (Supplier<String>) () -> helperService.preSignedUrl(BUCKET, key))
@@ -69,11 +69,11 @@ public class WorkerProductDetailService {
                             .toVariantArray(pojo.getVariants(), WorkerProductDetailService.class);
 
                     return new DetailResponse(pojo.getVisible(), pojo.getColour(), urls, variants);
-                }))
+                })
                 .toList();
 
         return CustomUtil.asynchronousTasks(futures, WorkerProductDetailService.class)
-                .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
+                .thenApply(v -> v.stream().map(Supplier::get).toList());
     }
 
     /**
@@ -83,7 +83,7 @@ public class WorkerProductDetailService {
      * @throws CustomNotFoundException is thrown if product uuid does not exist.
      * @throws DuplicateException      is thrown if product colour exists.
      */
-    @Transactional
+    @Transactional(rollbackFor = CustomNotFoundException.class)
     public void create(ProductDetailDto dto, MultipartFile[] multipartFiles) {
         var product = this.productRepo
                 .productByUuid(dto.uuid())
@@ -96,10 +96,10 @@ public class WorkerProductDetailService {
             return;
         }
 
-        // Validate MultipartFile[] are all images
+        // validate multipartFiles are all images
         var files = this.helperService.customMultiPartFiles(multipartFiles, new StringBuilder());
 
-        // Save ProductDetail
+        // save ProductDetail
         var detail = ProductDetail.builder()
                 .product(product)
                 .colour(dto.colour())
@@ -109,10 +109,10 @@ public class WorkerProductDetailService {
                 .skus(new HashSet<>())
                 .build();
 
-        // Save ProductDetail
+        // save ProductDetail
         var saved = this.detailRepo.save(detail);
 
-        // Save ProductSKUs
+        // save ProductSKU
         this.skuService.save(dto.sizeInventory(), saved);
 
         this.helperService.saveProductImages(detail, files, BUCKET);

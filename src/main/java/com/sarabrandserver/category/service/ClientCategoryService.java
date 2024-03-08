@@ -16,7 +16,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -64,36 +63,30 @@ public class ClientCategoryService {
             int page,
             int size
     ) {
-        Page<ProductPojo> dbRes = this.repository
+        var pageOfProducts = this.repository
                 .allProductsByCategoryIdWhereInStockAndIsVisible(categoryId, currency, PageRequest.of(page, size));
 
-        List<Supplier<ProductResponse>> futures = createTasks(dbRes);
+        var futures = createTasks(pageOfProducts);
 
         return CustomUtil.asynchronousTasks(futures, ClientCategoryService.class)
                 .thenApply(v -> new PageImpl<>(
                         v.stream().map(Supplier::get).toList(),
-                        dbRes.getPageable(),
-                        dbRes.getTotalElements()
+                        pageOfProducts.getPageable(),
+                        pageOfProducts.getTotalElements()
                 ));
     }
 
-    private List<Supplier<ProductResponse>> createTasks(Page<ProductPojo> dbRes) {
-        List<Supplier<ProductResponse>> futures = new ArrayList<>();
-
-        for (ProductPojo p : dbRes) {
-            futures.add(() -> {
-                var url = service.preSignedUrl(BUCKET, p.getImage());
-                return new ProductResponse(
+    private List<Supplier<ProductResponse>> createTasks(Page<ProductPojo> page) {
+        return page.stream()
+                .map(p -> (Supplier<ProductResponse>) () -> new ProductResponse(
                         p.getUuid(),
                         p.getName(),
                         p.getDescription(),
                         p.getPrice(),
                         p.getCurrency(),
-                        url
-                );
-            });
-        }
-        return futures;
+                        service.preSignedUrl(BUCKET, p.getImage())
+                ))
+                .toList();
     }
 
 }

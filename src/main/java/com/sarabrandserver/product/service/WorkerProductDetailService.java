@@ -11,7 +11,6 @@ import com.sarabrandserver.product.repository.ProductDetailRepo;
 import com.sarabrandserver.product.repository.ProductImageRepo;
 import com.sarabrandserver.product.repository.ProductRepo;
 import com.sarabrandserver.product.response.DetailResponse;
-import com.sarabrandserver.product.response.Variant;
 import com.sarabrandserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -56,17 +55,17 @@ public class WorkerProductDetailService {
                 .productDetailsByProductUuidAdminFront(uuid)
                 .stream()
                 .map(pojo -> CompletableFuture.supplyAsync(() ->  {
-                    List<Supplier<String>> req = Arrays
+                    var req = Arrays
                             .stream(pojo.getImage().split(","))
                             .map(key -> (Supplier<String>) () -> helperService.preSignedUrl(BUCKET, key))
                             .toList();
 
-                    List<String> urls = CustomUtil
+                    var urls = CustomUtil
                             .asynchronousTasks(req, WorkerProductDetailService.class)
                             .thenApply(v -> v.stream().map(Supplier::get).toList())
                             .join();
 
-                    Variant[] variants = CustomUtil
+                    var variants = CustomUtil
                             .toVariantArray(pojo.getVariants(), WorkerProductDetailService.class);
 
                     return new DetailResponse(pojo.getVisible(), pojo.getColour(), urls, variants);

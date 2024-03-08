@@ -58,19 +58,16 @@ class HelperService {
      * @throws CustomServerError if there is an error executing the tasks.
      */
     public void saveProductImages(ProductDetail detail, CustomMultiPart[] files, String bucket) {
-        List<Supplier<CustomMultiPart>> callables = new ArrayList<>();
-
-        // asynchronously save to s3.
-        for (CustomMultiPart file : files) {
-            callables.add(() -> {
-                this.service
-                        .uploadToS3(file.file(), file.metadata(), bucket, file.key());
-                return file;
-            });
-        }
+        var future = Arrays.stream(files)
+                .map(file -> (Supplier<CustomMultiPart>) () -> {
+                    service.uploadToS3(file.file(), file.metadata(), bucket, file.key());
+                    return file;
+                })
+                .toList();
 
         // save all images as long as we have successfully saved to s3
-        CustomUtil.asynchronousTasks(callables, HelperService.class).join()
+        CustomUtil.asynchronousTasks(future, HelperService.class)
+                .join()
                 .forEach(e -> {
                     CustomMultiPart obj = e.get();
                     this.repository

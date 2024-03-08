@@ -90,16 +90,16 @@ public class WorkerProductService {
      * @return a {@link CompletableFuture} of {@link Page} of {@link ProductResponse}.
      */
     public CompletableFuture<Page<ProductResponse>> allProducts(SarreCurrency currency, int page, int size) {
-        Page<ProductPojo> dbRes = this.productRepo
+        var pageOfProducts = this.productRepo
                 .allProductsForAdminFront(currency, PageRequest.of(page, size));
 
-        List<Supplier<ProductResponse>> futures = createTasks(dbRes);
+        var futures = createTasks(pageOfProducts);
 
         return CustomUtil.asynchronousTasks(futures, WorkerProductService.class)
                 .thenApply(v -> new PageImpl<>(
                         v.stream().map(Supplier::get).toList(),
-                        dbRes.getPageable(),
-                        dbRes.getTotalElements()
+                        pageOfProducts.getPageable(),
+                        pageOfProducts.getTotalElements()
                 ));
     }
 
@@ -108,30 +108,25 @@ public class WorkerProductService {
      * {@link ProductResponse} objects. Each Supplier encapsulates the creation
      * logic for a single {@link ProductResponse} object.
      *
-     * @param dbRes The page of {@link ProductPojo} objects from which to generate
+     * @param page The page of {@link ProductPojo} objects from which to generate
      *              {@link ProductResponse} objects.
      * @return A list of {@link Supplier}, each representing a task to create a
      * {@link ProductResponse} object.
      */
-    private List<Supplier<ProductResponse>> createTasks(Page<ProductPojo> dbRes) {
-        List<Supplier<ProductResponse>> futures = new ArrayList<>();
-        for (ProductPojo p : dbRes) {
-            futures.add(() -> {
-                var url = helperService.preSignedUrl(BUCKET, p.getImage());
-                return new ProductResponse(
+    private List<Supplier<ProductResponse>> createTasks(Page<ProductPojo> page) {
+        return page.stream()
+                .map(p -> (Supplier<ProductResponse>) () -> new ProductResponse(
                         p.getUuid(),
                         p.getName(),
                         p.getDescription(),
                         p.getPrice(),
                         p.getCurrency(),
-                        url,
+                        helperService.preSignedUrl(BUCKET, p.getImage()),
                         p.getCategory(),
                         p.getWeight(),
                         p.getWeightType()
-                );
-            });
-        }
-        return futures;
+                ))
+                .toList();
     }
 
     /**

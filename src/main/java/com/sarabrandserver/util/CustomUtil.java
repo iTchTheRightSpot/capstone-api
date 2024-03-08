@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
@@ -255,7 +254,7 @@ public class CustomUtil {
             List<T> schedules, Class<C> clazz
     ) {
         List<CompletableFuture<T>> futures = new ArrayList<>();
-        try (final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
             for (T s : schedules) {
                 futures.add(CompletableFuture
                         .supplyAsync(() -> s, executor)

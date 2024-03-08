@@ -46,16 +46,16 @@ public class ClientProductService {
      * @return a Page of {@link ProductResponse}.
      */
     public CompletableFuture<Page<ProductResponse>> allProductsByCurrency(SarreCurrency currency, int page, int size) {
-        Page<ProductPojo> dbRes = productRepo
+        var pageOfProducts = productRepo
                 .allProductsByCurrencyClient(currency, PageRequest.of(page, size));
 
-        List<Supplier<ProductResponse>> futures = createPageTasks(dbRes);
+        var futures = createPageTasks(pageOfProducts);
 
         return CustomUtil.asynchronousTasks(futures, ClientProductService.class)
                 .thenApply(v -> new PageImpl<>(
                         v.stream().map(Supplier::get).toList(),
-                        dbRes.getPageable(),
-                        dbRes.getTotalElements()
+                        pageOfProducts.getPageable(),
+                        pageOfProducts.getTotalElements()
                 ));
     }
 
@@ -85,7 +85,7 @@ public class ClientProductService {
 
         PriceCurrencyPojo object = optional.get();
 
-        List<CompletableFuture<DetailResponse>> futures = productDetailRepo
+        var futures = productDetailRepo
                 .productDetailsByProductUuidClientFront(uuid)
                 .stream()
                 .map(pojo -> CompletableFuture.supplyAsync(() -> {
@@ -94,7 +94,7 @@ public class ClientProductService {
                             .map(key -> (Supplier<String>) () -> s3Service.preSignedUrl(BUCKET, key))
                             .toList();
 
-                    List<String> urls = CustomUtil
+                    var urls = CustomUtil
                             .asynchronousTasks(suppliers, ClientProductService.class)
                             .thenApply(v -> v.stream().map(Supplier::get).toList())
                             .join();
@@ -129,16 +129,16 @@ public class ClientProductService {
     public CompletableFuture<Page<ProductResponse>> search(String param, SarreCurrency currency, int size) {
         // SQL LIKE Operator
         // https://www.w3schools.com/sql/sql_like.asp
-        Page<ProductPojo> dbRes = productRepo
+        var pageOfProducts = productRepo
                 .productsByNameAndCurrency(param + "%", currency, PageRequest.of(0, size));
 
-        List<Supplier<ProductResponse>> futures = createTasks(dbRes);
+        var futures = createTasks(pageOfProducts);
 
         return CustomUtil.asynchronousTasks(futures, ClientProductService.class)
                 .thenApply(v -> new PageImpl<>(
                         v.stream().map(Supplier::get).toList(),
-                        dbRes.getPageable(),
-                        dbRes.getTotalElements()
+                        pageOfProducts.getPageable(),
+                        pageOfProducts.getTotalElements()
                 ));
     }
 

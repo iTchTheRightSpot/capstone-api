@@ -11,28 +11,36 @@ import com.sarabrandserver.payment.repository.OrderReservationRepo;
 import com.sarabrandserver.product.repository.ProductSkuRepo;
 import com.sarabrandserver.thirdparty.ThirdPartyPaymentService;
 import com.sarabrandserver.util.CustomUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
 
-@Service
+@Component
 class CronJobs {
+
+    private static final Logger log = LoggerFactory.getLogger(CronJobs.class);
 
     private final RestClient restClient;
     private final ProductSkuRepo skuRepo;
     private final OrderReservationRepo reservationRepo;
     private final ShoppingSessionRepo sessionRepo;
     private final CartItemRepo cartItemRepo;
+    private final String secretKey;
 
     public CronJobs(
             RestClient.Builder clientBuilder,
@@ -46,12 +54,8 @@ class CronJobs {
         this.reservationRepo = reservationRepo;
         this.sessionRepo = sessionRepo;
         this.cartItemRepo = cartItemRepo;
-        this.restClient = clientBuilder
-                .baseUrl("https://api.paystack.co/transaction/verify")
-                .defaultHeader("Authorization", "Bearer %s"
-                        .formatted(paymentService.payStackCredentials().secretKey())
-                )
-                .build();
+        this.secretKey = paymentService.payStackCredentials().secretKey();
+        this.restClient = clientBuilder.build();
     }
 
     /**
@@ -61,8 +65,10 @@ class CronJobs {
     @Scheduled(fixedRate = 15, timeUnit = TimeUnit.MINUTES, zone = "UTC")
     @Transactional
     public void schedule() {
+        log.info("starting cron job");
         onDeleteShoppingSessions();
         onDeleteOrderReservations();
+        log.info("end of cron job");
     }
 
     /**
@@ -88,7 +94,7 @@ class CronJobs {
         Date date = CustomUtil
                 .toUTC(Date.from(Instant.now().plus(20, ChronoUnit.MINUTES)));
 
-        retrieveFailedOrderReservationsFromPaystack(reservationRepo
+        validateOrderReservationsFromPaystack(reservationRepo
                 .allPendingExpiredReservations(date, PENDING))
                 .forEach(reservation -> {
                     skuRepo.updateProductSkuInventoryByAddingToExistingInventory(
@@ -101,7 +107,6 @@ class CronJobs {
     /**
      * Finds failed {@link OrderReservation} from Paystack based on list of expired
      * {@link OrderReservation} objects.
-     *
      * <p>
      * Retrieves the status of transactions from Paystack and filters out reservations with
      * transaction references that do not exist or have statuses of abandoned or failed.
@@ -112,25 +117,37 @@ class CronJobs {
      *                           from Paystack.
      * @see <a href="https://paystack.com/docs/payments/verify-payments/">Paystack Documentation</a>
      */
-    public List<OrderReservation> retrieveFailedOrderReservationsFromPaystack(
+    public List<OrderReservation> validateOrderReservationsFromPaystack(
             List<OrderReservation> reservations
     ) {
-        record CustomCronObject(OrderReservation res, JsonNode node) {
+        record CustomCronObject(OrderReservation reservation, JsonNode node) {
         }
 
         // create tasks
         var futures = reservations.stream()
-                .map(reservation -> (Supplier<CustomCronObject>) () -> new CustomCronObject(
-                        reservation, restClient.get().uri("/", reservation.getReference())
-                        .retrieve().body(JsonNode.class)
-                ))
+                .map(reservation -> (Supplier<CustomCronObject>) () -> {
+                    URI uri = UriComponentsBuilder
+                            .fromUriString("https://api.paystack.co/transaction/verify")
+                            .pathSegment(reservation.getReference())
+                            .build()
+                            .toUri();
+
+                    JsonNode node = restClient.get().uri(uri)
+                            .header("Authorization",
+                                    "Bearer %s".formatted(secretKey)
+                            )
+                            .retrieve().body(JsonNode.class);
+                    return new CustomCronObject(reservation, node);
+                })
                 .toList();
 
         return CustomUtil.asynchronousTasks(futures, CronJobs.class)
+                .exceptionally(e -> null)
                 .thenApply(f -> f.stream()
-                        .map(Supplier::get)
-                        .filter(obj -> isFailedReservation(obj.node()))
-                        .map(CustomCronObject::res)
+                        .map(supplier -> Optional.ofNullable(supplier.get()))
+                        .filter(Optional::isPresent)
+                        .filter(obj -> isFailedReservation(obj.get().node()))
+                        .map(obj -> obj.get().reservation())
                         .toList()
                 )
                 .join();

@@ -24,16 +24,15 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static com.sarabrandserver.enumeration.ReservationStatus.PENDING;
 
 @Component
-class CronJobs {
+class CronJob {
 
-    private static final Logger log = LoggerFactory.getLogger(CronJobs.class);
+    private static final Logger log = LoggerFactory.getLogger(CronJob.class);
 
     private final RestClient restClient;
     private final ProductSkuRepo skuRepo;
@@ -42,7 +41,7 @@ class CronJobs {
     private final CartItemRepo cartItemRepo;
     private final String secretKey;
 
-    public CronJobs(
+    public CronJob(
             RestClient.Builder clientBuilder,
             ProductSkuRepo skuRepo,
             OrderReservationRepo reservationRepo,
@@ -87,18 +86,27 @@ class CronJobs {
     }
 
     /**
-     * Delete {@link OrderReservation}s.
-     * */
-    @Transactional(rollbackFor = CustomServerError.class)
+     * Retrieves all expired {@link OrderReservation}s with a pending status for deletion.
+     * After the {@link OrderReservation}s have been retrieved, update the inventory of
+     * associated {@link com.sarabrandserver.product.entity.ProductSku}s since the user did
+     * not complete the purchase within the allotted time. After the update has been performed,
+     * deletion of {@link OrderReservation} is performed.
+     * Note: The timeout for every payment session in Paystack is 600 seconds or 10 minutes.
+     * @see
+     * <a href="https://paystack.com/docs/api/integration/#update-timeout">updating the timeout</a>.
+     */
+    @Transactional
     public void onDeleteOrderReservations() {
         Date date = CustomUtil
-                .toUTC(Date.from(Instant.now().plus(20, ChronoUnit.MINUTES)));
+                .toUTC(Date.from(Instant.now().plus(5, ChronoUnit.MINUTES)));
 
-        validateOrderReservationsFromPaystack(reservationRepo
-                .allPendingExpiredReservations(date, PENDING))
+        reservationRepo
+                .allPendingExpiredReservations(date, PENDING)
                 .forEach(reservation -> {
+                    // add reservation qty to associated ProductSku inventory
                     skuRepo.updateProductSkuInventoryByAddingToExistingInventory(
                             reservation.getProductSku().getSku(), reservation.getQty());
+                    // delete the expired reservation
                     reservationRepo.deleteOrderReservationByReservationId(
                                     reservation.getReservationId());
                 });
@@ -115,7 +123,7 @@ class CronJobs {
      * @return A list of {@link OrderReservation} objects that have failed transactions.
      * @throws CustomServerError if an error occurs when asynchronous validating references
      *                           from Paystack.
-     * @see <a href="https://paystack.com/docs/payments/verify-payments/">Paystack Documentation</a>
+     * @see <a href="https://paystack.com/docs/payments/verify-payments/">documentation</a>
      */
     public List<OrderReservation> validateOrderReservationsFromPaystack(
             List<OrderReservation> reservations
@@ -141,16 +149,18 @@ class CronJobs {
                 })
                 .toList();
 
-        return CustomUtil.asynchronousTasks(futures, CronJobs.class)
-                .exceptionally(e -> null)
-                .thenApply(f -> f.stream()
-                        .map(supplier -> Optional.ofNullable(supplier.get()))
-                        .filter(Optional::isPresent)
-                        .filter(obj -> isFailedReservation(obj.get().node()))
-                        .map(obj -> obj.get().reservation())
-                        .toList()
-                )
-                .join();
+        return CustomUtil.asynchronousTasks(futures, CronJob.class)
+                    .thenApply(f -> f.stream()
+                            .map(Supplier::get)
+                            .filter(obj -> isFailedReservation(obj.node()))
+                            .map(CustomCronObject::reservation)
+                            .toList()
+                    )
+                    .exceptionally(e -> {
+                        log.error("error after {}", e.getMessage());
+                        return null;
+                    })
+                    .join();
     }
 
     /**
@@ -172,7 +182,7 @@ class CronJobs {
         String message = node.get("message").textValue();
         String status = node.get("data").get("status").textValue();
 
-        // Check if transaction reference not found or status is abandoned/failed
+        // check if transaction reference not found or status is abandoned/failed
         return message.equalsIgnoreCase("Transaction reference not found") ||
                 (message.equalsIgnoreCase("Verification successful") &&
                         (status.equalsIgnoreCase("abandoned")

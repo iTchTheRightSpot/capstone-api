@@ -1,7 +1,7 @@
 package com.sarabrandserver.thirdparty;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sarabrandserver.exception.CustomAwsException;
+import com.sarabrandserver.exception.CustomServerError;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +53,7 @@ public class ThirdPartyPaymentService {
                     If the issue persists, feel free to contact our support team for assistance.
                     Thank you for your understanding.
                     """;
-            throw new CustomAwsException(ui);
+            throw new CustomServerError(ui);
         }
     }
 

@@ -63,7 +63,7 @@ public class ControllerAdvices {
         return new ResponseEntity<>(res, PAYLOAD_TOO_LARGE);
     }
 
-    @ExceptionHandler({S3Exception.class, CustomAwsException.class, CustomServerError.class})
+    @ExceptionHandler({S3Exception.class, CustomServerError.class})
     public ResponseEntity<ExceptionResponse> awsException(Exception ex) {
         var res = new ExceptionResponse(ex.getMessage(), INTERNAL_SERVER_ERROR);
         return new ResponseEntity<>(res, INTERNAL_SERVER_ERROR);

@@ -1,7 +1,6 @@
 package com.sarabrandserver.product.service;
 
 import com.sarabrandserver.aws.S3Service;
-import com.sarabrandserver.exception.CustomAwsException;
 import com.sarabrandserver.exception.CustomServerError;
 import com.sarabrandserver.product.entity.Product;
 import com.sarabrandserver.product.entity.ProductDetail;
@@ -53,8 +52,6 @@ class HelperService {
      *              the images to be uploaded.
      * @param bucket The name of the Amazon S3 bucket to which the images will
      *               be uploaded.
-     * @throws CustomAwsException if there is an error uploading the images to
-     * Amazon S3.
      * @throws CustomServerError if there is an error executing the tasks.
      */
     public void saveProductImages(ProductDetail detail, CustomMultiPart[] files, String bucket) {
@@ -83,6 +80,7 @@ class HelperService {
      * @param multipartFiles is an array of {@link MultipartFile}.
      * @param defaultKey A property of {@link Product}.
      * @return A custom {@link CustomMultiPart} array.
+     * @throws CustomServerError if an error occurs validating if multipartFiles are images.
      */
     public CustomMultiPart[] customMultiPartFiles(MultipartFile[] multipartFiles, StringBuilder defaultKey) {
         return Arrays.stream(multipartFiles)
@@ -99,7 +97,7 @@ class HelperService {
                         String contentType = Files.probeContentType(file.toPath());
                         if (!contentType.startsWith("image/")) {
                             log.error("File is not an image");
-                            throw new CustomAwsException("File is not an image");
+                            throw new CustomServerError("File is not an image");
                         }
 
                         // Create image metadata for storing in AWS
@@ -122,8 +120,8 @@ class HelperService {
 
                         return result;
                     } catch (IOException ex) {
-                        log.error("Error either writing multipart to file or getting file type. {}", ex.getMessage());
-                        throw new CustomAwsException("please verify files are images");
+                        log.error("error either writing multipart to file or getting file type. {}", ex.getMessage());
+                        throw new CustomServerError("please verify files are images");
                     }
                 }) //
                 .toArray(CustomMultiPart[]::new);

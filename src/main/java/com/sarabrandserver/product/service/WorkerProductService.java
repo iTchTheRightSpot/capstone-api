@@ -89,7 +89,8 @@ public class WorkerProductService {
      * @param size     the size used of construct a {@link PageRequest}.
      * @return a {@link CompletableFuture} of {@link Page} of {@link ProductResponse}.
      */
-    public CompletableFuture<Page<ProductResponse>> allProducts(SarreCurrency currency, int page, int size) {
+    public CompletableFuture<Page<ProductResponse>> allProducts(
+            SarreCurrency currency, int page, int size) {
         var pageOfProducts = this.productRepo
                 .allProductsForAdminFront(currency, PageRequest.of(page, size));
 
@@ -136,10 +137,10 @@ public class WorkerProductService {
      * @param dto   of type CreateProductDTO
      * @throws CustomNotFoundException is thrown if categoryId name does not exist in database
      * or currency passed in truncateAmount does not contain in dto property priceCurrency
-     * @throws CustomAwsException      is thrown if File is not an image
+     * @throws CustomServerError      is thrown if File is not an image
      * @throws DuplicateException      is thrown if dto image exists in for Product
      */
-    @Transactional(rollbackFor = {CustomAwsException.class, CustomServerError.class})
+    @Transactional(rollbackFor = CustomServerError.class)
     public void create(final CreateProductDTO dto, final MultipartFile[] files) {
         if (!CustomUtil.validateContainsCurrencies(dto.priceCurrency())) {
             throw new CustomInvalidFormatException("please check currencies and prices");
@@ -234,10 +235,10 @@ public class WorkerProductService {
      *
      * @param uuid is a unique string for every {@link Product}.
      * @throws ResourceAttachedException is thrown if Product has ProductDetails attached.
-     * @throws S3Exception               is thrown when an error occurs when deleting from s3.
+     * @throws CustomServerError               is thrown when an error occurs when deleting from s3.
      * @see <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/DeleteMultiObjects.java">documentation</a>
      */
-    @Transactional(rollbackFor = {ResourceAttachedException.class, CustomAwsException.class})
+    @Transactional(rollbackFor = {CustomServerError.class, ResourceAttachedException.class})
     public void delete(final String uuid) {
         final List<ObjectIdentifier> keys = this.productRepo.productImagesByProductUuid(uuid)
                 .stream() //

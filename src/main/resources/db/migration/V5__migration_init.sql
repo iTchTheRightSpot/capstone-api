@@ -1,7 +1,6 @@
 # product
-UPDATE product
-SET uuid=(SELECT uuid())
-WHERE uuid IS NULL;
+UPDATE product SET uuid=(SELECT uuid()) WHERE uuid IS NULL;
+
 ALTER TABLE product
     MODIFY COLUMN uuid varchar(36) NOT NULL UNIQUE;
 CREATE INDEX IX_product_uuid ON product (uuid);

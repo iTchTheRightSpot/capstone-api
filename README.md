@@ -1,4 +1,6 @@
-# About
+# Cap-stone Server
+
+## About
 An ecommerce application still in development.
 
 ## Getting started

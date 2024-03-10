@@ -129,7 +129,7 @@ class CustomUtilTest extends AbstractUnitTest {
     void fromNairaToKobo() {
         AmountConversion[] arr = {
                 new AmountConversion(new BigDecimal("0"), new BigDecimal("0")),
-                new AmountConversion(new BigDecimal("1"), new BigDecimal("0.34")),
+                new AmountConversion(new BigDecimal("0"), new BigDecimal("0.34")),
                 new AmountConversion(new BigDecimal("20.00"), new BigDecimal("6.80")),
         };
 

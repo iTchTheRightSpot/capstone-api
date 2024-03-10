@@ -22,6 +22,7 @@ import java.util.concurrent.Executors;
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
 import static java.math.BigDecimal.ZERO;
+import static java.math.RoundingMode.DOWN;
 import static java.math.RoundingMode.FLOOR;
 
 public class CustomUtil {
@@ -123,7 +124,8 @@ public class CustomUtil {
                 .multiply(new BigDecimal(currencyConversion))
                 .setScale(2, FLOOR);
         return switch (currency) {
-            case NGN, USD -> amount.compareTo(ZERO) == 0 ? amount : total;
+            case NGN -> amount.compareTo(ZERO) == 0 ? amount : total.setScale(0, DOWN);
+            case USD -> amount.compareTo(ZERO) == 0 ? amount : total;
         };
     }
 

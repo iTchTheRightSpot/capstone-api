@@ -117,6 +117,8 @@ public class RaceConditionService {
                                 : obj.ship().ngnPrice()
                 );
 
+        // if ngn remove leading zeros
+
         var secret = this.thirdPartyService.payStackCredentials();
         return new PaymentResponse(
                 reference,

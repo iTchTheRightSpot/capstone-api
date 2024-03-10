@@ -59,7 +59,7 @@ class AuthServiceTest extends AbstractUnitTest {
     }
 
     @Test
-    void register_worker_that_doesnt_exist() {
+    void registerWorkerThatDoesntExist() {
         // Given
         var dto = new RegisterDto(
                 TestData.worker().getFirstname(),
@@ -84,7 +84,7 @@ class AuthServiceTest extends AbstractUnitTest {
     }
 
     @Test
-    void register_worker_with_already_existing_role_worker() {
+    void registerWorkerWithAlreadyExistingRoleWorker() {
         // Given
         var worker = TestData.worker();
         var dto = new RegisterDto(
@@ -109,7 +109,7 @@ class AuthServiceTest extends AbstractUnitTest {
      * have a role of WORKER.
      * */
     @Test
-    void register_worker_with_role_only_client() {
+    void registerWorkerWithRoleOnlyClient() {
         // Given
         var client = TestData.client();
         var dto = new RegisterDto(
@@ -132,7 +132,7 @@ class AuthServiceTest extends AbstractUnitTest {
     }
 
     @Test
-    void worker_login() {
+    void workerLogin() {
         // Given
         var dto = new LoginDto(TestData.worker().getEmail(), TestData.worker().getPassword());
         HttpServletRequest request = mock(HttpServletRequest.class);
@@ -149,7 +149,7 @@ class AuthServiceTest extends AbstractUnitTest {
     }
 
     @Test
-    void worker_login_non_existing_credentials() {
+    void workerLoginNonExistingCredentials() {
         // Given
         var dto = new LoginDto("client@client.com", TestData.worker().getPassword());
         HttpServletRequest request = mock(HttpServletRequest.class);
@@ -228,7 +228,7 @@ class AuthServiceTest extends AbstractUnitTest {
     }
 
     @Test
-    void client_login() {
+    void clientLogin() {
         // Given
         var dto = new LoginDto(TestData.client().getEmail(), TestData.client().getPassword());
         HttpServletRequest request = mock(HttpServletRequest.class);
@@ -245,7 +245,7 @@ class AuthServiceTest extends AbstractUnitTest {
     }
 
     @Test
-    void client_login_wrong_credentials() {
+    void clientLoginWrongCredentials() {
         // Given
         var dto = new LoginDto("worker@worker.com", TestData.client().getPassword());
         HttpServletRequest request = mock(HttpServletRequest.class);

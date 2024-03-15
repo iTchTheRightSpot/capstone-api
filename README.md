@@ -32,7 +32,6 @@ mvn clean test
 * AWS Java SDK v2 (SESv2, S3Client, S3Presigner and SecretsManager Client).
 * Unit testing, Data Access Layer and Integration Testing using JUnit, Mockito, Hamcrest and Test Containers.
 
-
 ### Schema
 Link for the most up-to-date schema.
 [Link](https://dbdiagram.io/d/6483c4d5722eb77494b791a1)

@@ -22,8 +22,8 @@ import java.util.concurrent.Executors;
 import static com.sarabrandserver.enumeration.SarreCurrency.NGN;
 import static com.sarabrandserver.enumeration.SarreCurrency.USD;
 import static java.math.BigDecimal.ZERO;
-import static java.math.RoundingMode.DOWN;
 import static java.math.RoundingMode.FLOOR;
+import static java.math.RoundingMode.UP;
 
 public class CustomUtil {
 
@@ -35,7 +35,7 @@ public class CustomUtil {
      * @param date of type java.util.date
      * @return {@link Date} in utc
      */
-    public static Date toUTC(Date date) {
+    public static Date toUTC(final Date date) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -55,7 +55,8 @@ public class CustomUtil {
      * @return true if the array is in the correct format and contains only
      * {@link SarreCurrency}.
      */
-    public static boolean validateContainsCurrencies(PriceCurrencyDto[] dto) {
+    public static boolean validateContainsCurrencies(
+            final PriceCurrencyDto[] dto) {
         if (dto.length != 2) {
             return false;
         }
@@ -92,7 +93,7 @@ public class CustomUtil {
      * @return An array of {@link Variant} objects if successful,
      * or null if an error occurs during deserialization.
      */
-    public static <T> Variant[] toVariantArray(String str, T clazz) {
+    public static <T> Variant[] toVariantArray(final String str, final T clazz) {
         try {
             return new ObjectMapper().readValue(str, Variant[].class);
         } catch (JsonProcessingException e) {
@@ -124,7 +125,7 @@ public class CustomUtil {
                 .multiply(new BigDecimal(currencyConversion))
                 .setScale(2, FLOOR);
         return switch (currency) {
-            case NGN -> amount.compareTo(ZERO) == 0 ? amount : total.setScale(0, DOWN);
+            case NGN -> amount.compareTo(ZERO) == 0 ? amount : total.setScale(0, UP);
             case USD -> amount.compareTo(ZERO) == 0 ? amount : total;
         };
     }
@@ -143,7 +144,7 @@ public class CustomUtil {
      * @return The {@link Cookie} object with the specified name, or null
      * if not found.
      */
-    public static Cookie cookie (HttpServletRequest req, String name) {
+    public static Cookie cookie (final HttpServletRequest req, final String name) {
         Cookie[] cookies = req.getCookies();
         return cookies == null
                 ? null
@@ -167,7 +168,8 @@ public class CustomUtil {
      *             into a hierarchy.
      * @return A list of {@link CategoryResponse} objects representing the root categories in the hierarchy.
      */
-    public static List<CategoryResponse> createCategoryHierarchy(List<CategoryResponse> list) {
+    public static List<CategoryResponse> createCategoryHierarchy(
+            final List<CategoryResponse> list) {
         Map<Long, CategoryResponse> map = new HashMap<>();
 
         // hierarchy is built by inject root
@@ -204,7 +206,8 @@ public class CustomUtil {
      * @param shippingPrice  The price for shipping the items in the shopping cart.
      * @return The total cost of the shopping cart including tax and shipping as a BigDecimal value.
      */
-    public static BigDecimal calculateTotal(BigDecimal cartItemsTotal, double tax, BigDecimal shippingPrice) {
+    public static BigDecimal calculateTotal(
+            final BigDecimal cartItemsTotal, final double tax, final BigDecimal shippingPrice) {
         var newTax = cartItemsTotal.multiply(BigDecimal.valueOf(tax));
         return cartItemsTotal
                 .add(newTax)
@@ -227,7 +230,7 @@ public class CustomUtil {
      * @return A {@link CheckoutPair} object containing the total
      * of weight and the total price of the {@code list}.
      */
-    public static CheckoutPair cartItemsTotalAndTotalWeight(List<TotalPojo> list) {
+    public static CheckoutPair cartItemsTotalAndTotalWeight(final List<TotalPojo> list) {
         double sumOfWeight = list.stream()
                 .mapToDouble(TotalPojo::getWeight)
                 .sum();
@@ -253,7 +256,7 @@ public class CustomUtil {
      * task.
      */
     public static <T, C> CompletableFuture<List<T>> asynchronousTasks(
-            List<T> schedules, Class<C> clazz
+            final List<T> schedules, final Class<C> clazz
     ) {
         List<CompletableFuture<T>> futures = new ArrayList<>();
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {

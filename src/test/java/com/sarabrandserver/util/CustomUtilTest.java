@@ -6,7 +6,6 @@ import com.sarabrandserver.category.response.CategoryResponse;
 import com.sarabrandserver.checkout.CheckoutPair;
 import com.sarabrandserver.payment.projection.TotalPojo;
 import com.sarabrandserver.product.dto.PriceCurrencyDto;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -95,8 +94,8 @@ class CustomUtilTest extends AbstractUnitTest {
     }
 
     @Test
-    void validate_contains_desired_currencies() {
-        PriceCurrencyDto[] arr = {
+    void validateContainsDesiredCurrencies() {
+        final PriceCurrencyDto[] arr = {
                 new PriceCurrencyDto(new BigDecimal(new Faker().commerce().price()), "USD"),
                 new PriceCurrencyDto(new BigDecimal(new Faker().commerce().price()), "NGN"),
         };
@@ -105,8 +104,8 @@ class CustomUtilTest extends AbstractUnitTest {
     }
 
     @Test
-    void error_thrown_from_negative_price() {
-        PriceCurrencyDto[] arr = {
+    void errorThrownFromNegativePrice() {
+        final PriceCurrencyDto[] arr = {
                 new PriceCurrencyDto(new BigDecimal("-1"), "USD"),
                 new PriceCurrencyDto(new BigDecimal(new Faker().commerce().price()), "NGN"),
         };
@@ -115,8 +114,8 @@ class CustomUtilTest extends AbstractUnitTest {
     }
 
     @Test
-    void can_only_be_ngn_and_usd() {
-        PriceCurrencyDto[] arr = {
+    void canOnlyBeNgnAndUsd() {
+        final PriceCurrencyDto[] arr = {
                 new PriceCurrencyDto(new BigDecimal("9.99"), USD.name()),
                 new PriceCurrencyDto(new BigDecimal("0"), USD.name()),
                 new PriceCurrencyDto(new BigDecimal(new Faker().commerce().price()), NGN.name()),
@@ -127,16 +126,15 @@ class CustomUtilTest extends AbstractUnitTest {
 
     @Test
     void fromNairaToKobo() {
-        AmountConversion[] arr = {
+        final AmountConversion[] arr = {
                 new AmountConversion(new BigDecimal("0"), new BigDecimal("0")),
-                new AmountConversion(new BigDecimal("1"), new BigDecimal("0")),
-                new AmountConversion(new BigDecimal("20.00"), new BigDecimal("6.80")),
+                new AmountConversion(new BigDecimal("1"), new BigDecimal("1")),
+                new AmountConversion(new BigDecimal("20.00"), new BigDecimal("7")),
         };
 
-        for (AmountConversion obj : arr) {
+        for (final AmountConversion obj : arr) {
             assertEquals(obj.expected(), CustomUtil
-                    .convertCurrency("0.34", NGN, obj.given())
-            );
+                    .convertCurrency("0.34", NGN, obj.given()));
         }
     }
 
@@ -156,11 +154,7 @@ class CustomUtilTest extends AbstractUnitTest {
     }
 
     @Test
-    @DisplayName("""
-    method tests creating a object hierarchy based on data
-    received from {@code allCategory} in {@code CategoryResponse} interface
-    """)
-    void categoryConverter() {
+    void shouldCreateHierarchyForCategory() {
         var actual = CustomUtil.createCategoryHierarchy(db());
         assertEquals(res(), actual);
     }

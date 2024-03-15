@@ -21,7 +21,6 @@
         <java.version>21</java.version>
         <awaitility.version>4.2.0</awaitility.version>
         <!-- as per spring boot version 3.2.3 release notes https://github.com/spring-projects/spring-boot/releases/tag/v3.2.3 -->
-        <!-- 6.3.2.Final -->
         <hibernate.orm.tooling.version>6.4.2.Final</hibernate.orm.tooling.version>
         <jakarta.xml.bind.version>4.0.1</jakarta.xml.bind.version>
     </properties>
@@ -208,8 +207,6 @@
                                     <failOnError>true</failOnError>
                                     <enableLazyInitialization>true</enableLazyInitialization>
                                     <enableDirtyTracking>true</enableDirtyTracking>
-<!--                                    <enableAssociationManagement>true</enableAssociationManagement>-->
-<!--                                    <enableExtendedEnhancement>false</enableExtendedEnhancement>-->
                                 </configuration>
                                 <goals>
                                     <goal>enhance</goal>

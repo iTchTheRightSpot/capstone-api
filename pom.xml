@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.3</version>
+        <version>3.2.2</version>
         <relativePath/> <!-- lookup parentId from repository -->
     </parent>
 
@@ -198,7 +198,7 @@
                         <executions>
                             <execution>
                                 <configuration>
-                                    <failOnError>false</failOnError>
+                                    <failOnError>true</failOnError>
                                     <enableLazyInitialization>true</enableLazyInitialization>
                                     <enableDirtyTracking>true</enableDirtyTracking>
                                     <enableAssociationManagement>true</enableAssociationManagement>

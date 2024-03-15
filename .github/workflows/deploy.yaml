@@ -16,12 +16,6 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Set up JDK GraalVM
-        uses: graalvm/setup-graalvm@v1
-        with:
-          java-version: '21'
-          distribution: 'graalvm'
-
       - name: Log into DockerHub
         uses: docker/login-action@v3
         with:

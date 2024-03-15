@@ -10,11 +10,13 @@
         <relativePath/> <!-- lookup parentId from repository -->
     </parent>
 
-    <groupId>com.example</groupId>
-    <artifactId>sara-brand-server</artifactId>
+    <groupId>dev.capstone</groupId>
+    <artifactId>capstone-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>SarreTheBrand</name>
-    <description>Backend for Sarre The Brand e-commerce application</description>
+    <name>Capstone Server</name>
+    <description>
+        An ecommerce application still in development.
+    </description>
 
     <properties>
         <aws.java.sdk.version>2.20.101</aws.java.sdk.version>

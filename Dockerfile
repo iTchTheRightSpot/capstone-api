@@ -8,6 +8,9 @@ WORKDIR /build
 # copy the app source code into build directory
 COPY . /build
 
+# executable permissions for mvnw
+RUN chmod +x mvnw
+
 # compile to native image
 RUN ./mvnw clean --no-transfer-progress -Pnative native:compile -DskipTests
 

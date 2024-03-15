@@ -19,16 +19,16 @@ mvn clean test
 
 ### Technologies
 * Java 21.
-* Spring Boot 3.2.2.
+* Spring Boot 3.2.x
   * Spring Starter Web.
   * Spring Starter Validation.
   * Spring Data JPA.
   * Spring Oauth2 Resource Server (manual authentication and authorization using jwt).
-  * Spring Session (http only cookie).
-* MySQL connector.
-* Flyway Migration.
+  * Spring Session.
+* MySQL.
+* Flyway.
 * Paystack.
-* Cron jobs using Awaitility.
+* Awaitility.
 * AWS Java SDK v2 (SESv2, S3Client, S3Presigner and SecretsManager Client).
 * Unit testing, Data Access Layer and Integration Testing using JUnit, Mockito, Hamcrest and Test Containers.
 

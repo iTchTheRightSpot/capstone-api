@@ -1,7 +1,6 @@
 package com.sarabrandserver.auth.config;
 
 import com.sarabrandserver.auth.jwt.RefreshTokenFilter;
-import com.sarabrandserver.auth.service.UserDetailService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +15,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -42,9 +42,6 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
-/**
- * API docs using session <a href="https://docs.spring.io/spring-session/reference/api.html">...</a>
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -62,7 +59,7 @@ public class SecurityConfig {
     private String BASEURL;
 
     @Bean
-    public AuthenticationProvider provider(UserDetailService service, PasswordEncoder encoder) {
+    public AuthenticationProvider provider(UserDetailsService service, PasswordEncoder encoder) {
         var provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(service);
         provider.setPasswordEncoder(encoder);
@@ -81,7 +78,9 @@ public class SecurityConfig {
     }
 
     /**
-     * <a href="https://docs.spring.io/spring-session/reference/guides/java-custom-cookie.html">...</a>
+     * Needed as we are sending jwt token as a http token
+     * @see
+     * <a href="https://docs.spring.io/spring-session/reference/guides/java-custom-cookie.html">documentation</a>
      */
     @Bean
     public CookieSerializer cookieSerializer() {
@@ -137,17 +136,15 @@ public class SecurityConfig {
                 .cors(withDefaults())
 
                 // Public routes
-                .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(
-                            "/" + this.BASEURL + "csrf",
-                            "/" + this.BASEURL + "client/**",
-                            "/" + this.BASEURL + "worker/auth/login",
-                            "/" + this.BASEURL + "cart/**",
-                            "/" + this.BASEURL + "payment/**",
-                            "/" + this.BASEURL + "checkout/**"
-                    ).permitAll();
-                    auth.anyRequest().authenticated();
-                })
+                .authorizeHttpRequests(auth -> auth.requestMatchers(
+                                "/" + this.BASEURL + "csrf",
+                                "/" + this.BASEURL + "client/**",
+                                "/" + this.BASEURL + "worker/auth/login",
+                                "/" + this.BASEURL + "cart/**",
+                                "/" + this.BASEURL + "payment/**",
+                                "/" + this.BASEURL + "checkout/**"
+                        ).permitAll()
+                        .anyRequest().authenticated())
 
                 // Jwt
                 .addFilterBefore(refreshTokenFilter, BearerTokenAuthenticationFilter.class)
@@ -171,9 +168,10 @@ public class SecurityConfig {
     }
 
     /**
-     * Reason for Consumer<ResponseCookie.ResponseCookieBuilder> as per docs secure, domain name and path are deprecated
-     * As per docs
-     * <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">...</a>
+     * Reason for Consumer<ResponseCookie.ResponseCookieBuilder> as per docs secure, domain
+     * name and path are deprecated.
+     * @see
+     * <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">documentation</a>
      */
     static final BiFunction<Boolean, String, CookieCsrfTokenRepository> csrfRepo = (secure, sameSite) -> {
         Consumer<ResponseCookie.ResponseCookieBuilder> consumer = (cookie) -> cookie

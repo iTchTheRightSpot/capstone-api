@@ -1,6 +1,5 @@
 package com.sarabrandserver.auth.jwt;
 
-import com.sarabrandserver.auth.service.UserDetailService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -9,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -27,7 +27,7 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
     private int MAXAGE;
 
     private final JwtTokenService tokenService;
-    private final UserDetailService userDetailsService;
+    private final UserDetailsService userDetailsService;
 
     /**
      * The objective of this filter is to replace JSESSIONID if jwt is

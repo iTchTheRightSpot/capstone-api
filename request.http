@@ -21,8 +21,8 @@ POST http://localhost:1997/api/v1/client/auth/login
 Content-Type: application/json
 
 {
- "principal":"yes@yes.com",
- "password":"123#-SEJ-Development"
+  "principal":"yes@yes.com",
+  "password":"123#-SEJ-Development"
 }
 
 

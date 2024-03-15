@@ -108,7 +108,7 @@ class CronJob {
                             reservation.getProductSku().getSku(), reservation.getQty());
                     // delete the expired reservation
                     reservationRepo.deleteOrderReservationByReservationId(
-                                    reservation.getReservationId());
+                            reservation.getReservationId());
                 });
     }
 
@@ -150,17 +150,17 @@ class CronJob {
                 .toList();
 
         return CustomUtil.asynchronousTasks(futures, CronJob.class)
-                    .thenApply(f -> f.stream()
-                            .map(Supplier::get)
-                            .filter(obj -> isFailedReservation(obj.node()))
-                            .map(CustomCronObject::reservation)
-                            .toList()
-                    )
-                    .exceptionally(e -> {
-                        log.error("error after {}", e.getMessage());
-                        return null;
-                    })
-                    .join();
+                .thenApply(f -> f.stream()
+                        .map(Supplier::get)
+                        .filter(obj -> isFailedReservation(obj.node()))
+                        .map(CustomCronObject::reservation)
+                        .toList()
+                )
+                .exceptionally(e -> {
+                    log.error("error after {}", e.getMessage());
+                    return null;
+                })
+                .join();
     }
 
     /**

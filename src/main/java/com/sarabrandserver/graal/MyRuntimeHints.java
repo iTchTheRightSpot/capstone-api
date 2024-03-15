@@ -30,7 +30,6 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
 
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
-
         // migration
         hints.resources().registerPattern("db/migration/*");
 

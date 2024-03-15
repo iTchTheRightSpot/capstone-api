@@ -149,7 +149,7 @@ public class SecurityConfig {
                     auth.anyRequest().authenticated();
                 })
 
-                 // Jwt
+                // Jwt
                 .addFilterBefore(refreshTokenFilter, BearerTokenAuthenticationFilter.class)
                 // https://docs.spring.io/spring-security/reference/6.0/servlet/oauth2/resource-server/jwt.html
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)))

@@ -261,9 +261,9 @@ public class WorkerProductService {
      * Retrieves the price based on the currency.
      * */
     final BiFunction<PriceCurrencyDto[], SarreCurrency, BigDecimal> truncateAmount = (arr, curr) -> Arrays
-                    .stream(arr)
-                    .filter(priceCurrencyDTO -> priceCurrencyDTO.currency().equals(curr.name()))
-                    .map(obj -> obj.price().setScale(2, FLOOR))
-                    .findFirst()
-                    .orElseThrow(() -> new CustomNotFoundException("please enter %s amount".formatted(curr.name())));
+            .stream(arr)
+            .filter(priceCurrencyDTO -> priceCurrencyDTO.currency().equals(curr.name()))
+            .map(obj -> obj.price().setScale(2, FLOOR))
+            .findFirst()
+            .orElseThrow(() -> new CustomNotFoundException("please enter %s amount".formatted(curr.name())));
 }

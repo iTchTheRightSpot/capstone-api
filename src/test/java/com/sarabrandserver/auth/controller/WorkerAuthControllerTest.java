@@ -56,12 +56,12 @@ class WorkerAuthControllerTest extends AbstractIntegration {
         this.service.register(
                 null,
                 new RegisterDto(
-                "SEJU",
-                "Development",
-                PRINCIPAL,
-                "",
-                "000-000-0000",
-                PASSWORD
+                        "SEJU",
+                        "Development",
+                        PRINCIPAL,
+                        "",
+                        "000-000-0000",
+                        PASSWORD
                 ),
                 RoleEnum.WORKER
         );

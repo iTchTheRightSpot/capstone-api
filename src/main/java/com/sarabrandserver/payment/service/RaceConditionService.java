@@ -185,8 +185,8 @@ public class RaceConditionService {
                 Map<String, OrderReservation> map = reservations.stream()
                         .collect(
                                 Collectors.toMap(
-                                reservation -> reservation.getProductSku().getSku(),
-                                orderReservation -> orderReservation)
+                                        reservation -> reservation.getProductSku().getSku(),
+                                        orderReservation -> orderReservation)
                         );
                 onPendingReservationsNotEmpty(
                         reference,

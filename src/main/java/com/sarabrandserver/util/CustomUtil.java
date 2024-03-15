@@ -170,7 +170,7 @@ public class CustomUtil {
      */
     public static List<CategoryResponse> createCategoryHierarchy(
             final List<CategoryResponse> list) {
-        Map<Long, CategoryResponse> map = new HashMap<>();
+        final Map<Long, CategoryResponse> map = new HashMap<>();
 
         // hierarchy is built by inject root
         map.put(-1L, new CategoryResponse("root"));
@@ -231,11 +231,11 @@ public class CustomUtil {
      * of weight and the total price of the {@code list}.
      */
     public static CheckoutPair cartItemsTotalAndTotalWeight(final List<TotalPojo> list) {
-        double sumOfWeight = list.stream()
+        final double sumOfWeight = list.stream()
                 .mapToDouble(TotalPojo::getWeight)
                 .sum();
 
-        BigDecimal total = list.stream()
+        final BigDecimal total = list.stream()
                 .map(p -> p.getPrice().multiply(BigDecimal.valueOf(p.getQty())))
                 .reduce(ZERO, BigDecimal::add)
                 .setScale(2, FLOOR);
@@ -258,7 +258,7 @@ public class CustomUtil {
     public static <T, C> CompletableFuture<List<T>> asynchronousTasks(
             final List<T> schedules, final Class<C> clazz
     ) {
-        List<CompletableFuture<T>> futures = new ArrayList<>();
+        final List<CompletableFuture<T>> futures = new ArrayList<>();
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
             for (T s : schedules) {
                 futures.add(CompletableFuture

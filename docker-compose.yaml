@@ -1,30 +1,30 @@
 version: '3.9'
 services:
 
-  api:
-    container_name: api
-    image: "emmanuelu17/sarre-bk-native:latest"
-    ports:
-      - "1997:1997"
-    depends_on:
-      mysql:
-        condition: service_healthy
-    environment:
-      SERVER_PORT: 1997
-      SPRING_PROFILES_ACTIVE:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sara_brand_db
-      SPRING_DATASOURCE_USERNAME: sara
-      SPRING_DATASOURCE_PASSWORD: sara
-      AWS_ACCESS_KEY_ID:
-      AWS_SECRET_ACCESS_KEY:
-      AWS_BUCKET:
-      CORS_UI_DOMAIN: http://localhost:4200/
+  #  api:
+  #    container_name: api
+  #    image: "emmanuelu17/sarre-bk-native:latest"
+  #    ports:
+  #      - "1997:1997"
+  #    depends_on:
+  #      mysql:
+  #        condition: service_healthy
+  #    environment:
+  #      SERVER_PORT: 1997
+  #      SPRING_PROFILES_ACTIVE:
+  #      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sara_brand_db
+  #      SPRING_DATASOURCE_USERNAME: sara
+  #      SPRING_DATASOURCE_PASSWORD: sara
+  #      AWS_ACCESS_KEY_ID:
+  #      AWS_SECRET_ACCESS_KEY:
+  #      AWS_BUCKET:
+  #      CORS_UI_DOMAIN: http://localhost:4200/
 
   mysql:
     image: "mysql:8.0"
     container_name: mysql
     ports:
-    - "3306:3306"
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: sara
       MYSQL_DATABASE: sara_brand_db

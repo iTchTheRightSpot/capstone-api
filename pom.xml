@@ -6,21 +6,25 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.4</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <version>3.2.2</version>
+        <relativePath/> <!-- lookup parentId from repository -->
     </parent>
 
-    <groupId>com.example</groupId>
-    <artifactId>sara-brand-server</artifactId>
+    <groupId>dev.capstone</groupId>
+    <artifactId>capstone-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>sara-brand-server</name>
-    <description>sara-brand-server</description>
+    <name>Capstone Server</name>
+    <description>
+        An ecommerce application still in development.
+    </description>
 
     <properties>
         <aws.java.sdk.version>2.20.101</aws.java.sdk.version>
-        <java.version>17</java.version>
-        <awaitility.version>3.1.2</awaitility.version>
-        <hibernate.orm.tooling.version>6.2.7.Final</hibernate.orm.tooling.version>
+        <java.version>21</java.version>
+        <awaitility.version>4.2.0</awaitility.version>
+        <!-- as per spring boot version 3.2.3 release notes https://github.com/spring-projects/spring-boot/releases/tag/v3.2.3 -->
+        <hibernate.orm.tooling.version>6.4.2.Final</hibernate.orm.tooling.version>
+        <jakarta.xml.bind.version>4.0.1</jakarta.xml.bind.version>
     </properties>
 
     <dependencyManagement>
@@ -36,7 +40,6 @@
     </dependencyManagement>
 
     <dependencies>
-
         <!-- Core -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -49,12 +52,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -75,7 +72,15 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- In other to enable @Scheduling -->
+        <!-- For decoding paystack request -->
+        <!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>${jakarta.xml.bind.version}</version>
+        </dependency>
+
+        <!-- For CRON jobs @Scheduling -->
         <dependency>
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
@@ -83,7 +88,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Fly Way -->
+        <!-- Flyway -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-mysql</artifactId>
@@ -113,7 +118,6 @@
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>sesv2</artifactId>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/secretsmanager -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>secretsmanager</artifactId>
@@ -146,7 +150,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Dummy Data For Testing -->
+        <!-- for creating dummy data for testing -->
         <!-- https://mvnrepository.com/artifact/com.github.javafaker/javafaker -->
         <dependency>
             <groupId>com.github.javafaker</groupId>
@@ -155,13 +159,30 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                    <image>
+                        <name>docker.io/emmanuelu17/${project.artifactId}:latest</name>
+                    </image>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <profiles>
-        <!-- default profile -->
         <profile>
-            <id>default</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
+            <id>native</id>
 
             <properties>
                 <spring.profiles.active>default</spring.profiles.active>
@@ -169,28 +190,7 @@
 
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.graalvm.buildtools</groupId>
-                        <artifactId>native-maven-plugin</artifactId>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-maven-plugin</artifactId>
-
-                        <configuration>
-                            <excludes>
-                                <exclude>
-                                    <groupId>org.projectlombok</groupId>
-                                    <artifactId>lombok</artifactId>
-                                </exclude>
-                            </excludes>
-                            <image>
-                                <name>docker.io/emmanuelu17/${project.artifactId}:latest</name>
-                            </image>
-                        </configuration>
-                    </plugin>
-
+                    <!-- https://docs.jboss.org/hibernate/orm/5.4/topical/html_single/bytecode/BytecodeEnhancement.html -->
                     <plugin>
                         <groupId>org.hibernate.orm.tooling</groupId>
                         <artifactId>hibernate-enhance-maven-plugin</artifactId>
@@ -200,6 +200,8 @@
                                 <configuration>
                                     <failOnError>true</failOnError>
                                     <enableLazyInitialization>true</enableLazyInitialization>
+                                    <enableDirtyTracking>true</enableDirtyTracking>
+                                    <enableAssociationManagement>true</enableAssociationManagement>
                                 </configuration>
                                 <goals>
                                     <goal>enhance</goal>
@@ -208,37 +210,13 @@
                         </executions>
                     </plugin>
 
-                </plugins>
-            </build>
-
-        </profile>
-
-        <!-- Test profile -->
-        <profile>
-            <id>test</id>
-            <properties>
-                <spring.profiles.active>test</spring.profiles.active>
-            </properties>
-
-            <build>
-                <plugins>
                     <plugin>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-maven-plugin</artifactId>
-
-                        <configuration>
-                            <excludes>
-                                <exclude>
-                                    <groupId>org.projectlombok</groupId>
-                                    <artifactId>lombok</artifactId>
-                                </exclude>
-                            </excludes>
-                        </configuration>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
                     </plugin>
                 </plugins>
             </build>
         </profile>
-
     </profiles>
 
 </project>

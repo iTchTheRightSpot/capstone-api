@@ -1,4 +1,4 @@
-name: Sarre Brand API Actions
+name: Capstone Server
 on:
   push:
     branches:
@@ -27,5 +27,5 @@ jobs:
 
       - name: Push native image to dockerhub
         run: |
-          docker image tag capstone-server:latest emmanuelu17/capstone-native:latest
-          docker push --all-tags emmanuelu17/capstone-native
+          docker image tag capstone-server:latest emmanuelu17/capstone-server:latest
+          docker push --all-tags emmanuelu17/capstone-server

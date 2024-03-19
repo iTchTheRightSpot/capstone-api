@@ -5,13 +5,13 @@ on:
       - dev
 
 jobs:
-  build:
-    name: Development Branch
+  test:
+    name: Normal app tests
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout master
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK Temurin
         uses: actions/setup-java@v4
@@ -22,7 +22,27 @@ jobs:
 
       - name: Run tests
         run: |
-          mvn clean test -DSTRIPE_API_KEY=$STRIPE_API_KEY
-        shell: bash
-        env:
-          STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
+          mvn clean install -DskipTests
+          cd webserver/
+          mvn test
+
+  native-image-test:
+    name: Native image test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v4
+
+      - name: Set up JDK Temurin
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Run tests against native image
+        run: |
+          mvn clean install -DskipTests
+          cd integration/
+          mvn test

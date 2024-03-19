@@ -7,24 +7,14 @@ An ecommerce application still in development.
 #### Pre-requisite
 1. docker
 
-```
-To run application
-./mvnw clean spring-boot:test-run
-or
-mvn clean spring-boot:test-run
-
-To run all test
-mvn clean test
-```
-
 ### Technologies
 * Java 21.
 * Spring Boot 3.2.x
-  * Spring Starter Web.
-  * Spring Starter Validation.
-  * Spring Data JPA.
-  * Spring Oauth2 Resource Server (manual authentication and authorization using jwt).
-  * Spring Session.
+    * Spring Starter Web.
+    * Spring Starter Validation.
+    * Spring Data JPA.
+    * Spring Oauth2 Resource Server (manual authentication and authorization using jwt).
+    * Spring Session.
 * MySQL.
 * Flyway.
 * Paystack.

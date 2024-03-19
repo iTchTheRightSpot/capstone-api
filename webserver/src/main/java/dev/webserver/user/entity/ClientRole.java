@@ -1,6 +1,7 @@
 package dev.webserver.user.entity;
 
 import dev.webserver.enumeration.RoleEnum;
+
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

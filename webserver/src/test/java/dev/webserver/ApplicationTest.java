@@ -2,7 +2,7 @@ package dev.webserver;
 
 import org.springframework.boot.SpringApplication;
 
-public class ApplicationTest {
+class ApplicationTest {
 
     public static void main(String... args) {
         SpringApplication

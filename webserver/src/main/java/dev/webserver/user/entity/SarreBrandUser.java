@@ -1,6 +1,7 @@
 package dev.webserver.user.entity;
 
 import dev.webserver.payment.entity.PaymentDetail;
+
 import jakarta.persistence.*;
 import lombok.*;
 

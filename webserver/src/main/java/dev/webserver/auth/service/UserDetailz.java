@@ -1,6 +1,7 @@
 package dev.webserver.auth.service;
 
 import dev.webserver.user.entity.SarreBrandUser;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

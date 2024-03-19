@@ -5,15 +5,15 @@ services:
     container_name: api
     image: "emmanuelu17/webserver:latest"
     ports:
-       - "1997:1997"
+      - "1997:1997"
     depends_on:
       mysql:
-         condition: service_healthy
+        condition: service_healthy
     environment:
       USER_PRINCIPAL: french@admin.com
       USER_PASSWORD: password
       PORT: 1997
-      SPRING_PROFILES_ACTIVE: 
+      SPRING_PROFILES_ACTIVE:
       DB_DOMAIN: "mysql"
       DH_HOST: 3306
       DB_NAME: sara_brand_db

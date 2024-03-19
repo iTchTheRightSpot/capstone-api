@@ -5,7 +5,7 @@ FROM ghcr.io/graalvm/graalvm-community:21 AS builder
 WORKDIR /build
 
 # copy source code into directory
-COPY webserver /build
+COPY . /build
 
 # maven install in the root of project and native compile webserver directory
 RUN ./mvnw clean install -DskipTests \

@@ -32,6 +32,7 @@ class MainTest {
             .withDatabaseName("webserver_module_db")
             .withUsername("webserver_module")
             .withPassword("webserver_module")
+            .withInitScript("/src/test/resources/db/init.sql")
             .withNetwork(network)
             .withNetworkAliases("mysql");
 
@@ -84,7 +85,7 @@ class MainTest {
     }
 
     @Test
-    void actuatorHealthNativeImage() {
+    void actuator() {
         testClient.get().uri("/actuator/health")
                 .exchange()
                 .expectStatus()

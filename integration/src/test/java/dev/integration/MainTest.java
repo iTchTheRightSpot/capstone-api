@@ -32,9 +32,11 @@ class MainTest {
             .withDatabaseName("webserver_module_db")
             .withUsername("webserver_module")
             .withPassword("webserver_module")
-            .withInitScript("/src/test/resources/db/init.sql")
+//            .withInitScript("src/test/resources/db/init.sql")
+            .withInitScript("db/init.sql")
             .withNetwork(network)
-            .withNetworkAliases("mysql");
+            .withNetworkAliases("mysql")
+            .withReuse(true);
 
     static {
         map.put("SPRING_PROFILES_ACTIVE", "native-test");
@@ -64,7 +66,8 @@ class MainTest {
             .withEnv(map)
             .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(MainTest.class)))
             .waitingFor(Wait.forHttp("/actuator/health"))
-            .withExposedPorts(8080);
+            .withExposedPorts(8080)
+            .withReuse(true);
 
     @BeforeAll
     static void beforeAllTests() {
@@ -84,6 +87,13 @@ class MainTest {
         testClient = WebTestClient.bindToServer().baseUrl(endpoint).build();
     }
 
+
+    @Test
+    void testCanImportAnObjectFromWebServerModule() {
+        assertEquals(new LoginDto("principal@gmail.com", "password"),
+                new LoginDto("principal@gmail.com", "password"));
+    }
+
     @Test
     void actuator() {
         testClient.get().uri("/actuator/health")
@@ -93,12 +103,6 @@ class MainTest {
                 .expectBody()
                 .jsonPath("$.status")
                 .isEqualTo("UP");
-    }
-
-    @Test
-    void testCanImportAnObjectFromWebServerModule() {
-        assertEquals(new LoginDto("principal@gmail.com", "password"),
-                new LoginDto("principal@gmail.com", "password"));
     }
 
 }

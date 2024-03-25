@@ -19,8 +19,7 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 @Configuration
 class AwsConfiguration {
 
-    private static final Logger log = LoggerFactory
-            .getLogger(AwsConfiguration.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(AwsConfiguration.class.getName());
     private static final Region REGION;
     private static final AwsCredentialsProvider PROVIDER;
 

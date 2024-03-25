@@ -55,7 +55,7 @@ public class SecurityConfig {
     private String SAMESITE;
     @Value(value = "${cors.ui.domain}")
     private String CORSDOMAIN;
-    @Value("${api.endpoint.baseurl}")
+    @Value("/${api.endpoint.baseurl}")
     private String BASEURL;
 
     @Bean
@@ -138,12 +138,12 @@ public class SecurityConfig {
                 // Public routes
                 .authorizeHttpRequests(auth -> auth.requestMatchers(
                                 "/actuator/**",
-                                "/" + this.BASEURL + "csrf",
-                                "/" + this.BASEURL + "client/**",
-                                "/" + this.BASEURL + "worker/auth/login",
-                                "/" + this.BASEURL + "cart/**",
-                                "/" + this.BASEURL + "payment/**",
-                                "/" + this.BASEURL + "checkout/**")
+                                this.BASEURL + "csrf",
+                                this.BASEURL + "client/**",
+                                this.BASEURL + "worker/auth/login",
+                                this.BASEURL + "cart/**",
+                                this.BASEURL + "payment/**",
+                                this.BASEURL + "checkout/**")
                         .permitAll()
                         .anyRequest().authenticated()
                 )
@@ -162,7 +162,7 @@ public class SecurityConfig {
                 // Logout
                 // https://docs.spring.io/spring-security/reference/servlet/authentication/logout.html
                 .logout((logoutConfig) -> logoutConfig
-                        .logoutUrl("/" + this.BASEURL + "logout")
+                        .logoutUrl(this.BASEURL + "logout")
                         .deleteCookies(this.JSESSIONID)
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(OK))
                 )

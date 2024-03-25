@@ -1,5 +1,6 @@
 package dev.webserver.auth.config;
 
+import dev.webserver.exception.ControllerAdvices;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,7 +13,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import java.io.IOException;
 
 /**
- * A global exception handler that allows {@code ControllerAdvices} class to take effect
+ * A global exception handler that allows {@link ControllerAdvices} class to take effect
  * */
 @Component(value = "authEntryPoint")
 public class AuthEntryPoint implements AuthenticationEntryPoint {

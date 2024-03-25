@@ -5,7 +5,6 @@ import dev.webserver.auth.dto.LoginDto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
@@ -29,7 +28,6 @@ class MainTest {
     private static WebTestClient testClient;
 
     @Container
-    @ServiceConnection
     private static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("webserver_module_db")
             .withUsername("webserver_module")
@@ -38,8 +36,8 @@ class MainTest {
             .withNetworkAliases("mysql");
 
     static {
-        map.put("SPRING_PROFILES_ACTIVE", "native");
-        map.put("PORT", "8080");
+        map.put("SPRING_PROFILES_ACTIVE", "native-test");
+        map.put("SERVER_PORT", "8080");
         map.put("USER_PRINCIPAL", "testadminemail@email.com");
         map.put("USER_PASSWORD", new Faker().lorem().characters(15));
         map.put("DB_DOMAIN", "mysql");
@@ -60,11 +58,12 @@ class MainTest {
     private static final GenericContainer<?> webserver = new GenericContainer<>(
             new ImageFromDockerfile("webserver-module", false)
                     .withDockerfile(Paths.get("../Dockerfile")))
-            .withExposedPorts(8080)
             .withNetwork(network)
             .dependsOn(mysql)
             .withEnv(map)
-            .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(MainTest.class)));
+            .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(MainTest.class)))
+            .waitingFor(Wait.forHttp("/actuator/health"))
+            .withExposedPorts(8080);
 
     @BeforeAll
     static void beforeAllTests() {
@@ -73,9 +72,7 @@ class MainTest {
         assertTrue(mysql.isCreated());
         assertTrue(mysql.isRunning());
 
-        webserver
-                .waitingFor(Wait.forHttp("/actuator/health"))
-                .start();
+        webserver.start();
 
         assertTrue(webserver.isCreated());
         assertTrue(webserver.isRunning());

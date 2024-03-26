@@ -73,5 +73,15 @@ class WorkerProductTest extends MainTest {
                 .expectStatus()
                 .isNoContent();
     }
+    
+    @Test
+    void shouldSuccessfullyDeleteAProduct() {
+        testClient.delete()
+                .uri("/api/v1/worker/product?id=1")
+                .cookie("JSESSIONID", COOKIE.getValue())
+                .exchange()
+                .expectStatus()
+                .isNoContent();
+    }
 
 }

@@ -131,7 +131,7 @@ public class MainTest {
 
     protected static ResponseCookie adminCookie() {
         FluxExchangeResult<Void> result = testClient.post()
-                .uri("/api/v1/worker/auth")
+                .uri("/api/v1/worker/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters
                         .fromValue(new LoginDto("admin@email.com", "password123")))

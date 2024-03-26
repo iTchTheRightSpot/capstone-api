@@ -157,18 +157,16 @@ public class TestData {
 
     @NotNull
     public static UpdateProductDTO updateProductDTO(
-            String productID,
+            String productId,
             String productName,
-            String category,
             long categoryId
     ) {
         return new UpdateProductDTO(
-                productID,
+                productId,
                 productName,
                 new Faker().lorem().fixedString(1000),
                 "ngn",
                 new BigDecimal(new Faker().number().numberBetween(1000, 700000)),
-                category,
                 categoryId,
                 new Faker().number().randomDouble(5, 100, 100)
         );

@@ -95,7 +95,6 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                 .updateProductDTO(
                         "",
                         "",
-                        "",
                         1
                 );
         var category = ProductCategory.builder().categoryId(payload.categoryId()).build();
@@ -124,7 +123,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                 .updateProductDTO(
                         "",
                         "",
-                        "", 1
+                        1
                 );
         var category = ProductCategory.builder().categoryId(payload.categoryId()).build();
 

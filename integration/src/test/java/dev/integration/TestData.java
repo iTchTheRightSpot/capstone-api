@@ -2,8 +2,6 @@ package dev.integration;
 
 import com.github.javafaker.Faker;
 import dev.webserver.product.dto.*;
-import dev.webserver.user.entity.ClientRole;
-import dev.webserver.user.entity.SarreBrandUser;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -13,39 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Set;
-
-import static dev.webserver.enumeration.RoleEnum.CLIENT;
-import static dev.webserver.enumeration.RoleEnum.WORKER;
 
 public class TestData {
-    public static SarreBrandUser client() {
-        var client = SarreBrandUser.builder()
-                .firstname(new Faker().name().firstName())
-                .lastname(new Faker().name().lastName())
-                .email(new Faker().name().fullName())
-                .phoneNumber(new Faker().phoneNumber().phoneNumber())
-                .password(new Faker().phoneNumber().phoneNumber())
-                .enabled(true)
-                .build();
-        client.setClientRole(Set.of(new ClientRole(CLIENT, client)));
-        return client;
-    }
-
-    public static SarreBrandUser worker() {
-        var client = SarreBrandUser.builder()
-                .firstname(new Faker().name().firstName())
-                .lastname(new Faker().name().lastName())
-                .email(new Faker().name().fullName())
-                .phoneNumber(new Faker().phoneNumber().phoneNumber())
-                .password(new Faker().phoneNumber().phoneNumber())
-                .enabled(true)
-                .build();
-        client.setClientRole(
-                Set.of(new ClientRole(CLIENT, client), new ClientRole(WORKER, client))
-        );
-        return client;
-    }
 
     @NotNull
     public static SizeInventoryDTO[] sizeInventoryDTOArray(int size) {

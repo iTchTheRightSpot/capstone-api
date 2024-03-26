@@ -298,7 +298,6 @@ class WorkerProductControllerTest extends AbstractIntegration {
                 .updateProductDTO(
                         product.get(0).getUuid(),
                         product.get(1).getName(),
-                        category.getFirst().getName(),
                         category.getFirst().getCategoryId()
                 );
 
@@ -330,7 +329,6 @@ class WorkerProductControllerTest extends AbstractIntegration {
                 .updateProductDTO(
                         product.getFirst().getUuid(),
                         "SEJU Development",
-                        category.getFirst().getName(),
                         category.getFirst().getCategoryId()
                 );
 

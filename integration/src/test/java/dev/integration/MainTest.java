@@ -1,11 +1,17 @@
 package dev.integration;
 
-import com.github.javafaker.Faker;
 import dev.webserver.auth.dto.LoginDto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
+import org.springframework.test.web.reactive.server.FluxExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.Network;
@@ -13,36 +19,41 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import reactor.core.publisher.Flux;
 
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class MainTest {
+public class MainTest {
 
+    static final Logger log = LoggerFactory.getLogger(MainTest.class);
     static Map<String, String> map = new HashMap<>();
-    static final Network network = Network.newNetwork();
-    private static WebTestClient testClient;
+    private static final Network network = Network.newNetwork();
+    protected static WebTestClient testClient;
+    protected static ObjectMapper mapper = new ObjectMapper();
 
     @Container
-    private static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
+    protected static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("webserver_module_db")
             .withUsername("webserver_module")
             .withPassword("webserver_module")
-//            .withInitScript("src/test/resources/db/init.sql")
-            .withInitScript("db/init.sql")
             .withNetwork(network)
             .withNetworkAliases("mysql")
-            .withReuse(true);
+            .withReuse(true)
+            .withLogConsumer(new Slf4jLogConsumer(log));
 
     static {
         map.put("SPRING_PROFILES_ACTIVE", "native-test");
         map.put("SERVER_PORT", "8080");
-        map.put("USER_PRINCIPAL", "testadminemail@email.com");
-        map.put("USER_PASSWORD", new Faker().lorem().characters(15));
+        map.put("API_PREFIX", "api/v1/");
+        map.put("USER_PRINCIPAL", "admin@email.com");
+        map.put("USER_PASSWORD", "password123");
         map.put("DB_DOMAIN", "mysql");
         map.put("DB_HOST", "3306");
         map.put("DB_NAME", "webserver_module_db");
@@ -58,16 +69,18 @@ class MainTest {
     }
 
     @Container
-    private static final GenericContainer<?> webserver = new GenericContainer<>(
+    protected static final GenericContainer<?> webserver = new GenericContainer<>(
             new ImageFromDockerfile("webserver-module", false)
                     .withDockerfile(Paths.get("../Dockerfile")))
+//            "webserver-module:latest")
             .withNetwork(network)
             .dependsOn(mysql)
             .withEnv(map)
             .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(MainTest.class)))
             .waitingFor(Wait.forHttp("/actuator/health"))
             .withExposedPorts(8080)
-            .withReuse(true);
+            .withReuse(true)
+            .withLogConsumer(new Slf4jLogConsumer(log));
 
     @BeforeAll
     static void beforeAllTests() {
@@ -103,6 +116,34 @@ class MainTest {
                 .expectBody()
                 .jsonPath("$.status")
                 .isEqualTo("UP");
+    }
+
+    protected static ResponseCookie adminCookie() {
+        FluxExchangeResult<Void> result = testClient.post()
+                .uri("/api/v1/worker/auth")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters
+                        .fromValue(new LoginDto("admin@email.com", "password123")))
+                .exchange()
+                .expectStatus()
+                .isCreated()
+                .expectHeader()
+                .exists(HttpHeaders.SET_COOKIE)
+                .returnResult(Void.class);
+
+        // print results
+        Flux<Void> body = result.getResponseBody();
+
+        body.subscribe(b -> System.out.println("Response Body: " + b));
+
+        MultiValueMap<String, ResponseCookie> cookies = result.getResponseCookies();
+
+        List<ResponseCookie> jsessionid = cookies.get("JSESSIONID");
+
+        if (jsessionid.isEmpty())
+            throw new RuntimeException("admin cookie is empty");
+
+        return jsessionid.getFirst();
     }
 
 }

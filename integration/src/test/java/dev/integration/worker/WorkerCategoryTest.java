@@ -1,17 +1,22 @@
-package dev.integration.product;
+package dev.integration.worker;
 
 import dev.integration.MainTest;
 import dev.webserver.category.dto.CategoryDTO;
 import dev.webserver.category.dto.UpdateCategoryDTO;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.BodyInserters;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Transactional
+@AutoConfigureWebTestClient(timeout = "PT15M")
 class WorkerCategoryTest extends MainTest {
 
     @BeforeAll
@@ -68,11 +73,21 @@ class WorkerCategoryTest extends MainTest {
     @Test
     void shouldSuccessfullyDeleteACategory() {
         testClient.delete()
-                .uri("/api/v1/worker/category/1")
+                .uri("/api/v1/worker/category/2")
                 .cookie("JSESSIONID", COOKIE.getValue())
                 .exchange()
                 .expectStatus()
                 .isNoContent();
+    }
+
+    @Test
+    void shouldThrowErrorWhenDeletingACategoryAsItHasDetailsAttached() {
+        testClient.delete()
+                .uri("/api/v1/worker/category/1")
+                .cookie("JSESSIONID", COOKIE.getValue())
+                .exchange()
+                .expectStatus()
+                .isEqualTo(HttpStatusCode.valueOf(409));
     }
 
 }

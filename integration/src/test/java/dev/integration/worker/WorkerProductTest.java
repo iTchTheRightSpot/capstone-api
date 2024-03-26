@@ -1,25 +1,39 @@
-package dev.integration.product;
+package dev.integration.worker;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.javafaker.Faker;
 import dev.integration.MainTest;
 import dev.integration.TestData;
 import dev.webserver.product.dto.SizeInventoryDTO;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.BodyInserters;
-import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Transactional
+@AutoConfigureWebTestClient(timeout = "PT15M")
 class WorkerProductTest extends MainTest {
 
     @BeforeAll
     static void before() {
         assertNotNull(COOKIE);
+    }
+
+    @Test
+    void shouldSuccessfullyRetrieveProducts() {
+        testClient.get()
+                .uri("/api/v1/worker/product")
+                .cookie("JSESSIONID", COOKIE.getValue())
+                .exchange()
+                .expectStatus()
+                .isOk();
     }
 
     @Test
@@ -73,15 +87,25 @@ class WorkerProductTest extends MainTest {
                 .expectStatus()
                 .isNoContent();
     }
-    
+
     @Test
     void shouldSuccessfullyDeleteAProduct() {
         testClient.delete()
-                .uri("/api/v1/worker/product?id=1")
+                .uri("/api/v1/worker/product?id=product-uuid-2")
                 .cookie("JSESSIONID", COOKIE.getValue())
                 .exchange()
                 .expectStatus()
                 .isNoContent();
+    }
+
+    @Test
+    void shouldNotSuccessfullyDeleteAProduct() {
+        testClient.delete()
+                .uri("/api/v1/worker/product?id=product-uuid")
+                .cookie("JSESSIONID", COOKIE.getValue())
+                .exchange()
+                .expectStatus()
+                .isEqualTo(409);
     }
 
 }

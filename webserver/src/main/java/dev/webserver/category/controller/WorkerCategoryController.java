@@ -23,12 +23,12 @@ import static org.springframework.http.HttpStatus.*;
 @RequiredArgsConstructor
 public class WorkerCategoryController {
 
-    private final WorkerCategoryService workerCategoryService;
+    private final WorkerCategoryService service;
 
     @ResponseStatus(OK)
     @GetMapping(produces = "application/json")
     public WorkerCategoryResponse allCategories() {
-        return this.workerCategoryService.allCategories();
+        return this.service.allCategories();
     }
 
     @ResponseStatus(OK)
@@ -40,26 +40,26 @@ public class WorkerCategoryController {
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
         var s =  SarreCurrency.valueOf(currency.toUpperCase());
-        return this.workerCategoryService
+        return this.service
                 .allProductsByCategoryId(s, id, page, Math.min(size, 20));
     }
 
     @ResponseStatus(CREATED)
     @PostMapping(consumes = "application/json")
     public void create(@Valid @RequestBody CategoryDTO dto) {
-        this.workerCategoryService.create(dto);
+        this.service.create(dto);
     }
 
     @ResponseStatus(NO_CONTENT)
     @PutMapping(consumes = "application/json")
     public void update(@Valid @RequestBody UpdateCategoryDTO dto) {
-        this.workerCategoryService.update(dto);
+        this.service.update(dto);
     }
 
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping(path = "/{id}")
     public void delete(@PathVariable(value = "id") Long id) {
-        this.workerCategoryService.delete(id);
+        this.service.delete(id);
     }
 
 }

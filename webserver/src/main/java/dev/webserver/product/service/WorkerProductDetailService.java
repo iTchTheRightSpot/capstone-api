@@ -7,6 +7,7 @@ import dev.webserver.product.dto.ProductDetailDto;
 import dev.webserver.product.dto.UpdateProductDetailDto;
 import dev.webserver.product.entity.Product;
 import dev.webserver.product.entity.ProductDetail;
+import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.ProductDetailRepo;
 import dev.webserver.product.repository.ProductImageRepo;
 import dev.webserver.product.repository.ProductRepo;
@@ -135,11 +136,14 @@ public class WorkerProductDetailService {
     }
 
     /**
-     * Permanently deletes ProductDetail and its relationship with ProductImages and ProductSKU
+     * Permanently deletes {@link ProductDetail} and its relationship with
+     * {@link dev.webserver.product.entity.ProductImage}s and
+     * {@link ProductSku}.
      *
-     * @param sku is ProductSKU property. ProductSKU has a many to 1 relationship with ProductDetail
-     * @throws CustomNotFoundException is thrown when sku does not exist
-     * @throws S3Exception             is thrown when deleting from s3
+     * @param sku is {@link ProductSku} property.
+     *            {@link ProductSku} has a many to 1 relationship with {@link ProductDetail}.
+     * @throws CustomNotFoundException is thrown when sku does not exist.
+     * @throws S3Exception             is thrown when deleting from s3.
      */
     @Transactional
     public void delete(final String sku) {

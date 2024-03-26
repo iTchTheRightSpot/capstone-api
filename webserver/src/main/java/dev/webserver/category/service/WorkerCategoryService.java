@@ -107,9 +107,9 @@ public class WorkerCategoryService {
      * to an existing dto.parentId (parentId {@link ProductCategory}) or
      * create new {@link ProductCategory} who has no parentId.
      *
-     * @param dto of type CategoryDTO
-     * @throws DuplicateException when dto.name exists
-     * @throws CustomNotFoundException when dto.parentId does not exist
+     * @param dto of type {@link CategoryDTO}.
+     * @throws DuplicateException when dto.name exists.
+     * @throws CustomNotFoundException when dto.parentId does not exist.
      * */
     @Transactional
     public void create(CategoryDTO dto) {
@@ -145,11 +145,11 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Updates a ProductCategory based on categoryId.
+     * Updates a {@link ProductCategory} based on categoryId.
      *
-     * @param dto {@code UpdateCategoryDTO}
+     * @param dto {@link  UpdateCategoryDTO}.
      * @throws DuplicateException is thrown if name exists, and it is not associated to
-     * categoryId
+     * categoryId.
      * */
     @Transactional
     public void update(UpdateCategoryDTO dto) {
@@ -174,7 +174,7 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Permanently deletes a {@code ProductCategory}.
+     * Permanently deletes a {@link ProductCategory}.
      *
      * @param id is {@code ProductCategory} categoryId
      * @throws org.springframework.dao.DataIntegrityViolationException if {@code ProductCategory}

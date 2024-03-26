@@ -1,8 +1,10 @@
 package dev.integration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.auth.dto.LoginDto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -22,19 +24,19 @@ import org.testcontainers.ext.ScriptUtils;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Flux;
 
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Transactional
 public class MainTest {
 
@@ -86,12 +88,12 @@ public class MainTest {
             .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(MainTest.class)))
             .waitingFor(Wait.forHttp("/actuator/health"))
             .withExposedPorts(8081)
-	    .withStartupTimeout(Duration.of(5, ChronoUnit.MINUTES))
+            .withStartupTimeout(Duration.of(5, ChronoUnit.MINUTES))
             .withReuse(true)
             .withLogConsumer(new Slf4jLogConsumer(log));
 
     @BeforeAll
-    static void beforeAllTests() {
+    void beforeAllTests() {
         mysql.start();
 
         assertTrue(mysql.isCreated());
@@ -114,7 +116,6 @@ public class MainTest {
 
         COOKIE = adminCookie();
     }
-
 
     @Test
     void testCanImportAnObjectFromWebServerModule() {
@@ -158,7 +159,6 @@ public class MainTest {
         if (jsessionid.isEmpty())
             throw new RuntimeException("admin cookie is empty");
 
-	System.out.println("First JSESSIOND " + jsessionid.getFirst());
         return jsessionid.getFirst();
     }
 

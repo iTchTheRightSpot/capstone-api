@@ -9,9 +9,15 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -51,18 +57,35 @@ class WorkerProductTest extends MainTest {
                         dtos
                 );
 
-        var payload = new MockMultipartFile(
-                "dto",
-                null,
-                "application/json",
-                mapper.writeValueAsString(dto).getBytes()
-        );
+        // create the json
+        String bytes = super.mapper.writeValueAsString(dto);
+
+        System.out.println("toJson " + bytes);
+
+        // as per https://github.com/spring-projects/spring-framework/issues/20666
+        MultiValueMap<String, Object> multipartData = new LinkedMultiValueMap<>();
+
+        // create the head
+        HttpHeaders headers = new HttpHeaders();
+        // add
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_PNG_VALUE);
+        Resource imageResource = new ByteArrayResource("<<png data>>".getBytes()) {
+            @Override
+            public String getFilename() {
+                return "image.png";
+            }
+        };
+
+        multipartData.add("file", new HttpEntity<>(imageResource, headers));
+        HttpHeaders metadataHeaders = new HttpHeaders();
+        metadataHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        multipartData.add("dto", new HttpEntity<>(bytes, metadataHeaders));
 
         // request
         testClient.post()
                 .uri("/api/v1/worker/product")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(payload))
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData("files", multipartData))
                 .cookie("JSESSIONID", COOKIE.getValue())
                 .exchange()
                 .expectStatus()

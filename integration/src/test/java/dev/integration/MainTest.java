@@ -40,11 +40,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Transactional
 public class MainTest {
 
+    protected ObjectMapper mapper = new ObjectMapper();
+
     static final Logger log = LoggerFactory.getLogger(MainTest.class);
     static Map<String, String> map = new HashMap<>();
     private static final Network network = Network.newNetwork();
     protected static WebTestClient testClient;
-    protected static ObjectMapper mapper = new ObjectMapper();
     protected static ResponseCookie COOKIE;
 
     @Container

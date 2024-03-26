@@ -1,9 +1,7 @@
 package dev.integration.worker;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.javafaker.Faker;
 import dev.integration.MainTest;
-import dev.integration.TestData;
 import dev.webserver.product.dto.ProductDetailDto;
 import dev.webserver.product.dto.SizeInventoryDTO;
 import dev.webserver.product.dto.UpdateProductDetailDto;
@@ -52,13 +50,13 @@ class WorkerProductDetailTest extends MainTest {
                 "dto",
                 null,
                 "application/json",
-                mapper.writeValueAsString(dto).getBytes()
+                super.mapper.writeValueAsString(dto).getBytes()
         );
 
         // request
         testClient.post()
                 .uri("/api/v1/worker/product/detail")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(BodyInserters.fromValue(payload))
                 .cookie("JSESSIONID", COOKIE.getValue())
                 .exchange()
@@ -99,6 +97,5 @@ class WorkerProductDetailTest extends MainTest {
                 .expectStatus()
                 .isEqualTo(409);
     }
-
 
 }

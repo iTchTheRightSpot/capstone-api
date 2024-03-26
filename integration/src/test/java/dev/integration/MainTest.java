@@ -26,6 +26,7 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Flux;
 
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +56,7 @@ public class MainTest {
 
     static {
         map.put("SPRING_PROFILES_ACTIVE", "native-test");
-        map.put("SERVER_PORT", "8080");
+        map.put("SERVER_PORT", "8081");
         map.put("API_PREFIX", "api/v1/");
         map.put("USER_PRINCIPAL", "admin@email.com");
         map.put("USER_PASSWORD", "password123");
@@ -83,7 +84,7 @@ public class MainTest {
             .withEnv(map)
             .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(MainTest.class)))
             .waitingFor(Wait.forHttp("/actuator/health"))
-            .withExposedPorts(8080)
+            .withExposedPorts(8081)
             .withReuse(true)
             .withLogConsumer(new Slf4jLogConsumer(log));
 
@@ -106,7 +107,8 @@ public class MainTest {
         String endpoint = String
                 .format("http://%s:%d/", webserver.getHost(), webserver.getFirstMappedPort());
 
-        testClient = WebTestClient.bindToServer().baseUrl(endpoint).build();
+        testClient = WebTestClient.bindToServer().baseUrl(endpoint)
+                .build();
 
         COOKIE = adminCookie();
     }

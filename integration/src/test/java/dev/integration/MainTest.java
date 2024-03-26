@@ -17,7 +17,9 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.ext.ScriptUtils;
 import org.testcontainers.images.builder.ImageFromDockerfile;
+import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Flux;
@@ -37,6 +39,7 @@ public class MainTest {
     private static final Network network = Network.newNetwork();
     protected static WebTestClient testClient;
     protected static ObjectMapper mapper = new ObjectMapper();
+    protected static ResponseCookie COOKIE;
 
     @Container
     protected static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
@@ -94,10 +97,16 @@ public class MainTest {
         assertTrue(webserver.isCreated());
         assertTrue(webserver.isRunning());
 
+        ScriptUtils.runInitScript(
+                new JdbcDatabaseDelegate(mysql, ""),
+                "db/init.sql");
+
         String endpoint = String
                 .format("http://%s:%d/", webserver.getHost(), webserver.getFirstMappedPort());
 
         testClient = WebTestClient.bindToServer().baseUrl(endpoint).build();
+
+        COOKIE = adminCookie();
     }
 
 

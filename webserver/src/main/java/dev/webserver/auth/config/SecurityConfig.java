@@ -57,6 +57,8 @@ public class SecurityConfig {
     private String CORSDOMAIN;
     @Value("/${api.endpoint.baseurl}")
     private String BASEURL;
+    @Value("${spring.profiles.active}")
+    private String PROFILE;
 
     @Bean
     public AuthenticationProvider provider(UserDetailsService service, PasswordEncoder encoder) {
@@ -122,14 +124,16 @@ public class SecurityConfig {
 
                 // CSRF Config
                 // https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers(
-                                AntPathRequestMatcher
-                                        .antMatcher(HttpMethod.POST, "/" + this.BASEURL + "payment")
-                        )
-                        .csrfTokenRepository(csrfTokenRepository)
-                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                )
+                .csrf(csrf -> {
+                    if (PROFILE.equals("native-test")) {
+                        csrf.disable();
+                    } else {
+                        csrf.ignoringRequestMatchers(AntPathRequestMatcher
+                                        .antMatcher(HttpMethod.POST, "/" + this.BASEURL + "payment"))
+                                .csrfTokenRepository(csrfTokenRepository)
+                                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler());
+                    }
+                })
                 .addFilterAfter(new CookieCsrfFilter(), BasicAuthenticationFilter.class)
 
                 // Cors Config

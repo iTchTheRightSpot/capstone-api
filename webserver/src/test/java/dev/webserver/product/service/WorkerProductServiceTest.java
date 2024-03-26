@@ -96,9 +96,9 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                         "",
                         "",
                         "",
-                        -1
+                        1
                 );
-        var category = ProductCategory.builder().name(payload.category()).build();
+        var category = ProductCategory.builder().categoryId(payload.categoryId()).build();
 
         // When
         when(this.productRepo.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
@@ -124,9 +124,9 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                 .updateProductDTO(
                         "",
                         "",
-                        "", -1
+                        "", 1
                 );
-        var category = ProductCategory.builder().name(payload.category()).build();
+        var category = ProductCategory.builder().categoryId(payload.categoryId()).build();
 
         // When
         when(this.productRepo.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);

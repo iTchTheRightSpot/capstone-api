@@ -30,9 +30,6 @@ public record UpdateProductDTO(
         @NotNull(message = "cannot be empty")
         BigDecimal price,
 
-        @NotNull(message = "cannot be empty")
-        String category,
-
         @JsonProperty(value = "category_id")
         @NotNull(message = "cannot be empty")
         Long categoryId,

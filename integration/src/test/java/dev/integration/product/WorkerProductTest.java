@@ -10,27 +10,20 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.BodyInserters;
-import org.testcontainers.ext.ScriptUtils;
-import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Transactional
 class WorkerProductTest extends MainTest {
 
     @BeforeAll
     static void before() {
-        assertTrue(webserver.isRunning());
-        ScriptUtils.runInitScript(
-                new JdbcDatabaseDelegate(mysql, ""),
-                "db/init.sql");
+        assertNotNull(COOKIE);
     }
 
     @Test
     void shouldSuccessfullyCreateAProduct() throws JsonProcessingException {
-        var cookie = adminCookie();
-
         SizeInventoryDTO[] dtos = {
                 new SizeInventoryDTO(10, "small"),
                 new SizeInventoryDTO(3, "medium"),
@@ -56,10 +49,29 @@ class WorkerProductTest extends MainTest {
                 .uri("/api/v1/worker/product")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(payload))
-                .cookie("JSESSIONID", cookie.getValue())
+                .cookie("JSESSIONID", COOKIE.getValue())
                 .exchange()
                 .expectStatus()
                 .isCreated();
+    }
+
+    @Test
+    void shouldSuccessfullyUpdateAProduct() {
+        var dto = TestData
+                .updateProductDTO(
+                        "product-uuid",
+                        "new-product-name",
+                        1
+                );
+
+        testClient.put()
+                .uri("/api/v1/worker/product")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(dto))
+                .cookie("JSESSIONID", COOKIE.getValue())
+                .exchange()
+                .expectStatus()
+                .isNoContent();
     }
 
 }

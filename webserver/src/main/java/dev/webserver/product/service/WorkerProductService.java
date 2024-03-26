@@ -132,12 +132,12 @@ public class WorkerProductService {
     /**
      * Create a new {@link Product}.
      *
-     * @param files of type MultipartFile
-     * @param dto   of type CreateProductDTO
-     * @throws CustomNotFoundException is thrown if categoryId name does not exist in database
-     * or currency passed in truncateAmount does not contain in dto property priceCurrency
-     * @throws CustomServerError      is thrown if File is not an image
-     * @throws DuplicateException      is thrown if dto image exists in for Product
+     * @param files of type {@link MultipartFile}.
+     * @param dto   of type {@link CreateProductDTO}.
+     * @throws CustomNotFoundException is thrown if categoryId name does not exist in database.
+     * or currency passed in truncateAmount does not contain in dto property priceCurrency.
+     * @throws CustomServerError      is thrown if File is not an image.
+     * @throws DuplicateException      is thrown if dto image exists in for Product.
      */
     @Transactional(rollbackFor = CustomServerError.class)
     public void create(final CreateProductDTO dto, final MultipartFile[] files) {
@@ -190,12 +190,12 @@ public class WorkerProductService {
     }
 
     /**
-     * Method updates a Product obj based on its UUID.
+     * Method updates a {@link Product} obj based on its UUID.
      *
-     * @param dto of type UpdateProductDTO
-     * @throws CustomNotFoundException when dto category_id or collection_id does not exist
-     * @throws DuplicateException      when new product name exist but not associated to product uuid
-     * @throws CustomInvalidFormatException if price is less than zero
+     * @param dto of type {@link UpdateProductDTO}.
+     * @throws CustomNotFoundException when dto category_id or collection_id does not exist.
+     * @throws DuplicateException      when new product name exist but not associated to product uuid.
+     * @throws CustomInvalidFormatException if price is less than zero.
      */
     @Transactional
     public void update(final UpdateProductDTO dto) {

@@ -15,6 +15,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -119,22 +120,22 @@ public class SecurityConfig {
             RefreshTokenFilter refreshTokenFilter,
             JwtAuthenticationConverter converter
     ) throws Exception {
-        var csrfTokenRepository = csrfRepo.apply(this.COOKIESECURE, this.SAMESITE);
-        return http
 
-                // CSRF Config
-                // https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html
-                .csrf(csrf -> {
-                    if (PROFILE.equals("native-test")) {
-                        csrf.disable();
-                    } else {
-                        csrf.ignoringRequestMatchers(AntPathRequestMatcher
-                                        .antMatcher(HttpMethod.POST, "/" + this.BASEURL + "payment"))
-                                .csrfTokenRepository(csrfTokenRepository)
-                                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler());
-                    }
-                })
-                .addFilterAfter(new CookieCsrfFilter(), BasicAuthenticationFilter.class)
+        if (PROFILE.equals("native-test")) {
+            http.csrf(AbstractHttpConfigurer::disable);
+        } else {
+            var csrfTokenRepository = csrfRepo.apply(this.COOKIESECURE, this.SAMESITE);
+            // CSRF Config
+            // https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html
+            http
+                    .csrf(csrf -> csrf.ignoringRequestMatchers(AntPathRequestMatcher
+                                    .antMatcher(HttpMethod.POST, "/" + this.BASEURL + "payment"))
+                            .csrfTokenRepository(csrfTokenRepository)
+                            .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
+                    .addFilterAfter(new CookieCsrfFilter(), BasicAuthenticationFilter.class);
+        }
+
+        return http
 
                 // Cors Config
                 .cors(withDefaults())

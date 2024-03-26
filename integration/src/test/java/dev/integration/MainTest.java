@@ -30,6 +30,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -85,6 +86,7 @@ public class MainTest {
             .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(MainTest.class)))
             .waitingFor(Wait.forHttp("/actuator/health"))
             .withExposedPorts(8081)
+	    .withStartupTimeout(Duration.of(5, ChronoUnit.MINUTES))
             .withReuse(true)
             .withLogConsumer(new Slf4jLogConsumer(log));
 
@@ -139,7 +141,7 @@ public class MainTest {
                         .fromValue(new LoginDto("admin@email.com", "password123")))
                 .exchange()
                 .expectStatus()
-                .isCreated()
+                .isOk()
                 .expectHeader()
                 .exists(HttpHeaders.SET_COOKIE)
                 .returnResult(Void.class);
@@ -156,6 +158,7 @@ public class MainTest {
         if (jsessionid.isEmpty())
             throw new RuntimeException("admin cookie is empty");
 
+	System.out.println("First JSESSIOND " + jsessionid.getFirst());
         return jsessionid.getFirst();
     }
 

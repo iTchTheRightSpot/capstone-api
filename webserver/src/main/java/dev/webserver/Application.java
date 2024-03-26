@@ -34,7 +34,7 @@ public class Application {
     }
 
     @Bean
-    @Profile(value = {"default", "stage"})
+    @Profile(value = {"default", "native-test"})
     public CommandLineRunner commandLineRunner(AuthService service, UserRepository repository) {
         return args -> {
             if (repository.userByPrincipal(principal).isEmpty()) {

@@ -59,7 +59,7 @@ public class WorkerProductDetailController {
 
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping(path = "/sku")
-    public void deleteProductSKU(@NotNull @RequestParam(value = "sku") String sku) {
+    public void deleteProductSku(@NotNull @RequestParam(value = "sku") String sku) {
         this.skuService.delete(sku);
     }
 

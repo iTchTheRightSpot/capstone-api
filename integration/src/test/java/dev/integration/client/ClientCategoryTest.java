@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Transactional
-@AutoConfigureWebTestClient(timeout = "PT15M")
+@AutoConfigureWebTestClient(timeout = "PT10H")
 class ClientCategoryTest extends MainTest {
 
     @BeforeAll

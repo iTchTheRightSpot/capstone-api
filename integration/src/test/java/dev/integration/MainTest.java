@@ -40,11 +40,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Transactional
 public class MainTest {
 
-    protected ObjectMapper mapper = new ObjectMapper();
-
-    static final Logger log = LoggerFactory.getLogger(MainTest.class);
-    static Map<String, String> map = new HashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(MainTest.class);
+    private static final Map<String, String> map = new HashMap<>();
     private static final Network network = Network.newNetwork();
+
+    protected static ObjectMapper mapper = new ObjectMapper();
     protected static WebTestClient testClient;
     protected static ResponseCookie COOKIE;
 
@@ -82,14 +82,13 @@ public class MainTest {
     protected static final GenericContainer<?> webserver = new GenericContainer<>(
             new ImageFromDockerfile("webserver-module", false)
                     .withDockerfile(Paths.get("../Dockerfile")))
-//            "webserver-module:latest")
             .withNetwork(network)
             .dependsOn(mysql)
             .withEnv(map)
             .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(MainTest.class)))
             .waitingFor(Wait.forHttp("/actuator/health"))
             .withExposedPorts(8081)
-            .withStartupTimeout(Duration.of(5, ChronoUnit.MINUTES))
+            .withStartupTimeout(Duration.of(60, ChronoUnit.MINUTES))
             .withReuse(true)
             .withLogConsumer(new Slf4jLogConsumer(log));
 

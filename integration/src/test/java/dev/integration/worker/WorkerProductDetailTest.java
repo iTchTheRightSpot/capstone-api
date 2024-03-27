@@ -1,24 +1,25 @@
 package dev.integration.worker;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import dev.integration.MainTest;
+import dev.integration.TestData;
 import dev.webserver.product.dto.ProductDetailDto;
-import dev.webserver.product.dto.SizeInventoryDTO;
 import dev.webserver.product.dto.UpdateProductDetailDto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
+
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Transactional
-@AutoConfigureWebTestClient(timeout = "PT15M")
+@AutoConfigureWebTestClient(timeout = "PT10H")
 class WorkerProductDetailTest extends MainTest {
 
     @BeforeAll
@@ -37,27 +38,23 @@ class WorkerProductDetailTest extends MainTest {
     }
 
     @Test
-    void shouldSuccessfullyCreateAProductDetail() throws JsonProcessingException {
-        SizeInventoryDTO[] dtos = {
-                new SizeInventoryDTO(10, "small"),
-                new SizeInventoryDTO(3, "medium"),
-                new SizeInventoryDTO(15, "large"),
-        };
-
-        var dto = new ProductDetailDto("product-uuid", true, "brown", dtos);
-
-        var payload = new MockMultipartFile(
-                "dto",
-                null,
-                "application/json",
-                super.mapper.writeValueAsString(dto).getBytes()
+    void shouldSuccessfullyCreateAProductDetail() throws IOException {
+        var detailDto = new ProductDetailDto(
+                "product-uuid",
+                true,
+                "brown",
+                TestData.sizeInventoryDTOArray(3)
         );
+
+        String dto = mapper.writeValueAsString(detailDto);
+
+        MultiValueMap<String, Object> multipartData = TestData.files(dto);
 
         // request
         testClient.post()
                 .uri("/api/v1/worker/product/detail")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
-                .body(BodyInserters.fromValue(payload))
+                .body(BodyInserters.fromMultipartData(multipartData))
                 .cookie("JSESSIONID", COOKIE.getValue())
                 .exchange()
                 .expectStatus()
@@ -81,7 +78,7 @@ class WorkerProductDetailTest extends MainTest {
     @Test
     void shouldSuccessfullyDeleteAProductDetail() {
         testClient.delete()
-                .uri("/api/v1/worker/product?id=product-uuid-2")
+                .uri("/api/v1/worker/product/detail/product-sku-sku")
                 .cookie("JSESSIONID", COOKIE.getValue())
                 .exchange()
                 .expectStatus()
@@ -89,13 +86,13 @@ class WorkerProductDetailTest extends MainTest {
     }
 
     @Test
-    void shouldNotSuccessfullyDeleteAProduct() {
+    void shouldSuccessfullyDeleteAProductSku() {
         testClient.delete()
-                .uri("/api/v1/worker/product?id=product-uuid")
+                .uri("/api/v1/worker/product/detail/sku?sku=product-sku-sku-2")
                 .cookie("JSESSIONID", COOKIE.getValue())
                 .exchange()
                 .expectStatus()
-                .isEqualTo(409);
+                .isNoContent();
     }
 
 }

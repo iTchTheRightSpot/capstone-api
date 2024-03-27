@@ -120,9 +120,9 @@ public class WorkerProductDetailService {
     }
 
     /**
-     * Updates a ProductDetail based on ProductSKU sku
+     * Updates a {@link ProductDetail} based on {@link ProductSku} sku
      *
-     * @param dto of type DetailDTO
+     * @param dto of type {@link UpdateProductDetailDto}.
      */
     @Transactional
     public void update(final UpdateProductDetailDto dto) {
@@ -160,7 +160,7 @@ public class WorkerProductDetailService {
             this.helperService.deleteFromS3(keys, BUCKET);
         }
 
-        // Remove detail from Product and Save Product
+        // permanently delete
         this.detailRepo.delete(detail);
     }
 
@@ -187,7 +187,12 @@ public class WorkerProductDetailService {
     }
 
     /**
-     * Find ProductDetail by sku
+     * Returns a {@link ProductDetail} by a {@link ProductSku} property
+     * sku.
+     *
+     * @param sku is a unique string for every {@link ProductSku} object.
+     * @return a {@link ProductDetail} a parent of a {@link ProductSku}.
+     * @throws CustomNotFoundException if no {@link ProductDetail} is found.
      */
     public ProductDetail productDetailByProductSku(final String sku) {
         return this.detailRepo

@@ -1,6 +1,9 @@
 package dev.webserver.product.repository;
 
+import dev.webserver.product.entity.Product;
 import dev.webserver.product.entity.ProductDetail;
+import dev.webserver.product.entity.ProductImage;
+import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.projection.DetailPojo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -19,7 +22,7 @@ import java.util.Optional;
 public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
 
     /**
-     * Returns a {@code ProductDetail} by {@code ProductSku} property sku
+     * Returns a {@link ProductDetail} by {@link ProductSku} property sku
      * */
     @Query(value = """
     SELECT d FROM ProductDetail d
@@ -32,7 +35,7 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     Optional<ProductDetail> productDetailByColour(String colour);
 
     /**
-     * using native MySQL query, method updates a ProductDetail and ProductSku.
+     * using native MySQL query, method updates a {@link ProductDetail} and {@link ProductSku}.
      */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -51,14 +54,14 @@ public interface ProductDetailRepo extends JpaRepository<ProductDetail, Long> {
     );
 
     /**
-     * Query retrieves all ProductDetails associated to a Product by its uuid.
+     * Query retrieves all {@link ProductDetail}s associated to a {@link Product} by its uuid.
      * It filters and maps using Spring Data Projection.
-     * The magic is since ProductDetail has a 1 to many relationship with
-     * ProductImage and ProductSKU, we are getting all ProductImages keys (comma separated).
-     * These keys we use to retrieve pre-assigned urls from s3.
-     * Finally, for ProductSku we retrieve an array of distinct custom objects.
+     * The magic is since {@link ProductDetail} has a 1 to many relationship with
+     * {@link ProductImage} and {@link ProductSku}, we are getting all {@link ProductImage}s
+     * keys (comma separated). These keys we use to retrieve pre-assigned urls from s3.
+     * Finally, for {@link ProductSku} we retrieve an array of distinct custom objects.
      * NOTE: this method is similar to findProductDetailsByProductUuidWorker only it
-     * filters by ProductDetail being visible
+     * filters by {@link ProductDetail} being visible.
      */
     @Query(nativeQuery = true, value = """
     SELECT

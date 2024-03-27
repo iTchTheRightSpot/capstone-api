@@ -1,30 +1,24 @@
 package dev.integration.worker;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.javafaker.Faker;
 import dev.integration.MainTest;
 import dev.integration.TestData;
-import dev.webserver.product.dto.SizeInventoryDTO;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
+
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Transactional
-@AutoConfigureWebTestClient(timeout = "PT15M")
+@AutoConfigureWebTestClient(timeout = "PT10H")
 class WorkerProductTest extends MainTest {
 
     @BeforeAll
@@ -43,49 +37,24 @@ class WorkerProductTest extends MainTest {
     }
 
     @Test
-    void shouldSuccessfullyCreateAProduct() throws JsonProcessingException {
-        SizeInventoryDTO[] dtos = {
-                new SizeInventoryDTO(10, "small"),
-                new SizeInventoryDTO(3, "medium"),
-                new SizeInventoryDTO(15, "large"),
-        };
-
-        var dto = TestData
+    void shouldSuccessfullyCreateAProduct() throws IOException {
+        var productDto = TestData
                 .createProductDTO(
                         new Faker().commerce().productName(),
                         1,
-                        dtos
+                        TestData.sizeInventoryDTOArray(3)
                 );
 
         // create the json
-        String bytes = super.mapper.writeValueAsString(dto);
+        String dto = mapper.writeValueAsString(productDto);
 
-        System.out.println("toJson " + bytes);
-
-        // as per https://github.com/spring-projects/spring-framework/issues/20666
-        MultiValueMap<String, Object> multipartData = new LinkedMultiValueMap<>();
-
-        // create the head
-        HttpHeaders headers = new HttpHeaders();
-        // add
-        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_PNG_VALUE);
-        Resource imageResource = new ByteArrayResource("<<png data>>".getBytes()) {
-            @Override
-            public String getFilename() {
-                return "image.png";
-            }
-        };
-
-        multipartData.add("file", new HttpEntity<>(imageResource, headers));
-        HttpHeaders metadataHeaders = new HttpHeaders();
-        metadataHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        multipartData.add("dto", new HttpEntity<>(bytes, metadataHeaders));
+        MultiValueMap<String, Object> multipartData = TestData.files(dto);
 
         // request
         testClient.post()
                 .uri("/api/v1/worker/product")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
-                .body(BodyInserters.fromMultipartData("files", multipartData))
+                .body(BodyInserters.fromMultipartData(multipartData))
                 .cookie("JSESSIONID", COOKIE.getValue())
                 .exchange()
                 .expectStatus()

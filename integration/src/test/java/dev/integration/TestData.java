@@ -3,14 +3,22 @@ package dev.integration;
 import com.github.javafaker.Faker;
 import dev.webserver.product.dto.*;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 
 public class TestData {
 
@@ -24,30 +32,42 @@ public class TestData {
     }
 
     /**
-     * Converts all files from uploads directory into a MockMultipartFile
-     */
+     * Just like creating a {@link MockMultipartFile} for {@link MockMvc}, this achieves the same thing
+     * but for {@link WebTestClient}.
+     *
+     * @param dto application/json to send the server.
+     * @return MultiValueMap<String, Object> where the key is the parameter the server accepts. See
+     * @throws IOException if file path does not exist.
+     * @see <a href="https://github.com/spring-projects/spring-framework/issues/20666">github issue</a>
+     * */
     @NotNull
-    public static MockMultipartFile[] files() {
-        return Arrays.stream(new Path[]{Paths.get("src/test/resources/uploads/benzema.JPG")})
-                .map(path -> {
-                    String contentType;
-                    byte[] content;
-                    try {
-                        contentType = Files.probeContentType(path);
-                        content = Files.readAllBytes(path);
-                    } catch (IOException ignored) {
-                        contentType = "text/plain";
-                        content = new byte[3];
-                    }
+    public static MultiValueMap<String, Object> files(String dto) throws IOException {
+        Path path = Paths.get("src/test/resources/uploads/benzema.JPG");
 
-                    return new MockMultipartFile(
-                            "files",
-                            path.getFileName().toString(),
-                            contentType,
-                            content
-                    );
-                })
-                .toArray(MockMultipartFile[]::new);
+        if (!Files.exists(path))
+            throw new IOException("file path does not exits");
+
+        byte[] bytes = Files.readAllBytes(path);
+
+        MultiValueMap<String, Object> multipartData = new LinkedMultiValueMap<>();
+
+        // create file
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_JPEG_VALUE);
+        Resource file = new ByteArrayResource(bytes) {
+            @Override
+            public String getFilename() {
+                return "benzema.JPG";
+            }
+        };
+        multipartData.add("files", new HttpEntity<>(file, headers));
+
+        // create dto
+        HttpHeaders metadataHeaders = new HttpHeaders();
+        metadataHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        multipartData.add("dto", new HttpEntity<>(dto, metadataHeaders));
+
+        return multipartData;
     }
 
     @NotNull

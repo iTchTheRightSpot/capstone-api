@@ -2,65 +2,76 @@ package dev.integration.client;
 
 import dev.integration.MainTest;
 import dev.webserver.cart.dto.CartDTO;
+import dev.webserver.cart.response.CartResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseCookie;
+import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.BodyInserters;
 
+import java.util.ArrayList;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Transactional
-@AutoConfigureWebTestClient(timeout = "PT10H")
 class CartControllerTest extends MainTest {
 
     private static ResponseCookie CARTCOOKIE;
 
     @BeforeAll
     static void before() {
-        var fluxExchangeResult = testClient.get()
-                .uri("/api/v1/cart")
-                .exchange()
-                .expectStatus()
-                .isOk()
-                .expectHeader()
-                .exists(HttpHeaders.SET_COOKIE)
-                .returnResult(Void.class);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
 
-        var cookies = fluxExchangeResult.getResponseCookies().get("CARTCOOKIE");
+        var response = testTemplate.exchange(
+                PATH + "/api/v1/cart",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                ArrayList.class.asSubclass(CartResponse.class)
+        );
 
-        if (cookies.isEmpty())
-            throw new RuntimeException("cart cookie is empty");
+        var cookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
 
-        CARTCOOKIE = cookies.getFirst();
+        if (cookies == null || cookies.isEmpty())
+            throw new RuntimeException("admin cookie is empty");
+
+        String c = cookies.stream()
+                .filter(cookie -> cookie.startsWith("CARTCOOKIE"))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("cart cookie is empty"));
+
+        CARTCOOKIE = ResponseCookie.from(c).build();
 
         assertNotNull(CARTCOOKIE);
     }
 
     @Test
     void shouldSuccessfullyAddToAUsersCart_should_successfully_delete_from_users_cart() {
-        var dto = new CartDTO("product-sku-sku", 5);
-        testClient.post()
-                .uri("/api/v1/cart")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(dto))
-                .cookie("CARTCOOKIE", CARTCOOKIE.getValue())
-                .exchange()
-                .expectStatus()
-                .isCreated();
+        // header
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+        headers.set("Cookie", "CARTCOOKIE=" + CARTCOOKIE.getValue());
 
+        // post
+        var post = testTemplate.postForEntity(
+                PATH + "/api/v1/cart",
+                new HttpEntity<>(new CartDTO("product-sku-sku", 5), headers),
+                Void.class
+        );
 
-        testClient.delete()
-                .uri("/api/v1/cart?sku=product-sku-sku")
-                .cookie("CARTCOOKIE", CARTCOOKIE.getValue())
-                .exchange()
-                .expectStatus()
-                .isOk();
+        assertEquals(HttpStatusCode.valueOf(201), post.getStatusCode());
+
+        // delete
+        ResponseEntity<Void> delete = testTemplate.exchange(
+                PATH + "/api/v1/cart?sku=product-sku-sku",
+                HttpMethod.DELETE,
+                new HttpEntity<>(headers),
+                Void.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(200), delete.getStatusCode());
     }
 
 }

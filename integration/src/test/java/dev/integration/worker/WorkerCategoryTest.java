@@ -3,91 +3,101 @@ package dev.integration.worker;
 import dev.integration.MainTest;
 import dev.webserver.category.dto.CategoryDTO;
 import dev.webserver.category.dto.UpdateCategoryDTO;
+import dev.webserver.category.response.WorkerCategoryResponse;
+import dev.webserver.product.response.ProductResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
+import org.springframework.data.domain.Page;
+import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.BodyInserters;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Transactional
-@AutoConfigureWebTestClient(timeout = "PT10H")
 class WorkerCategoryTest extends MainTest {
+
+    private static final HttpHeaders headers = new HttpHeaders();
 
     @BeforeAll
     static void before() {
         assertNotNull(COOKIE);
+
+        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+        headers.set("Cookie", "JSESSIONID=" + COOKIE.getValue());
     }
 
     @Test
     void shouldSuccessfullyRetrieveACategory() {
-        testClient.get()
-                .uri("/api/v1/worker/category")
-                .cookie("JSESSIONID", COOKIE.getValue())
-                .exchange()
-                .expectStatus()
-                .isOk();
+        var get = testTemplate.exchange(
+                PATH + "/api/v1/worker/category",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                WorkerCategoryResponse.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
     }
 
     @Test
     void shouldSuccessfullyRetrieveProductsBaseOnCategory() {
-        testClient.get()
-                .uri("/api/v1/worker/category/products?category_id=1")
-                .cookie("JSESSIONID", COOKIE.getValue())
-                .exchange()
-                .expectStatus()
-                .isOk();
+        var get = testTemplate.exchange(
+                PATH + "/api/v1/worker/category/products?category_id=1",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                Page.class.asSubclass(ProductResponse.class)
+        );
+
+        assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
     }
 
     @Test
     void shouldSuccessfullyCreateACategory() {
-        testClient.post()
-                .uri("/api/v1/worker/category")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters
-                        .fromValue(new CategoryDTO("worker-cat", true, null)))
-                .cookie("JSESSIONID", COOKIE.getValue())
-                .exchange()
-                .expectStatus()
-                .isCreated();
+        var post = testTemplate.postForEntity(
+                PATH + "/api/v1/worker/category",
+                new HttpEntity<>(new CategoryDTO("worker-cat", true, null), headers),
+                Void.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(201), post.getStatusCode());
     }
 
     @Test
     void shouldSuccessfullyUpdateACategory() {
-        testClient.put()
-                .uri("/api/v1/worker/category")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(
-                        new UpdateCategoryDTO(1L, null, "frank", false)))
-                .cookie("JSESSIONID", COOKIE.getValue())
-                .exchange()
-                .expectStatus()
-                .isNoContent();
+        var update = testTemplate.exchange(
+                PATH + "/api/v1/worker/category",
+                HttpMethod.PUT,
+                new HttpEntity<>(new UpdateCategoryDTO(1L, null, "frank", false), headers),
+                Void.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(204), update.getStatusCode());
     }
 
     @Test
     void shouldSuccessfullyDeleteACategory() {
-        testClient.delete()
-                .uri("/api/v1/worker/category/2")
-                .cookie("JSESSIONID", COOKIE.getValue())
-                .exchange()
-                .expectStatus()
-                .isNoContent();
+        var delete = testTemplate.exchange(
+                PATH + "/api/v1/worker/category/2",
+                HttpMethod.DELETE,
+                new HttpEntity<>(headers),
+                Void.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(204), delete.getStatusCode());
     }
 
     @Test
     void shouldThrowErrorWhenDeletingACategoryAsItHasDetailsAttached() {
-        testClient.delete()
-                .uri("/api/v1/worker/category/1")
-                .cookie("JSESSIONID", COOKIE.getValue())
-                .exchange()
-                .expectStatus()
-                .isEqualTo(HttpStatusCode.valueOf(409));
+        var delete = testTemplate.exchange(
+                PATH + "/api/v1/worker/category/1",
+                HttpMethod.DELETE,
+                new HttpEntity<>(headers),
+                Void.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(409), delete.getStatusCode());
     }
 
 }

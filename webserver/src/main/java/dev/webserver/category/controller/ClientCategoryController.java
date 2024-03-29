@@ -24,7 +24,7 @@ public class ClientCategoryController {
     @ResponseStatus(OK)
     @GetMapping(produces = "application/json")
     public List<CategoryResponse> allCategories() {
-        return this.service.allCategories();
+        return service.allCategories();
     }
 
     @ResponseStatus(OK)
@@ -35,7 +35,7 @@ public class ClientCategoryController {
             @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "NGN") String currency
     ) {
-        return this.service
+        return service
                 .allProductsByCategoryId(SarreCurrency.valueOf(currency), id, page, Math.min(size, 20));
     }
 

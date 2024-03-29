@@ -1,5 +1,7 @@
 package dev.integration;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.auth.dto.LoginDto;
 import org.junit.jupiter.api.BeforeAll;
@@ -7,14 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseCookie;
-import org.springframework.test.web.reactive.server.FluxExchangeResult;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.Network;
@@ -24,13 +21,11 @@ import org.testcontainers.ext.ScriptUtils;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.junit.jupiter.Container;
-import reactor.core.publisher.Flux;
 
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,7 +40,8 @@ public class MainTest {
     private static final Network network = Network.newNetwork();
 
     protected static ObjectMapper mapper = new ObjectMapper();
-    protected static WebTestClient testClient;
+    protected static final TestRestTemplate testTemplate = new TestRestTemplate();
+    protected static String PATH;
     protected static ResponseCookie COOKIE;
 
     @Container
@@ -108,11 +104,8 @@ public class MainTest {
                 new JdbcDatabaseDelegate(mysql, ""),
                 "db/init.sql");
 
-        String endpoint = String
+        PATH = String
                 .format("http://%s:%d/", webserver.getHost(), webserver.getFirstMappedPort());
-
-        testClient = WebTestClient.bindToServer().baseUrl(endpoint)
-                .build();
 
         COOKIE = adminCookie();
     }
@@ -124,42 +117,38 @@ public class MainTest {
     }
 
     @Test
-    void actuator() {
-        testClient.get().uri("/actuator/health")
-                .exchange()
-                .expectStatus()
-                .is2xxSuccessful()
-                .expectBody()
-                .jsonPath("$.status")
-                .isEqualTo("UP");
+    void actuator() throws JsonProcessingException {
+        var responseEntity = testTemplate
+                .getForEntity(PATH + "/actuator/health", String.class);
+
+        assertEquals(HttpStatusCode.valueOf(200), responseEntity.getStatusCode());
+
+        JsonNode node = mapper.readValue(responseEntity.getBody(), JsonNode.class).get("status");
+
+        assertEquals("UP", node.asText());
     }
 
     protected static ResponseCookie adminCookie() {
-        FluxExchangeResult<Void> result = testClient.post()
-                .uri("/api/v1/worker/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters
-                        .fromValue(new LoginDto("admin@email.com", "password123")))
-                .exchange()
-                .expectStatus()
-                .isOk()
-                .expectHeader()
-                .exists(HttpHeaders.SET_COOKIE)
-                .returnResult(Void.class);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
 
-        // print results
-        Flux<Void> body = result.getResponseBody();
+        var responseEntity = testTemplate.postForEntity(
+                PATH + "/api/v1/worker/auth/login",
+                new HttpEntity<>(new LoginDto("admin@email.com", "password123"), headers),
+                Void.class
+        );
 
-        body.subscribe(b -> System.out.println("Response Body: " + b));
+        var cookies = responseEntity.getHeaders().get(HttpHeaders.SET_COOKIE);
 
-        MultiValueMap<String, ResponseCookie> cookies = result.getResponseCookies();
-
-        List<ResponseCookie> jsessionid = cookies.get("JSESSIONID");
-
-        if (jsessionid.isEmpty())
+        if (cookies == null || cookies.isEmpty())
             throw new RuntimeException("admin cookie is empty");
 
-        return jsessionid.getFirst();
+        String jsessionid = cookies.stream()
+                .filter(cookie -> cookie.startsWith("JSESSIONID"))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("admin cookie is empty"));
+
+        return ResponseCookie.from(jsessionid).build();
     }
 
 }

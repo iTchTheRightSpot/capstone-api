@@ -2,43 +2,52 @@ package dev.integration.worker;
 
 import dev.integration.MainTest;
 import dev.integration.TestData;
+import dev.webserver.category.response.WorkerCategoryResponse;
 import dev.webserver.product.dto.ProductDetailDto;
 import dev.webserver.product.dto.UpdateProductDetailDto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.BodyInserters;
 
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Transactional
-@AutoConfigureWebTestClient(timeout = "PT10H")
 class WorkerProductDetailTest extends MainTest {
+
+    private static final HttpHeaders headers = new HttpHeaders();
 
     @BeforeAll
     static void before() {
         assertNotNull(COOKIE);
+
+        headers.set("Cookie", "JSESSIONID=" + COOKIE.getValue());
     }
 
     @Test
     void shouldSuccessfullyRetrieveProductDetails() {
-        testClient.get()
-                .uri("/api/v1/worker/product/detail?id=product-uuid")
-                .cookie("JSESSIONID", COOKIE.getValue())
-                .exchange()
-                .expectStatus()
-                .isOk();
+        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+
+        var get = testTemplate.exchange(
+                PATH + "/api/v1/worker/product/detail?id=product-uuid",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                WorkerCategoryResponse.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
     }
 
     @Test
     void shouldSuccessfullyCreateAProductDetail() throws IOException {
+        headers.set("content-type", MediaType.MULTIPART_FORM_DATA_VALUE);
+
         var detailDto = new ProductDetailDto(
                 "product-uuid",
                 true,
@@ -51,48 +60,57 @@ class WorkerProductDetailTest extends MainTest {
         MultiValueMap<String, Object> multipartData = TestData.files(dto);
 
         // request
-        testClient.post()
-                .uri("/api/v1/worker/product/detail")
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .body(BodyInserters.fromMultipartData(multipartData))
-                .cookie("JSESSIONID", COOKIE.getValue())
-                .exchange()
-                .expectStatus()
-                .isCreated();
+        var post = testTemplate.postForEntity(
+                PATH + "/api/v1/worker/product/detail",
+                new HttpEntity<>(multipartData, headers),
+                Void.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(201), post.getStatusCode());
     }
 
     @Test
     void shouldSuccessfullyUpdateAProductDetail() {
+        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+
         var dto = new UpdateProductDetailDto("product-sku-sku", "green", true, 4, "large");
 
-        testClient.put()
-                .uri("/api/v1/worker/product/detail")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(dto))
-                .cookie("JSESSIONID", COOKIE.getValue())
-                .exchange()
-                .expectStatus()
-                .isNoContent();
+        var update = testTemplate.exchange(
+                PATH + "/api/v1/worker/product/detail",
+                HttpMethod.PUT,
+                new HttpEntity<>(dto, headers),
+                Void.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(204), update.getStatusCode());
     }
 
     @Test
     void shouldSuccessfullyDeleteAProductDetail() {
-        testClient.delete()
-                .uri("/api/v1/worker/product/detail/product-sku-sku")
-                .cookie("JSESSIONID", COOKIE.getValue())
-                .exchange()
-                .expectStatus()
-                .isNoContent();
+        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+
+        var delete = testTemplate.exchange(
+                PATH + "/api/v1/worker/product/detail/product-sku-sku",
+                HttpMethod.DELETE,
+                new HttpEntity<>(headers),
+                Void.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(204), delete.getStatusCode());
     }
 
     @Test
     void shouldSuccessfullyDeleteAProductSku() {
-        testClient.delete()
-                .uri("/api/v1/worker/product/detail/sku?sku=product-sku-sku-2")
-                .cookie("JSESSIONID", COOKIE.getValue())
-                .exchange()
-                .expectStatus()
-                .isNoContent();
+        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+
+        var delete = testTemplate.exchange(
+                PATH + "/api/v1/worker/product/detail/sku?sku=product-sku-sku-2",
+                HttpMethod.DELETE,
+                new HttpEntity<>(headers),
+                Void.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(204), delete.getStatusCode());
     }
 
 }

@@ -45,7 +45,7 @@ public class MainTest {
     protected static ResponseCookie COOKIE;
 
     @Container
-    protected static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
+    private static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("webserver_module_db")
             .withUsername("webserver_module")
             .withPassword("webserver_module")
@@ -75,7 +75,7 @@ public class MainTest {
     }
 
     @Container
-    protected static final GenericContainer<?> webserver = new GenericContainer<>(
+    private static final GenericContainer<?> webserver = new GenericContainer<>(
             new ImageFromDockerfile("webserver-module", false)
                     .withDockerfile(Paths.get("../Dockerfile")))
             .withNetwork(network)
@@ -132,13 +132,13 @@ public class MainTest {
         HttpHeaders headers = new HttpHeaders();
         headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
 
-        var responseEntity = testTemplate.postForEntity(
+        var post = testTemplate.postForEntity(
                 PATH + "/api/v1/worker/auth/login",
                 new HttpEntity<>(new LoginDto("admin@email.com", "password123"), headers),
                 Void.class
         );
 
-        var cookies = responseEntity.getHeaders().get(HttpHeaders.SET_COOKIE);
+        var cookies = post.getHeaders().get(HttpHeaders.SET_COOKIE);
 
         if (cookies == null || cookies.isEmpty())
             throw new RuntimeException("admin cookie is empty");
@@ -148,7 +148,7 @@ public class MainTest {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("admin cookie is empty"));
 
-        return ResponseCookie.from(jsessionid).build();
+        return TestData.toCookie(jsessionid);
     }
 
 }

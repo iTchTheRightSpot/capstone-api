@@ -8,6 +8,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
@@ -16,6 +17,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.HttpCookie;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -154,6 +156,24 @@ public class TestData {
                 categoryId,
                 new Faker().number().randomDouble(5, 100, 100)
         );
+    }
+
+    @NotNull
+    public static ResponseCookie toCookie(String cookie) {
+        return HttpCookie.parse(cookie)
+                .stream()
+                .findFirst()
+                .map(httpCookie -> ResponseCookie
+                        .from(httpCookie.getName(), httpCookie.getValue())
+                        .domain(httpCookie.getDomain())
+                        .path(httpCookie.getPath())
+                        .maxAge(httpCookie.getMaxAge())
+                        .httpOnly(httpCookie.getSecure())
+                        .secure(httpCookie.getSecure())
+                        .sameSite("lax")
+                        .build()
+                )
+                .orElseThrow();
     }
 
 }

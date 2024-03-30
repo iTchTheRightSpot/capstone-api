@@ -25,8 +25,8 @@ class WorkerCategoryTest extends MainTest {
     static void before() {
         assertNotNull(COOKIE);
 
-        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
-        headers.set("Cookie", "JSESSIONID=" + COOKIE.getValue());
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        headers.set(HttpHeaders.SET_COOKIE, COOKIE.getValue());
     }
 
     @Test

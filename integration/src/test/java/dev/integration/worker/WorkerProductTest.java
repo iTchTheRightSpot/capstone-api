@@ -26,12 +26,12 @@ class WorkerProductTest extends MainTest {
     static void before() {
         assertNotNull(COOKIE);
 
-        headers.set("Cookie", "JSESSIONID=" + COOKIE.getValue());
+        headers.set(HttpHeaders.SET_COOKIE, COOKIE.getValue());
     }
 
     @Test
     void shouldSuccessfullyRetrieveProducts() {
-        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var get = testTemplate.exchange(
                 PATH + "/api/v1/worker/product",
@@ -45,7 +45,7 @@ class WorkerProductTest extends MainTest {
 
     @Test
     void shouldSuccessfullyCreateAProduct() throws IOException {
-        headers.set("content-type", MediaType.MULTIPART_FORM_DATA_VALUE);
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA_VALUE);
 
         var productDto = TestData
                 .createProductDTO(
@@ -71,7 +71,7 @@ class WorkerProductTest extends MainTest {
 
     @Test
     void shouldSuccessfullyUpdateAProduct() {
-        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var dto = TestData
                 .updateProductDTO(
@@ -92,7 +92,7 @@ class WorkerProductTest extends MainTest {
 
     @Test
     void shouldSuccessfullyDeleteAProduct() {
-        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
                 PATH + "/api/v1/worker/product?id=product-uuid-2",
@@ -106,7 +106,7 @@ class WorkerProductTest extends MainTest {
 
     @Test
     void shouldNotSuccessfullyDeleteAProduct() {
-        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
                 PATH + "/api/v1/worker/product?id=product-uuid",

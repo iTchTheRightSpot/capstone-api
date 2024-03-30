@@ -1,6 +1,7 @@
 package dev.integration.client;
 
 import dev.integration.MainTest;
+import dev.integration.TestData;
 import dev.webserver.cart.dto.CartDTO;
 import dev.webserver.cart.response.CartResponse;
 import org.junit.jupiter.api.BeforeAll;
@@ -37,12 +38,12 @@ class CartControllerTest extends MainTest {
         if (cookies == null || cookies.isEmpty())
             throw new RuntimeException("admin cookie is empty");
 
-        String c = cookies.stream()
+        String str = cookies.stream()
                 .filter(cookie -> cookie.startsWith("CARTCOOKIE"))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("cart cookie is empty"));
 
-        CARTCOOKIE = ResponseCookie.from(c).build();
+        CARTCOOKIE = TestData.toCookie(str);
 
         assertNotNull(CARTCOOKIE);
     }
@@ -51,8 +52,8 @@ class CartControllerTest extends MainTest {
     void shouldSuccessfullyAddToAUsersCart_should_successfully_delete_from_users_cart() {
         // header
         HttpHeaders headers = new HttpHeaders();
-        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
-        headers.set("Cookie", "CARTCOOKIE=" + CARTCOOKIE.getValue());
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        headers.set(HttpHeaders.SET_COOKIE, CARTCOOKIE.getValue());
 
         // post
         var post = testTemplate.postForEntity(

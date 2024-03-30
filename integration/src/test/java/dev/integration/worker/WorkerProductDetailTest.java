@@ -27,12 +27,12 @@ class WorkerProductDetailTest extends MainTest {
     static void before() {
         assertNotNull(COOKIE);
 
-        headers.set("Cookie", "JSESSIONID=" + COOKIE.getValue());
+        headers.set(HttpHeaders.SET_COOKIE, COOKIE.getValue());
     }
 
     @Test
     void shouldSuccessfullyRetrieveProductDetails() {
-        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var get = testTemplate.exchange(
                 PATH + "/api/v1/worker/product/detail?id=product-uuid",
@@ -46,7 +46,7 @@ class WorkerProductDetailTest extends MainTest {
 
     @Test
     void shouldSuccessfullyCreateAProductDetail() throws IOException {
-        headers.set("content-type", MediaType.MULTIPART_FORM_DATA_VALUE);
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA_VALUE);
 
         var detailDto = new ProductDetailDto(
                 "product-uuid",
@@ -71,7 +71,7 @@ class WorkerProductDetailTest extends MainTest {
 
     @Test
     void shouldSuccessfullyUpdateAProductDetail() {
-        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var dto = new UpdateProductDetailDto("product-sku-sku", "green", true, 4, "large");
 
@@ -87,7 +87,7 @@ class WorkerProductDetailTest extends MainTest {
 
     @Test
     void shouldSuccessfullyDeleteAProductDetail() {
-        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
                 PATH + "/api/v1/worker/product/detail/product-sku-sku",
@@ -101,7 +101,7 @@ class WorkerProductDetailTest extends MainTest {
 
     @Test
     void shouldSuccessfullyDeleteAProductSku() {
-        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
                 PATH + "/api/v1/worker/product/detail/sku?sku=product-sku-sku-2",

@@ -26,13 +26,13 @@ class ClientCategoryTest extends MainTest {
         assertNotNull(COOKIE);
 
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.SET_COOKIE, COOKIE.getValue());
+        headers.set(HttpHeaders.SET_COOKIE, COOKIE);
     }
 
     @Test
     void shouldSuccessfullyRetrieveACategory() {
         var get = testTemplate.exchange(
-                PATH + "/api/v1/client/category",
+                PATH + "api/v1/client/category",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 ArrayList.class.asSubclass(CategoryResponse.class)
@@ -44,7 +44,7 @@ class ClientCategoryTest extends MainTest {
     @Test
     void shouldSuccessfullyRetrieveProductsBaseOnCategory() {
         var get = testTemplate.exchange(
-                PATH + "/api/v1/client/category/products?category_id=1",
+                PATH + "api/v1/client/category/products?category_id=1",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 Page.class.asSubclass(ProductResponse.class)

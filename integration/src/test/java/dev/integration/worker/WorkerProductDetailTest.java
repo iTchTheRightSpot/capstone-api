@@ -27,7 +27,7 @@ class WorkerProductDetailTest extends MainTest {
     static void before() {
         assertNotNull(COOKIE);
 
-        headers.set(HttpHeaders.SET_COOKIE, COOKIE.getValue());
+        headers.set(HttpHeaders.SET_COOKIE, COOKIE);
     }
 
     @Test
@@ -35,7 +35,7 @@ class WorkerProductDetailTest extends MainTest {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var get = testTemplate.exchange(
-                PATH + "/api/v1/worker/product/detail?id=product-uuid",
+                PATH + "api/v1/worker/product/detail?id=product-uuid",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 WorkerCategoryResponse.class
@@ -61,7 +61,7 @@ class WorkerProductDetailTest extends MainTest {
 
         // request
         var post = testTemplate.postForEntity(
-                PATH + "/api/v1/worker/product/detail",
+                PATH + "api/v1/worker/product/detail",
                 new HttpEntity<>(multipartData, headers),
                 Void.class
         );
@@ -76,7 +76,7 @@ class WorkerProductDetailTest extends MainTest {
         var dto = new UpdateProductDetailDto("product-sku-sku", "green", true, 4, "large");
 
         var update = testTemplate.exchange(
-                PATH + "/api/v1/worker/product/detail",
+                PATH + "api/v1/worker/product/detail",
                 HttpMethod.PUT,
                 new HttpEntity<>(dto, headers),
                 Void.class
@@ -90,7 +90,7 @@ class WorkerProductDetailTest extends MainTest {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
-                PATH + "/api/v1/worker/product/detail/product-sku-sku",
+                PATH + "api/v1/worker/product/detail/product-sku-sku",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class
@@ -104,7 +104,7 @@ class WorkerProductDetailTest extends MainTest {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
-                PATH + "/api/v1/worker/product/detail/sku?sku=product-sku-sku-2",
+                PATH + "api/v1/worker/product/detail/sku?sku=product-sku-sku-2",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class

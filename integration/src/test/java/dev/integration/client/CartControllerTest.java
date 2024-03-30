@@ -1,9 +1,7 @@
 package dev.integration.client;
 
 import dev.integration.MainTest;
-import dev.integration.TestData;
 import dev.webserver.cart.dto.CartDTO;
-import dev.webserver.cart.response.CartResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -19,31 +17,31 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @Transactional
 class CartControllerTest extends MainTest {
 
-    private static ResponseCookie CARTCOOKIE;
+    private static String CARTCOOKIE;
 
     @BeforeAll
     static void before() {
         HttpHeaders headers = new HttpHeaders();
-        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
-        var response = testTemplate.exchange(
-                PATH + "/api/v1/cart",
+        var get = testTemplate.exchange(
+                PATH + "api/v1/cart",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                ArrayList.class.asSubclass(CartResponse.class)
+                ArrayList.class
         );
 
-        var cookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
+        var cookies = get.getHeaders().get(HttpHeaders.SET_COOKIE);
 
         if (cookies == null || cookies.isEmpty())
             throw new RuntimeException("admin cookie is empty");
 
-        String str = cookies.stream()
+        CARTCOOKIE = cookies.stream()
                 .filter(cookie -> cookie.startsWith("CARTCOOKIE"))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("cart cookie is empty"));
 
-        CARTCOOKIE = TestData.toCookie(str);
+//        CARTCOOKIE = TestData.toCookie(str);
 
         assertNotNull(CARTCOOKIE);
     }
@@ -53,11 +51,12 @@ class CartControllerTest extends MainTest {
         // header
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.SET_COOKIE, CARTCOOKIE.getValue());
+        String string = CARTCOOKIE;
+        headers.set(HttpHeaders.SET_COOKIE, string);
 
         // post
         var post = testTemplate.postForEntity(
-                PATH + "/api/v1/cart",
+                PATH + "api/v1/cart",
                 new HttpEntity<>(new CartDTO("product-sku-sku", 5), headers),
                 Void.class
         );
@@ -66,7 +65,7 @@ class CartControllerTest extends MainTest {
 
         // delete
         ResponseEntity<Void> delete = testTemplate.exchange(
-                PATH + "/api/v1/cart?sku=product-sku-sku",
+                PATH + "api/v1/cart?sku=product-sku-sku",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class

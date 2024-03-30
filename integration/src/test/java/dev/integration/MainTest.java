@@ -10,7 +10,10 @@ import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
@@ -42,7 +45,7 @@ public class MainTest {
     protected static ObjectMapper mapper = new ObjectMapper();
     protected static final TestRestTemplate testTemplate = new TestRestTemplate();
     protected static String PATH;
-    protected static ResponseCookie COOKIE;
+    protected static String COOKIE;
 
     @Container
     private static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
@@ -119,7 +122,7 @@ public class MainTest {
     @Test
     void actuator() throws JsonProcessingException {
         var responseEntity = testTemplate
-                .getForEntity(PATH + "/actuator/health", String.class);
+                .getForEntity(PATH + "actuator/health", String.class);
 
         assertEquals(HttpStatusCode.valueOf(200), responseEntity.getStatusCode());
 
@@ -128,12 +131,12 @@ public class MainTest {
         assertEquals("UP", node.asText());
     }
 
-    protected static ResponseCookie adminCookie() {
+    protected static String adminCookie() {
         HttpHeaders headers = new HttpHeaders();
         headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
 
         var post = testTemplate.postForEntity(
-                PATH + "/api/v1/worker/auth/login",
+                PATH + "api/v1/worker/auth/login",
                 new HttpEntity<>(new LoginDto("admin@email.com", "password123"), headers),
                 Void.class
         );
@@ -143,12 +146,12 @@ public class MainTest {
         if (cookies == null || cookies.isEmpty())
             throw new RuntimeException("admin cookie is empty");
 
-        String jsessionid = cookies.stream()
+        return cookies.stream()
                 .filter(cookie -> cookie.startsWith("JSESSIONID"))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("admin cookie is empty"));
 
-        return TestData.toCookie(jsessionid);
+//        return TestData.toCookie(jsessionid);
     }
 
 }

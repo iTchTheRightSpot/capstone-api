@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
@@ -26,7 +27,7 @@ class WorkerProductTest extends MainTest {
     static void before() {
         assertNotNull(COOKIE);
 
-        headers.set(HttpHeaders.SET_COOKIE, COOKIE.getValue());
+        headers.set(HttpHeaders.SET_COOKIE, COOKIE.toString());
     }
 
     @Test
@@ -34,7 +35,7 @@ class WorkerProductTest extends MainTest {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var get = testTemplate.exchange(
-                PATH + "/api/v1/worker/product",
+                PATH + "api/v1/worker/product",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 WorkerCategoryResponse.class
@@ -55,13 +56,12 @@ class WorkerProductTest extends MainTest {
                 );
 
         // create the json
-        String dto = mapper.writeValueAsString(productDto);
-
-        MultiValueMap<String, Object> multipartData = TestData.files(dto);
+        MultiValueMap<String, Object> multipartData = TestData
+                .files(mapper.writeValueAsString(productDto));
 
         // request
         var post = testTemplate.postForEntity(
-                PATH + "/api/v1/worker/product",
+                PATH + "api/v1/worker/product",
                 new HttpEntity<>(multipartData, headers),
                 Void.class
         );
@@ -81,7 +81,7 @@ class WorkerProductTest extends MainTest {
                 );
 
         var update = testTemplate.exchange(
-                PATH + "/api/v1/worker/product",
+                PATH + "api/v1/worker/product",
                 HttpMethod.PUT,
                 new HttpEntity<>(dto, headers),
                 Void.class
@@ -95,7 +95,7 @@ class WorkerProductTest extends MainTest {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
-                PATH + "/api/v1/worker/product?id=product-uuid-2",
+                PATH + "api/v1/worker/product?id=product-uuid-2",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class
@@ -109,7 +109,7 @@ class WorkerProductTest extends MainTest {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
-                PATH + "/api/v1/worker/product?id=product-uuid",
+                PATH + "api/v1/worker/product?id=product-uuid",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class

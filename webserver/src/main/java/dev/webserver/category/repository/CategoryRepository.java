@@ -232,6 +232,10 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     """)
     List<CategoryPojo> allCategoriesByCategoryId(long id);
 
+    /**
+     * Retrieves all {@link ProductCategory} objects. Then maps the
+     * objects to a {@link CategoryPojo} using Spring Data Projection.
+     * */
     @Query(value = """
     SELECT
     c.categoryId AS id,

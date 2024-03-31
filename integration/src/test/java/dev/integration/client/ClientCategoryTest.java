@@ -1,19 +1,13 @@
 package dev.integration.client;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import dev.integration.MainTest;
-import dev.webserver.category.response.CategoryResponse;
-import dev.webserver.product.response.ProductResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -33,12 +27,13 @@ class ClientCategoryTest extends MainTest {
     }
 
     @Test
-    void shouldSuccessfullyRetrieveACategory() {
+    void shouldSuccessfullyRetrieveAllCategories() {
         var get = testTemplate.exchange(
                 PATH + "api/v1/client/category",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                new ParameterizedTypeReference<List<CategoryResponse>>() {}
+                ArrayList.class
+                // new ParameterizedTypeReference<List<CategoryResponse>>() {}
         );
 
         assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());

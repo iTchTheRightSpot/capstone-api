@@ -31,8 +31,7 @@ public class ClientCategoryService {
     private final S3Service service;
 
     /**
-     * Returns a list of {@code CategoryResponse}
-     * with is_visible marked as true.
+     * Returns a {@link List} of {@link CategoryResponse}.
      * */
     public List<CategoryResponse> allCategories() {
         var list = this.repository
@@ -46,9 +45,8 @@ public class ClientCategoryService {
     }
 
     /**
-     * Asynchronously retrieves a {@link Page} of
-     * {@link ProductResponse} objects associated with a
-     * specific category.
+     * Asynchronously retrieves a {@link Page} of {@link ProductResponse}
+     * objects by a {@link ProductCategory}.
      *
      * @param currency    The currency in which prices are displayed.
      * @param categoryId  The primary key of a {@link ProductCategory}.

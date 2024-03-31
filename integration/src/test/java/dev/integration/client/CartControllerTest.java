@@ -2,13 +2,15 @@ package dev.integration.client;
 
 import dev.integration.MainTest;
 import dev.webserver.cart.dto.CartDTO;
+import dev.webserver.cart.response.CartResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -28,7 +30,7 @@ class CartControllerTest extends MainTest {
                 PATH + "api/v1/cart",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                ArrayList.class
+                new ParameterizedTypeReference<List<CartResponse>>() {}
         );
 
         var cookies = get.getHeaders().get(HttpHeaders.SET_COOKIE);
@@ -41,8 +43,6 @@ class CartControllerTest extends MainTest {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("cart cookie is empty"));
 
-//        CARTCOOKIE = TestData.toCookie(str);
-
         assertNotNull(CARTCOOKIE);
     }
 
@@ -52,7 +52,7 @@ class CartControllerTest extends MainTest {
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         String string = CARTCOOKIE;
-        headers.set(HttpHeaders.SET_COOKIE, string);
+        headers.set(HttpHeaders.COOKIE, string);
 
         // post
         var post = testTemplate.postForEntity(
@@ -64,7 +64,7 @@ class CartControllerTest extends MainTest {
         assertEquals(HttpStatusCode.valueOf(201), post.getStatusCode());
 
         // delete
-        ResponseEntity<Void> delete = testTemplate.exchange(
+        var delete = testTemplate.exchange(
                 PATH + "api/v1/cart?sku=product-sku-sku",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),

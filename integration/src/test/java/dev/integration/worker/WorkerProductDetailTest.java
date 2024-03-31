@@ -2,17 +2,19 @@ package dev.integration.worker;
 
 import dev.integration.MainTest;
 import dev.integration.TestData;
-import dev.webserver.category.response.WorkerCategoryResponse;
 import dev.webserver.product.dto.ProductDetailDto;
 import dev.webserver.product.dto.UpdateProductDetailDto;
+import dev.webserver.product.response.DetailResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -27,7 +29,7 @@ class WorkerProductDetailTest extends MainTest {
     static void before() {
         assertNotNull(COOKIE);
 
-        headers.set(HttpHeaders.SET_COOKIE, COOKIE);
+        headers.set(HttpHeaders.COOKIE, COOKIE);
     }
 
     @Test
@@ -38,7 +40,7 @@ class WorkerProductDetailTest extends MainTest {
                 PATH + "api/v1/worker/product/detail?id=product-uuid",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                WorkerCategoryResponse.class
+                new ParameterizedTypeReference<List<DetailResponse>>() {}
         );
 
         assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());

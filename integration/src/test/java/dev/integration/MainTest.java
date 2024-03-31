@@ -61,7 +61,7 @@ public class MainTest {
         map.put("SPRING_PROFILES_ACTIVE", "native-test");
         map.put("SERVER_PORT", "8081");
         map.put("API_PREFIX", "api/v1/");
-        map.put("USER_PRINCIPAL", "admin@email.com");
+        map.put("USER_PRINCIPAL", "admin@admin.com");
         map.put("USER_PASSWORD", "password123");
         map.put("DB_DOMAIN", "mysql");
         map.put("DB_HOST", "3306");
@@ -110,6 +110,8 @@ public class MainTest {
         PATH = String
                 .format("http://%s:%d/", webserver.getHost(), webserver.getFirstMappedPort());
 
+//        PATH = "http://localhost:1997/";
+
         COOKIE = adminCookie();
     }
 
@@ -137,7 +139,7 @@ public class MainTest {
 
         var post = testTemplate.postForEntity(
                 PATH + "api/v1/worker/auth/login",
-                new HttpEntity<>(new LoginDto("admin@email.com", "password123"), headers),
+                new HttpEntity<>(new LoginDto("admin@admin.com", "password123"), headers),
                 Void.class
         );
 
@@ -150,8 +152,6 @@ public class MainTest {
                 .filter(cookie -> cookie.startsWith("JSESSIONID"))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("admin cookie is empty"));
-
-//        return TestData.toCookie(jsessionid);
     }
 
 }

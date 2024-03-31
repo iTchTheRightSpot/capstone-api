@@ -1,16 +1,19 @@
 package dev.integration.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import dev.integration.MainTest;
 import dev.webserver.category.response.CategoryResponse;
 import dev.webserver.product.response.ProductResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -26,7 +29,7 @@ class ClientCategoryTest extends MainTest {
         assertNotNull(COOKIE);
 
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.SET_COOKIE, COOKIE);
+        headers.set(HttpHeaders.COOKIE, COOKIE);
     }
 
     @Test
@@ -35,7 +38,7 @@ class ClientCategoryTest extends MainTest {
                 PATH + "api/v1/client/category",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                ArrayList.class.asSubclass(CategoryResponse.class)
+                new ParameterizedTypeReference<List<CategoryResponse>>() {}
         );
 
         assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
@@ -47,7 +50,7 @@ class ClientCategoryTest extends MainTest {
                 PATH + "api/v1/client/category/products?category_id=1",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                Page.class.asSubclass(ProductResponse.class)
+                Object.class
         );
 
         assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());

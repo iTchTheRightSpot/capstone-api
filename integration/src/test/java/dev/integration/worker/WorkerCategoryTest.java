@@ -26,13 +26,13 @@ class WorkerCategoryTest extends MainTest {
         assertNotNull(COOKIE);
 
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.SET_COOKIE, COOKIE);
+        headers.set(HttpHeaders.COOKIE, COOKIE);
     }
 
     @Test
     void shouldSuccessfullyRetrieveACategory() {
         var get = testTemplate.exchange(
-                PATH + "/api/v1/worker/category",
+                PATH + "api/v1/worker/category",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 WorkerCategoryResponse.class
@@ -44,10 +44,10 @@ class WorkerCategoryTest extends MainTest {
     @Test
     void shouldSuccessfullyRetrieveProductsBaseOnCategory() {
         var get = testTemplate.exchange(
-                PATH + "/api/v1/worker/category/products?category_id=1",
+                PATH + "api/v1/worker/category/products?category_id=1",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                Page.class.asSubclass(ProductResponse.class)
+                Object.class
         );
 
         assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
@@ -56,7 +56,7 @@ class WorkerCategoryTest extends MainTest {
     @Test
     void shouldSuccessfullyCreateACategory() {
         var post = testTemplate.postForEntity(
-                PATH + "/api/v1/worker/category",
+                PATH + "api/v1/worker/category",
                 new HttpEntity<>(new CategoryDTO("worker-cat", true, null), headers),
                 Void.class
         );
@@ -67,7 +67,7 @@ class WorkerCategoryTest extends MainTest {
     @Test
     void shouldSuccessfullyUpdateACategory() {
         var update = testTemplate.exchange(
-                PATH + "/api/v1/worker/category",
+                PATH + "api/v1/worker/category",
                 HttpMethod.PUT,
                 new HttpEntity<>(new UpdateCategoryDTO(1L, null, "frank", false), headers),
                 Void.class
@@ -79,7 +79,7 @@ class WorkerCategoryTest extends MainTest {
     @Test
     void shouldSuccessfullyDeleteACategory() {
         var delete = testTemplate.exchange(
-                PATH + "/api/v1/worker/category/2",
+                PATH + "api/v1/worker/category/2",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class
@@ -91,7 +91,7 @@ class WorkerCategoryTest extends MainTest {
     @Test
     void shouldThrowErrorWhenDeletingACategoryAsItHasDetailsAttached() {
         var delete = testTemplate.exchange(
-                PATH + "/api/v1/worker/category/1",
+                PATH + "api/v1/worker/category/1",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class

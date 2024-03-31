@@ -121,6 +121,7 @@ public class SecurityConfig {
             JwtAuthenticationConverter converter
     ) throws Exception {
 
+        //  || PROFILE.equals("test")
         if (PROFILE.equals("native-test")) {
             http.csrf(AbstractHttpConfigurer::disable);
         } else {

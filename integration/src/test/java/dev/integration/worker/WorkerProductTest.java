@@ -27,7 +27,7 @@ class WorkerProductTest extends MainTest {
     static void before() {
         assertNotNull(COOKIE);
 
-        headers.set(HttpHeaders.SET_COOKIE, COOKIE.toString());
+        headers.set(HttpHeaders.COOKIE, COOKIE);
     }
 
     @Test

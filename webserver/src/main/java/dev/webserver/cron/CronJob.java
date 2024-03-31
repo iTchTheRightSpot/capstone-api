@@ -8,10 +8,10 @@ import dev.webserver.cart.repository.ShoppingSessionRepo;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.payment.entity.OrderReservation;
 import dev.webserver.payment.repository.OrderReservationRepo;
+import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.ProductSkuRepo;
 import dev.webserver.thirdparty.ThirdPartyPaymentService;
 import dev.webserver.util.CustomUtil;
-import dev.webserver.product.entity.ProductSku;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -65,10 +65,8 @@ class CronJob {
     @Scheduled(fixedRate = 15, timeUnit = TimeUnit.MINUTES, zone = "UTC")
     @Transactional
     public void schedule() {
-        log.info("starting cron job");
         onDeleteShoppingSessions();
         onDeleteOrderReservations();
-        log.info("end of cron job");
     }
 
     /**
@@ -175,7 +173,7 @@ class CronJob {
      * reference not found or a verification success with a transaction status of abandoned
      * or failed.
      *
-     * @param node The {@code JsonNode} containing the Paystack response for the reservation.
+     * @param node The {@link JsonNode} containing the Paystack response for the reservation.
      * @return {@code true} if the reservation has a failed transaction status,
      * {@code false} otherwise.
      */

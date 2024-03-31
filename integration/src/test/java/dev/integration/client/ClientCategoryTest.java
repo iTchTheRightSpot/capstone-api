@@ -7,10 +7,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Transactional
@@ -20,10 +17,7 @@ class ClientCategoryTest extends MainTest {
 
     @BeforeAll
     void before() {
-        assertNotNull(COOKIE);
-
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.COOKIE, COOKIE);
     }
 
     @Test
@@ -32,7 +26,7 @@ class ClientCategoryTest extends MainTest {
                 PATH + "api/v1/client/category",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                ArrayList.class
+                Object.class
                 // new ParameterizedTypeReference<List<CategoryResponse>>() {}
         );
 

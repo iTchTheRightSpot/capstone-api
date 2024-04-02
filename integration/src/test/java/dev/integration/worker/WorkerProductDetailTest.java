@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
@@ -20,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Transactional
 class WorkerProductDetailTest extends MainTest {
 
     private static final HttpHeaders headers = new HttpHeaders();
@@ -51,7 +49,7 @@ class WorkerProductDetailTest extends MainTest {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA_VALUE);
 
         var detailDto = new ProductDetailDto(
-                "product-uuid",
+                "product-uuid-1",
                 true,
                 "brown",
                 TestData.sizeInventoryDTOArray(3)
@@ -75,7 +73,7 @@ class WorkerProductDetailTest extends MainTest {
     void shouldSuccessfullyUpdateAProductDetail() {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
-        var dto = new UpdateProductDetailDto("product-sku-sku", "green", true, 4, "large");
+        var dto = new UpdateProductDetailDto("product-sku-2", "green", true, 4, "large");
 
         var update = testTemplate.exchange(
                 PATH + "api/v1/worker/product/detail",
@@ -92,7 +90,7 @@ class WorkerProductDetailTest extends MainTest {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
-                PATH + "api/v1/worker/product/detail/product-sku-sku",
+                PATH + "api/v1/worker/product/detail/product-sku-3",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class
@@ -106,7 +104,7 @@ class WorkerProductDetailTest extends MainTest {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
-                PATH + "api/v1/worker/product/detail/sku?sku=product-sku-sku-2",
+                PATH + "api/v1/worker/product/detail/sku?sku=product-sku-2",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class

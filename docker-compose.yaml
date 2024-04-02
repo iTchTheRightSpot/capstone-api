@@ -18,6 +18,7 @@ services:
       retries: 5
     volumes:
       - db-data:/var/lib/mysql
+#      - ./db/:/docker-entrypoint-initdb.d
 
   api:
     build: .
@@ -47,6 +48,12 @@ services:
       AWS_BUCKET: my-bucket
       AWS_PAYSTACK_SECRET_ID: secrete-id
       ON_CUSTOM_PROFILE: native-test
+
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:1997/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   db-data: {}

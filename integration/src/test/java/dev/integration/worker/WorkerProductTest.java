@@ -8,8 +8,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.http.*;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
@@ -18,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Transactional
 class WorkerProductTest extends MainTest {
 
     private static final HttpHeaders headers = new HttpHeaders();
@@ -109,7 +106,7 @@ class WorkerProductTest extends MainTest {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
-                PATH + "api/v1/worker/product?id=product-uuid",
+                PATH + "api/v1/worker/product?id=product-uuid-1",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class

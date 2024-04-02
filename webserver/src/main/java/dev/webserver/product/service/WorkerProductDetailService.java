@@ -7,6 +7,7 @@ import dev.webserver.product.dto.ProductDetailDto;
 import dev.webserver.product.dto.UpdateProductDetailDto;
 import dev.webserver.product.entity.Product;
 import dev.webserver.product.entity.ProductDetail;
+import dev.webserver.product.entity.ProductImage;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.ProductDetailRepo;
 import dev.webserver.product.repository.ProductImageRepo;
@@ -137,8 +138,7 @@ public class WorkerProductDetailService {
 
     /**
      * Permanently deletes {@link ProductDetail} and its relationship with
-     * {@link dev.webserver.product.entity.ProductImage}s and
-     * {@link ProductSku}.
+     * {@link ProductImage}s and {@link ProductSku}.
      *
      * @param sku is {@link ProductSku} property.
      *            {@link ProductSku} has a many to 1 relationship with {@link ProductDetail}.

@@ -1,18 +1,6 @@
-ALTER TABLE product_detail
-DROP
-FOREIGN KEY product_detail_ibfk_1,
-                    DROP
-COLUMN size_id;
-ALTER TABLE product_detail
-DROP
-FOREIGN KEY product_detail_ibfk_2,
-                    DROP
-COLUMN inventory_id;
-ALTER TABLE product_detail
-DROP
-FOREIGN KEY product_detail_ibfk_3,
-                    DROP
-COLUMN colour_id;
+ALTER TABLE product_detail DROP FOREIGN KEY product_detail_ibfk_1, DROP COLUMN size_id;
+ALTER TABLE product_detail DROP FOREIGN KEY product_detail_ibfk_2, DROP COLUMN inventory_id;
+ALTER TABLE product_detail DROP FOREIGN KEY product_detail_ibfk_3, DROP COLUMN colour_id;
 
 ALTER TABLE product_detail DROP COLUMN sku;
 ALTER TABLE product_detail DROP COLUMN modified_at;

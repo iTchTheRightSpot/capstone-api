@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS product
     default_image_key VARCHAR(50)  NOT NULL,
     price             DECIMAL      NOT NULL,
     currency          VARCHAR(50)  NOT NULL,
-    category_id       BIGINT,
+    category_id BIGINT NOT NULL,
     collection_id     BIGINT,
     session_id        BIGINT,
     order_item_id     BIGINT,

@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Transactional
 class CartControllerTest extends MainTest {
 
     private static String CARTCOOKIE;
@@ -57,7 +55,7 @@ class CartControllerTest extends MainTest {
         // post
         var post = testTemplate.postForEntity(
                 PATH + "api/v1/cart",
-                new HttpEntity<>(new CartDTO("product-sku-sku", 5), headers),
+                new HttpEntity<>(new CartDTO("product-sku-1", 5), headers),
                 Void.class
         );
 

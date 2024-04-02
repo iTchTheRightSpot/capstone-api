@@ -7,8 +7,6 @@ import dev.webserver.auth.dto.LoginDto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -16,32 +14,20 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.JdbcDatabaseContainer;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.ext.ScriptUtils;
-import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.junit.jupiter.Container;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Transactional
 public class MainTest {
 
-    private static final Logger log = LoggerFactory.getLogger(MainTest.class);
-    private static final Map<String, String> map = new HashMap<>();
-    private static final Network network = Network.newNetwork();
-
-    protected static ObjectMapper mapper = new ObjectMapper();
+    protected static final ObjectMapper mapper = new ObjectMapper();
     protected static final TestRestTemplate testTemplate = new TestRestTemplate();
     protected static String PATH;
     protected static String COOKIE;
@@ -55,25 +41,15 @@ public class MainTest {
                                     .withStartupTimeout(Duration.ofMinutes(30)));
 
     @BeforeAll
-    void beforeAllTests() {
+    void beforeAllTests() throws SQLException {
         environment.start();
 
-        var mysqlOptional = environment.getContainerByServiceName("mysql");
-        var apiOptional = environment.getContainerByServiceName("api");
+        final String host = environment.getServiceHost("api", 1997);
+        final int port = environment.getServicePort("api", 1997);
 
+        PATH = String.format("http://%s:%d/", host, port);
 
-        assertTrue(mysqlOptional.isPresent());
-        assertTrue(apiOptional.isPresent());
-
-        ScriptUtils.runInitScript(
-                new JdbcDatabaseDelegate((JdbcDatabaseContainer<?>) mysqlOptional.get(), ""),
-                "db/init.sql");
-
-        final var mySqlHostname = environment.getServiceHost("api", 1997);
-        final var hostMySqlProtocolPort = environment.getServicePort("api", 1997);
-
-        PATH = String
-                .format("http://%s:%d/", mySqlHostname, hostMySqlProtocolPort);
+        CustomRunInitScripts.processScript("integration", "integration");
 
         COOKIE = adminCookie();
     }

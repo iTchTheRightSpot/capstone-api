@@ -1,5 +1,7 @@
 package dev.webserver.category.projection;
 
+import dev.webserver.category.repository.CategoryRepository;
+
 // Using spring data projection
 public interface CategoryPojo {
 
@@ -15,7 +17,7 @@ public interface CategoryPojo {
     Long getParent();
 
     /**
-     * Since {@code CategoryRepository} interface contains jpa
+     * Since {@link CategoryRepository} interface contains jpa
      * and native sql queries, {@code statusImpl} helps catch
      * cases where jpa returns a boolean variable but native
      * sql query returns 0 or 1.

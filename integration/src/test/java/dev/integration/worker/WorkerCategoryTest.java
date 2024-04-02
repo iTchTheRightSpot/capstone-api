@@ -16,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Transactional
 class WorkerCategoryTest extends MainTest {
 
     private static final HttpHeaders headers = new HttpHeaders();

@@ -18,7 +18,7 @@
         <java.version>21</java.version>
         <aws.java.sdk.version>2.20.101</aws.java.sdk.version>
         <!-- as per issue https://github.com/spring-projects/spring-security/issues/14362 -->
-            <awaitility.version>4.2.0</awaitility.version>
+        <awaitility.version>4.2.0</awaitility.version>
         <!-- as per spring boot version 3.2.3 release notes https://github.com/spring-projects/spring-boot/releases/tag/v3.2.3 -->
         <hibernate.orm.tooling.version>6.4.2.Final</hibernate.orm.tooling.version>
         <jakarta.xml.bind.version>4.0.1</jakarta.xml.bind.version>
@@ -84,6 +84,15 @@
                     <plugin>
                         <groupId>org.graalvm.buildtools</groupId>
                         <artifactId>native-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>build</id>
+                                <goals>
+                                    <goal>compile-no-fork</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

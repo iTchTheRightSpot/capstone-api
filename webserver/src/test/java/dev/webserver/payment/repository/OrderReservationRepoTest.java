@@ -140,15 +140,13 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
         assertEquals(2, skus.size());
 
         var session = this.sessionRepo
-                .save(
-                        new ShoppingSession(
-                                "cookie",
-                                new Date(),
-                                CustomUtil.toUTC(Date.from(Instant.now().plus(1, HOURS))),
-                                new HashSet<>(),
-                                new HashSet<>()
-                        )
-                );
+                .save(new ShoppingSession(
+                        "cookie",
+                        new Date(),
+                        CustomUtil.toUTC(Date.from(Instant.now().plus(1, HOURS))),
+                        new HashSet<>(),
+                        new HashSet<>()
+                ));
 
         Date current = new Date();
         ProductSku first = skus.getFirst();

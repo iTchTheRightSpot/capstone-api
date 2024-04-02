@@ -68,7 +68,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
                         new ShoppingSession(
                                 "cookie",
                                 new Date(),
-                                CustomUtil.toUTC(new Date(Instant.now().plus(1, HOURS).toEpochMilli())),
+                                CustomUtil.toUTC(Date.from(Instant.now().plus(1, HOURS))),
                                 new HashSet<>(),
                                 new HashSet<>()
                         )
@@ -83,10 +83,9 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
                                 first.getInventory() - 1,
                                 PENDING,
                                 CustomUtil.toUTC(
-                                        new Date(current
+                                        Date.from(current
                                                 .toInstant()
                                                 .plus(15, MINUTES)
-                                                .toEpochMilli()
                                         )
                                 ),
                                 first,
@@ -101,10 +100,9 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
                         2,
                         "update",
                         CustomUtil.toUTC(
-                                new Date(current
+                                Date.from(current
                                         .toInstant()
                                         .plus(20, MINUTES)
-                                        .toEpochMilli()
                                 )
                         ),
                         "cookie",
@@ -146,7 +144,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
                         new ShoppingSession(
                                 "cookie",
                                 new Date(),
-                                CustomUtil.toUTC(new Date(Instant.now().plus(1, HOURS).toEpochMilli())),
+                                CustomUtil.toUTC(Date.from(Instant.now().plus(1, HOURS))),
                                 new HashSet<>(),
                                 new HashSet<>()
                         )
@@ -161,10 +159,9 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
                                 first.getInventory() - 1,
                                 PENDING,
                                 CustomUtil.toUTC(
-                                        new Date(current
+                                        Date.from(current
                                                 .toInstant()
                                                 .plus(15, MINUTES)
-                                                .toEpochMilli()
                                         )
                                 ),
                                 first,
@@ -179,10 +176,9 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
                         5,
                         "new-reference",
                         CustomUtil.toUTC(
-                                new Date(current
+                                Date.from(current
                                         .toInstant()
                                         .plus(20, MINUTES)
-                                        .toEpochMilli()
                                 )
                         ),
                         "cookie",
@@ -224,7 +220,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
                         new ShoppingSession(
                                 "cookie",
                                 new Date(),
-                                CustomUtil.toUTC(new Date(Instant.now().plus(1, HOURS).toEpochMilli())),
+                                CustomUtil.toUTC(Date.from(Instant.now().plus(1, HOURS))),
                                 new HashSet<>(),
                                 new HashSet<>()
                         )
@@ -239,10 +235,9 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
                                     sku.getInventory() - 1,
                                     PENDING,
                                     CustomUtil.toUTC(
-                                            new Date(current
+                                            Date.from(current
                                                     .toInstant()
                                                     .minus(5, HOURS)
-                                                    .toEpochMilli()
                                             )
                                     ),
                                     sku,
@@ -280,7 +275,7 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
                         new ShoppingSession(
                                 "cookie",
                                 new Date(),
-                                CustomUtil.toUTC(new Date(Instant.now().plus(1, HOURS).toEpochMilli())),
+                                CustomUtil.toUTC(Date.from(Instant.now().plus(1, HOURS))),
                                 new HashSet<>(),
                                 new HashSet<>()
                         )

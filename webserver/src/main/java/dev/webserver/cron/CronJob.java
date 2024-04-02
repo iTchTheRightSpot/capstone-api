@@ -8,6 +8,7 @@ import dev.webserver.cart.repository.ShoppingSessionRepo;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.payment.entity.OrderReservation;
 import dev.webserver.payment.repository.OrderReservationRepo;
+import dev.webserver.payment.service.PaymentDetailService;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.ProductSkuRepo;
 import dev.webserver.thirdparty.ThirdPartyPaymentService;
@@ -17,10 +18,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static dev.webserver.enumeration.ReservationStatus.PENDING;
+import static org.springframework.http.HttpStatus.*;
 
 @Component
 class CronJob {
@@ -40,6 +42,7 @@ class CronJob {
     private final OrderReservationRepo reservationRepo;
     private final ShoppingSessionRepo sessionRepo;
     private final CartItemRepo cartItemRepo;
+    private final PaymentDetailService paymentDetailService;
     private final String secretKey;
 
     public CronJob(
@@ -48,12 +51,14 @@ class CronJob {
             OrderReservationRepo reservationRepo,
             ShoppingSessionRepo sessionRepo,
             CartItemRepo cartItemRepo,
+            PaymentDetailService paymentDetailService,
             ThirdPartyPaymentService paymentService
     ) {
         this.skuRepo = skuRepo;
         this.reservationRepo = reservationRepo;
         this.sessionRepo = sessionRepo;
         this.cartItemRepo = cartItemRepo;
+        this.paymentDetailService = paymentDetailService;
         this.secretKey = paymentService.payStackCredentials().secretKey();
         this.restClient = clientBuilder.build();
     }
@@ -94,98 +99,97 @@ class CronJob {
      * @see
      * <a href="https://paystack.com/docs/api/integration/#update-timeout">updating the timeout</a>.
      */
-    @Transactional
+    @Transactional(rollbackFor = CustomServerError.class)
     public void onDeleteOrderReservations() {
-        Date date = CustomUtil
+        var date = CustomUtil
                 .toUTC(Date.from(Instant.now().plus(5, ChronoUnit.MINUTES)));
 
-        reservationRepo
-                .allPendingExpiredReservations(date, PENDING)
-                .forEach(reservation -> {
-                    // add reservation qty to associated ProductSku inventory
+        var reservations = reservationRepo.allPendingExpiredReservations(date, PENDING);
+
+        onResponseFromPaystack(reservations)
+                .stream()
+                .filter(reservation -> onSuccess(reservation)
+                        || reservation.status().equals(BAD_REQUEST)
+                        || reservation.status().equals(NOT_FOUND)
+                )
+                .forEach(obj -> {
+                    if (obj.status().equals(OK)) {
+                        var email = obj.node().get("data").get("customer").get("email").textValue();
+                        var reference = obj.node().get("data").get("reference").textValue();
+
+                        if (!paymentDetailService.paymentDetailExists(email, reference)) {
+                            paymentDetailService.onSuccessfulPayment(obj.node().get("data"));
+                        }
+                    }
+
                     skuRepo.updateProductSkuInventoryByAddingToExistingInventory(
-                            reservation.getProductSku().getSku(), reservation.getQty());
-                    // delete the expired reservation
+                            obj.reservation().getProductSku().getSku(),
+                            obj.reservation().getQty()
+                    );
+
                     reservationRepo.deleteOrderReservationByReservationId(
-                            reservation.getReservationId());
+                            obj.reservation().getReservationId()
+                    );
                 });
     }
 
     /**
-     * Finds failed {@link OrderReservation} from Paystack based on list of expired
-     * {@link OrderReservation} objects.
-     * <p>
-     * Retrieves the status of transactions from Paystack and filters out reservations with
-     * transaction references that do not exist or have statuses of abandoned or failed.
+     * Leveraging multithreading, function validates the status of expired {@link OrderReservation}s
+     * from Paystack.
      *
-     * @param reservations The list of expired {@link OrderReservation} objects to validate.
-     * @return A list of {@link OrderReservation} objects that have failed transactions.
-     * @throws CustomServerError if an error occurs when asynchronous validating references
-     *                           from Paystack.
+     * @param reservations The {@link List} of expired {@link OrderReservation} objects to validate.
+     * @return A {@link List} of {@link CustomCronJobObject} which contains validated
+     * {@link OrderReservation}s.
      * @see <a href="https://paystack.com/docs/payments/verify-payments/">documentation</a>
      */
-    public List<OrderReservation> validateOrderReservationsFromPaystack(
-            List<OrderReservation> reservations
+    private List<CustomCronJobObject> onResponseFromPaystack(
+            final List<OrderReservation> reservations
     ) {
-        record CustomCronObject(OrderReservation reservation, JsonNode node) {
-        }
-
-        // create tasks
         var futures = reservations.stream()
-                .map(reservation -> (Supplier<CustomCronObject>) () -> {
-                    URI uri = UriComponentsBuilder
+                .map(reservation -> (Supplier<CustomCronJobObject>) () -> {
+                    var uri = UriComponentsBuilder
                             .fromUriString("https://api.paystack.co/transaction/verify")
                             .pathSegment(reservation.getReference())
                             .build()
                             .toUri();
 
-                    JsonNode node = restClient.get().uri(uri)
-                            .header("Authorization",
-                                    "Bearer %s".formatted(secretKey)
-                            )
-                            .retrieve().body(JsonNode.class);
-                    return new CustomCronObject(reservation, node);
+                    try {
+                        var node = restClient
+                                .get()
+                                .uri(uri)
+                                .header("Authorization", "Bearer %s".formatted(secretKey))
+                                .retrieve()
+                                .body(JsonNode.class);
+
+                        return new CustomCronJobObject(reservation, node, OK);
+                    } catch (Exception e) {
+                        var status = switch (e) {
+                            case HttpClientErrorException.BadRequest ignored1 -> BAD_REQUEST;
+                            case HttpClientErrorException.NotFound ignored2 -> NOT_FOUND;
+                            case HttpClientErrorException.Forbidden ignored3 -> FORBIDDEN;
+                            case HttpClientErrorException.Unauthorized ignored4 -> UNAUTHORIZED;
+                            default -> INTERNAL_SERVER_ERROR;
+                        };
+
+                        log.error("Status is %s \nMessage %s".formatted(status, e.getMessage()));
+
+                        return new CustomCronJobObject(reservation, null, status);
+                    }
                 })
                 .toList();
 
         return CustomUtil.asynchronousTasks(futures, CronJob.class)
-                .thenApply(f -> f.stream()
-                        .map(Supplier::get)
-                        .filter(obj -> isFailedReservation(obj.node()))
-                        .map(CustomCronObject::reservation)
-                        .toList()
-                )
-                .exceptionally(e -> {
-                    log.error("error after {}", e.getMessage());
-                    return null;
-                })
+                .thenApply(c -> c.stream().map(Supplier::get).toList())
                 .join();
     }
 
     /**
-     * Checks if the provided {@link JsonNode} represents a failed {@link OrderReservation}
-     * based on the Paystack response.
-     *
-     * <p>
-     * This method examines the Paystack response contained in the provided
-     * {@link JsonNode} to determine if the corresponding reservation has a failed
-     * transaction status. It checks if the response message indicates a transaction
-     * reference not found or a verification success with a transaction status of abandoned
-     * or failed.
-     *
-     * @param node The {@link JsonNode} containing the Paystack response for the reservation.
-     * @return {@code true} if the reservation has a failed transaction status,
-     * {@code false} otherwise.
-     */
-    private boolean isFailedReservation(JsonNode node) {
-        String message = node.get("message").textValue();
-        String status = node.get("data").get("status").textValue();
-
-        // check if transaction reference not found or status is abandoned/failed
-        return message.equalsIgnoreCase("Transaction reference not found") ||
-                (message.equalsIgnoreCase("Verification successful") &&
-                        (status.equalsIgnoreCase("abandoned")
-                                || status.equalsIgnoreCase("failed")));
+     * Filters successful {@link OrderReservation}.
+     * */
+    private boolean onSuccess(CustomCronJobObject obj) {
+        return obj.status().equals(OK)
+                && obj.node().get("message").textValue().equalsIgnoreCase("Verification successful")
+                && obj.node().get("data").get("status").textValue().equalsIgnoreCase("success");
     }
 
 }

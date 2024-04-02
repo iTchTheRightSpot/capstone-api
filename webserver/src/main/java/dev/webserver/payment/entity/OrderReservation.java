@@ -45,6 +45,11 @@ public class OrderReservation {
     @JoinColumn(name = "session_id", referencedColumnName = "session_id")
     private ShoppingSession shoppingSession;
 
+    public OrderReservation(String reference, ProductSku sku) {
+        this.reference = reference;
+        this.productSku = sku;
+    }
+
     public OrderReservation(
             String reference,
             int qty,

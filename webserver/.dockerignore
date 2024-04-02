@@ -32,3 +32,7 @@ build/
 .vscode/
 
 .aws-sam/build
+
+test-metadata.txt
+
+.git

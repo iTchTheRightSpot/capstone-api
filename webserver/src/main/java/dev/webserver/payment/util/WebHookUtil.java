@@ -50,7 +50,7 @@ public class WebHookUtil {
 
     /**
      * Validates if request came from paystack.
-     * <a href="https://paystack.com/docs/payments/webhooks/">...</a>
+     * @see <a href="https://paystack.com/docs/payments/webhooks/">documentation</a>
      * */
     public static WebhookConstruct validateRequestFromPayStack(
             String secretKey, String body

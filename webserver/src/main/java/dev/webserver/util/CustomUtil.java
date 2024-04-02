@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 
 import static dev.webserver.enumeration.SarreCurrency.NGN;
 import static dev.webserver.enumeration.SarreCurrency.USD;
@@ -247,7 +248,7 @@ public class CustomUtil {
     /**
      * Executes a list of tasks asynchronously and returns a {@link CompletableFuture}
      * where all the tasks are complete. Each task is executed independently and
-     * concurrently, leveraging the Virtual Thread.
+     * concurrently, leveraging the new Virtual Thread.
      *
      * @param schedules The list of tasks to execute asynchronously.
      * @param clazz The class that called this method.

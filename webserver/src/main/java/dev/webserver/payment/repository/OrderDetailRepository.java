@@ -19,7 +19,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> 
      * Retrieves the order history for a given user principal email.
      *
      * @param principal the email associated to a {@link PaymentDetail}.
-     * @return a list of {@link OrderPojo} representing the order history.
+     * @return a {@link List} of {@link OrderPojo} representing the order history.
      */
     @Query(nativeQuery = true, value = """
     SELECT

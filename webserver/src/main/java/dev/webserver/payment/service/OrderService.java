@@ -7,9 +7,9 @@ import dev.webserver.exception.CustomServerError;
 import dev.webserver.payment.dto.OrderHistoryDTO;
 import dev.webserver.payment.dto.PayloadMapper;
 import dev.webserver.payment.entity.OrderDetail;
+import dev.webserver.payment.projection.OrderPojo;
 import dev.webserver.payment.repository.OrderDetailRepository;
 import dev.webserver.util.CustomUtil;
-import dev.webserver.payment.projection.OrderPojo;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -56,7 +56,7 @@ public class OrderService {
     public CompletableFuture<List<OrderHistoryDTO>> orderHistory() {
         String principal = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        List<CompletableFuture<OrderHistoryDTO>> jobs = repository
+        var jobs = repository
                 .orderHistoryByPrincipal(principal)
                 .stream()
                 .map(db -> CompletableFuture.supplyAsync(() -> {

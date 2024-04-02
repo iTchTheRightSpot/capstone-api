@@ -4,9 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
-import org.springframework.core.env.StandardEnvironment;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
@@ -20,13 +18,10 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 class AwsConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(AwsConfiguration.class.getName());
-    private static final Region REGION;
-    private static final AwsCredentialsProvider PROVIDER;
+    private final Region REGION;
+    private final AwsCredentialsProvider PROVIDER;
 
-    // TODO come back to this as this is wrong.
-    static {
-        var env = new StandardEnvironment();
-
+    public AwsConfiguration(Environment env) {
         String region = env.getProperty("aws.region", "ca-central-1");
 
         REGION = Region.of(region);
@@ -35,13 +30,13 @@ class AwsConfiguration {
 
         log.info("S3Config current active profile {}", profile);
 
-        PROVIDER = profile.equals("default")
+        PROVIDER = profile.equals("aws")
                 ? InstanceProfileCredentialsProvider.builder().build()
                 : EnvironmentVariableCredentialsProvider.create();
     }
 
     @Bean
-    public static S3Client s3Client() {
+    public S3Client s3Client() {
         return S3Client.builder()
                 .region(REGION)
                 .credentialsProvider(PROVIDER)
@@ -50,16 +45,15 @@ class AwsConfiguration {
     }
 
     @Bean
-    public static S3Presigner s3Presigner() {
+    public S3Presigner s3Presigner() {
         return S3Presigner.builder()
                 .region(REGION)
                 .credentialsProvider(PROVIDER)
                 .build();
     }
 
-    @Lazy
     @Bean
-    public static SecretsManagerClient secretsManager() {
+    public SecretsManagerClient secretsManager() {
         return SecretsManagerClient.builder()
                 .region(REGION)
                 .credentialsProvider(PROVIDER)

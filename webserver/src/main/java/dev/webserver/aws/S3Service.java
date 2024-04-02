@@ -30,8 +30,10 @@ public class S3Service {
     public S3Service (S3Client s3Client, S3Presigner s3Presigner, Environment env) {
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
-        this.profile = !env.getProperty("spring.profiles.active", "default")
-                .equals("default");
+
+        String profile = env.getProperty("spring.profiles.active", "default");
+
+        this.profile = profile.equals("native-test") || profile.equals("test");
     }
 
     public void uploadToS3(File file, Map<String, String> metadata, String bucket, String key) {

@@ -128,14 +128,14 @@ public class MainTest {
 
         assertEquals(HttpStatusCode.valueOf(200), responseEntity.getStatusCode());
 
-        JsonNode node = mapper.readValue(responseEntity.getBody(), JsonNode.class).get("status");
+        var node = mapper.readValue(responseEntity.getBody(), JsonNode.class).get("status");
 
         assertEquals("UP", node.asText());
     }
 
     protected static String adminCookie() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("content-type", MediaType.APPLICATION_JSON_VALUE);
+        var headers = new HttpHeaders();
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var post = testTemplate.postForEntity(
                 PATH + "api/v1/worker/auth/login",

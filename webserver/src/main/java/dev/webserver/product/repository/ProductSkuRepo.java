@@ -40,10 +40,11 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     void updateProductSkuInventoryBySubtractingFromExistingInventory(String sku, int qty);
 
     /**
-     * Updates a {@link ProductSku} qty property by adding from current qty.
+     * Updates a {@link ProductSku} inventory property by adding qty in parameter to
+     * {@link ProductSku} inventory.
      *
      * @param sku is a unique string for every {@link ProductSku}.
-     * @param qty is the number to add to an existing {@link ProductSku}.
+     * @param qty the number to add to an existing {@link ProductSku} inventory.
      * */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -56,7 +57,7 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     void updateProductSkuInventoryByAddingToExistingInventory(String sku, int qty);
 
     /**
-     * Deletes a {@link ProductSku} by its property 'sku'.
+     * Deletes a {@link ProductSku} by its property sku.
      * */
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -64,7 +65,7 @@ public interface ProductSkuRepo extends JpaRepository<ProductSku, Long> {
     void deleteProductSkuBySku(String sku);
 
     /**
-     * Retrieves a {@link Product} based on the provided sku.
+     * Retrieves a {@link Product} based on a {@link ProductSku} sku property.
      * <p>
      * This method returns a {@link Product} entity by querying
      * its relationship with a {@link ProductSku}. It filters

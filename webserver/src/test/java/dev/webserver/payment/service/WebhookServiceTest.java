@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.cart.repository.CartItemRepo;
-import dev.webserver.payment.repository.*;
 import dev.webserver.thirdparty.ThirdPartyPaymentService;
-import dev.webserver.user.service.SarreBrandUserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -17,38 +14,17 @@ class WebhookServiceTest extends AbstractUnitTest {
     private WebhookService webhookService;
 
     @Mock
-    private SarreBrandUserService userService;
-    @Mock
     private ThirdPartyPaymentService thirdPartyPaymentService;
     @Mock
-    private AddressRepo addressRepo;
-    @Mock
-    private PaymentDetailRepo paymentDetailRepo;
-    @Mock
-    private PaymentAuthorizationRepo authorizationRepo;
-    @Mock
-    private OrderReservationRepo orderReservationRepo;
-    @Mock
-    private CartItemRepo cartItemRepo;
-    @Mock
-    private OrderDetailRepository orderDetailRepository;
+    private PaymentDetailService paymentDetailService;
 
     @BeforeEach
     void setUpWebHookService() {
-        webhookService = new WebhookService(
-                userService,
-                thirdPartyPaymentService,
-                addressRepo,
-                paymentDetailRepo,
-                authorizationRepo,
-                orderReservationRepo,
-                cartItemRepo,
-                orderDetailRepository
-        );
+        webhookService = new WebhookService(thirdPartyPaymentService, paymentDetailService);
     }
 
     @Test
-    void onSuccessWebHook() throws JsonProcessingException {
+    void shouldSuccessfullyProcessWebHookBasedOnMockData() throws JsonProcessingException {
         // given
         JsonNode node = new ObjectMapper().readValue(dummyPaystackWebhook, JsonNode.class);
 

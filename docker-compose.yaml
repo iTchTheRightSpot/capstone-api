@@ -1,40 +1,16 @@
 version: '3.9'
 services:
-
-  api:
-    container_name: api
-    image: "emmanuelu17/webserver:latest"
-    ports:
-      - "1997:1997"
-    depends_on:
-      mysql:
-        condition: service_healthy
-    environment:
-      USER_PRINCIPAL: french@admin.com
-      USER_PASSWORD: password
-      PORT: 1997
-      SPRING_PROFILES_ACTIVE:
-      DB_DOMAIN: "mysql"
-      DH_HOST: 3306
-      DB_NAME: sara_brand_db
-      SPRING_DATASOURCE_USERNAME: sara
-      SPRING_DATASOURCE_PASSWORD: sara
-      SARRE_USD_TO_CENT: 100
-      SARRE_NGN_TO_KOBO: 0.37
-      PAYSTACK_PUB_KEY: "public key"
-      PAYSTACK_SECRET_KEY: "you tried it haha"
-      CORS_UI_DOMAIN: http://localhost:4200/
-
+  
   mysql:
     image: "mysql:8.0"
-    container_name: mysql
+#    container_name: mysql
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: sara
-      MYSQL_DATABASE: sara_brand_db
-      MYSQL_USER: sara
-      MYSQL_PASSWORD: sara
+      MYSQL_ROOT_PASSWORD: integration
+      MYSQL_DATABASE: integration_db
+      MYSQL_USER: integration
+      MYSQL_PASSWORD: integration
     healthcheck:
       test: [ "CMD-SHELL", "mysqladmin ping -h localhost" ]
       interval: 10s
@@ -43,7 +19,34 @@ services:
     volumes:
       - db-data:/var/lib/mysql
 
+  api:
+    build: .
+#    container_name: api
+    ports:
+      - "1997:1997"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      USER_PRINCIPAL: admin@admin.com
+      USER_PASSWORD: password123
+      SERVER_PORT: 1997
+      SPRING_PROFILES_ACTIVE: default
+      API_PREFIX: "api/v1/"
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/integration_db
+      DB_DOMAIN: mysql
+      DH_HOST: 3306
+      DB_NAME: integration_db
+      SPRING_DATASOURCE_USERNAME: integration
+      SPRING_DATASOURCE_PASSWORD: integration
+      SARRE_USD_TO_CENT: 100
+      SARRE_NGN_TO_KOBO: 0.37
+      PAYSTACK_PUB_KEY: "public key"
+      PAYSTACK_SECRET_KEY: "you tried it haha"
+      CORS_UI_DOMAIN: http://localhost:4200/
+      AWS_BUCKET: my-bucket
+      AWS_PAYSTACK_SECRET_ID: secrete-id
+      ON_CUSTOM_PROFILE: native-test
+
 volumes:
   db-data: {}
-
-# SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sara_brand_db

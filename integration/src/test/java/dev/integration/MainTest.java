@@ -15,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.Network;
@@ -25,6 +26,7 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.junit.jupiter.Container;
 
+import java.io.File;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -58,7 +60,7 @@ public class MainTest {
             .withLogConsumer(new Slf4jLogConsumer(log));
 
     static {
-        map.put("SPRING_PROFILES_ACTIVE", "native-test");
+        map.put("SPRING_PROFILES_ACTIVE", "default");
         map.put("SERVER_PORT", "8081");
         map.put("API_PREFIX", "api/v1/");
         map.put("USER_PRINCIPAL", "admin@admin.com");
@@ -91,26 +93,43 @@ public class MainTest {
             .withReuse(true)
             .withLogConsumer(new Slf4jLogConsumer(log));
 
+    @SuppressWarnings("all")
+    private static DockerComposeContainer environment =
+            new DockerComposeContainer(new File(Paths.get("../docker-compose.yaml").toUri()))
+                    .withExposedService("mysql", 3306, Wait.forListeningPort())
+                    .withExposedService("api", 1997, Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(30))
+//                                    .forHttp("/actuator/health")
+//                                    .forStatusCode(200)
+//                            .usingTls()
+                    );
+
+
     @BeforeAll
     void beforeAllTests() {
-        mysql.start();
+//        mysql.start();
+//
+//        assertTrue(mysql.isCreated());
+//        assertTrue(mysql.isRunning());
+//
+//        webserver.start();
+//
+//        assertTrue(webserver.isCreated());
+//        assertTrue(webserver.isRunning());
+//
+//        ScriptUtils.runInitScript(
+//                new JdbcDatabaseDelegate(mysql, ""),
+//                "db/init.sql");
 
-        assertTrue(mysql.isCreated());
-        assertTrue(mysql.isRunning());
+//        PATH = String
+//                .format("http://%s:%d/", webserver.getHost(), webserver.getFirstMappedPort());
 
-        webserver.start();
+        environment.start();
 
-        assertTrue(webserver.isCreated());
-        assertTrue(webserver.isRunning());
-
-        ScriptUtils.runInitScript(
-                new JdbcDatabaseDelegate(mysql, ""),
-                "db/init.sql");
+        final var mySqlHostname = environment.getServiceHost("api", 1997);
+        final var hostMySqlProtocolPort = environment.getServicePort("api", 1997);
 
         PATH = String
-                .format("http://%s:%d/", webserver.getHost(), webserver.getFirstMappedPort());
-
-//        PATH = "http://localhost:1997/";
+                .format("http://%s:%d/", mySqlHostname, hostMySqlProtocolPort);
 
         COOKIE = adminCookie();
     }

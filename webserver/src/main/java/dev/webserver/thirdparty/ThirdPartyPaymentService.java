@@ -28,8 +28,9 @@ public class ThirdPartyPaymentService {
         String pubKey = this.env.getProperty("paystack.pub.key", "");
         String secretKey = this.env.getProperty("paystack.secret.key", "");
 
-        if (profile.equalsIgnoreCase("test")
-                || profile.equalsIgnoreCase("native-test")
+        if (env.getProperty("spring.profiles.active", "default")
+                .equalsIgnoreCase("test")
+                || env.getProperty("on.native.profile") != null
                 || (!pubKey.isBlank() && !secretKey.isBlank())
         ) {
             return new PaymentCredentialObj(pubKey, secretKey);

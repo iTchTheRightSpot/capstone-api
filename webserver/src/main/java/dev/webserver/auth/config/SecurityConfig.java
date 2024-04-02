@@ -58,7 +58,7 @@ public class SecurityConfig {
     private String CORSDOMAIN;
     @Value("/${api.endpoint.baseurl}")
     private String BASEURL;
-    @Value("${spring.profiles.active}")
+    @Value("${on.custom.profile}")
     private String PROFILE;
 
     @Bean

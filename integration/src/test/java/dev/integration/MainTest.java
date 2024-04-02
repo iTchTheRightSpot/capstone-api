@@ -16,20 +16,17 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.ext.ScriptUtils;
-import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.junit.jupiter.Container;
 
 import java.io.File;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,80 +47,27 @@ public class MainTest {
     protected static String COOKIE;
 
     @Container
-    private static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
-            .withDatabaseName("webserver_module_db")
-            .withUsername("webserver_module")
-            .withPassword("webserver_module")
-            .withNetwork(network)
-            .withNetworkAliases("mysql")
-            .withReuse(true)
-            .withLogConsumer(new Slf4jLogConsumer(log));
-
-    static {
-        map.put("SPRING_PROFILES_ACTIVE", "default");
-        map.put("SERVER_PORT", "8081");
-        map.put("API_PREFIX", "api/v1/");
-        map.put("USER_PRINCIPAL", "admin@admin.com");
-        map.put("USER_PASSWORD", "password123");
-        map.put("DB_DOMAIN", "mysql");
-        map.put("DB_HOST", "3306");
-        map.put("DB_NAME", "webserver_module_db");
-        map.put("SPRING_DATASOURCE_USERNAME", "webserver_module");
-        map.put("SPRING_DATASOURCE_PASSWORD", "webserver_module");
-        map.put("CORS_UI_DOMAIN", "http://localhost:4200/");
-        map.put("AWS_BUCKET", "webserver_module_bucket");
-        map.put("AWS_PAYSTACK_SECRET_ID", "my-paystack-key");
-        map.put("PAYSTACK_PUB_KEY", "public key");
-        map.put("PAYSTACK_SECRET_KEY", "you tried it haha");
-        map.put("SARRE_USD_TO_CENT", "100");
-        map.put("SARRE_NGN_TO_KOB0", "0.37");
-    }
-
-    @Container
-    private static final GenericContainer<?> webserver = new GenericContainer<>(
-            new ImageFromDockerfile("webserver-module", false)
-                    .withDockerfile(Paths.get("../Dockerfile")))
-            .withNetwork(network)
-            .dependsOn(mysql)
-            .withEnv(map)
-            .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(MainTest.class)))
-            .waitingFor(Wait.forHttp("/actuator/health"))
-            .withExposedPorts(8081)
-            .withStartupTimeout(Duration.of(60, ChronoUnit.MINUTES))
-            .withReuse(true)
-            .withLogConsumer(new Slf4jLogConsumer(log));
-
     @SuppressWarnings("all")
     private static DockerComposeContainer environment =
             new DockerComposeContainer(new File(Paths.get("../docker-compose.yaml").toUri()))
                     .withExposedService("mysql", 3306, Wait.forListeningPort())
-                    .withExposedService("api", 1997, Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(30))
-//                                    .forHttp("/actuator/health")
-//                                    .forStatusCode(200)
-//                            .usingTls()
-                    );
-
+                    .withExposedService("api", 1997, Wait.forListeningPort()
+                                    .withStartupTimeout(Duration.ofMinutes(30)));
 
     @BeforeAll
     void beforeAllTests() {
-//        mysql.start();
-//
-//        assertTrue(mysql.isCreated());
-//        assertTrue(mysql.isRunning());
-//
-//        webserver.start();
-//
-//        assertTrue(webserver.isCreated());
-//        assertTrue(webserver.isRunning());
-//
-//        ScriptUtils.runInitScript(
-//                new JdbcDatabaseDelegate(mysql, ""),
-//                "db/init.sql");
-
-//        PATH = String
-//                .format("http://%s:%d/", webserver.getHost(), webserver.getFirstMappedPort());
-
         environment.start();
+
+        var mysqlOptional = environment.getContainerByServiceName("mysql");
+        var apiOptional = environment.getContainerByServiceName("api");
+
+
+        assertTrue(mysqlOptional.isPresent());
+        assertTrue(apiOptional.isPresent());
+
+        ScriptUtils.runInitScript(
+                new JdbcDatabaseDelegate((JdbcDatabaseContainer<?>) mysqlOptional.get(), ""),
+                "db/init.sql");
 
         final var mySqlHostname = environment.getServiceHost("api", 1997);
         final var hostMySqlProtocolPort = environment.getServicePort("api", 1997);

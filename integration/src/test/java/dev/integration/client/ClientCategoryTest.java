@@ -26,28 +26,28 @@ class ClientCategoryTest extends MainTest {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
     }
 
-//    @Test
-//    void shouldSuccessfullyRetrieveAllCategories() {
-//        var get = testTemplate.exchange(
-//                PATH + "api/v1/client/category",
-//                HttpMethod.GET,
-//                new HttpEntity<>(headers),
-//                new ParameterizedTypeReference<List<CategoryResponse>>() {}
-//        );
-//
-//        assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
-//    }
-//
-//    @Test
-//    void shouldSuccessfullyRetrieveProductsBaseOnCategory() {
-//        var get = testTemplate.exchange(
-//                PATH + "api/v1/client/category/products?category_id=1",
-//                HttpMethod.GET,
-//                new HttpEntity<>(headers),
-//                Object.class
-//        );
-//
-//        assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
-//    }
+    @Test
+    void shouldSuccessfullyRetrieveAllCategories() {
+        var get = testTemplate.exchange(
+                PATH + "api/v1/client/category",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                new ParameterizedTypeReference<List<CategoryResponse>>() {}
+        );
+
+        assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
+    }
+
+    @Test
+    void shouldSuccessfullyRetrieveProductsBaseOnCategory() {
+        var get = testTemplate.exchange(
+                PATH + "api/v1/client/category/products?category_id=1",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                Object.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
+    }
 
 }

@@ -6,7 +6,6 @@ import dev.webserver.cart.repository.CartItemRepo;
 import dev.webserver.cart.repository.ShoppingSessionRepo;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomNotFoundException;
-import dev.webserver.payment.projection.TotalPojo;
 import dev.webserver.shipping.entity.ShipSetting;
 import dev.webserver.shipping.service.ShippingService;
 import dev.webserver.tax.Tax;
@@ -22,7 +21,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -59,7 +57,7 @@ public class CheckoutService {
     public Checkout checkout(HttpServletRequest req, String country, SarreCurrency currency) {
         CustomObject obj = validateCurrentShoppingSession(req, country);
 
-        List<TotalPojo> list = this.cartItemRepo
+        var list = this.cartItemRepo
                 .amountToPayForAllCartItemsForShoppingSession(obj.session().shoppingSessionId(), currency);
 
         BigDecimal shipCost = currency.equals(SarreCurrency.USD)

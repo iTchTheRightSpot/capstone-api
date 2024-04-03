@@ -32,7 +32,7 @@ services:
       USER_PRINCIPAL: admin@admin.com
       USER_PASSWORD: password123
       SERVER_PORT: 1997
-      SPRING_PROFILES_ACTIVE: default
+      SPRING_PROFILES_ACTIVE: native-test
       API_PREFIX: "api/v1/"
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/integration_db
       DB_DOMAIN: mysql
@@ -47,13 +47,12 @@ services:
       CORS_UI_DOMAIN: http://localhost:4200/
       AWS_BUCKET: my-bucket
       AWS_PAYSTACK_SECRET_ID: secrete-id
-      ON_CUSTOM_PROFILE: native-test
 
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:1997/actuator/health" ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 3
 
 volumes:
   db-data: {}

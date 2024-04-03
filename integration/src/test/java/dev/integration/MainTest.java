@@ -4,15 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.auth.dto.LoginDto;
+import dev.webserver.cart.response.CartResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
 import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
@@ -21,6 +19,7 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -31,6 +30,7 @@ public class MainTest {
     protected static final TestRestTemplate testTemplate = new TestRestTemplate();
     protected static String PATH;
     protected static String COOKIE;
+    protected static String CARTCOOKIE;
 
     @Container
     @SuppressWarnings("all")
@@ -48,10 +48,12 @@ public class MainTest {
         final int port = environment.getServicePort("api", 1997);
 
         PATH = String.format("http://%s:%d/", host, port);
+//        PATH = "http://localhost:1997/";
 
         CustomRunInitScripts.processScript("integration", "integration");
 
         COOKIE = adminCookie();
+        CARTCOOKIE = cartCookie();
     }
 
     @Test
@@ -91,6 +93,28 @@ public class MainTest {
                 .filter(cookie -> cookie.startsWith("JSESSIONID"))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("admin cookie is empty"));
+    }
+
+    protected static String cartCookie() {
+        var headers = new HttpHeaders();
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+
+        var get = testTemplate.exchange(
+                PATH + "api/v1/cart",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                new ParameterizedTypeReference<List<CartResponse>>() {}
+        );
+
+        var cookies = get.getHeaders().get(HttpHeaders.SET_COOKIE);
+
+        if (cookies == null || cookies.isEmpty())
+            throw new RuntimeException("admin cookie is empty");
+
+        return cookies.stream()
+                .filter(cookie -> cookie.startsWith("CARTCOOKIE"))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("cart cookie is empty"));
     }
 
 }

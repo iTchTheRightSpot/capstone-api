@@ -26,7 +26,7 @@ class AwsConfiguration {
 
         REGION = Region.of(region);
 
-        String profile = env.getProperty("on.custom.profile", "aws");
+        String profile = env.getProperty("spring.profiles.active", "default");
 
         log.info("S3Config current active profile {}", profile);
 

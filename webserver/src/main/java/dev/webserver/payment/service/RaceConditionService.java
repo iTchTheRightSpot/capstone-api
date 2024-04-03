@@ -119,7 +119,6 @@ public class RaceConditionService {
                 );
 
         // if ngn remove leading zeros
-
         var secret = this.thirdPartyService.payStackCredentials();
         return new PaymentResponse(
                 reference,

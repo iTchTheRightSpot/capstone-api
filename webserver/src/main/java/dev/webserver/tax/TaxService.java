@@ -28,10 +28,10 @@ public class TaxService {
     }
 
     /**
-     * Update the default {@code Tax} added in db/migration/V15
+     * Update the default {@link Tax} added in db/migration/V15.
      *
-     * @param dto passed from controller
-     * @throws CustomNotFoundException if {@code Tax} percentage
+     * @param dto passed from controller.
+     * @throws CustomNotFoundException if {@link Tax} percentage
      *                                 isn't in the right format.
      */
     public void update(TaxDto dto) {

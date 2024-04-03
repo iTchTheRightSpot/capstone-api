@@ -19,9 +19,9 @@ public interface ShippingRepo extends JpaRepository<ShipSetting, Long> {
     void deleteShipSettingById(long id);
 
     /**
-     * Updates {@code ShipSetting} by categoryId with the provided country and prices.
+     * Updates {@link ShipSetting} by categoryId with the provided country and prices.
      * <p>
-     * This method updates the {@code ShipSetting} identified by the given categoryId with the
+     * This method updates the {@link ShipSetting} identified by the given categoryId with the
      * specified country and prices. If the categoryId matches a default value entered in
      * db/migration/V13 set country to 'default'; otherwise, the provided country is used.
      *
@@ -49,9 +49,9 @@ public interface ShippingRepo extends JpaRepository<ShipSetting, Long> {
     void updateShipSettingById(long id, String country, BigDecimal ngn, BigDecimal usd);
 
     /**
-     * Retrieves a {@code Shipping} entity based on the provided country.
+     * Retrieves a {@link ShipSetting} entity based on the provided country.
      * If a country is specified, it returns the corresponding
-     * {@code Shipping} entity, otherwise, it returns a default entity
+     * {@link ShipSetting} entity, otherwise, it returns a default entity
      * where the country name is 'default'. For better understanding,
      * the native query is:
      * SELECT * FROM shipping s WHERE s.country = (
@@ -59,11 +59,11 @@ public interface ShippingRepo extends JpaRepository<ShipSetting, Long> {
      * :country, 'default'))
      *
      * @param country The country for which to retrieve the
-     *                {@code Shipping} entity. If {@code Shipping} does
+     *                {@link ShipSetting} entity. If {@link ShipSetting} does
      *                not exist, a default entity with country 'default'
      *                is returned.
-     * @return An {@code Optional} containing the retrieved {@code Shipping}
-     * entity, or an empty {@code Optional} if default entity is not found.
+     * @return An {@link Optional} containing the retrieved {@code Shipping}
+     * entity, or an empty {@link Optional} if default entity is not found.
      */
     @Query("""
     SELECT s FROM ShipSetting s

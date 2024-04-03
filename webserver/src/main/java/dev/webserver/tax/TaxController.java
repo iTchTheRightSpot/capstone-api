@@ -16,13 +16,13 @@ public class TaxController {
 
     @GetMapping(produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
-    List<TaxDto> taxes () {
+    public List<TaxDto> taxes () {
         return service.taxes();
     }
 
     @PutMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void update (@Valid @RequestBody TaxDto dto) {
+    public void update (@Valid @RequestBody TaxDto dto) {
         service.update(dto);
     }
 

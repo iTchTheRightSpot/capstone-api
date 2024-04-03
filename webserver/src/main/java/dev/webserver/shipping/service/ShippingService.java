@@ -40,10 +40,10 @@ public class ShippingService {
     }
 
     /**
-     * Saves a {@code ShipSetting} object to the db.
+     * Saves a {@link ShipSetting} object to the db.
      *
-     * @param dto is of {@code ShippingDto} which contains the
-     *            necessary info to save a {@code Shipping} object.
+     * @param dto is of {@link ShippingDto} which contains the
+     *            necessary info to save a {@link ShipSetting} object.
      * @throws DuplicateException if dto.country() exists.
      * */
     public void create(final ShippingDto dto) {
@@ -56,10 +56,10 @@ public class ShippingService {
     }
 
     /**
-     * Updates a {@code ShipSetting} object.
+     * Updates a {@link ShipSetting} object.
      *
-     * @param dto is of {@code ShippingMapper} which contains the
-     *            necessary info to update a {@code Shipping} object.
+     * @param dto is of {@link ShippingMapper} which contains the
+     *            necessary info to update a {@link ShipSetting} object.
      * @throws DuplicateException if dto.country() exists.
      * */
     public void update(final ShippingMapper dto) {
@@ -77,9 +77,9 @@ public class ShippingService {
     }
 
     /**
-     * Deletes a {@code ShipSetting} by its primary key.
+     * Deletes a {@link ShipSetting} by its primary key.
      *
-     * @param id is a primary key for a {@code Shipping} object.
+     * @param id is a primary key for a {@link ShipSetting} object.
      * @throws ResourceAttachedException if categoryId is equal to 1.
      * */
     public void delete(final long id) {

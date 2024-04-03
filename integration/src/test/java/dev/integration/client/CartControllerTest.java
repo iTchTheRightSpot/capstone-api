@@ -1,6 +1,7 @@
 package dev.integration.client;
 
 import dev.integration.MainTest;
+import dev.integration.TestData;
 import dev.webserver.cart.dto.CartDTO;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
@@ -18,10 +19,11 @@ class CartControllerTest extends MainTest {
 
     @BeforeAll
     static void before() {
-        assertNotNull(CARTCOOKIE);
+        String cartcookie = TestData.CARTCOOKIE(testTemplate, PATH);
+        assertNotNull(cartcookie);
 
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.COOKIE, CARTCOOKIE);
+        headers.set(HttpHeaders.COOKIE, cartcookie);
     }
 
     @Order(1)

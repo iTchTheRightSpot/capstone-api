@@ -9,7 +9,6 @@ import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.OutOfStockException;
 import dev.webserver.payment.entity.OrderReservation;
-import dev.webserver.payment.projection.TotalPojo;
 import dev.webserver.payment.repository.OrderReservationRepo;
 import dev.webserver.payment.response.PaymentResponse;
 import dev.webserver.product.entity.ProductSku;
@@ -106,7 +105,7 @@ public class RaceConditionService {
 
         raceConditionImpl(reference, reservations, obj.cartItems(), toExpire, obj.session());
 
-        List<TotalPojo> list = this.cartItemRepo
+        var list = this.cartItemRepo
                 .amountToPayForAllCartItemsForShoppingSession(obj.session().shoppingSessionId(), currency);
 
         BigDecimal total = CustomUtil

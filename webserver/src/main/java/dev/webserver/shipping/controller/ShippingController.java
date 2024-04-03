@@ -25,25 +25,25 @@ public class ShippingController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(produces = "application/json")
-    List<ShippingMapper> allShipping() {
+    public List<ShippingMapper> allShipping() {
         return service.shipping();
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = "application/json")
-    void create(@Valid @RequestBody ShippingDto dto) {
+    public void create(@Valid @RequestBody ShippingDto dto) {
         service.create(dto);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping(consumes = "application/json")
-    void update(@Valid @RequestBody ShippingMapper dto) {
+    public void update(@Valid @RequestBody ShippingMapper dto) {
         service.update(dto);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{shipping_id}")
-    void delete(@NotNull @PathVariable("shipping_id") Long id) {
+    public void delete(@NotNull @PathVariable("shipping_id") Long id) {
         service.delete(id);
     }
 

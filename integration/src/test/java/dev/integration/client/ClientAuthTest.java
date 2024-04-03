@@ -4,6 +4,7 @@ import dev.integration.MainTest;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.http.HttpEntity;
@@ -24,7 +25,8 @@ class ClientAuthTest extends MainTest {
     }
 
     @Test
-    void shouldSuccessfullyRegister_and_login_AUser() {
+    @Order(1)
+    void shouldSuccessfullyRegisterAUser() {
         var dto = new RegisterDto(
                 "SEUY",
                 "Development",
@@ -41,7 +43,11 @@ class ClientAuthTest extends MainTest {
         );
 
         assertEquals(HttpStatusCode.valueOf(201), register.getStatusCode());
+    }
 
+    @Test
+    @Order(2)
+    void shouldSuccessfullyLoginAUser() {
         var login = testTemplate.postForEntity(
                 PATH + "api/v1/client/auth/login",
                 new HttpEntity<>(new LoginDto("SEUY@SEUY.com", "password123"), headers),

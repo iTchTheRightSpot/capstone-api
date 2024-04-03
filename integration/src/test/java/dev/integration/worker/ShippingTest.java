@@ -2,24 +2,26 @@ package dev.integration.worker;
 
 import dev.integration.MainTest;
 import dev.integration.TestData;
-import dev.webserver.category.dto.CategoryDTO;
-import dev.webserver.category.dto.UpdateCategoryDTO;
-import dev.webserver.category.response.WorkerCategoryResponse;
-import dev.webserver.product.response.ProductResponse;
+import dev.webserver.shipping.ShippingDto;
+import dev.webserver.shipping.ShippingMapper;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.data.domain.Page;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class WorkerCategoryTest extends MainTest {
+class ShippingTest extends MainTest {
 
     private static final HttpHeaders headers = new HttpHeaders();
+    private final String path = PATH + "api/v1/shipping";
 
     @BeforeAll
     static void before() {
@@ -31,34 +33,25 @@ class WorkerCategoryTest extends MainTest {
     }
 
     @Test
-    void shouldSuccessfullyRetrieveACategory() {
+    @Order(1)
+    void shouldSuccessfullyRetrieveShippingObjects() {
         var get = testTemplate.exchange(
-                PATH + "api/v1/worker/category",
+                path,
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                WorkerCategoryResponse.class
+                new ParameterizedTypeReference<List<ShippingMapper>>() {}
         );
-
         assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
     }
 
     @Test
-    void shouldSuccessfullyRetrieveProductsBaseOnCategory() {
-        var get = testTemplate.exchange(
-                PATH + "api/v1/worker/category/products?category_id=1",
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                Object.class
-        );
-
-        assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
-    }
-
-    @Test
-    void shouldSuccessfullyCreateACategory() {
+    @Order(2)
+    void shouldSuccessfullyCreateShippingDetails() {
         var post = testTemplate.postForEntity(
-                PATH + "api/v1/worker/category",
-                new HttpEntity<>(new CategoryDTO("worker-cat", true, null), headers),
+                path,
+                new HttpEntity<>(new ShippingDto("brazil",
+                        new BigDecimal("2410"), new BigDecimal("15.99")),
+                        headers),
                 Void.class
         );
 
@@ -66,21 +59,25 @@ class WorkerCategoryTest extends MainTest {
     }
 
     @Test
-    void shouldSuccessfullyUpdateACategory() {
-        var update = testTemplate.exchange(
-                PATH + "api/v1/worker/category",
+    @Order(3)
+    void shouldSuccessfullyUpdateShippingSetting() {
+        var put = testTemplate.exchange(
+                path,
                 HttpMethod.PUT,
-                new HttpEntity<>(new UpdateCategoryDTO(1L, null, "frank", false), headers),
+                new HttpEntity<>(new ShippingMapper(3L, "Ecuador",
+                        new BigDecimal("2410"), new BigDecimal("15.99")),
+                        headers),
                 Void.class
         );
 
-        assertEquals(HttpStatusCode.valueOf(204), update.getStatusCode());
+        assertEquals(HttpStatusCode.valueOf(204), put.getStatusCode());
     }
 
     @Test
-    void shouldSuccessfullyDeleteACategory() {
+    @Order(4)
+    void shouldSuccessfullyDeleteShippingSetting() {
         var delete = testTemplate.exchange(
-                PATH + "api/v1/worker/category/2",
+                path + "/3",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class
@@ -90,9 +87,10 @@ class WorkerCategoryTest extends MainTest {
     }
 
     @Test
-    void shouldThrowErrorWhenDeletingACategoryAsItHasDetailsAttached() {
+    @Order(5)
+    void shouldNotSuccessfullyDeleteDefaultShippingSetting() {
         var delete = testTemplate.exchange(
-                PATH + "api/v1/worker/category/1",
+                path + "/1",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class

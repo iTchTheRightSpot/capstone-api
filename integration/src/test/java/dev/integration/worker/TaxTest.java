@@ -1,6 +1,7 @@
 package dev.integration.worker;
 
 import dev.integration.MainTest;
+import dev.integration.TestData;
 import dev.webserver.tax.TaxDto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
@@ -21,10 +22,11 @@ class TaxTest extends MainTest {
 
     @BeforeAll
     static void before() {
-        assertNotNull(COOKIE);
+        String cookie = TestData.ADMINCOOKIE(testTemplate, PATH);
+        assertNotNull(cookie);
 
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.COOKIE, COOKIE);
+        headers.set(HttpHeaders.COOKIE, cookie);
     }
 
     @Order(1)

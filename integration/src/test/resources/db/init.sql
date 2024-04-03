@@ -20,6 +20,5 @@ VALUES ('product-sku-1', 'medium', 10, 1),
        ('product-sku-3', 'large', 2, 3);
 
 INSERT IGNORE INTO ship_setting(country, ngn_price, usd_price)
-VALUES ('default', 30250, 40.59),
-       ('nigeria', 15750, 10.59),
+VALUES ('nigeria', 15750, 10.59),
        ('canada', 55000, 50.59);

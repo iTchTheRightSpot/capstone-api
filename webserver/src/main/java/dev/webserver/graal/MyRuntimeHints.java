@@ -12,6 +12,7 @@ import dev.webserver.checkout.CustomObject;
 import dev.webserver.payment.dto.OrderHistoryDTO;
 import dev.webserver.payment.dto.PaymentDTO;
 import dev.webserver.payment.dto.SkuQtyDTO;
+import dev.webserver.payment.response.PaymentResponse;
 import dev.webserver.product.dto.*;
 import dev.webserver.product.response.DetailResponse;
 import dev.webserver.product.response.Variant;
@@ -77,6 +78,8 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
         // Tax
         hints.serialization().registerType(TaxDto.class);
 
+        // Payment
+        hints.serialization().registerType(PaymentResponse.class);
     }
 
 }

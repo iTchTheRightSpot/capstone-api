@@ -25,9 +25,10 @@ class WorkerProductDetailTest extends MainTest {
 
     @BeforeAll
     static void before() {
-        assertNotNull(COOKIE);
+        String cookie = TestData.ADMINCOOKIE(testTemplate, PATH);
+        assertNotNull(cookie);
 
-        headers.set(HttpHeaders.COOKIE, COOKIE);
+        headers.set(HttpHeaders.COOKIE, cookie);
     }
 
     @Test

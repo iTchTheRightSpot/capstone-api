@@ -40,6 +40,7 @@ import static java.math.RoundingMode.FLOOR;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(rollbackFor = Exception.class)
 public class WorkerProductService {
 
     private static final Logger log = LoggerFactory.getLogger(WorkerProductService.class);
@@ -139,7 +140,6 @@ public class WorkerProductService {
      * @throws CustomServerError      is thrown if File is not an image.
      * @throws DuplicateException      is thrown if dto image exists in for Product.
      */
-    @Transactional(rollbackFor = CustomServerError.class)
     public void create(final CreateProductDTO dto, final MultipartFile[] files) {
         if (!CustomUtil.validateContainsCurrencies(dto.priceCurrency())) {
             throw new CustomInvalidFormatException("please check currencies and prices");
@@ -197,7 +197,6 @@ public class WorkerProductService {
      * @throws DuplicateException      when new product name exist but not associated to product uuid.
      * @throws CustomInvalidFormatException if price is less than zero.
      */
-    @Transactional
     public void update(final UpdateProductDTO dto) {
         if (dto.price().compareTo(BigDecimal.ZERO) < 0) {
             throw new CustomInvalidFormatException("price cannot be zero");
@@ -237,7 +236,6 @@ public class WorkerProductService {
      * @throws CustomServerError               is thrown when an error occurs when deleting from s3.
      * @see <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/DeleteMultiObjects.java">documentation</a>
      */
-    @Transactional(rollbackFor = {CustomServerError.class, ResourceAttachedException.class})
     public void delete(final String uuid) {
         final List<ObjectIdentifier> keys = this.productRepo.productImagesByProductUuid(uuid)
                 .stream() //

@@ -29,6 +29,7 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(rollbackFor = Exception.class)
 public class PaymentDetailService {
 
     static final Logger log = LoggerFactory.getLogger(PaymentDetailService.class);
@@ -60,7 +61,6 @@ public class PaymentDetailService {
      *
      * @param data contains details of a successful payment.
      */
-    @Transactional
     public void onSuccessfulPayment(final JsonNode data) {
         // TODO only process in production
         final String domain = data.get("domain").textValue();

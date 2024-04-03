@@ -5,7 +5,6 @@ import dev.webserver.cart.entity.CartItem;
 import dev.webserver.cart.entity.ShoppingSession;
 import dev.webserver.cart.repository.CartItemRepo;
 import dev.webserver.cart.repository.ShoppingSessionRepo;
-import dev.webserver.exception.CustomServerError;
 import dev.webserver.payment.entity.OrderReservation;
 import dev.webserver.payment.repository.OrderReservationRepo;
 import dev.webserver.payment.service.PaymentDetailService;
@@ -33,6 +32,7 @@ import static dev.webserver.enumeration.ReservationStatus.PENDING;
 import static org.springframework.http.HttpStatus.*;
 
 @Component
+@Transactional(rollbackFor = Exception.class)
 class CronJob {
 
     private static final Logger log = LoggerFactory.getLogger(CronJob.class);
@@ -68,7 +68,6 @@ class CronJob {
      * @see <a href="https://docs.spring.io/spring-framework/reference/integration/scheduling.html">documentation</a>
      * */
     @Scheduled(fixedRate = 15, timeUnit = TimeUnit.MINUTES, zone = "UTC")
-    @Transactional
     public void schedule() {
         onDeleteShoppingSessions();
         onDeleteOrderReservations();
@@ -99,7 +98,6 @@ class CronJob {
      * @see
      * <a href="https://paystack.com/docs/api/integration/#update-timeout">updating the timeout</a>.
      */
-    @Transactional(rollbackFor = CustomServerError.class)
     public void onDeleteOrderReservations() {
         var date = CustomUtil
                 .toUTC(Date.from(Instant.now().plus(5, ChronoUnit.MINUTES)));

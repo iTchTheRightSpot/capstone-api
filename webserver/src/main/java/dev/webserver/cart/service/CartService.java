@@ -11,10 +11,10 @@ import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomInvalidFormatException;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.OutOfStockException;
+import dev.webserver.product.entity.Product;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.service.ProductSkuService;
 import dev.webserver.util.CustomUtil;
-import dev.webserver.product.entity.Product;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,6 +38,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(rollbackFor = Exception.class)
 public class CartService {
 
     private static final Logger log = LoggerFactory.getLogger(CartService.class);
@@ -200,7 +201,6 @@ public class CartService {
      * requested quantity exceeds available inventory.
      * @throws CustomInvalidFormatException if the cookie is invalid.
      */
-    @Transactional
     public void create(CartDTO dto, HttpServletRequest req) {
         Cookie cookie = CustomUtil.cookie(req, CARTCOOKIE);
 
@@ -279,7 +279,6 @@ public class CartService {
      *            every device that visit out application.
      * @param sku unique {@link ProductSku}.
      * */
-    @Transactional
     public void deleteFromCart(HttpServletRequest req, String sku) {
         Cookie cookie = CustomUtil.cookie(req, CARTCOOKIE);
 

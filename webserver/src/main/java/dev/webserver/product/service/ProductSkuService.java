@@ -18,6 +18,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(rollbackFor = Exception.class)
 public class ProductSkuService {
 
     private static final Logger log = LoggerFactory.getLogger(ProductSkuService.class);
@@ -27,7 +28,6 @@ public class ProductSkuService {
     /**
      * Saves {@link ProductSku} based on {@link SizeInventoryDTO} array.
      */
-    @Transactional
     public void save(SizeInventoryDTO[] arr, ProductDetail detail) {
         for (var dto : arr) {
             this.repository.save(
@@ -50,7 +50,6 @@ public class ProductSkuService {
      * @throws ResourceAttachedException if {@link ProductSku}
      * has children entities attached to it.
      * */
-    @Transactional
     public void delete(final String sku) {
         try {
             this.repository.deleteProductSkuBySku(sku);

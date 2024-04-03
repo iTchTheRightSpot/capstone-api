@@ -58,7 +58,7 @@ public class AuthService {
      * @param key is of {@code RoleEnum}. If is equal to CLIENT, we add a
      *            jwt cookie to {@code HttpServletResponse}.
      */
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     public void register(HttpServletResponse res, RegisterDto dto, RoleEnum key) {
         if (key.equals(CLIENT)) {
             clientRegister(dto, res);

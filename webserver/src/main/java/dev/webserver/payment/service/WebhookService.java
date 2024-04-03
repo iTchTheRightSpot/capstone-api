@@ -1,6 +1,5 @@
 package dev.webserver.payment.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.payment.util.WebHookUtil;
@@ -19,6 +18,7 @@ import java.security.NoSuchAlgorithmException;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(rollbackFor = Exception.class)
 public class WebhookService {
 
     private static final Logger log = LoggerFactory.getLogger(WebhookService.class);
@@ -34,10 +34,6 @@ public class WebhookService {
      * @throws CustomServerError if there is an error parsing the request or an invalid request
      * is received from Paystack.
      */
-    @Transactional(rollbackFor = {
-            IOException.class, CustomServerError.class, JsonProcessingException.class,
-            InvalidKeyException.class
-    })
     public void webhook(HttpServletRequest req) {
         try {
             log.info("webhook received");

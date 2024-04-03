@@ -29,6 +29,7 @@ import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(rollbackFor = Exception.class)
 public class WorkerProductDetailService {
 
     @Value(value = "${aws.bucket}")
@@ -85,7 +86,6 @@ public class WorkerProductDetailService {
      * @throws CustomNotFoundException is thrown if product uuid does not exist.
      * @throws DuplicateException      is thrown if product colour exists.
      */
-    @Transactional(rollbackFor = CustomNotFoundException.class)
     public void create(ProductDetailDto dto, MultipartFile[] multipartFiles) {
         var product = this.productRepo
                 .productByUuid(dto.uuid())
@@ -125,7 +125,6 @@ public class WorkerProductDetailService {
      *
      * @param dto of type {@link UpdateProductDetailDto}.
      */
-    @Transactional
     public void update(final UpdateProductDetailDto dto) {
         this.detailRepo.updateProductSkuAndProductDetailByProductSku(
                 dto.sku(),
@@ -145,7 +144,6 @@ public class WorkerProductDetailService {
      * @throws CustomNotFoundException is thrown when sku does not exist.
      * @throws S3Exception             is thrown when deleting from s3.
      */
-    @Transactional
     public void delete(final String sku) {
         var detail = productDetailByProductSku(sku);
 

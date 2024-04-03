@@ -21,6 +21,7 @@ import java.util.List;
  * */
 @Service
 @RequiredArgsConstructor
+@Transactional(rollbackFor = Exception.class)
 public class ShippingService {
 
     private static final Logger log = LoggerFactory.getLogger(ShippingService.class);
@@ -45,7 +46,6 @@ public class ShippingService {
      *            necessary info to save a {@code Shipping} object.
      * @throws DuplicateException if dto.country() exists.
      * */
-    @Transactional
     public void create(final ShippingDto dto) {
         try {
             repository
@@ -62,7 +62,6 @@ public class ShippingService {
      *            necessary info to update a {@code Shipping} object.
      * @throws DuplicateException if dto.country() exists.
      * */
-    @Transactional
     public void update(final ShippingMapper dto) {
         try {
             repository
@@ -83,7 +82,6 @@ public class ShippingService {
      * @param id is a primary key for a {@code Shipping} object.
      * @throws ResourceAttachedException if categoryId is equal to 1.
      * */
-    @Transactional
     public void delete(final long id) {
         if (id == 1)
             throw new ResourceAttachedException("cannot delete default country.");

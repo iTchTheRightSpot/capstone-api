@@ -14,9 +14,9 @@ import dev.webserver.payment.repository.OrderReservationRepo;
 import dev.webserver.payment.response.PaymentResponse;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.ProductSkuRepo;
+import dev.webserver.shipping.entity.ShipSetting;
 import dev.webserver.thirdparty.ThirdPartyPaymentService;
 import dev.webserver.util.CustomUtil;
-import dev.webserver.shipping.entity.ShipSetting;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -40,6 +40,7 @@ import static dev.webserver.enumeration.ReservationStatus.PENDING;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(rollbackFor = Exception.class)
 public class RaceConditionService {
 
     private static final Logger log = LoggerFactory.getLogger(RaceConditionService.class);
@@ -81,7 +82,6 @@ public class RaceConditionService {
      * @throws OutOfStockException If {@link CartItem} quantity is greater {@link ProductSku} inventory.
      * @throws JpaSystemException if {@link ProductSku} property 'inventory' is negative.
      */
-    @Transactional(rollbackFor = { CustomNotFoundException.class, OutOfStockException.class, JpaSystemException.class })
     public PaymentResponse raceCondition(
             HttpServletRequest req,
             final String country,

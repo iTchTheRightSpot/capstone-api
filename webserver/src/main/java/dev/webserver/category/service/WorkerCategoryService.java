@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(rollbackOn = Exception.class)
 public class WorkerCategoryService {
 
     private static final Logger log = LoggerFactory.getLogger(WorkerCategoryService.class);
@@ -111,7 +112,6 @@ public class WorkerCategoryService {
      * @throws DuplicateException when dto.name exists.
      * @throws CustomNotFoundException when dto.parentId does not exist.
      * */
-    @Transactional
     public void create(CategoryDTO dto) {
         if (this.repository.findByName(dto.name().trim()).isPresent()) {
             throw new DuplicateException(dto.name() + " exists");
@@ -151,7 +151,6 @@ public class WorkerCategoryService {
      * @throws DuplicateException is thrown if name exists, and it is not associated to
      * categoryId.
      * */
-    @Transactional
     public void update(UpdateCategoryDTO dto) {
         boolean bool = this.repository
                 .onDuplicateCategoryName(dto.id(), dto.name().trim()) > 0;
@@ -180,7 +179,6 @@ public class WorkerCategoryService {
      * @throws org.springframework.dao.DataIntegrityViolationException if {@code ProductCategory}
      * has children entities attached to it.
      * */
-    @Transactional
     public void delete(final long id) {
         try {
             this.repository.deleteProductCategoryById(id);

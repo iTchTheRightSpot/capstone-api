@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
@@ -26,6 +27,7 @@ import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(rollbackFor = Exception.class)
 class HelperService {
 
     private static final Logger log = LoggerFactory.getLogger(HelperService.class);

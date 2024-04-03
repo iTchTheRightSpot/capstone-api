@@ -46,11 +46,11 @@ class TaxTest extends MainTest {
         var get = testTemplate.exchange(
                 PATH + "api/v1/tax",
                 HttpMethod.PUT,
-                new HttpEntity<>(new TaxDto(1L, "VAT-TAX", 6.5), headers),
+                new HttpEntity<>(new TaxDto(1L, "tax", 6.5), headers),
                 Void.class
         );
 
-        assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
+        assertEquals(HttpStatusCode.valueOf(204), get.getStatusCode());
     }
 
 }

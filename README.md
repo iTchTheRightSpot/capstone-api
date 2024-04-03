@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Cap-stone Server
 
 ## About
@@ -78,5 +77,4 @@ Link for the most up-to-date schema.
 [Admin front](https://server.emmanueluluabuike.com/admin)
 
 ### Development information
->>>>>>> 38dca43c14b569b33b94a23c1bdce50584a67195
 * [naming index convention](https://www.quora.com/What-naming-convention-do-you-use-for-SQL-indexes)

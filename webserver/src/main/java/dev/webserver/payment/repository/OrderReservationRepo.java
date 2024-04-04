@@ -99,9 +99,18 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
             @Param(value = "status") ReservationStatus status
     );
 
-    @Query("SELECT o FROM OrderReservation o WHERE o.expireAt <= :date AND o.status = :status")
+    @Query("""
+    SELECT o FROM OrderReservation o
+    JOIN FETCH o.productSku
+    WHERE o.expireAt <= :date AND o.status = :status
+    """)
     List<OrderReservation> allPendingExpiredReservations(Date date, ReservationStatus status);
 
+    /**
+     * Using Spring Data Projection, method returns a {@link List} of {@link OrderReservation}
+     * as {@link OrderReservationRepo}. The reason main reason for returning a {@link OrderReservationRepo}
+     * is due to {@link org.hibernate.LazyInitializationException} error when compiled to a native image.
+     * */
     @Query("""
     SELECT
     o.reservationId AS reservationId,
@@ -112,8 +121,8 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     p AS productSku,
     s AS shoppingSession
     FROM OrderReservation o
-    INNER JOIN ProductSku p ON o.productSku.skuId = p.skuId
-    INNER JOIN ShoppingSession s ON o.shoppingSession.shoppingSessionId = s.shoppingSessionId
+    INNER JOIN FETCH ProductSku p ON o.productSku.skuId = p.skuId
+    INNER JOIN FETCH ShoppingSession s ON o.shoppingSession.shoppingSessionId = s.shoppingSessionId
     WHERE s.shoppingSessionId = :id AND o.expireAt > :date AND o.status = :status
     """)
     List<OrderReservationPojo> allPendingNoneExpiredReservationsAssociatedToShoppingSession(

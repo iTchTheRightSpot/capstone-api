@@ -289,16 +289,14 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
                     : new Date(current.toInstant().plus(5, HOURS).toEpochMilli());
 
             reservationRepo
-                    .save(
-                            new OrderReservation(
-                                    UUID.randomUUID().toString(),
-                                    curr.getInventory() - 1,
-                                    PENDING,
-                                    CustomUtil.toUTC(temp),
-                                    curr,
-                                    session
-                            )
-                    );
+                    .save(new OrderReservation(
+                            UUID.randomUUID().toString(),
+                            curr.getInventory() - 1,
+                            PENDING,
+                            CustomUtil.toUTC(temp),
+                            curr,
+                            session
+                    ));
         }
 
         // when

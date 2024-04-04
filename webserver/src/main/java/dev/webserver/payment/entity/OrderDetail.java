@@ -27,7 +27,7 @@ public class OrderDetail implements Serializable {
     @JoinColumn(name = "sku_id", referencedColumnName = "sku_id", nullable = false)
     private ProductSku sku;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "payment_detail_id", referencedColumnName = "payment_detail_id", nullable = false)
     private PaymentDetail paymentDetail;
 

@@ -95,8 +95,7 @@ public class RaceConditionService {
                         .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
                         obj.session().shoppingSessionId(),
                         CustomUtil.toUTC(new Date()),
-                        PENDING)
-                );
+                        PENDING));
 
         final String reference = UUID.randomUUID().toString();
 

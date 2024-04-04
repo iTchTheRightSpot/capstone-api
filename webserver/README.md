@@ -1,7 +1,4 @@
-# Cap-stone Server
-
-## About
-An ecommerce application still in development.
+# Webserver module
 
 ## Getting started
 #### Pre-requisite
@@ -43,3 +40,4 @@ Link for the most up-to-date schema.
 
 ### Development information
 * [naming index convention](https://www.quora.com/What-naming-convention-do-you-use-for-SQL-indexes)
+* [LazyInitializationException](https://thorben-janssen.com/lazyinitializationexception/)

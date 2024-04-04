@@ -46,7 +46,7 @@ services:
       AWS_PAYSTACK_SECRET_ID: secrete-id
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:1997/actuator/health" ]
-      interval: 600s
+      interval: 5s
       timeout: 5s
       retries: 3
 

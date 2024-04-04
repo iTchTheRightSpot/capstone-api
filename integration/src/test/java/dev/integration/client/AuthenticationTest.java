@@ -1,6 +1,7 @@
 package dev.integration.client;
 
 import dev.integration.MainTest;
+import dev.integration.TestData;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,17 +16,17 @@ import org.springframework.http.MediaType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ClientAuthTest extends MainTest {
+class AuthenticationTest extends MainTest {
 
     private static final HttpHeaders headers = new HttpHeaders();
 
     @BeforeAll
-    void before() {
+    void setup() {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
     }
 
-    @Test
     @Order(1)
+    @Test
     void shouldSuccessfullyRegisterAUser() {
         var dto = new RegisterDto(
                 "SEUY",
@@ -45,8 +46,8 @@ class ClientAuthTest extends MainTest {
         assertEquals(HttpStatusCode.valueOf(201), register.getStatusCode());
     }
 
-    @Test
     @Order(2)
+    @Test
     void shouldSuccessfullyLoginAUser() {
         var login = testTemplate.postForEntity(
                 PATH + "api/v1/client/auth/login",
@@ -55,6 +56,54 @@ class ClientAuthTest extends MainTest {
         );
 
         assertEquals(HttpStatusCode.valueOf(200), login.getStatusCode());
+    }
+
+    @Order(3)
+    @Test
+    void shouldSuccessfullyRegisterUserToAnAdmin() {
+        var cookie = TestData.ADMINCOOKIE(testTemplate, PATH);
+        headers.set(HttpHeaders.COOKIE, cookie);
+
+        var dto = new RegisterDto(
+                "SEUY",
+                "Development",
+                "SEUY@SEUY.com",
+                "",
+                "0000000000",
+                "password123"
+        );
+
+        var register = testTemplate.postForEntity(
+                PATH + "api/v1/worker/auth/register",
+                new HttpEntity<>(dto, headers),
+                Void.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(201), register.getStatusCode());
+    }
+
+    @Order(4)
+    @Test
+    void shouldSuccessfullyRegisterAnAdmin() {
+        var cookie = TestData.ADMINCOOKIE(testTemplate, PATH);
+        headers.set(HttpHeaders.COOKIE, cookie);
+
+        var dto = new RegisterDto(
+                "SEUY",
+                "Development",
+                "fried@SEUY.com",
+                "",
+                "0000000000",
+                "password123"
+        );
+
+        var register = testTemplate.postForEntity(
+                PATH + "api/v1/worker/auth/register",
+                new HttpEntity<>(dto, headers),
+                Void.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(201), register.getStatusCode());
     }
 
 }

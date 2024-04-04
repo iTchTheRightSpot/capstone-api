@@ -32,6 +32,7 @@ public class MainTest {
     protected static final TestRestTemplate testTemplate = new TestRestTemplate();
     protected static String PATH;
 
+    // https://java.testcontainers.org/modules/docker_compose/
     @Container
     @SuppressWarnings("all")
     private static DockerComposeContainer environment =

@@ -61,8 +61,7 @@ public class JwtConfig {
      * The reason for BearerResolver is since by default, Resource Server looks for a bearer token in the
      * Authorization header, and I am sending my jwt token as a cookie instead of Authorization
      * header, I need to inform Resource Server/BearerTokenAuthenticationFilter where to look for my jwt token.
-     * Look at the link below for reference.
-     * <a href="https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/bearer-tokens.html">...</a>
+     * @see <a href="https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/bearer-tokens.html">documentation</a>
      */
     @Bean
     public BearerTokenResolver bearerTokenResolver(JwtDecoder decoder, JwtTokenService service) {

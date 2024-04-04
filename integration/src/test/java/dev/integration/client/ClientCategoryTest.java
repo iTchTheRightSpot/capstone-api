@@ -1,14 +1,10 @@
 package dev.integration.client;
 
 import dev.integration.MainTest;
-import dev.webserver.category.response.CategoryResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -31,6 +27,8 @@ class ClientCategoryTest extends MainTest {
 //                new HttpEntity<>(headers),
 //                new ParameterizedTypeReference<List<CategoryResponse>>() {}
 //        );
+//
+//        Objects.requireNonNull(get.getBody()).forEach(System.out::println);
 //
 //        assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
     }

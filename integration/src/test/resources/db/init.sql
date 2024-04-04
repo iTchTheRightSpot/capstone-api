@@ -15,9 +15,10 @@ VALUES (1, 'red', true, timestamp('2024-03-26', '12:20:45'), 1),
 INSERT IGNORE INTO product_image(image_key, image_path, detail_id) VALUE ('image-key', 'image-path-is', 1);
 
 INSERT IGNORE INTO product_sku(sku, size, inventory, detail_id)
-VALUES ('product-sku-1', 'medium', 10, 1),
-       ('product-sku-2', 'large', 5, 1),
-       ('product-sku-3', 'large', 2, 3);
+VALUES ('product-sku-1', 'small', 10, 1),
+       ('product-sku-2', 'medium', 5, 1),
+       ('product-sku-3', 'large', 2, 3),
+       ('product-sku-4', 'x-large', 22, 3);
 
 INSERT IGNORE INTO ship_setting(country, ngn_price, usd_price)
 VALUES ('nigeria', 15750, 10.59),

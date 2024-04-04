@@ -174,7 +174,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         // request
         super.mockMvc
-                .perform(get(path)
+                .perform(post(path)
                         .param("currency", USD.getCurrency())
                         .param("country", "USA")
                         .with(csrf())
@@ -213,7 +213,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         // simulate user in payment component
         super.mockMvc
-                .perform(get(path)
+                .perform(post(path)
                         .param("currency", USD.getCurrency())
                         .param("country", "nigeria")
                         .with(csrf())
@@ -250,7 +250,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         // simulate user switching to pay in ngn
         super.mockMvc
-                .perform(get(path)
+                .perform(post(path)
                         .param("currency", NGN.getCurrency())
                         .param("country", "nigeria")
                         .with(csrf())
@@ -350,7 +350,7 @@ class PaymentControllerTest extends AbstractIntegration {
                                     var c = curr % 2 == 0 ? USD.getCurrency() : NGN.getCurrency();
                                     var country = curr % 2 == 0 ? "nigeria" : "Canada";
                                     return super.mockMvc
-                                            .perform(get(path)
+                                            .perform(post(path)
                                                     .param("currency", c)
                                                     .param("country", country)
                                                     .with(csrf())
@@ -456,9 +456,10 @@ class PaymentControllerTest extends AbstractIntegration {
                 );
 
         super.mockMvc
-                .perform(get(path)
+                .perform(post(path)
                         .param("currency", USD.getCurrency())
                         .param("country", "Canada")
+                        .with(csrf())
                         .cookie(cookie)
                 )
                 .andDo(print())
@@ -518,9 +519,10 @@ class PaymentControllerTest extends AbstractIntegration {
                 );
 
         super.mockMvc
-                .perform(get(path)
+                .perform(post(path)
                         .param("currency", NGN.getCurrency())
                         .param("country", "nigeria")
+                        .with(csrf())
                         .cookie(cookie)
                 )
                 .andDo(print())

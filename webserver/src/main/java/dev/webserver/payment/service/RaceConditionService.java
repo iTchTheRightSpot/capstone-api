@@ -11,6 +11,7 @@ import dev.webserver.exception.OutOfStockException;
 import dev.webserver.payment.entity.OrderReservation;
 import dev.webserver.payment.repository.OrderReservationRepo;
 import dev.webserver.payment.response.PaymentResponse;
+import dev.webserver.payment.util.WebHookUtil;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.ProductSkuRepo;
 import dev.webserver.shipping.entity.ShipSetting;
@@ -82,33 +83,34 @@ public class RaceConditionService {
      * @throws JpaSystemException if {@link ProductSku} property 'inventory' is negative.
      */
     public PaymentResponse raceCondition(
-            HttpServletRequest req,
+            final HttpServletRequest req,
             final String country,
             final SarreCurrency currency
     ) {
-        CustomObject obj = checkoutService
+        final CustomObject obj = checkoutService
                 .validateCurrentShoppingSession(req, country.toLowerCase().trim());
 
-        var reservations = this.reservationRepo
-                .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
+        final var reservations = WebHookUtil
+                .fromOrderReservationPojoToOrderReservation(reservationRepo
+                        .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
                         obj.session().shoppingSessionId(),
                         CustomUtil.toUTC(new Date()),
-                        PENDING
+                        PENDING)
                 );
 
-        String reference = UUID.randomUUID().toString();
+        final String reference = UUID.randomUUID().toString();
 
-        long instant = Instant.now()
+        final long instant = Instant.now()
                 .plus(bound, ChronoUnit.MINUTES)
                 .toEpochMilli();
-        Date toExpire = CustomUtil.toUTC(new Date(instant));
+        final Date toExpire = CustomUtil.toUTC(new Date(instant));
 
         raceConditionImpl(reference, reservations, obj.cartItems(), toExpire, obj.session());
 
-        var list = this.cartItemRepo
+        final var list = this.cartItemRepo
                 .amountToPayForAllCartItemsForShoppingSession(obj.session().shoppingSessionId(), currency);
 
-        BigDecimal total = CustomUtil
+        final BigDecimal total = CustomUtil
                 .calculateTotal(
                         CustomUtil.cartItemsTotalAndTotalWeight(list).total(),
                         obj.tax().rate(),
@@ -118,7 +120,7 @@ public class RaceConditionService {
                 );
 
         // if ngn remove leading zeros
-        var secret = this.thirdPartyService.payStackCredentials();
+        final var secret = this.thirdPartyService.payStackCredentials();
         return new PaymentResponse(
                 reference,
                 secret.pubKey(),
@@ -150,19 +152,19 @@ public class RaceConditionService {
      * @throws OutOfStockException If inventory becomes negative due to reservations.
      */
     void raceConditionImpl(
-            String reference,
-            List<OrderReservation> reservations,
-            List<CartItem> carts,
-            Date toExpire,
-            ShoppingSession session
+            final String reference,
+            final List<OrderReservation> reservations,
+            final List<CartItem> carts,
+            final Date toExpire,
+            final ShoppingSession session
     ) {
         try {
             if (reservations.isEmpty()) {
                 for (CartItem cart : carts) {
                     if (cart.quantityIsGreaterThanProductSkuInventory()) {
-                        var optional = productSkuRepo.productByProductSku(cart.getProductSku().getSku());
+                        final var optional = productSkuRepo.productByProductSku(cart.getProductSku().getSku());
 
-                        String name = optional.isPresent() ? optional.get().getName() : "";
+                        final String name = optional.isPresent() ? optional.get().getName() : "";
 
                         throw new OutOfStockException("%s %s is out of stock"
                                 .formatted(name, cart.getProductSku().getSize()));
@@ -181,7 +183,7 @@ public class RaceConditionService {
                             );
                 }
             } else {
-                Map<String, OrderReservation> map = reservations.stream()
+                final Map<String, OrderReservation> map = reservations.stream()
                         .collect(
                                 Collectors.toMap(
                                         reservation -> reservation.getProductSku().getSku(),
@@ -199,7 +201,7 @@ public class RaceConditionService {
             log.error(e.getMessage());
             throw new OutOfStockException(e.getMessage());
         } catch (JpaSystemException e) {
-            log.error("{}", e.getMessage());
+            log.error(e.getMessage());
             throw new OutOfStockException("an item in your cart is out of stock");
         }
     }
@@ -226,24 +228,24 @@ public class RaceConditionService {
      * @throws JpaSystemException if {@link ProductSku} property 'inventory' is negative.
      * */
     void onPendingReservationsNotEmpty(
-            String reference,
-            ShoppingSession session,
-            Date toExpire,
-            Map<String, OrderReservation> map,
-            List<CartItem> cartItems
+            final String reference,
+            final ShoppingSession session,
+            final Date toExpire,
+            final Map<String, OrderReservation> map,
+            final List<CartItem> cartItems
     ) {
         for (CartItem cart : cartItems) {
             if (cart.quantityIsGreaterThanProductSkuInventory()) {
-                var optional = productSkuRepo.productByProductSku(cart.getProductSku().getSku());
+                final var optional = productSkuRepo.productByProductSku(cart.getProductSku().getSku());
 
-                String name = optional.isPresent() ? optional.get().getName() : "";
+                final String name = optional.isPresent() ? optional.get().getName() : "";
 
                 throw new OutOfStockException("%s %s is out of stock"
                         .formatted(name, cart.getProductSku().getSize()));
             }
 
             if (map.containsKey(cart.getProductSku().getSku())) {
-                OrderReservation reservation = map.get(cart.getProductSku().getSku());
+                final OrderReservation reservation = map.get(cart.getProductSku().getSku());
 
                 if (cart.getQty() > reservation.getQty()) {
                     this.reservationRepo
@@ -286,7 +288,7 @@ public class RaceConditionService {
         }
 
         for (Map.Entry<String, OrderReservation> entry : map.entrySet()) {
-            OrderReservation value = entry.getValue();
+            final OrderReservation value = entry.getValue();
             this.productSkuRepo.updateProductSkuInventoryByAddingToExistingInventory(
                     value.getProductSku().getSku(),
                     value.getQty()

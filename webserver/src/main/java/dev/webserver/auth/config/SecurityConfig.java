@@ -121,7 +121,6 @@ public class SecurityConfig {
             JwtAuthenticationConverter converter
     ) throws Exception {
 
-        //  || PROFILE.equals("test")
         if (PROFILE.equals("native-test")) {
             http.csrf(AbstractHttpConfigurer::disable);
         } else {
@@ -130,11 +129,21 @@ public class SecurityConfig {
             // https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html
             http
                     .csrf(csrf -> csrf.ignoringRequestMatchers(AntPathRequestMatcher
-                                    .antMatcher(HttpMethod.POST, this.BASEURL + "payment"))
+                                    .antMatcher(HttpMethod.POST, this.BASEURL + "payment/webhook"))
                             .csrfTokenRepository(csrfTokenRepository)
                             .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                     .addFilterAfter(new CookieCsrfFilter(), BasicAuthenticationFilter.class);
         }
+
+        final String[] pubRoutes = {
+                "/actuator/**",
+                this.BASEURL + "csrf",
+                this.BASEURL + "client/**",
+                this.BASEURL + "worker/auth/login",
+                this.BASEURL + "cart/**",
+                this.BASEURL + "payment/**",
+                this.BASEURL + "checkout/**"
+        };
 
         return http
 
@@ -142,14 +151,7 @@ public class SecurityConfig {
                 .cors(withDefaults())
 
                 // Public routes
-                .authorizeHttpRequests(auth -> auth.requestMatchers(
-                                "/actuator/**",
-                                this.BASEURL + "csrf",
-                                this.BASEURL + "client/**",
-                                this.BASEURL + "worker/auth/login",
-                                this.BASEURL + "cart/**",
-                                this.BASEURL + "payment/**",
-                                this.BASEURL + "checkout/**")
+                .authorizeHttpRequests(auth -> auth.requestMatchers(pubRoutes)
                         .permitAll()
                         .anyRequest().authenticated()
                 )
@@ -182,7 +184,7 @@ public class SecurityConfig {
      * <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">documentation</a>
      */
     static final BiFunction<Boolean, String, CookieCsrfTokenRepository> csrfRepo = (secure, sameSite) -> {
-        Consumer<ResponseCookie.ResponseCookieBuilder> consumer = (cookie) -> cookie
+        final Consumer<ResponseCookie.ResponseCookieBuilder> consumer = (cookie) -> cookie
                 .httpOnly(false)
                 .secure(secure)
                 .path("/")

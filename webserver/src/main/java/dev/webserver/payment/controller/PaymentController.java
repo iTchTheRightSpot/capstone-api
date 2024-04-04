@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}payment")
@@ -26,7 +25,7 @@ public class PaymentController {
      * Called before payment page appears
      * */
     @ResponseStatus(OK)
-    @GetMapping(produces = APPLICATION_JSON_VALUE)
+    @PostMapping
     public PaymentResponse raceCondition(
             @NotNull @NotEmpty @RequestParam(name = "currency") String currency,
             @NotNull @NotEmpty @RequestParam(name = "country") String country,
@@ -41,7 +40,7 @@ public class PaymentController {
      * complete transaction.
      * */
     @ResponseStatus(CREATED)
-    @PostMapping
+    @PostMapping(path = "/webhook")
     public void webhook(HttpServletRequest req) {
         this.webhookService.webhook(req);
     }

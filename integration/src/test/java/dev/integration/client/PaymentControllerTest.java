@@ -7,7 +7,9 @@ import dev.webserver.payment.response.PaymentResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -23,30 +25,29 @@ class PaymentControllerTest extends MainTest {
 
         assertNotNull(cartcookie);
 
-        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        // headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         headers.set(HttpHeaders.COOKIE, cartcookie);
     }
 
     @Test
     void shouldSuccessfullyCallRaceConditionMethod() {
         // add to shopping cart
-        var post = testTemplate.postForEntity(
+        var cart = testTemplate.postForEntity(
                 PATH + "api/v1/cart",
                 new HttpEntity<>(new CartDTO("product-sku-1", 4), headers),
                 Void.class
         );
 
-        assertEquals(HttpStatusCode.valueOf(201), post.getStatusCode());
+        assertEquals(HttpStatusCode.valueOf(201), cart.getStatusCode());
 
         // access race condition route
-        var get = testTemplate.exchange(
+        var post = testTemplate.postForEntity(
                 PATH + "api/v1/payment?country=france&currency=ngn",
-                HttpMethod.GET,
                 new HttpEntity<>(headers),
                 PaymentResponse.class
         );
 
-        assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
+        assertEquals(HttpStatusCode.valueOf(200), post.getStatusCode());
     }
 
 }

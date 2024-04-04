@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.payment.entity.OrderReservation;
+import dev.webserver.payment.projection.OrderReservationPojo;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.xml.bind.DatatypeConverter;
 import org.slf4j.Logger;
@@ -15,6 +17,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
 import static java.math.RoundingMode.FLOOR;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -63,6 +66,22 @@ public class WebHookUtil {
                 .printHexBinary(sha512_HMAC.doFinal(node.toString().getBytes(UTF_8)));
         log.info("successfully constructed WebhookConstruct from {}", WebHookUtil.class.getName());
         return new WebhookConstruct(node, validate);
+    }
+
+    public static List<OrderReservation> fromOrderReservationPojoToOrderReservation(
+            List<OrderReservationPojo> list
+    ) {
+        return list.stream()
+                .map(pojo -> new OrderReservation(
+                        pojo.getReservationId(),
+                        pojo.getReference(),
+                        pojo.getQty(),
+                        pojo.getStatus(),
+                        pojo.getExpireAt(),
+                        pojo.getProductSku(),
+                        pojo.getShoppingSession()
+                ))
+                .toList();
     }
 
 }

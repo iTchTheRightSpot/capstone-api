@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy-native-image:
-    name: Build and Deploy native image
+    name: Build and Deploy
     runs-on: ubuntu-latest
 
     steps:
@@ -22,12 +22,12 @@ jobs:
           username: emmanuelu17
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build native image
+      - name: Build docker image
         run: |
           mvn clean install -DskipTests
           docker build --tag capstone-server:latest . --progress=plain
 
-      - name: Push native image to dockerhub
+      - name: Push image to dockerhub
         run: |
           docker image tag capstone-server:latest emmanuelu17/capstone-server:latest
           docker push --all-tags emmanuelu17/capstone-server

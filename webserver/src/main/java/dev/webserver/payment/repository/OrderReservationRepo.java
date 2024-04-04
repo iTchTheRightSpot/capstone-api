@@ -3,6 +3,7 @@ package dev.webserver.payment.repository;
 import dev.webserver.cart.entity.ShoppingSession;
 import dev.webserver.enumeration.ReservationStatus;
 import dev.webserver.payment.entity.OrderReservation;
+import dev.webserver.payment.projection.OrderReservationPojo;
 import dev.webserver.product.entity.ProductSku;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -102,12 +103,20 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     List<OrderReservation> allPendingExpiredReservations(Date date, ReservationStatus status);
 
     @Query("""
-    SELECT o FROM OrderReservation o
-    INNER JOIN FETCH o.productSku
+    SELECT
+    o.reservationId AS reservationId,
+    o.reference AS reference,
+    o.qty AS qty,
+    o.status AS status,
+    o.expireAt AS expireAt,
+    p AS productSku,
+    s AS shoppingSession
+    FROM OrderReservation o
+    INNER JOIN ProductSku p ON o.productSku.skuId = p.skuId
     INNER JOIN ShoppingSession s ON o.shoppingSession.shoppingSessionId = s.shoppingSessionId
     WHERE s.shoppingSessionId = :id AND o.expireAt > :date AND o.status = :status
     """)
-    List<OrderReservation> allPendingNoneExpiredReservationsAssociatedToShoppingSession(
+    List<OrderReservationPojo> allPendingNoneExpiredReservationsAssociatedToShoppingSession(
             @Param("id") long shoppingSessionId,
             Date date,
             ReservationStatus status

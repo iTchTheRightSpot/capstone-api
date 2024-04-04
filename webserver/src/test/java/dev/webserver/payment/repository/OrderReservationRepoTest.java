@@ -7,6 +7,7 @@ import dev.webserver.category.entity.ProductCategory;
 import dev.webserver.category.repository.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
 import dev.webserver.payment.entity.OrderReservation;
+import dev.webserver.payment.projection.OrderReservationPojo;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.*;
 import dev.webserver.util.CustomUtil;
@@ -310,6 +311,16 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
 
         // then
         assertEquals(1, list.size());
+
+        for (OrderReservationPojo pojo : list) {
+            assertNotNull(pojo.getReservationId());
+            assertNotNull(pojo.getReference());
+            assertNotNull(pojo.getQty());
+            assertNotNull(pojo.getStatus());
+            assertNotNull(pojo.getExpireAt());
+            assertNotNull(pojo.getProductSku());
+            assertNotNull(pojo.getShoppingSession());
+        }
     }
 
     @Test

@@ -78,7 +78,7 @@ public class PaymentDetail implements Serializable {
     @JoinColumn(name = "client_id", referencedColumnName = "client_id")
     private SarreBrandUser user;
 
-    @OneToMany(fetch = LAZY, cascade = { PERSIST, MERGE, REFRESH }, mappedBy = "paymentDetail")
+    @OneToMany(fetch = LAZY, cascade = {PERSIST, MERGE, REFRESH}, mappedBy = "paymentDetail")
     private Set<OrderDetail> orderDetails;
 
 }

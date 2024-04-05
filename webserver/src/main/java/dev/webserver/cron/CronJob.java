@@ -79,6 +79,7 @@ class CronJob {
      * using the current date as a reference point. For each expired session, it deletes all
      * {@link CartItem} associated with that session and then deletes the session itself.
      */
+    @Transactional(rollbackFor = Exception.class)
     public void onDeleteShoppingSessions() {
         sessionRepo.allExpiredShoppingSession(CustomUtil.toUTC(new Date()))
                 .forEach(session -> {

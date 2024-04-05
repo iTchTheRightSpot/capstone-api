@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.Set;
 
 import static jakarta.persistence.CascadeType.ALL;
-import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Table(name = "product_sku", indexes = @Index(name = "IX_product_sku_sku", columnList = "sku"))
@@ -43,7 +42,7 @@ public class ProductSku implements Serializable {
     @OneToMany(fetch = LAZY, cascade = ALL, mappedBy = "sku")
     private Set<OrderDetail> orderDetails;
 
-    @OneToMany(fetch = EAGER, cascade = ALL, mappedBy = "productSku")
+    @OneToMany(fetch = LAZY, cascade = ALL, mappedBy = "productSku")
     private Set<OrderReservation> reservations;
 
     @OneToMany(fetch = LAZY, cascade = ALL, mappedBy = "productSku")

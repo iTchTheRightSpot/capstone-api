@@ -82,6 +82,7 @@ public class RaceConditionService {
      * @throws OutOfStockException If {@link CartItem} quantity is greater {@link ProductSku} inventory.
      * @throws JpaSystemException if {@link ProductSku} property 'inventory' is negative.
      */
+    @Transactional(rollbackFor = Exception.class)
     public PaymentResponse raceCondition(
             final HttpServletRequest req,
             final String country,
@@ -150,6 +151,7 @@ public class RaceConditionService {
      * @param session      The {@link ShoppingSession} associated with the user's device.
      * @throws OutOfStockException If inventory becomes negative due to reservations.
      */
+    @Transactional(rollbackFor = Exception.class)
     void raceConditionImpl(
             final String reference,
             final List<OrderReservation> reservations,
@@ -226,6 +228,7 @@ public class RaceConditionService {
      * than {@code ProductSku} property inventory.
      * @throws JpaSystemException if {@link ProductSku} property 'inventory' is negative.
      * */
+    @Transactional(rollbackFor = Exception.class)
     void onPendingReservationsNotEmpty(
             final String reference,
             final ShoppingSession session,
@@ -281,8 +284,8 @@ public class RaceConditionService {
                         cart.getQty(),
                         PENDING, toExpire,
                         cart.getProductSku(),
-                        session)
-                );
+                        session
+                ));
             }
         }
 

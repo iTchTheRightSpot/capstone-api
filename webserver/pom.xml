@@ -64,7 +64,8 @@
                     <plugin>
                         <groupId>org.hibernate.orm.tooling</groupId>
                         <artifactId>hibernate-enhance-maven-plugin</artifactId>
-                        <version>${hibernate.orm.tooling.version}</version>
+<!--                        <version>${hibernate.orm.tooling.version}</version>-->
+                        <version>${hibernate.version}</version>
                         <executions>
                             <execution>
                                 <configuration>
@@ -72,6 +73,7 @@
                                     <enableLazyInitialization>true</enableLazyInitialization>
                                     <enableDirtyTracking>true</enableDirtyTracking>
                                     <enableAssociationManagement>true</enableAssociationManagement>
+                                    <enableExtendedEnhancement>false</enableExtendedEnhancement>
                                 </configuration>
                                 <goals>
                                     <goal>enhance</goal>

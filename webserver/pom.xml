@@ -20,7 +20,8 @@
         <!-- as per issue https://github.com/spring-projects/spring-security/issues/14362 -->
         <awaitility.version>4.2.0</awaitility.version>
         <!-- as per spring boot version 3.2.3 release notes https://github.com/spring-projects/spring-boot/releases/tag/v3.2.3 -->
-        <hibernate.orm.tooling.version>6.4.2.Final</hibernate.orm.tooling.version>
+<!--        <hibernate.orm.tooling.version>6.4.2.Final</hibernate.orm.tooling.version>-->
+        <hibernate.orm.tooling.version>6.3.2.Final</hibernate.orm.tooling.version>
         <jakarta.xml.bind.version>4.0.1</jakarta.xml.bind.version>
     </properties>
 
@@ -64,8 +65,7 @@
                     <plugin>
                         <groupId>org.hibernate.orm.tooling</groupId>
                         <artifactId>hibernate-enhance-maven-plugin</artifactId>
-<!--                        <version>${hibernate.orm.tooling.version}</version>-->
-                        <version>${hibernate.version}</version>
+                        <version>${hibernate.orm.tooling.version}</version>
                         <executions>
                             <execution>
                                 <configuration>
@@ -73,7 +73,6 @@
                                     <enableLazyInitialization>true</enableLazyInitialization>
                                     <enableDirtyTracking>true</enableDirtyTracking>
                                     <enableAssociationManagement>true</enableAssociationManagement>
-                                    <enableExtendedEnhancement>false</enableExtendedEnhancement>
                                 </configuration>
                                 <goals>
                                     <goal>enhance</goal>

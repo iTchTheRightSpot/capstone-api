@@ -7,10 +7,7 @@ import dev.webserver.category.entity.ProductCategory;
 import dev.webserver.category.repository.CategoryRepository;
 import dev.webserver.data.TestData;
 import dev.webserver.payment.entity.OrderReservation;
-import dev.webserver.payment.repository.AddressRepo;
-import dev.webserver.payment.repository.OrderDetailRepository;
-import dev.webserver.payment.repository.OrderReservationRepo;
-import dev.webserver.payment.repository.PaymentDetailRepo;
+import dev.webserver.payment.repository.*;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.ProductSkuRepo;
 import dev.webserver.product.service.WorkerProductService;
@@ -48,6 +45,8 @@ class CronJobTest extends AbstractIntegration {
     private OrderDetailRepository orderDetailRepository;
     @Autowired
     private AddressRepo addressRepo;
+    @Autowired
+    private PaymentAuthorizationRepo authorizationRepo;
 
     @Test
     void shouldSuccessfullyValidateFromPayStack() {
@@ -85,7 +84,7 @@ class CronJobTest extends AbstractIntegration {
                         session
                 ));
 
-        // when
+        // method to test
         cronJob.onDeleteOrderReservations();
 
         // then
@@ -93,10 +92,12 @@ class CronJobTest extends AbstractIntegration {
         var reservations = reservationRepo.findAll();
         var addresses = addressRepo.findAll();
         var orderDetails = orderDetailRepository.findAll();
+        var authorizations = authorizationRepo.findAll();
 
         assertTrue(reservations.isEmpty());
         assertEquals(1, payments.size());
         assertEquals(1, addresses.size());
+        assertEquals(1, authorizations.size());
         assertFalse(orderDetails.isEmpty());
     }
 

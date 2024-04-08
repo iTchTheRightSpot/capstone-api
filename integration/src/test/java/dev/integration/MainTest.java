@@ -44,13 +44,13 @@ public class MainTest {
 
     @BeforeAll
     void beforeAllTests() throws SQLException {
-//        environment.start();
+        environment.start();
 
-//        final String host = environment.getServiceHost("api", 1997);
-//        final int port = environment.getServicePort("api", 1997);
+        final String host = environment.getServiceHost("api", 1997);
+        final int port = environment.getServicePort("api", 1997);
 
-//        PATH = String.format("http://%s:%d/", host, port);
-        PATH = "http://localhost:1997/";
+        PATH = String.format("http://%s:%d/", host, port);
+//        PATH = "http://localhost:1997/";
 
         CustomRunInitScripts.processScript("integration", "integration");
     }

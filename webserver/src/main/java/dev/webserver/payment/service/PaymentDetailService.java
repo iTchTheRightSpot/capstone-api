@@ -49,8 +49,7 @@ public class PaymentDetailService {
      * @return true is {@link PaymentDetail} exists else false.
      */
     public boolean paymentDetailExists(final String email, final String reference) {
-        return paymentDetailRepo.paymentDetailByEmailAndReference(email, reference)
-                .isPresent();
+        return paymentDetailRepo.paymentDetailByEmailAndReference(email, reference).isPresent();
     }
 
     /**
@@ -77,7 +76,7 @@ public class PaymentDetailService {
             var detail = paymentDetail(data, metadata, reference, amount);
             address(metadata, detail);
             paymentAuthorization(webAuth, detail);
-            orderDetail(detail, reference.substring(4));
+            orderDetail(detail, reference);
 
         } catch (JsonProcessingException e) {
             log.error(e.getMessage());
@@ -178,7 +177,7 @@ public class PaymentDetailService {
      * @param reference The reference id associated to an {@link OrderReservation}.
      */
     private void orderDetail(final PaymentDetail detail, final String reference) {
-        var reservations = orderReservationRepo.allReservationsByReference(reference);
+        final var reservations = orderReservationRepo.allReservationsByReference(reference);
 
         // save OrderDetails
         reservations.forEach(obj -> orderDetailRepository

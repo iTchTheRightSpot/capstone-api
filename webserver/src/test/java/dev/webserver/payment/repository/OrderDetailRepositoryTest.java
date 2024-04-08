@@ -162,8 +162,12 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
         assertFalse(skus.isEmpty());
         var sku = skus.getFirst();
 
+        // method to test
         orderDetailRepository
                 .saveOrderDetail(sku.getInventory(), sku.getSkuId(), paymentDetail.getPaymentDetailId());
+
+        // then
+        assertFalse(orderDetailRepository.findAll().isEmpty());
     }
 
 }

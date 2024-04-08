@@ -48,11 +48,10 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> 
     """)
     List<OrderPojo> orderHistoryByPrincipal(String principal);
 
-    // TODO repo test
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(nativeQuery = true, value = """
-    INSERT INTO order_detail(qty, sku_id, session_id)
+    INSERT INTO order_detail(qty, sku_id, payment_detail_id)
     VALUE (:qty, :skuId, :detailId);
     """)
     void saveOrderDetail(int qty, long skuId, long detailId);

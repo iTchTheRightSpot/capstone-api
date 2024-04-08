@@ -90,12 +90,19 @@ public class RaceConditionService {
         final CustomObject obj = checkoutService
                 .validateCurrentShoppingSession(req, country.toLowerCase().trim());
 
-        final var reservations = WebHookUtil
-                .fromOrderReservationPojoToOrderReservation(reservationRepo
+        log.info("On RaceCondition after Carts {}", obj.cartItems());
+
+        log.info("On RaceCondition before reservation");
+        final var reservations = WebHookUtil.fromOrderReservationPojoToOrderReservation(
+                reservationRepo
                         .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
-                        obj.session().shoppingSessionId(),
-                        CustomUtil.toUTC(new Date()),
-                        PENDING));
+                                obj.session().shoppingSessionId(),
+                                CustomUtil.toUTC(new Date()),
+                                PENDING
+                        )
+        );
+
+        log.info("On RaceCondition after reservation {}", reservations);
 
         final String reference = UUID.randomUUID().toString();
 
@@ -160,6 +167,8 @@ public class RaceConditionService {
         try {
             if (reservations.isEmpty()) {
                 for (CartItem cart : carts) {
+                    log.info("On RaceCondition implementation method after cart {}", cart);
+
                     if (cart.quantityIsGreaterThanProductSkuInventory()) {
                         final var optional = productSkuRepo.productByProductSku(cart.getProductSku().getSku());
 
@@ -183,11 +192,10 @@ public class RaceConditionService {
                 }
             } else {
                 final Map<String, OrderReservation> map = reservations.stream()
-                        .collect(
-                                Collectors.toMap(
-                                        reservation -> reservation.getProductSku().getSku(),
-                                        orderReservation -> orderReservation)
-                        );
+                        .collect(Collectors.toMap(
+                                reservation -> reservation.getProductSku().getSku(),
+                                orderReservation -> orderReservation
+                        ));
                 onPendingReservationsNotEmpty(
                         reference,
                         session,

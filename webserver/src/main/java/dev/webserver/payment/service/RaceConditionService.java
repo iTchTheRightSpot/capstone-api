@@ -9,9 +9,10 @@ import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.OutOfStockException;
 import dev.webserver.payment.entity.OrderReservation;
+import dev.webserver.payment.projection.OrderReservationPojo;
+import dev.webserver.payment.projection.RaceConditionCartPojo;
 import dev.webserver.payment.repository.OrderReservationRepo;
 import dev.webserver.payment.response.PaymentResponse;
-import dev.webserver.payment.util.WebHookUtil;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.ProductSkuRepo;
 import dev.webserver.shipping.entity.ShipSetting;
@@ -90,17 +91,12 @@ public class RaceConditionService {
         final CustomObject obj = checkoutService
                 .validateCurrentShoppingSession(req, country.toLowerCase().trim());
 
-        log.info("On RaceCondition after Carts {}", obj.cartItems());
-
-        log.info("On RaceCondition before reservation");
-        final var reservations = WebHookUtil.fromOrderReservationPojoToOrderReservation(
-                reservationRepo
-                        .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
-                                obj.session().shoppingSessionId(),
-                                CustomUtil.toUTC(new Date()),
-                                PENDING
-                        )
-        );
+        final var reservations = reservationRepo
+                .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
+                        obj.session().shoppingSessionId(),
+                        CustomUtil.toUTC(new Date()),
+                        PENDING
+                );
 
         log.info("On RaceCondition after reservation {}", reservations);
 
@@ -159,36 +155,33 @@ public class RaceConditionService {
      */
     void raceConditionImpl(
             final String reference,
-            final List<OrderReservation> reservations,
-            final List<CartItem> carts,
+            final List<OrderReservationPojo> reservations,
+            final List<RaceConditionCartPojo> carts,
             final Date toExpire,
             final ShoppingSession session
     ) {
         try {
             if (reservations.isEmpty()) {
-                for (CartItem cart : carts) {
-                    log.info("On RaceCondition implementation method after cart {}", cart);
-
+                for (var cart : carts) {
                     onCartItemQtyGreaterThanProductSkuInventory(cart);
 
-                    this.productSkuRepo
-                            .updateProductSkuInventoryBySubtractingFromExistingInventory(
-                                    cart.getProductSku().getSku(),
-                                    cart.getQty()
-                            );
-                    this.reservationRepo
-                            .save(new OrderReservation(
-                                    reference,
-                                    cart.getQty(),
-                                    PENDING, toExpire, cart.getProductSku(), session)
-                            );
+                    this.productSkuRepo.updateProductSkuInventoryBySubtractingFromExistingInventory(
+                            cart.getProductSkuSku(),
+                            cart.getCartItemQty()
+                    );
+                    reservationRepo.saveOrderReservation(
+                            reference,
+                            cart.getCartItemQty(),
+                            PENDING,
+                            toExpire,
+                            cart.getProductSkuId(),
+                            cart.getShoppingSessionId()
+                    );
+
                 }
             } else {
-                final Map<String, OrderReservation> map = reservations.stream()
-                        .collect(Collectors.toMap(
-                                reservation -> reservation.getProductSku().getSku(),
-                                orderReservation -> orderReservation
-                        ));
+                final Map<String, OrderReservationPojo> map = reservations.stream()
+                        .collect(Collectors.toMap(OrderReservationPojo::getProductSkuSku, pojo -> pojo));
                 onPendingReservationsNotEmpty(
                         reference,
                         session,
@@ -206,15 +199,15 @@ public class RaceConditionService {
         }
     }
 
-    private void onCartItemQtyGreaterThanProductSkuInventory(CartItem cart) {
-        if (cart.quantityIsGreaterThanProductSkuInventory()) {
+    private void onCartItemQtyGreaterThanProductSkuInventory(RaceConditionCartPojo cart) {
+        if (cart.getCartItemQty() > cart.getProductSkuInventory()) {
             final var optional = productSkuRepo
-                    .productByProductSku(cart.getProductSku().getSku());
+                    .productByProductSku(cart.getProductSkuSku());
 
             final String name = optional.isPresent() ? optional.get().getName() : "";
 
             throw new OutOfStockException("%s %s is out of stock"
-                    .formatted(name, cart.getProductSku().getSize()));
+                    .formatted(name, cart.getProductSkuSize()));
         }
     }
 
@@ -243,62 +236,63 @@ public class RaceConditionService {
             final String reference,
             final ShoppingSession session,
             final Date toExpire,
-            final Map<String, OrderReservation> map,
-            final List<CartItem> cartItems
+            final Map<String, OrderReservationPojo> map,
+            final List<RaceConditionCartPojo> cartItems
     ) {
-        for (CartItem cart : cartItems) {
+        for (var cart : cartItems) {
             onCartItemQtyGreaterThanProductSkuInventory(cart);
 
-            if (map.containsKey(cart.getProductSku().getSku())) {
-                final OrderReservation reservation = map.get(cart.getProductSku().getSku());
+            if (map.containsKey(cart.getProductSkuSku())) {
+                final OrderReservationPojo reservation = map.get(cart.getProductSkuSku());
 
-                if (cart.getQty() > reservation.getQty()) {
+                if (cart.getCartItemQty() > reservation.getReservationQty()) {
                     this.reservationRepo
                             .deductFromProductSkuInventoryAndReplaceReservationQty(
-                                    cart.getQty() - reservation.getQty(),
-                                    cart.getQty(),
+                                    cart.getCartItemQty() - reservation.getReservationQty(),
+                                    cart.getCartItemQty(),
                                     reference,
                                     toExpire,
                                     session.cookie(),
-                                    cart.getProductSku().getSku(),
+                                    cart.getProductSkuSku(),
                                     PENDING
                             );
-                } else if (cart.getQty() < reservation.getQty()) {
+                } else if (cart.getCartItemQty() < reservation.getReservationQty()) {
                     this.reservationRepo
                             .addToProductSkuInventoryAndReplaceReservationQty(
-                                    reservation.getQty() - cart.getQty(),
-                                    cart.getQty(),
+                                    reservation.getReservationQty() - cart.getCartItemQty(),
+                                    cart.getCartItemQty(),
                                     reference,
                                     toExpire,
                                     session.cookie(),
-                                    cart.getProductSku().getSku(),
+                                    cart.getProductSkuSku(),
                                     PENDING
                             );
                 }
 
-                map.remove(cart.getProductSku().getSku());
+                map.remove(cart.getProductSkuSku());
             } else {
                 this.productSkuRepo.updateProductSkuInventoryBySubtractingFromExistingInventory(
-                        cart.getProductSku().getSku(),
-                        cart.getQty()
+                        cart.getProductSkuSku(),
+                        cart.getCartItemQty()
                 );
-                this.reservationRepo.save(new OrderReservation(
+                reservationRepo.saveOrderReservation(
                         reference,
-                        cart.getQty(),
-                        PENDING, toExpire,
-                        cart.getProductSku(),
-                        session
-                ));
+                        cart.getCartItemQty(),
+                        PENDING,
+                        toExpire,
+                        cart.getProductSkuId(),
+                        cart.getShoppingSessionId()
+                );
             }
         }
 
-        for (Map.Entry<String, OrderReservation> entry : map.entrySet()) {
-            final OrderReservation value = entry.getValue();
+        for (Map.Entry<String, OrderReservationPojo> entry : map.entrySet()) {
+            final OrderReservationPojo reservation = entry.getValue();
             this.productSkuRepo.updateProductSkuInventoryByAddingToExistingInventory(
-                    value.getProductSku().getSku(),
-                    value.getQty()
+                    reservation.getProductSkuSku(),
+                    reservation.getReservationQty()
             );
-            this.reservationRepo.deleteById(value.getReservationId());
+            this.reservationRepo.deleteById(reservation.getReservationId());
         }
     }
 

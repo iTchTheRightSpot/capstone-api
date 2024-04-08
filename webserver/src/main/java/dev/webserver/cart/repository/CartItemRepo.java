@@ -3,6 +3,7 @@ package dev.webserver.cart.repository;
 import dev.webserver.cart.entity.CartItem;
 import dev.webserver.cart.entity.ShoppingSession;
 import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.payment.projection.RaceConditionCartPojo;
 import dev.webserver.payment.projection.TotalPojo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -57,11 +58,20 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     List<TotalPojo> amountToPayForAllCartItemsForShoppingSession(long sessionId, SarreCurrency currency);
 
     @Query("""
-    SELECT c FROM CartItem c
+    SELECT
+    p.skuId AS productSkuId,
+    p.sku AS productSkuSku,
+    p.size AS productSkuSize,
+    p.inventory AS productSkuInventory,
+    c.cartId AS cartItemId,
+    c.qty AS cartItemQty,
+    s.shoppingSessionId AS shoppingSessionId
+    FROM CartItem c
     INNER JOIN ShoppingSession s ON c.shoppingSession.shoppingSessionId = s.shoppingSessionId
+    INNER JOIN ProductSku p ON c.productSku.skuId = p.skuId
     WHERE s.shoppingSessionId = :id
     """)
-    List<CartItem> cartItemsByShoppingSessionId(long id);
+    List<RaceConditionCartPojo> cartItemsByShoppingSessionId(long id);
 
     @Query("""
     SELECT

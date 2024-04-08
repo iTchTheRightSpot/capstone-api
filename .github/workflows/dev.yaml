@@ -53,7 +53,6 @@ jobs:
           docker compose up -d --build
           mvn clean install -DskipTests
           cd integration/
-          clear
           mvn test -DPAYSTACK_PUB_KEY=PAYSTACK_PUB_KEY -DPAYSTACK_SECRET_KEY=PAYSTACK_SECRET_KEY
           docker container log api
           docker compose -f down -v

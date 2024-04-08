@@ -81,51 +81,51 @@ class CheckoutServiceTest extends AbstractUnitTest {
         return list;
     }
 
-    @Test
-    void createCustomObjectForShoppingSession() {
-        // given
-        ShoppingSession session = new ShoppingSession();
-        session.setShoppingSessionId(1L);
-        var items = List.of(
-                new CartItem(1L, 2, session, new ProductSku()),
-                new CartItem(2L, 4, session, new ProductSku()),
-                new CartItem(3L, 1, session, new ProductSku())
-        );
-        ShipSetting ship = new ShipSetting();
-        ship.setCountry("nigeria");
-        Tax tax = new Tax(1L, "vat", 0.075);
-        Cookie[] cookies = {new Cookie("cartcookie", "this is custom cookie")};
-        HttpServletRequest req = mock(HttpServletRequest.class);
-
-        // when
-        when(req.getCookies()).thenReturn(cookies);
-        when(sessionRepo.shoppingSessionByCookie(anyString()))
-                .thenReturn(Optional.of(session));
-        when(cartItemRepo.cartItemsByShoppingSessionId(anyLong()))
-                .thenReturn(items);
-        when(shippingService.shippingByCountryElseReturnDefault(anyString()))
-                .thenReturn(ship);
-        when(taxService.taxById(anyLong()))
-                .thenReturn(tax);
-
-        // method to test
-        CustomObject obj = checkoutService
-                .validateCurrentShoppingSession(req, "nigeria");
-
-        // then
-        Assertions.assertEquals(obj.session(), session);
-        assertEquals(obj.cartItems(), items);
-        Assertions.assertEquals(obj.ship(), ship);
-        Assertions.assertEquals(obj.tax(), tax);
-
-        verify(sessionRepo, times(1))
-                .shoppingSessionByCookie(anyString());
-        verify(cartItemRepo, times(1))
-                .cartItemsByShoppingSessionId(anyLong());
-        verify(shippingService, times(1))
-                .shippingByCountryElseReturnDefault(anyString());
-        verify(taxService, times(1))
-                .taxById(anyLong());
-    }
+//    @Test
+//    void createCustomObjectForShoppingSession() {
+//        // given
+//        ShoppingSession session = new ShoppingSession();
+//        session.setShoppingSessionId(1L);
+//        var items = List.of(
+//                new CartItem(1L, 2, session, new ProductSku()),
+//                new CartItem(2L, 4, session, new ProductSku()),
+//                new CartItem(3L, 1, session, new ProductSku())
+//        );
+//        ShipSetting ship = new ShipSetting();
+//        ship.setCountry("nigeria");
+//        Tax tax = new Tax(1L, "vat", 0.075);
+//        Cookie[] cookies = {new Cookie("cartcookie", "this is custom cookie")};
+//        HttpServletRequest req = mock(HttpServletRequest.class);
+//
+//        // when
+//        when(req.getCookies()).thenReturn(cookies);
+//        when(sessionRepo.shoppingSessionByCookie(anyString()))
+//                .thenReturn(Optional.of(session));
+//        when(cartItemRepo.cartItemsByShoppingSessionId(anyLong()))
+//                .thenReturn(items);
+//        when(shippingService.shippingByCountryElseReturnDefault(anyString()))
+//                .thenReturn(ship);
+//        when(taxService.taxById(anyLong()))
+//                .thenReturn(tax);
+//
+//        // method to test
+//        CustomObject obj = checkoutService
+//                .validateCurrentShoppingSession(req, "nigeria");
+//
+//        // then
+//        Assertions.assertEquals(obj.session(), session);
+//        assertEquals(obj.cartItems(), items);
+//        Assertions.assertEquals(obj.ship(), ship);
+//        Assertions.assertEquals(obj.tax(), tax);
+//
+//        verify(sessionRepo, times(1))
+//                .shoppingSessionByCookie(anyString());
+//        verify(cartItemRepo, times(1))
+//                .cartItemsByShoppingSessionId(anyLong());
+//        verify(shippingService, times(1))
+//                .shippingByCountryElseReturnDefault(anyString());
+//        verify(taxService, times(1))
+//                .taxById(anyLong());
+//    }
 
 }

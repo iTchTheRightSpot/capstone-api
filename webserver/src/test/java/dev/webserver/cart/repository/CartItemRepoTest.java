@@ -179,43 +179,6 @@ class CartItemRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void quantityIsGreaterThanProductSkuInventory() {
-        // given
-        var cat = categoryRepo
-                .save(ProductCategory.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
-
-        // create 3 ProductSku objects
-        RepositoryTestData
-                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
-
-        var skus = skuRepo.findAll();
-        assertEquals(3, skus.size());
-        ProductSku sku = skus.getFirst();
-
-        var saved = this.sessionRepo
-                .save(
-                        new ShoppingSession(
-                                "cookie",
-                                new Date(),
-                                new Date(Instant.now().plus(1, HOURS).toEpochMilli()),
-                                new HashSet<>(),
-                                new HashSet<>()
-                        )
-                );
-
-        var cart = cartItemRepo.save(new CartItem(Integer.MAX_VALUE, saved, sku));
-
-        // when
-        assertTrue(cart.quantityIsGreaterThanProductSkuInventory());
-    }
-
-    @Test
     void deleteCartItemsByShoppingSessionId() {
         // given
         var cat = categoryRepo
@@ -359,6 +322,58 @@ class CartItemRepoTest extends AbstractRepositoryTest {
                 )
                 .isEmpty()
         );
+    }
+
+    @Test
+    void shouldSuccessfullyRetrieveRaceConditionCartPojo() {
+        // given
+        var cat = categoryRepo
+                .save(ProductCategory.builder()
+                        .name("category")
+                        .isVisible(true)
+                        .categories(new HashSet<>())
+                        .product(new HashSet<>())
+                        .build()
+                );
+
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
+
+        var skus = skuRepo.findAll();
+        assertEquals(3, skus.size());
+        ProductSku first = skus.getFirst();
+        ProductSku second = skus.get(1);
+        ProductSku third = skus.get(2);
+
+        var session = this.sessionRepo
+                .save(
+                        new ShoppingSession(
+                                "cookie",
+                                new Date(),
+                                new Date(Instant.now().plus(1, HOURS).toEpochMilli()),
+                                new HashSet<>(),
+                                new HashSet<>()
+                        )
+                );
+
+        cartItemRepo.save(new CartItem(3, session, first));
+        cartItemRepo.save(new CartItem(5, session, second));
+        cartItemRepo.save(new CartItem(7, session, third));
+
+        // when
+        var list = cartItemRepo
+                .cartItemsByShoppingSessionId(session.shoppingSessionId());
+        assertEquals(3, list.size());
+
+        for (var pojo : list) {
+            assertTrue(pojo.getProductSkuId() > 0);
+            assertFalse(pojo.getProductSkuSku().isEmpty());
+            assertFalse(pojo.getProductSkuSize().isEmpty());
+            assertTrue(pojo.getProductSkuInventory() > 0);
+            assertTrue(pojo.getCartItemId() > 0);
+            assertTrue(pojo.getCartItemQty() > 0);
+            assertTrue(pojo.getShoppingSessionId() > 0);
+        }
     }
 
 }

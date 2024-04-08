@@ -4,7 +4,7 @@ import dev.webserver.cart.entity.ShoppingSession;
 import dev.webserver.enumeration.ReservationStatus;
 import dev.webserver.payment.entity.OrderReservation;
 import dev.webserver.payment.projection.OrderReservationPojo;
-import dev.webserver.payment.projection.ReservationPojo;
+import dev.webserver.payment.projection.PaymentDetailPojo;
 import dev.webserver.product.entity.ProductSku;
 import org.hibernate.LazyInitializationException;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -116,12 +116,8 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     @Query("""
     SELECT
     o.reservationId AS reservationId,
-    o.reference AS reference,
-    o.qty AS qty,
-    o.status AS status,
-    o.expireAt AS expireAt,
-    p AS productSku,
-    s AS shoppingSession
+    o.qty AS reservationQty,
+    p.sku AS productSkuSku
     FROM OrderReservation o
     INNER JOIN FETCH ProductSku p ON o.productSku.skuId = p.skuId
     INNER JOIN FETCH ShoppingSession s ON o.shoppingSession.shoppingSessionId = s.shoppingSessionId
@@ -134,11 +130,11 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     );
 
     /**
-     * Returns a {@link ReservationPojo} consisting of {@link OrderReservation} and
+     * Returns a {@link PaymentDetailPojo} consisting of {@link OrderReservation} and
      * {@link ProductSku}.
      *
      * @param reference a unique string for every {@link OrderReservation} object.
-     * @return a {@link List} of {@link ReservationPojo}.
+     * @return a {@link List} of {@link PaymentDetailPojo}.
      * */
     @Query("""
     SELECT
@@ -149,6 +145,21 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     INNER JOIN ShoppingSession s ON o.shoppingSession.shoppingSessionId = s.shoppingSessionId
     WHERE o.reference = :reference
     """)
-    List<ReservationPojo> allReservationsByReference(String reference);
+    List<PaymentDetailPojo> allReservationsByReference(String reference);
+
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(nativeQuery = true, value = """
+    INSERT INTO order_reservation(reference, qty, status, expire_at, sku_id, session_id)
+    VALUE (:reference, :qty, :#{#status.name()}, :date, :skuId, :sessionId);
+    """)
+    void saveOrderReservation(
+            String reference,
+            int qty,
+            ReservationStatus status,
+            Date date,
+            long skuId,
+            long sessionId
+    );
 
 }

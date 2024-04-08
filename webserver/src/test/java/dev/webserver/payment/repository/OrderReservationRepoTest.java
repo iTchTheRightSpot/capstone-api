@@ -7,7 +7,6 @@ import dev.webserver.category.entity.ProductCategory;
 import dev.webserver.category.repository.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
 import dev.webserver.payment.entity.OrderReservation;
-import dev.webserver.payment.projection.OrderReservationPojo;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.*;
 import dev.webserver.util.CustomUtil;
@@ -310,14 +309,10 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
         // then
         assertEquals(1, list.size());
 
-        for (OrderReservationPojo pojo : list) {
-            assertNotNull(pojo.getReservationId());
-            assertNotNull(pojo.getReference());
-            assertNotNull(pojo.getQty());
-            assertNotNull(pojo.getStatus());
-            assertNotNull(pojo.getExpireAt());
-            assertNotNull(pojo.getProductSku());
-            assertNotNull(pojo.getShoppingSession());
+        for (var pojo : list) {
+            assertTrue(pojo.getReservationId() > 0);
+            assertTrue(pojo.getReservationQty() > 0);
+            assertFalse(pojo.getProductSkuSku().isEmpty());
         }
     }
 
@@ -399,6 +394,57 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
             assertNotNull(pojo.getReservation());
             assertNotNull(pojo.getSku());
         }
+    }
+
+    @Test
+    void shouldSaveOrderReservation() {
+        // given
+        var cat = categoryRepo
+                .save(ProductCategory.builder()
+                        .name("category")
+                        .isVisible(true)
+                        .categories(new HashSet<>())
+                        .product(new HashSet<>())
+                        .build()
+                );
+
+        // create 3 ProductSku objects
+        RepositoryTestData
+                .createProduct(3, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
+
+        var skus = skuRepo.findAll();
+        assertEquals(3, skus.size());
+
+        var session = this.sessionRepo
+                .save(new ShoppingSession(
+                        "cookie",
+                        new Date(),
+                        CustomUtil.toUTC(new Date(Instant.now().plus(1, HOURS).toEpochMilli())),
+                        new HashSet<>(),
+                        new HashSet<>()
+                ));
+
+        String reference = UUID.randomUUID().toString();
+
+        reservationRepo.saveOrderReservation(
+                reference,
+                skus.getFirst().getInventory() - 1,
+                PENDING,
+                new Date(),
+                skus.getFirst().getSkuId(),
+                session.shoppingSessionId()
+        );
+
+        reservationRepo.saveOrderReservation(
+                reference,
+                skus.getFirst().getInventory() - 1,
+                PENDING,
+                new Date(),
+                skus.getFirst().getSkuId(),
+                session.shoppingSessionId()
+        );
+
+        assertEquals(2, reservationRepo.findAll().size());
     }
 
 }

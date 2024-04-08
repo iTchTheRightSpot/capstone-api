@@ -37,8 +37,4 @@ public class CartItem {
         this.productSku = sku;
     }
 
-    public boolean quantityIsGreaterThanProductSkuInventory() {
-        return this.qty > this.productSku.getInventory();
-    }
-
 }

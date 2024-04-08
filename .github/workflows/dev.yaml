@@ -47,6 +47,7 @@ jobs:
 
       - name: Run tests
         run: |
+          docker compose up -d --build
           mvn clean install -DskipTests
           cd integration/
           mvn test -DPAYSTACK_PUB_KEY=PAYSTACK_PUB_KEY -DPAYSTACK_SECRET_KEY=PAYSTACK_SECRET_KEY

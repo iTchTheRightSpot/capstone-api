@@ -169,14 +169,8 @@ public class RaceConditionService {
                 for (CartItem cart : carts) {
                     log.info("On RaceCondition implementation method after cart {}", cart);
 
-                    if (cart.quantityIsGreaterThanProductSkuInventory()) {
-                        final var optional = productSkuRepo.productByProductSku(cart.getProductSku().getSku());
-
-                        final String name = optional.isPresent() ? optional.get().getName() : "";
-
-                        throw new OutOfStockException("%s %s is out of stock"
-                                .formatted(name, cart.getProductSku().getSize()));
-                    }
+                    // cart.quantityIsGreaterThanProductSkuInventory()
+                    onCartItemQtyGreaterThanProductSkuInventory(cart);
 
                     this.productSkuRepo
                             .updateProductSkuInventoryBySubtractingFromExistingInventory(
@@ -213,6 +207,18 @@ public class RaceConditionService {
         }
     }
 
+    private void onCartItemQtyGreaterThanProductSkuInventory(CartItem cart) {
+        if (cart.getQty() > cart.getProductSku().getInventory()) {
+            final var optional = productSkuRepo
+                    .productByProductSku(cart.getProductSku().getSku());
+
+            final String name = optional.isPresent() ? optional.get().getName() : "";
+
+            throw new OutOfStockException("%s %s is out of stock"
+                    .formatted(name, cart.getProductSku().getSize()));
+        }
+    }
+
     /**
      * Handles scenarios when pending reservations exist for items in the user's cart.
      * <p>
@@ -242,14 +248,7 @@ public class RaceConditionService {
             final List<CartItem> cartItems
     ) {
         for (CartItem cart : cartItems) {
-            if (cart.quantityIsGreaterThanProductSkuInventory()) {
-                final var optional = productSkuRepo.productByProductSku(cart.getProductSku().getSku());
-
-                final String name = optional.isPresent() ? optional.get().getName() : "";
-
-                throw new OutOfStockException("%s %s is out of stock"
-                        .formatted(name, cart.getProductSku().getSize()));
-            }
+            onCartItemQtyGreaterThanProductSkuInventory(cart);
 
             if (map.containsKey(cart.getProductSku().getSku())) {
                 final OrderReservation reservation = map.get(cart.getProductSku().getSku());

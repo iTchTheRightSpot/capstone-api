@@ -1,7 +1,6 @@
 package dev.webserver.cart.entity;
 
 import dev.webserver.product.entity.ProductSku;
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

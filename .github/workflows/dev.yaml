@@ -45,11 +45,12 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
-      - name: Start Containers
-        run: docker compose up -d --build
+#      - name: Start Containers
+#        run: docker compose up -d --build
 
-      - name: Run tests
+      - name: Start Containers and Run tests
         run: |
+          docker compose up -d --build
           mvn clean install -DskipTests
           cd integration/
           mvn test -DPAYSTACK_PUB_KEY=PAYSTACK_PUB_KEY -DPAYSTACK_SECRET_KEY=PAYSTACK_SECRET_KEY

@@ -98,8 +98,6 @@ public class RaceConditionService {
                         PENDING
                 );
 
-        log.info("On RaceCondition after reservation {}", reservations);
-
         final String reference = UUID.randomUUID().toString();
 
         final long instant = Instant.now()
@@ -177,7 +175,6 @@ public class RaceConditionService {
                             cart.getProductSkuId(),
                             cart.getShoppingSessionId()
                     );
-
                 }
             } else {
                 final Map<String, OrderReservationPojo> map = reservations.stream()

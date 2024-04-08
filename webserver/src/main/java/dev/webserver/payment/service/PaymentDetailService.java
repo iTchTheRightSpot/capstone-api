@@ -3,11 +3,8 @@ package dev.webserver.payment.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.webserver.cart.entity.CartItem;
-import dev.webserver.cart.entity.ShoppingSession;
 import dev.webserver.cart.repository.CartItemRepo;
 import dev.webserver.enumeration.PaymentStatus;
-import dev.webserver.enumeration.ReservationStatus;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.payment.entity.*;
@@ -184,15 +181,16 @@ public class PaymentDetailService {
         var reservations = orderReservationRepo.allReservationsByReference(reference);
 
         // save OrderDetails
-        reservations.forEach(obj -> new OrderDetail(obj.getReservation().getQty(), obj.getSku(), detail));
+        reservations.forEach(obj -> orderDetailRepository
+                .saveOrderDetail(obj.getReservationQty(), obj.getProductSkuId(), detail.getPaymentDetailId()));
 
         // delete CartItems
         cartItemRepo.cartItemsByOrderReservationReference(reference)
-                .forEach(cartItem -> cartItemRepo.deleteById(cartItem.getCartId()));
+                .forEach(cartItem -> cartItemRepo.deleteById(cartItem.getCartItemId()));
 
         // delete OrderReservations
         reservations
-                .forEach(o -> orderReservationRepo.deleteById(o.getReservation().getReservationId()));
+                .forEach(o -> orderReservationRepo.deleteById(o.getReservationId()));
     }
 
 }

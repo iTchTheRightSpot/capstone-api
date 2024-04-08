@@ -118,4 +118,52 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
         }
     }
 
+    @Test
+    void shouldSuccessfullySaveOrderDetail() {
+        var cat = categoryRepo
+                .save(ProductCategory.builder()
+                        .name("category")
+                        .isVisible(true)
+                        .categories(new HashSet<>())
+                        .product(new HashSet<>())
+                        .build()
+                );
+
+        RepositoryTestData
+                .createProduct(2, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
+
+        var paymentDetail = paymentDetailRepo
+                .save(PaymentDetail.builder()
+                        .name(new Faker().name().fullName())
+                        .email("hello@hello.com")
+                        .phone("0000000000")
+                        .referenceId("unique-payment-categoryId")
+                        .currency(SarreCurrency.USD)
+                        .amount(new BigDecimal("50.65"))
+                        .paymentProvider("Paystack")
+                        .createAt(new Date())
+                        .orderDetails(new HashSet<>())
+                        .build()
+                );
+
+        addressRepo.save(new Address(
+                "address boulevard",
+                "city",
+                "state",
+                "postcode",
+                "Transylvania",
+                new Faker().lorem().characters(500),
+                paymentDetail)
+        );
+
+
+        // when
+        var skus = skuRepo.findAll();
+        assertFalse(skus.isEmpty());
+        var sku = skus.getFirst();
+
+        orderDetailRepository
+                .saveOrderDetail(sku.getInventory(), sku.getSkuId(), paymentDetail.getPaymentDetailId());
+    }
+
 }

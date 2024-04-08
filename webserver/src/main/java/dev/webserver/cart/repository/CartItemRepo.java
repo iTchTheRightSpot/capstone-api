@@ -75,13 +75,13 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
 
     @Query("""
     SELECT
-    c
+    c.cartId AS cartItemId
     FROM CartItem c
     INNER JOIN ShoppingSession s ON c.shoppingSession.shoppingSessionId = s.shoppingSessionId
     INNER JOIN OrderReservation o ON s.shoppingSessionId = o.shoppingSession.shoppingSessionId
     WHERE o.reference = :reference
     """)
-    List<CartItem> cartItemsByOrderReservationReference(String reference);
+    List<RaceConditionCartPojo> cartItemsByOrderReservationReference(String reference);
 
     @Query("""
     SELECT c FROM CartItem c

@@ -7,6 +7,8 @@ import dev.webserver.category.entity.ProductCategory;
 import dev.webserver.category.repository.CategoryRepository;
 import dev.webserver.data.TestData;
 import dev.webserver.payment.entity.OrderReservation;
+import dev.webserver.payment.repository.AddressRepo;
+import dev.webserver.payment.repository.OrderDetailRepository;
 import dev.webserver.payment.repository.OrderReservationRepo;
 import dev.webserver.payment.repository.PaymentDetailRepo;
 import dev.webserver.product.entity.ProductSku;
@@ -42,6 +44,10 @@ class CronJobTest extends AbstractIntegration {
     private OrderReservationRepo reservationRepo;
     @Autowired
     private PaymentDetailRepo paymentDetailRepo;
+    @Autowired
+    private OrderDetailRepository orderDetailRepository;
+    @Autowired
+    private AddressRepo addressRepo;
 
     @Test
     void shouldSuccessfullyValidateFromPayStack() {
@@ -85,9 +91,13 @@ class CronJobTest extends AbstractIntegration {
         // then
         var payments = paymentDetailRepo.findAll();
         var reservations = reservationRepo.findAll();
+        var addresses = addressRepo.findAll();
+        var orderDetails = orderDetailRepository.findAll();
 
-        assertEquals(1, payments.size());
         assertTrue(reservations.isEmpty());
+        assertEquals(1, payments.size());
+        assertEquals(1, addresses.size());
+        assertFalse(orderDetails.isEmpty());
     }
 
     private ProductSku productSku() {

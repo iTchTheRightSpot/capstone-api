@@ -376,4 +376,9 @@ class CartItemRepoTest extends AbstractRepositoryTest {
         }
     }
 
+    @Test
+    void shouldReturnCartItemsByOrderReservationReference() {
+        // TODO
+    }
+
 }

@@ -391,8 +391,9 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
         assertEquals(3, list.size());
 
         for (var pojo : list) {
-            assertNotNull(pojo.getReservation());
-            assertNotNull(pojo.getSku());
+            assertTrue(pojo.getReservationId() > 0);
+            assertTrue(pojo.getReservationQty() > 0);
+            assertTrue(pojo.getProductSkuId() > 0);
         }
     }
 

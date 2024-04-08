@@ -138,8 +138,9 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
      * */
     @Query("""
     SELECT
-    o AS reservation,
-    p AS sku
+    o.reservationId AS reservationId,
+    o.qty AS reservationQty,
+    p.skuId AS productSkuId
     FROM OrderReservation o
     INNER JOIN FETCH ProductSku p ON o.productSku.skuId = p.skuId
     INNER JOIN ShoppingSession s ON o.shoppingSession.shoppingSessionId = s.shoppingSessionId

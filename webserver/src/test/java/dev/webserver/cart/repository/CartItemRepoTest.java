@@ -212,7 +212,7 @@ class CartItemRepoTest extends AbstractRepositoryTest {
         var cart = cartItemRepo.save(new CartItem(Integer.MAX_VALUE, saved, sku));
 
         // when
-//        assertTrue(cart.quantityIsGreaterThanProductSkuInventory());
+        assertTrue(cart.quantityIsGreaterThanProductSkuInventory());
     }
 
     @Test
@@ -359,44 +359,6 @@ class CartItemRepoTest extends AbstractRepositoryTest {
                 )
                 .isEmpty()
         );
-    }
-
-    @Test
-    void deleteCartItemByCartItemId() {
-        // given
-        var cat = categoryRepo
-                .save(ProductCategory.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
-
-        RepositoryTestData
-                .createProduct(2, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
-
-        var skus = skuRepo.findAll();
-        assertEquals(2, skus.size());
-
-        var session = this.sessionRepo
-                .save(
-                        new ShoppingSession(
-                                "cookie",
-                                new Date(),
-                                new Date(Instant.now().plus(1, HOURS).toEpochMilli()),
-                                new HashSet<>(),
-                                new HashSet<>()
-                        )
-                );
-
-        long item = cartItemRepo.save(new CartItem(3, session, skus.getFirst())).getCartId();
-
-        // when
-        cartItemRepo.deleteCartItemByCartItemId(item);
-
-        // then
-        assertTrue(cartItemRepo.findById(item).isEmpty());
     }
 
 }

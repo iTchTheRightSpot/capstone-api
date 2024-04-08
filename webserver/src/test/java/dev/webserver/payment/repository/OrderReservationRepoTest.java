@@ -322,62 +322,6 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void deleteOrderReservationByReservationId() {
-        // given
-        var cat = categoryRepo
-                .save(ProductCategory.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
-
-        // create 1 ProductSku objects
-        RepositoryTestData
-                .createProduct(1, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
-
-        var skus = skuRepo.findAll();
-        assertEquals(1, skus.size());
-
-        var session = this.sessionRepo
-                .save(
-                        new ShoppingSession(
-                                "cookie",
-                                new Date(),
-                                CustomUtil.toUTC(new Date(Instant.now().plus(1, HOURS).toEpochMilli())),
-                                new HashSet<>(),
-                                new HashSet<>()
-                        )
-                );
-
-        Date current = new Date();
-        ProductSku first = skus.getFirst();
-        var reservation = reservationRepo
-                .save(
-                        new OrderReservation(
-                                UUID.randomUUID().toString(),
-                                first.getInventory() - 1,
-                                PENDING,
-                                CustomUtil.toUTC(
-                                        new Date(current
-                                                .toInstant()
-                                                .minus(5, HOURS)
-                                                .toEpochMilli()
-                                        )
-                                ),
-                                first,
-                                session
-                        )
-                );
-
-        // when
-        long reservationId = reservation.getReservationId();
-        reservationRepo.deleteOrderReservationByReservationId(reservationId);
-        assertTrue(reservationRepo.findById(reservationId).isEmpty());
-    }
-
-    @Test
     void allReservationsByReference() {
         // given
         var cat = categoryRepo
@@ -448,7 +392,13 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
         }
 
         assertEquals(4, reservationRepo.findAll().size());
-        assertEquals(3, reservationRepo.allReservationsByReference(reference).size());
+        var list = reservationRepo.allReservationsByReference(reference);
+        assertEquals(3, list.size());
+
+        for (var pojo : list) {
+            assertNotNull(pojo.getReservation());
+            assertNotNull(pojo.getSku());
+        }
     }
 
 }

@@ -64,16 +64,21 @@ public interface CartItemRepo extends JpaRepository<CartItem, Long> {
     List<CartItem> cartItemsByShoppingSessionId(long id);
 
     @Query("""
+    SELECT
+    c
+    FROM CartItem c
+    INNER JOIN ShoppingSession s ON c.shoppingSession.shoppingSessionId = s.shoppingSessionId
+    INNER JOIN OrderReservation o ON s.shoppingSessionId = o.shoppingSession.shoppingSessionId
+    WHERE o.reference = :reference
+    """)
+    List<CartItem> cartItemsByOrderReservationReference(String reference);
+
+    @Query("""
     SELECT c FROM CartItem c
     INNER JOIN ShoppingSession s ON c.shoppingSession.shoppingSessionId = s.shoppingSessionId
     INNER JOIN ProductSku sk ON c.productSku.skuId = sk.skuId
     WHERE s.shoppingSessionId = :id AND sk.sku = :sku
     """)
     Optional<CartItem> cartItemByShoppingSessionIdAndProductSkuSku(long id, String sku);
-
-    @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query("DELETE FROM CartItem c WHERE c.cartId = :id")
-    void deleteCartItemByCartItemId(long id);
 
 }

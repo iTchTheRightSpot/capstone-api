@@ -7,6 +7,7 @@ import dev.webserver.cart.entity.CartItem;
 import dev.webserver.cart.entity.ShoppingSession;
 import dev.webserver.cart.repository.CartItemRepo;
 import dev.webserver.enumeration.PaymentStatus;
+import dev.webserver.enumeration.ReservationStatus;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.payment.entity.*;
@@ -25,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -80,7 +80,7 @@ public class PaymentDetailService {
             var detail = paymentDetail(data, metadata, reference, amount);
             address(metadata, detail);
             paymentAuthorization(webAuth, detail);
-            processPaymentOrderReservations(detail, reference.substring(4));
+            orderDetail(detail, reference.substring(4));
 
         } catch (JsonProcessingException e) {
             log.error(e.getMessage());
@@ -174,35 +174,25 @@ public class PaymentDetailService {
     }
 
     /**
-     * After processing a {@link PaymentDetail}, we create process the {@link OrderDetail} by
-     * retrieving all of PENDING {@link OrderReservation}s by the reference. After which we
-     * delete all {@link OrderReservation}s and {@link CartItem}s
-     * by {@link ShoppingSession}.
+     * Saves {@link OrderDetail}s and deletes the items currently bought in the users cart and
+     * {@link OrderReservation}.
      *
      * @param detail    The {@link PaymentDetail} associated with the order.
      * @param reference The reference id associated to an {@link OrderReservation}.
      */
-    private void processPaymentOrderReservations(final PaymentDetail detail, final String reference) {
+    private void orderDetail(final PaymentDetail detail, final String reference) {
         var reservations = orderReservationRepo.allReservationsByReference(reference);
 
         // save OrderDetails
-        reservations.stream()
-                .map(o -> new OrderDetail(o.getQty(), o.getProductSku(), detail))
-                .forEach(orderDetailRepository::save);
+        reservations.forEach(obj -> new OrderDetail(obj.getReservation().getQty(), obj.getSku(), detail));
 
-        // delete CartItems with the same ProductSku
-        reservations.stream().map(OrderReservation::getProductSku)
-                .toList()
-                .stream()
-                .flatMap(s -> cartItemRepo
-                        .cartItemsByShoppingSessionId(reservations.getFirst().getShoppingSession().shoppingSessionId())
-                        .stream()
-                        .filter(c -> Objects.equals(c.getProductSku().getSku(), s.getSku()))
-                )
-                .forEach(cartItem -> cartItemRepo.deleteCartItemByCartItemId(cartItem.getCartId()));
+        // delete CartItems
+        cartItemRepo.cartItemsByOrderReservationReference(reference)
+                .forEach(cartItem -> cartItemRepo.deleteById(cartItem.getCartId()));
 
         // delete OrderReservations
-        reservations.forEach(o -> orderReservationRepo.deleteOrderReservationByReservationId(o.getReservationId()));
+        reservations
+                .forEach(o -> orderReservationRepo.deleteById(o.getReservation().getReservationId()));
     }
 
 }

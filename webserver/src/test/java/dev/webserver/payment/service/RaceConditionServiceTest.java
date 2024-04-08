@@ -243,8 +243,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
         verify(skuRepo, times(0))
                 .updateProductSkuInventoryByAddingToExistingInventory(anyString(), anyInt());
 
-        verify(reservationRepo, times(0))
-                .deleteOrderReservationByReservationId(anyLong());
+        verify(reservationRepo, times(0)).deleteById(anyLong());
     }
 
     @Test
@@ -357,8 +356,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
 
         verify(skuRepo, times(0))
                 .updateProductSkuInventoryByAddingToExistingInventory(anyString(), anyInt());
-        verify(reservationRepo, times(0))
-                .deleteOrderReservationByReservationId(anyLong());
+        verify(reservationRepo, times(0)).deleteById(anyLong());
     }
 
     @Test
@@ -471,8 +469,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
 
         verify(skuRepo, times(0))
                 .updateProductSkuInventoryByAddingToExistingInventory(anyString(), anyInt());
-        verify(reservationRepo, times(0))
-                .deleteOrderReservationByReservationId(anyLong());
+        verify(reservationRepo, times(0)).deleteById(anyLong());
     }
 
     @Test
@@ -577,8 +574,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
 
         verify(skuRepo, times(2))
                 .updateProductSkuInventoryByAddingToExistingInventory(anyString(), anyInt());
-        verify(reservationRepo, times(2))
-                .deleteOrderReservationByReservationId(anyLong());
+        verify(reservationRepo, times(2)).deleteById(anyLong());
     }
 
 }

@@ -169,7 +169,6 @@ public class RaceConditionService {
                 for (CartItem cart : carts) {
                     log.info("On RaceCondition implementation method after cart {}", cart);
 
-                    // cart.quantityIsGreaterThanProductSkuInventory()
                     onCartItemQtyGreaterThanProductSkuInventory(cart);
 
                     this.productSkuRepo
@@ -208,7 +207,7 @@ public class RaceConditionService {
     }
 
     private void onCartItemQtyGreaterThanProductSkuInventory(CartItem cart) {
-        if (cart.getQty() > cart.getProductSku().getInventory()) {
+        if (cart.quantityIsGreaterThanProductSkuInventory()) {
             final var optional = productSkuRepo
                     .productByProductSku(cart.getProductSku().getSku());
 
@@ -299,7 +298,7 @@ public class RaceConditionService {
                     value.getProductSku().getSku(),
                     value.getQty()
             );
-            this.reservationRepo.deleteOrderReservationByReservationId(value.getReservationId());
+            this.reservationRepo.deleteById(value.getReservationId());
         }
     }
 

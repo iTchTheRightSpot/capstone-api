@@ -14,7 +14,7 @@ import static org.springframework.http.HttpStatus.OK;
 @RequestMapping(path = "${api.endpoint.baseurl}cron")
 @PreAuthorize(value = "hasRole('ROLE_WORKER')")
 @RequiredArgsConstructor
-@Profile(value = "native-test")
+//@Profile(value = "native-test")
 class CronController {
 
     private final CronJob cronJob;

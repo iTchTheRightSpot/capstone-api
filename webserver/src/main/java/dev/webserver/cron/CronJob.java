@@ -126,9 +126,7 @@ class CronJob {
                             obj.reservation().getQty()
                     );
 
-                    reservationRepo.deleteOrderReservationByReservationId(
-                            obj.reservation().getReservationId()
-                    );
+                    reservationRepo.deleteById(obj.reservation().getReservationId());
                 });
     }
 

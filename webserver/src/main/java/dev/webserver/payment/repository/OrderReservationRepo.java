@@ -4,7 +4,9 @@ import dev.webserver.cart.entity.ShoppingSession;
 import dev.webserver.enumeration.ReservationStatus;
 import dev.webserver.payment.entity.OrderReservation;
 import dev.webserver.payment.projection.OrderReservationPojo;
+import dev.webserver.payment.projection.ReservationPojo;
 import dev.webserver.product.entity.ProductSku;
+import org.hibernate.LazyInitializationException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -109,7 +111,7 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
     /**
      * Using Spring Data Projection, method returns a {@link List} of {@link OrderReservation}
      * as {@link OrderReservationRepo}. The reason main reason for returning a {@link OrderReservationRepo}
-     * is due to {@link org.hibernate.LazyInitializationException} error when compiled to a native image.
+     * is due to {@link LazyInitializationException} error when compiled to a native image.
      * */
     @Query("""
     SELECT
@@ -131,12 +133,22 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
             ReservationStatus status
     );
 
-    @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query("DELETE FROM OrderReservation o WHERE o.reservationId = :id")
-    void deleteOrderReservationByReservationId(long id);
-
-    @Query("SELECT o FROM OrderReservation o WHERE o.reference = :reference")
-    List<OrderReservation> allReservationsByReference(String reference);
+    /**
+     * Returns a {@link ReservationPojo} consisting of {@link OrderReservation} and
+     * {@link ProductSku}.
+     *
+     * @param reference a unique string for every {@link OrderReservation} object.
+     * @return a {@link List} of {@link ReservationPojo}.
+     * */
+    @Query("""
+    SELECT
+    o AS reservation,
+    p AS sku
+    FROM OrderReservation o
+    INNER JOIN FETCH ProductSku p ON o.productSku.skuId = p.skuId
+    INNER JOIN ShoppingSession s ON o.shoppingSession.shoppingSessionId = s.shoppingSessionId
+    WHERE o.reference = :reference
+    """)
+    List<ReservationPojo> allReservationsByReference(String reference);
 
 }

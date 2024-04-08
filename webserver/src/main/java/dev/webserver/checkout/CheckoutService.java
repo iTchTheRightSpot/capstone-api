@@ -54,29 +54,29 @@ public class CheckoutService {
      * @return A {@link Checkout} object containing objects needed to be sent to the UI.
      * @throws CustomNotFoundException If any required information is missing or invalid.
      */
-    public Checkout checkout(HttpServletRequest req, String country, SarreCurrency currency) {
-        CustomObject obj = validateCurrentShoppingSession(req, country);
+    public Checkout checkout(final HttpServletRequest req, final String country, final SarreCurrency currency) {
+        final CustomObject obj = validateCurrentShoppingSession(req, country);
 
-        var list = this.cartItemRepo
+        final var list = this.cartItemRepo
                 .amountToPayForAllCartItemsForShoppingSession(obj.session().shoppingSessionId(), currency);
 
-        BigDecimal shipCost = currency.equals(SarreCurrency.USD)
+        final BigDecimal shipCost = currency.equals(SarreCurrency.USD)
                 ? obj.ship().usdPrice()
                 : obj.ship().ngnPrice();
 
-        CheckoutPair subtotal = CustomUtil.cartItemsTotalAndTotalWeight(list);
+        final CheckoutPair subtotal = CustomUtil.cartItemsTotalAndTotalWeight(list);
 
-        BigDecimal total = CustomUtil
+        final BigDecimal total = CustomUtil
                 .calculateTotal(
                         subtotal.total(),
                         obj.tax().rate(),
                         shipCost
                 );
 
-        var optional = Optional
+        final var optional = Optional
                 .ofNullable(SecurityContextHolder.getContext().getAuthentication());
 
-        String principal = optional.isEmpty() ? "" : switch (optional.get()) {
+        final String principal = optional.isEmpty() ? "" : switch (optional.get()) {
             case AnonymousAuthenticationToken ignored -> "";
             default -> optional.get().getName();
         };
@@ -112,33 +112,33 @@ public class CheckoutService {
      *                                 {@link HttpServletRequest}, the {@link ShoppingSession} is
      *                                 invalid, or {@link CartItem} is empty.
      */
-    public CustomObject validateCurrentShoppingSession(HttpServletRequest req, String country) {
-        Cookie cookie = CustomUtil.cookie(req, CARTCOOKIE);
+    public CustomObject validateCurrentShoppingSession(final HttpServletRequest req, final String country) {
+        final Cookie cookie = CustomUtil.cookie(req, CARTCOOKIE);
 
         if (cookie == null) {
             throw new CustomNotFoundException("no cookie found. kindly refresh window");
         }
 
-        var optional = shoppingSessionRepo
+        final var optional = shoppingSessionRepo
                 .shoppingSessionByCookie(cookie.getValue().split(SPLIT)[0]);
 
         if (optional.isEmpty()) {
             throw new CustomNotFoundException("invalid shopping session");
         }
 
-        ShoppingSession session = optional.get();
+        final ShoppingSession session = optional.get();
 
-        var carts = cartItemRepo
+        final var carts = cartItemRepo
                 .cartItemsByShoppingSessionId(session.shoppingSessionId());
 
         if (carts.isEmpty()) {
             throw new CustomNotFoundException("cart is empty");
         }
 
-        ShipSetting ship = shippingService
+        final ShipSetting ship = shippingService
                 .shippingByCountryElseReturnDefault(country);
 
-        Tax tax = taxService.taxById(1);
+        final Tax tax = taxService.taxById(1);
 
         return new CustomObject(session, carts, ship, tax);
     }

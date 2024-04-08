@@ -6,7 +6,10 @@ import dev.webserver.cart.entity.ShoppingSession;
 import dev.webserver.category.entity.ProductCategory;
 import dev.webserver.category.repository.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
+import dev.webserver.enumeration.ReservationStatus;
+import dev.webserver.payment.entity.OrderReservation;
 import dev.webserver.payment.projection.TotalPojo;
+import dev.webserver.payment.repository.OrderReservationRepo;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.*;
 import org.junit.jupiter.api.Test;
@@ -42,6 +45,8 @@ class CartItemRepoTest extends AbstractRepositoryTest {
     private PriceCurrencyRepo priceCurrencyRepo;
     @Autowired
     private ProductImageRepo imageRepo;
+    @Autowired
+    private OrderReservationRepo orderReservationRepo;
 
     @Test
     void updateCartQtyByCartId() {
@@ -378,7 +383,46 @@ class CartItemRepoTest extends AbstractRepositoryTest {
 
     @Test
     void shouldReturnCartItemsByOrderReservationReference() {
-        // TODO
+        // given
+        var cat = categoryRepo
+                .save(ProductCategory.builder()
+                        .name("category")
+                        .isVisible(true)
+                        .categories(new HashSet<>())
+                        .product(new HashSet<>())
+                        .build()
+                );
+
+        RepositoryTestData
+                .createProduct(2, cat, productRepo, detailRepo, priceCurrencyRepo, imageRepo, skuRepo);
+
+        var createExpired = new Date(Instant.now().minus(2, HOURS).toEpochMilli());
+        var toExpire = new Date(Instant.now().minus(1, HOURS).toEpochMilli());
+
+        var skus = skuRepo.findAll();
+        assertFalse(skus.isEmpty());
+
+        var session = this.sessionRepo.save(new ShoppingSession(
+                "cookie",
+                createExpired,
+                toExpire,
+                new HashSet<>(),
+                new HashSet<>()
+        ));
+
+        var sku = skus.getFirst();
+        orderReservationRepo.save(new OrderReservation(
+                "reference-1",
+                sku.getInventory() - 1,
+                ReservationStatus.PENDING,
+                toExpire,
+                sku,
+                session
+        ));
+        cartItemRepo.save(new CartItem(sku.getInventory() - 1, session, sku));
+
+        // method to test
+        assertEquals(1, cartItemRepo.cartItemsByOrderReservationReference("reference-1").size());
     }
 
 }

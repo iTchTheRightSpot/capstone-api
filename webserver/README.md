@@ -2,7 +2,7 @@
 
 ## Getting started
 #### Pre-requisite
-1. docker
+1. docker installed
 
 ```
 To run application
@@ -13,21 +13,6 @@ mvn clean spring-boot:test-run
 To run all test
 mvn clean test
 ```
-
-### Technologies
-* Java 21.
-* Spring Boot 3.2.x
-  * Spring Starter Web.
-  * Spring Starter Validation.
-  * Spring Data JPA.
-  * Spring Oauth2 Resource Server (manual authentication and authorization using jwt).
-  * Spring Session.
-* MySQL.
-* Flyway.
-* Paystack.
-* Awaitility.
-* AWS Java SDK v2 (SESv2, S3Client, S3Presigner and SecretsManager Client).
-* Unit testing, Data Access Layer and Integration Testing using JUnit, Mockito, Hamcrest and Test Containers.
 
 ### Schema
 Link for the most up-to-date schema.

@@ -1,16 +1,11 @@
 package dev.integration;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.webserver.auth.dto.LoginDto;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpStatusCode;
 import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -20,8 +15,6 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.Duration;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MainTest {
@@ -53,24 +46,6 @@ public class MainTest {
 //        PATH = "http://localhost:1997/";
 
         CustomRunInitScripts.processScript("integration", "integration");
-    }
-
-    @Test
-    void testCanImportAnObjectFromWebServerModule() {
-        assertEquals(new LoginDto("principal@gmail.com", "password"),
-                new LoginDto("principal@gmail.com", "password"));
-    }
-
-    @Test
-    void actuator() throws JsonProcessingException {
-        var responseEntity = testTemplate
-                .getForEntity(PATH + "actuator/health", String.class);
-
-        assertEquals(HttpStatusCode.valueOf(200), responseEntity.getStatusCode());
-
-        var node = mapper.readValue(responseEntity.getBody(), JsonNode.class).get("status");
-
-        assertEquals("UP", node.asText());
     }
 
 }

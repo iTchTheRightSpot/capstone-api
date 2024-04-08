@@ -196,7 +196,7 @@ public class RaceConditionService {
         }
     }
 
-    private void onCartItemQtyGreaterThanProductSkuInventory(RaceConditionCartPojo cart) {
+    private void onCartItemQtyGreaterThanProductSkuInventory(final RaceConditionCartPojo cart) {
         if (cart.getCartItemQty() > cart.getProductSkuInventory()) {
             final var optional = productSkuRepo
                     .productByProductSku(cart.getProductSkuSku());
@@ -221,7 +221,7 @@ public class RaceConditionService {
      * @param session The {@link ShoppingSession} associated with the user's
      *                device.
      * @param toExpire The expiration date for the reservations.
-     * @param map A map of existing {@link OrderReservation} indexed by
+     * @param reservations A map of existing {@link OrderReservation} indexed by
      *            {@link ProductSku} property sku.
      * @param cartItems A list of {@link CartItem} representing items in the
      *                  user's cart.
@@ -233,14 +233,14 @@ public class RaceConditionService {
             final String reference,
             final ShoppingSession session,
             final Date toExpire,
-            final Map<String, OrderReservationPojo> map,
+            final Map<String, OrderReservationPojo> reservations,
             final List<RaceConditionCartPojo> cartItems
     ) {
         for (var cart : cartItems) {
             onCartItemQtyGreaterThanProductSkuInventory(cart);
 
-            if (map.containsKey(cart.getProductSkuSku())) {
-                final OrderReservationPojo reservation = map.get(cart.getProductSkuSku());
+            if (reservations.containsKey(cart.getProductSkuSku())) {
+                final OrderReservationPojo reservation = reservations.get(cart.getProductSkuSku());
 
                 if (cart.getCartItemQty() > reservation.getReservationQty()) {
                     this.reservationRepo
@@ -266,7 +266,7 @@ public class RaceConditionService {
                             );
                 }
 
-                map.remove(cart.getProductSkuSku());
+                reservations.remove(cart.getProductSkuSku());
             } else {
                 this.productSkuRepo.updateProductSkuInventoryBySubtractingFromExistingInventory(
                         cart.getProductSkuSku(),
@@ -283,7 +283,7 @@ public class RaceConditionService {
             }
         }
 
-        for (Map.Entry<String, OrderReservationPojo> entry : map.entrySet()) {
+        for (final Map.Entry<String, OrderReservationPojo> entry : reservations.entrySet()) {
             final OrderReservationPojo reservation = entry.getValue();
             this.productSkuRepo.updateProductSkuInventoryByAddingToExistingInventory(
                     reservation.getProductSkuSku(),

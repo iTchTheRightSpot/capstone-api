@@ -1,13 +1,10 @@
 package dev.webserver.checkout;
 
-import com.github.javafaker.Faker;
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.cart.entity.CartItem;
 import dev.webserver.cart.entity.ShoppingSession;
 import dev.webserver.cart.repository.CartItemRepo;
 import dev.webserver.cart.repository.ShoppingSessionRepo;
-import dev.webserver.payment.projection.TotalPojo;
-import dev.webserver.product.entity.ProductSku;
+import dev.webserver.payment.projection.RaceConditionCartPojo;
 import dev.webserver.shipping.entity.ShipSetting;
 import dev.webserver.shipping.service.ShippingService;
 import dev.webserver.tax.Tax;
@@ -19,10 +16,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -54,78 +52,80 @@ class CheckoutServiceTest extends AbstractUnitTest {
         checkoutService.setSPLIT("%");
     }
 
-    List<TotalPojo> dummyItems (int num) {
-        List<TotalPojo> list = new ArrayList<>();
-        for (int i = 1; i < num; i++) {
-            int finalI = i;
-            TotalPojo item = new TotalPojo() {
-                @Override
-                public Integer getQty() {
-                    return finalI;
-                }
+    @Test
+    void createCustomObjectForShoppingSession() {
+        // given
+        var session = new ShoppingSession();
+        session.setShoppingSessionId(1L);
+        ShipSetting ship = new ShipSetting();
+        ship.setCountry("nigeria");
+        Tax tax = new Tax(1L, "vat", 0.075);
+        Cookie[] cookies = {new Cookie("cartcookie", "this is custom cookie")};
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        var cartItems = items.apply(3, session);
 
-                @Override
-                public BigDecimal getPrice() {
-                    return new BigDecimal(new Faker().commerce().price());
-                }
+        // when
+        when(req.getCookies()).thenReturn(cookies);
+        when(sessionRepo.shoppingSessionByCookie(anyString())).thenReturn(Optional.of(session));
+        when(cartItemRepo.cartItemsByShoppingSessionId(anyLong())).thenReturn(cartItems);
+        when(shippingService.shippingByCountryElseReturnDefault(anyString())).thenReturn(ship);
+        when(taxService.taxById(anyLong())).thenReturn(tax);
 
-                @Override
-                public Double getWeight() {
-                    return new Faker().number()
-                            .randomDouble(4, 1, 10);
-                }
-            };
+        // method to test
+        CustomObject obj = checkoutService
+                .validateCurrentShoppingSession(req, "nigeria");
 
-            list.add(item);
-        }
-        return list;
+        // then
+        Assertions.assertEquals(obj.session(), session);
+        assertEquals(obj.cartItems(), cartItems);
+        Assertions.assertEquals(obj.ship(), ship);
+        Assertions.assertEquals(obj.tax(), tax);
+
+        verify(sessionRepo, times(1)).shoppingSessionByCookie(anyString());
+        verify(cartItemRepo, times(1)).cartItemsByShoppingSessionId(anyLong());
+        verify(shippingService, times(1)).shippingByCountryElseReturnDefault(anyString());
+        verify(taxService, times(1)).taxById(anyLong());
     }
 
-//    @Test
-//    void createCustomObjectForShoppingSession() {
-//        // given
-//        ShoppingSession session = new ShoppingSession();
-//        session.setShoppingSessionId(1L);
-//        var items = List.of(
-//                new CartItem(1L, 2, session, new ProductSku()),
-//                new CartItem(2L, 4, session, new ProductSku()),
-//                new CartItem(3L, 1, session, new ProductSku())
-//        );
-//        ShipSetting ship = new ShipSetting();
-//        ship.setCountry("nigeria");
-//        Tax tax = new Tax(1L, "vat", 0.075);
-//        Cookie[] cookies = {new Cookie("cartcookie", "this is custom cookie")};
-//        HttpServletRequest req = mock(HttpServletRequest.class);
-//
-//        // when
-//        when(req.getCookies()).thenReturn(cookies);
-//        when(sessionRepo.shoppingSessionByCookie(anyString()))
-//                .thenReturn(Optional.of(session));
-//        when(cartItemRepo.cartItemsByShoppingSessionId(anyLong()))
-//                .thenReturn(items);
-//        when(shippingService.shippingByCountryElseReturnDefault(anyString()))
-//                .thenReturn(ship);
-//        when(taxService.taxById(anyLong()))
-//                .thenReturn(tax);
-//
-//        // method to test
-//        CustomObject obj = checkoutService
-//                .validateCurrentShoppingSession(req, "nigeria");
-//
-//        // then
-//        Assertions.assertEquals(obj.session(), session);
-//        assertEquals(obj.cartItems(), items);
-//        Assertions.assertEquals(obj.ship(), ship);
-//        Assertions.assertEquals(obj.tax(), tax);
-//
-//        verify(sessionRepo, times(1))
-//                .shoppingSessionByCookie(anyString());
-//        verify(cartItemRepo, times(1))
-//                .cartItemsByShoppingSessionId(anyLong());
-//        verify(shippingService, times(1))
-//                .shippingByCountryElseReturnDefault(anyString());
-//        verify(taxService, times(1))
-//                .taxById(anyLong());
-//    }
+    static final BiFunction<Integer, ShoppingSession, List<RaceConditionCartPojo>> items = (num, session) -> IntStream
+            .range(0, num)
+            .mapToObj(op -> new RaceConditionCartPojo() {
+
+                @Override
+                public Long getProductSkuId() {
+                    return (long) num;
+                }
+
+                @Override
+                public String getProductSkuSku() {
+                    return "sku-" + num;
+                }
+
+                @Override
+                public Integer getProductSkuInventory() {
+                    return num;
+                }
+
+                @Override
+                public String getProductSkuSize() {
+                    return "size-" + num;
+                }
+
+                @Override
+                public Long getCartItemId() {
+                    return (long) num;
+                }
+
+                @Override
+                public Integer getCartItemQty() {
+                    return num * 2;
+                }
+
+                @Override
+                public Long getShoppingSessionId() {
+                    return session.shoppingSessionId();
+                }
+            })
+            .collect(Collectors.toUnmodifiableList());
 
 }

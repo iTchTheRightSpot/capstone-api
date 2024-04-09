@@ -3,11 +3,14 @@ package dev.integration;
 import com.github.javafaker.Faker;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.cart.response.CartResponse;
-import dev.webserver.product.dto.*;
+import dev.webserver.product.dto.CreateProductDTO;
+import dev.webserver.product.dto.PriceCurrencyDto;
+import dev.webserver.product.dto.SizeInventoryDTO;
+import dev.webserver.product.dto.UpdateProductDTO;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.mock.web.MockMultipartFile;
@@ -16,13 +19,16 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.io.IOException;
+import java.io.File;
 import java.math.BigDecimal;
 import java.net.HttpCookie;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestData {
 
@@ -40,48 +46,45 @@ public class TestData {
      * but for {@link WebTestClient}.
      *
      * @param dto application/json to send the server.
-     * @return MultiValueMap<String, Object> where the key is the parameter the server accepts. See
-     * @throws IOException if file path does not exist.
+     * @return a {@link MultiValueMap} where the key is the parameter the server accepts.
      * @see <a href="https://github.com/spring-projects/spring-framework/issues/20666">github issue</a>
      * */
     @NotNull
-    public static MultiValueMap<String, Object> files(String dto) throws IOException {
-        Path path = Paths.get("src/test/resources/uploads/benzema.JPG");
-
-        if (!Files.exists(path))
-            throw new IOException("file path does not exits");
-
-        byte[] bytes = Files.readAllBytes(path);
-
-        MultiValueMap<String, Object> multipartData = new LinkedMultiValueMap<>();
+    public static MultiValueMap<String, Object> mockMultiPart(String dto) {
+        MultiValueMap<String, Object> multipart = new LinkedMultiValueMap<>();
 
         // create file
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_JPEG_VALUE);
-        Resource file = new ByteArrayResource(bytes) {
-            @Override
-            public String getFilename() {
-                return "benzema.JPG";
-            }
-        };
-        multipartData.add("files", new HttpEntity<>(file, headers));
+        multipart.add("files", new HttpEntity<>(resources(), headers));
 
         // create dto
         HttpHeaders metadataHeaders = new HttpHeaders();
         metadataHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        multipartData.add("dto", new HttpEntity<>(dto, metadataHeaders));
+        multipart.add("dto", new HttpEntity<>(dto, metadataHeaders));
 
-        return multipartData;
+        return multipart;
     }
 
     @NotNull
-    public static CreateProductDTO createProductDTO(long categoryId, SizeInventoryDTO[] dtos) {
-        return productDTO(
-                categoryId,
-                new Faker().commerce().productName(),
-                dtos,
-                new Faker().commerce().color()
-        );
+    private static Resource[] resources() {
+        Path path = Paths.get("src/test/resources/uploads/");
+
+        assertTrue(Files.exists(path));
+
+        File dir = new File(path.toUri());
+        assertNotNull(dir);
+
+        File[] files = dir.listFiles();
+        assertNotNull(files);
+
+        Resource[] resources = new FileSystemResource[files.length];
+
+        for (int i = 0; i < files.length; i++) {
+            resources[i] = new FileSystemResource(files[i]);
+        }
+
+        return resources;
     }
 
     @NotNull
@@ -91,27 +94,6 @@ public class TestData {
             SizeInventoryDTO[] dtos
     ) {
         return productDTO(categoryId, productName, dtos, new Faker().commerce().color());
-    }
-
-    @NotNull
-    public static CreateProductDTO productDTOWeight(
-            long categoryId,
-            String productName,
-            SizeInventoryDTO[] dtos,
-            PriceCurrencyDto[] pcDto,
-            String colour,
-            double weight
-    ) {
-        return new CreateProductDTO(
-                categoryId,
-                productName,
-                new Faker().lorem().fixedString(1000),
-                weight,
-                pcDto,
-                true,
-                dtos,
-                colour
-        );
     }
 
     @NotNull
@@ -136,11 +118,6 @@ public class TestData {
                 dtos,
                 colour
         );
-    }
-
-    @NotNull
-    public static ProductDetailDto productDetailDTO(String productID, String colour, SizeInventoryDTO[] dtos) {
-        return new ProductDetailDto(productID, false, colour, dtos);
     }
 
     public static String CARTCOOKIE(TestRestTemplate restTemplate, String PATH) {

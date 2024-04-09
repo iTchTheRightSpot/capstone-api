@@ -58,7 +58,7 @@ class WorkerProductDetailTest extends MainTest {
 
         String dto = mapper.writeValueAsString(detailDto);
 
-        MultiValueMap<String, Object> multipartData = TestData.files(dto);
+        MultiValueMap<String, Object> multipartData = TestData.mockMultiPart(dto);
 
         // request
         var post = testTemplate.postForEntity(

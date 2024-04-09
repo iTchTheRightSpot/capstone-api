@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.http.*;
-import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
 
@@ -46,7 +45,7 @@ class WorkerProductTest extends MainTest {
     void shouldSuccessfullyCreateAProduct() throws IOException {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA_VALUE);
 
-        var productDto = TestData
+        final var productDto = TestData
                 .createProductDTO(
                         new Faker().commerce().productName(),
                         1,
@@ -54,8 +53,7 @@ class WorkerProductTest extends MainTest {
                 );
 
         // create the json
-        MultiValueMap<String, Object> multipartData = TestData
-                .files(mapper.writeValueAsString(productDto));
+        final var multipartData = TestData.mockMultiPart(mapper.writeValueAsString(productDto));
 
         // request
         var post = testTemplate.postForEntity(

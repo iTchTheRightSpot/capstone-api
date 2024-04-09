@@ -16,6 +16,13 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      - name: Set up JDK Temurin
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
       - name: Log into DockerHub
         uses: docker/login-action@v3
         with:

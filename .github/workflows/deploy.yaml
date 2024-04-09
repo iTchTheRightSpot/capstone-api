@@ -22,12 +22,12 @@ jobs:
           username: emmanuelu17
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build docker image
+      - name: Build image
         run: |
           mvn clean install -DskipTests
-          docker build --tag capstone-server:latest . --progress=plain
+          docker build --tag capstone-api:latest . --progress=plain
 
       - name: Push image to dockerhub
         run: |
-          docker image tag capstone-server:latest emmanuelu17/capstone-server:latest
-          docker push --all-tags emmanuelu17/capstone-server
+          docker image tag capstone-api:latest emmanuelu17/capstone-api:latest
+          docker push --all-tags emmanuelu17/capstone-api

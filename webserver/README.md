@@ -26,3 +26,5 @@ Link for the most up-to-date schema.
 ### Development information
 * [naming index convention](https://www.quora.com/What-naming-convention-do-you-use-for-SQL-indexes)
 * [LazyInitializationException](https://thorben-janssen.com/lazyinitializationexception/)
+* [Common table expression](https://dev.mysql.com/doc/refman/8.0/en/with.html)
+* [Searching database using like](https://www.w3schools.com/sql/sql_like.asp)

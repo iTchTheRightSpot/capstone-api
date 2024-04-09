@@ -1,11 +1,9 @@
 package dev.webserver.category.repository;
 
-import com.github.javafaker.Faker;
 import dev.webserver.AbstractRepositoryTest;
 import dev.webserver.category.entity.ProductCategory;
 import dev.webserver.data.RepositoryTestData;
 import dev.webserver.enumeration.SarreCurrency;
-import dev.webserver.product.entity.Product;
 import dev.webserver.product.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +12,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -152,213 +149,6 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         // then
         assertThrows(DataIntegrityViolationException.class,
                 () -> categoryRepo.deleteProductCategoryById(category.getCategoryId()));
-    }
-
-    @Test
-    void shouldValidateCategoryHasOneSubCategory() {
-        // given
-        var category = categoryRepo
-                .save(
-                        ProductCategory.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        var clothes = categoryRepo
-                .save(
-                        ProductCategory.builder()
-                                .name("clothes")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        categoryRepo
-                .save(
-                        ProductCategory.builder()
-                                .name("top")
-                                .isVisible(true)
-                                .parentCategory(clothes)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        assertEquals(1, categoryRepo.validateCategoryIsAParent(category.getCategoryId()));
-        assertEquals(1, categoryRepo.validateCategoryIsAParent(clothes.getCategoryId()));
-    }
-
-    @Test
-    void shouldValidateCategoryHasMoreThanOneSubCategory() {
-        // given
-        var category = categoryRepo
-                .save(
-                        ProductCategory.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        categoryRepo
-                .save(
-                        ProductCategory.builder()
-                                .name("clothes")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        categoryRepo
-                .save(
-                        ProductCategory.builder()
-                                .name("furniture")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        assertEquals(2, categoryRepo.validateCategoryIsAParent(category.getCategoryId()));
-    }
-
-    @Test
-    void shouldValidateCategoryHasMoreThanOneProductAttached() {
-        var category = categoryRepo
-                .save(
-                        ProductCategory.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        productRepo
-                .save(
-                        Product.builder()
-                                .uuid(UUID.randomUUID().toString())
-                                .name(new Faker().commerce().productName())
-                                .description(new Faker().lorem().fixedString(40))
-                                .defaultKey("default-key")
-                                .weight(2.5)
-                                .weightType("kg")
-                                .productCategory(category)
-                                .productDetails(new HashSet<>())
-                                .priceCurrency(new HashSet<>())
-                                .build()
-                );
-
-        int count = categoryRepo.validateProductAttached(category.getCategoryId());
-
-        assertEquals(1, count);
-    }
-
-    @Test
-    void shouldValidateCategoryHasMoreThanOneSubCategoryAndProduct() {
-        var category = categoryRepo
-                .save(
-                        ProductCategory.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        var subCategory = categoryRepo
-                .save(
-                        ProductCategory.builder()
-                                .name("clothes")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        productRepo
-                .save(
-                        Product.builder()
-                                .uuid(UUID.randomUUID().toString())
-                                .name(new Faker().commerce().productName())
-                                .description(new Faker().lorem().fixedString(40))
-                                .defaultKey("default-key")
-                                .weight(2.5)
-                                .weightType("kg")
-                                .productCategory(subCategory)
-                                .productDetails(new HashSet<>())
-                                .priceCurrency(new HashSet<>())
-                                .build()
-                );
-
-        int count = categoryRepo.validateProductAttached(category.getCategoryId());
-
-        assertEquals(1, count);
-    }
-
-    @Test
-    void shouldReturnAllNestedSubCategoryOfParentCategory() {
-        // given
-        var category = categoryRepo
-                .save(
-                        ProductCategory.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        var clothes = categoryRepo
-                .save(
-                        ProductCategory.builder()
-                                .name("clothes")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        var top = categoryRepo
-                .save(
-                        ProductCategory.builder()
-                                .name("top")
-                                .isVisible(false)
-                                .parentCategory(clothes)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        categoryRepo
-                .save(
-                        ProductCategory.builder()
-                                .name("shirt")
-                                .isVisible(true)
-                                .parentCategory(top)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-
-        // then
-        assertEquals(
-                3,
-                this.categoryRepo
-                        .allCategoriesByCategoryId(category.getCategoryId())
-                        .size()
-        );
     }
 
     @Test
@@ -505,12 +295,11 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                                 .build()
                 );
 
-        // when
-        categoryRepo
-                .updateCategoryParentIdBasedOnCategoryId(
-                        clothes.getCategoryId(),
-                        collection.getCategoryId()
-                );
+        // method to test
+        categoryRepo.updateCategoryParentIdBasedOnCategoryId(
+                clothes.getCategoryId(),
+                collection.getCategoryId()
+        );
 
         // then
         assertEquals(0, categoryRepo.validateCategoryIsAParent(category.getCategoryId()));

@@ -109,7 +109,6 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     """)
     List<ImagePojo> productImagesByProductUuid(@Param(value = "uuid") String uuid);
 
-    // SQL LIKE Operator
     // https://www.w3schools.com/sql/sql_like.asp
     @Query("""
     SELECT

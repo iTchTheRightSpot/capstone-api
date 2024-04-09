@@ -1,0 +1,53 @@
+package dev.integration.client;
+
+import dev.integration.MainTest;
+import dev.integration.TestData;
+import dev.webserver.cart.dto.CartDTO;
+import dev.webserver.payment.response.PaymentResponse;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class PaymentControllerTest extends MainTest {
+
+    private static final HttpHeaders headers = new HttpHeaders();
+
+    @BeforeAll
+    static void before() {
+        String cartcookie = TestData.CARTCOOKIE(testTemplate, PATH);
+
+        assertNotNull(cartcookie);
+
+        // headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        headers.set(HttpHeaders.COOKIE, cartcookie);
+    }
+
+    @Test
+    void shouldSuccessfullyCallRaceConditionMethod() {
+        // add to shopping cart
+        var cart = testTemplate.postForEntity(
+                PATH + "api/v1/cart",
+                new HttpEntity<>(new CartDTO("product-sku-1", 4), headers),
+                Void.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(201), cart.getStatusCode());
+
+        // access race condition route
+        var post = testTemplate.postForEntity(
+                PATH + "api/v1/payment?country=france&currency=ngn",
+                new HttpEntity<>(headers),
+                PaymentResponse.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(200), post.getStatusCode());
+    }
+
+}

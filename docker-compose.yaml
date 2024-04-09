@@ -1,35 +1,16 @@
 version: '3.9'
 services:
-
-  #  api:
-  #    container_name: api
-  #    image: "emmanuelu17/sarre-bk-native:latest"
-  #    ports:
-  #      - "1997:1997"
-  #    depends_on:
-  #      mysql:
-  #        condition: service_healthy
-  #    environment:
-  #      SERVER_PORT: 1997
-  #      SPRING_PROFILES_ACTIVE:
-  #      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sara_brand_db
-  #      SPRING_DATASOURCE_USERNAME: sara
-  #      SPRING_DATASOURCE_PASSWORD: sara
-  #      AWS_ACCESS_KEY_ID:
-  #      AWS_SECRET_ACCESS_KEY:
-  #      AWS_BUCKET:
-  #      CORS_UI_DOMAIN: http://localhost:4200/
-
+  
   mysql:
     image: "mysql:8.0"
-    container_name: mysql
+#    container_name: mysql
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: sara
-      MYSQL_DATABASE: sara_brand_db
-      MYSQL_USER: sara
-      MYSQL_PASSWORD: sara
+      MYSQL_ROOT_PASSWORD: integration
+      MYSQL_DATABASE: integration_db
+      MYSQL_USER: integration
+      MYSQL_PASSWORD: integration
     healthcheck:
       test: [ "CMD-SHELL", "mysqladmin ping -h localhost" ]
       interval: 10s
@@ -37,6 +18,37 @@ services:
       retries: 5
     volumes:
       - db-data:/var/lib/mysql
+#      - ./db/:/docker-entrypoint-initdb.d
+
+  api:
+    build: .
+#    container_name: api
+    ports:
+      - "1997:1997"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      USER_PRINCIPAL: admin@admin.com
+      USER_PASSWORD: password123
+      SERVER_PORT: 1997
+      ACTIVE_PROFILE: native-test
+      API_PREFIX: "api/v1/"
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/integration_db
+      SPRING_DATASOURCE_USERNAME: integration
+      SPRING_DATASOURCE_PASSWORD: integration
+      SARRE_USD_TO_CENT: 100
+      SARRE_NGN_TO_KOBO: 0.37
+      PAYSTACK_PUB_KEY: "public key"
+      PAYSTACK_SECRET_KEY: "you tried it haha"
+      CORS_UI_DOMAIN: http://localhost:4200/
+      AWS_BUCKET: my-bucket
+      AWS_PAYSTACK_SECRET_ID: secrete-id
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:1997/actuator/health" ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
 
 volumes:
   db-data: {}

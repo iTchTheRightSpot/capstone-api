@@ -32,3 +32,5 @@ build/
 .vscode/
 
 .aws-sam/build
+
+db-data

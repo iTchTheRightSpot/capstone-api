@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -34,11 +35,9 @@ public class TestData {
 
     @NotNull
     public static SizeInventoryDTO[] sizeInventoryDTOArray(int size) {
-        SizeInventoryDTO[] dto = new SizeInventoryDTO[size];
-        for (int i = 0; i < size; i++) {
-            dto[i] = new SizeInventoryDTO(new Faker().number().randomDigitNotZero() + 1, "tall " + i);
-        }
-        return dto;
+        return IntStream.range(0, size)
+                .mapToObj(i -> new SizeInventoryDTO(new Faker().number().randomDigitNotZero() + 1, "tall " + i))
+                .toArray(SizeInventoryDTO[]::new);
     }
 
     /**

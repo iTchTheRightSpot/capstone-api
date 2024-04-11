@@ -151,8 +151,7 @@ public class SecurityConfig {
                 .cors(withDefaults())
 
                 // Public routes
-                .authorizeHttpRequests(auth -> auth.requestMatchers(pubRoutes)
-                        .permitAll()
+                .authorizeHttpRequests(auth -> auth.requestMatchers(pubRoutes).permitAll()
                         .anyRequest().authenticated()
                 )
 

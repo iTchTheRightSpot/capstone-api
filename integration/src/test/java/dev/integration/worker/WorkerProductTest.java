@@ -2,6 +2,7 @@ package dev.integration.worker;
 
 import com.github.javafaker.Faker;
 import dev.integration.MainTest;
+import dev.integration.MockRequest;
 import dev.integration.TestData;
 import dev.webserver.category.response.WorkerCategoryResponse;
 import org.junit.jupiter.api.BeforeAll;
@@ -21,7 +22,7 @@ class WorkerProductTest extends MainTest {
 
     @BeforeAll
     static void before() {
-        String cookie = TestData.ADMINCOOKIE(testTemplate, PATH);
+        String cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
         assertNotNull(cookie);
 
         headers.set(HttpHeaders.COOKIE, cookie);

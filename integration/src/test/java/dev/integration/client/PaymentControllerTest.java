@@ -1,10 +1,11 @@
 package dev.integration.client;
 
 import dev.integration.MainTest;
-import dev.integration.TestData;
+import dev.integration.MockRequest;
 import dev.webserver.cart.dto.CartDTO;
 import dev.webserver.payment.response.PaymentResponse;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.http.HttpEntity;
@@ -21,16 +22,16 @@ class PaymentControllerTest extends MainTest {
 
     @BeforeAll
     static void before() {
-        String cartcookie = TestData.CARTCOOKIE(testTemplate, PATH);
+        String cartcookie = MockRequest.CARTCOOKIE(testTemplate, PATH);
 
         assertNotNull(cartcookie);
 
-        // headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         headers.set(HttpHeaders.COOKIE, cartcookie);
     }
 
     @Test
-    void shouldSuccessfullyCallRaceConditionMethod() {
+    @Order(1)
+    void shouldSuccessfullyPreSaveItemsToCartForRaceConditionTest() {
         // add to shopping cart
         var cart = testTemplate.postForEntity(
                 PATH + "api/v1/cart",
@@ -39,7 +40,11 @@ class PaymentControllerTest extends MainTest {
         );
 
         assertEquals(HttpStatusCode.valueOf(201), cart.getStatusCode());
+    }
 
+    @Test
+    @Order(2)
+    void shouldSuccessfullyCallRaceConditionMethod() {
         // access race condition route
         var post = testTemplate.postForEntity(
                 PATH + "api/v1/payment?country=france&currency=ngn",

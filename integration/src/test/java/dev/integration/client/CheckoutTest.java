@@ -1,7 +1,7 @@
 package dev.integration.client;
 
 import dev.integration.MainTest;
-import dev.integration.TestData;
+import dev.integration.MockRequest;
 import dev.webserver.cart.dto.CartDTO;
 import dev.webserver.checkout.Checkout;
 import org.junit.jupiter.api.BeforeAll;
@@ -19,7 +19,7 @@ class CheckoutTest extends MainTest {
 
     @BeforeAll
     static void before() {
-        String cartcookie = TestData.CARTCOOKIE(testTemplate, PATH);
+        String cartcookie = MockRequest.CARTCOOKIE(testTemplate, PATH);
 
         assertNotNull(cartcookie);
 

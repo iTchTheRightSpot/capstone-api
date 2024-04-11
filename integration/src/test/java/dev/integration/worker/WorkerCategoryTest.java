@@ -1,17 +1,14 @@
 package dev.integration.worker;
 
 import dev.integration.MainTest;
-import dev.integration.TestData;
+import dev.integration.MockRequest;
 import dev.webserver.category.dto.CategoryDTO;
 import dev.webserver.category.dto.UpdateCategoryDTO;
 import dev.webserver.category.response.WorkerCategoryResponse;
-import dev.webserver.product.response.ProductResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.data.domain.Page;
 import org.springframework.http.*;
-import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -23,7 +20,7 @@ class WorkerCategoryTest extends MainTest {
 
     @BeforeAll
     static void before() {
-        String cookie = TestData.ADMINCOOKIE(testTemplate, PATH);
+        String cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
         assertNotNull(cookie);
 
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);

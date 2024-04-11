@@ -1,18 +1,17 @@
 package dev.integration;
 
 import com.github.javafaker.Faker;
-import dev.webserver.auth.dto.LoginDto;
-import dev.webserver.cart.response.CartResponse;
 import dev.webserver.product.dto.CreateProductDTO;
 import dev.webserver.product.dto.PriceCurrencyDto;
 import dev.webserver.product.dto.SizeInventoryDTO;
 import dev.webserver.product.dto.UpdateProductDTO;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,7 +24,6 @@ import java.net.HttpCookie;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -117,49 +115,6 @@ public class TestData {
                 dtos,
                 colour
         );
-    }
-
-    public static String CARTCOOKIE(TestRestTemplate restTemplate, String PATH) {
-        var headers = new HttpHeaders();
-        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-
-        var get = restTemplate.exchange(
-                PATH + "api/v1/cart",
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                new ParameterizedTypeReference<List<CartResponse>>() {}
-        );
-
-        var cookies = get.getHeaders().get(HttpHeaders.SET_COOKIE);
-
-        if (cookies == null || cookies.isEmpty())
-            throw new RuntimeException("admin cookie is empty");
-
-        return cookies.stream()
-                .filter(cookie -> cookie.startsWith("CARTCOOKIE"))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("cart cookie is empty"));
-    }
-
-    public static String ADMINCOOKIE(TestRestTemplate restTemplate, String PATH) {
-        var headers = new HttpHeaders();
-        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-
-        var post = restTemplate.postForEntity(
-                PATH + "api/v1/worker/auth/login",
-                new HttpEntity<>(new LoginDto("admin@admin.com", "password123"), headers),
-                Void.class
-        );
-
-        var cookies = post.getHeaders().get(HttpHeaders.SET_COOKIE);
-
-        if (cookies == null || cookies.isEmpty())
-            throw new RuntimeException("admin cookie is empty");
-
-        return cookies.stream()
-                .filter(cookie -> cookie.startsWith("JSESSIONID"))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("admin cookie is empty"));
     }
 
     @NotNull

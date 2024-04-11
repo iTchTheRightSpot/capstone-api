@@ -45,8 +45,8 @@ public class S3Service {
     }
 
     /**
-     * Upload image to s3. As per docs
-     * <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/PutObject.java">...</a>
+     * Upload image to s3.
+     * @see <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/PutObject.java">aws docs</a>
      * */
     private void uploadToS3Impl(File file, Map<String, String> metadata, String bucket, String key) {
         try {
@@ -59,7 +59,7 @@ public class S3Service {
 
             this.s3Client.putObject(request, RequestBody.fromFile(file));
         } catch (S3Exception e) {
-            log.error("Error uploading image to s3 " + e.getMessage());
+            log.error("Error uploading image to s3 {}", e.getMessage());
             throw new CustomServerError("error uploading image. Please try again or call developer");
         }
     }
@@ -72,8 +72,8 @@ public class S3Service {
     }
 
     /**
-     * Delete image(s) from s3. As per docs
-     * <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/DeleteObjects.java">...</a>
+     * Delete image(s) from s3.
+     * @see <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/DeleteObjects.java">aws docs</a>
      * */
     private void deleteFromS3Impl(List<ObjectIdentifier> keys, String bucketName) {
         Delete del = Delete.builder().objects(keys).build();
@@ -84,7 +84,7 @@ public class S3Service {
                     .build();
             this.s3Client.deleteObjects(multiObjectDeleteRequest);
         } catch (S3Exception e) {
-            log.error("Error deleting image from s3 " + e.getMessage());
+            log.error("Error deleting image from s3 {}", e.getMessage());
             throw new CustomServerError("Error deleting image. Please try again later or call developer");
         }
     }
@@ -104,12 +104,12 @@ public class S3Service {
     }
 
     /**
-     * Retrieves image pre-assigned url. As per docs
-     * <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/GetObjectPresignedUrl.java">...</a>
+     * Retrieves image pre-assigned url.
+     * @see <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/GetObjectPresignedUrl.java">aws docs</a>
      *
      * @param bucket is the bucket name
      * @param key is the object key
-     * @return String
+     * @return image url
      * */
     private String preSignedUrlImpl(String bucket, String key) {
         try {
@@ -127,7 +127,7 @@ public class S3Service {
             log.info("successfully retrieved object preassigned URL");
             return request.url().toString();
         } catch (S3Exception ex) {
-            log.error("error retrieving object preassigned url " + ex.getMessage());
+            log.error("error retrieving object preassigned url {}", ex.getMessage());
             return "";
         }
     }

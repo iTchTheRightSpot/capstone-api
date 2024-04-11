@@ -1,6 +1,7 @@
 package dev.integration.worker;
 
 import dev.integration.MainTest;
+import dev.integration.MockRequest;
 import dev.integration.TestData;
 import dev.webserver.product.dto.ProductDetailDto;
 import dev.webserver.product.dto.UpdateProductDetailDto;
@@ -25,7 +26,7 @@ class WorkerProductDetailTest extends MainTest {
 
     @BeforeAll
     static void before() {
-        String cookie = TestData.ADMINCOOKIE(testTemplate, PATH);
+        String cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
         assertNotNull(cookie);
 
         headers.set(HttpHeaders.COOKIE, cookie);

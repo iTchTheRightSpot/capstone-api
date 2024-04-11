@@ -20,36 +20,36 @@ services:
       - db-data:/var/lib/mysql
 #      - ./db/:/docker-entrypoint-initdb.dcd do ch
 
-  api:
-#    image: "emmanuelu17/capstone-api:latest"
-    build: .
-#    container_name: api
-    ports:
-      - "1997:1997"
-    depends_on:
-      mysql:
-        condition: service_healthy
-    environment:
-      USER_PRINCIPAL: admin@admin.com
-      USER_PASSWORD: password123
-      SERVER_PORT: 1997
-      ACTIVE_PROFILE: native-test
-      API_PREFIX: "api/v1/"
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/integration_db
-      SPRING_DATASOURCE_USERNAME: integration
-      SPRING_DATASOURCE_PASSWORD: integration
-      SARRE_USD_TO_CENT: 100
-      SARRE_NGN_TO_KOBO: 0.37
-      PAYSTACK_PUB_KEY: "public key"
-      PAYSTACK_SECRET_KEY: "you tried it haha"
-      CORS_UI_DOMAIN: http://localhost:4200/
-      AWS_BUCKET: my-bucket
-      AWS_PAYSTACK_SECRET_ID: secrete-id
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:1997/actuator/health" ]
-      interval: 5s
-      timeout: 5s
-      retries: 3
+#  api:
+##    image: "emmanuelu17/capstone-api:latest"
+#    build: .
+##    container_name: api
+#    ports:
+#      - "1997:1997"
+#    depends_on:
+#      mysql:
+#        condition: service_healthy
+#    environment:
+#      USER_PRINCIPAL: admin@admin.com
+#      USER_PASSWORD: password123
+#      SERVER_PORT: 1997
+#      ACTIVE_PROFILE: native-test
+#      API_PREFIX: "api/v1/"
+#      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/integration_db
+#      SPRING_DATASOURCE_USERNAME: integration
+#      SPRING_DATASOURCE_PASSWORD: integration
+#      SARRE_USD_TO_CENT: 100
+#      SARRE_NGN_TO_KOBO: 0.37
+#      PAYSTACK_PUB_KEY: "public key"
+#      PAYSTACK_SECRET_KEY: "you tried it haha"
+#      CORS_UI_DOMAIN: http://localhost:4200/
+#      AWS_BUCKET: my-bucket
+#      AWS_PAYSTACK_SECRET_ID: secrete-id
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost:1997/actuator/health" ]
+#      interval: 5s
+#      timeout: 5s
+#      retries: 3
 
 volumes:
   db-data: {}

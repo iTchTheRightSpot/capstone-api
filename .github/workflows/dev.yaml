@@ -54,7 +54,6 @@ jobs:
 
       - name: Run tests
         run: |
-#          docker compose up -d --build
           touch .env
           echo PAYSTACK_PUB_KEY=$PAYSTACK_PUB_KEY >> .env
           cat .env

@@ -30,8 +30,7 @@ class PaymentControllerTest extends MainTest {
     }
 
     @Test
-    @Order(1)
-    void shouldSuccessfullyPreSaveItemsToCartForRaceConditionTest() {
+    void shouldSuccessfullyCallRaceConditionMethod() {
         // add to shopping cart
         var cart = testTemplate.postForEntity(
                 PATH + "api/v1/cart",
@@ -40,11 +39,7 @@ class PaymentControllerTest extends MainTest {
         );
 
         assertEquals(HttpStatusCode.valueOf(201), cart.getStatusCode());
-    }
 
-    @Test
-    @Order(2)
-    void shouldSuccessfullyCallRaceConditionMethod() {
         // access race condition route
         var post = testTemplate.postForEntity(
                 PATH + "api/v1/payment?country=france&currency=ngn",

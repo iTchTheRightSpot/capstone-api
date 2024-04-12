@@ -1,5 +1,7 @@
 package dev.webserver.payment.util;
 
+import java.io.Serializable;
+
 public record WebhookAuthorization(
         String authorization_code,
         String bin,
@@ -16,4 +18,4 @@ public record WebhookAuthorization(
         String account_name,
         String receiver_bank_account_number,
         String receiver_bank
-) {}
+) implements Serializable {}

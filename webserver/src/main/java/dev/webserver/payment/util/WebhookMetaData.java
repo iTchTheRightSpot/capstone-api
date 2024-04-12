@@ -1,5 +1,7 @@
 package dev.webserver.payment.util;
 
+import java.io.Serializable;
+
 public record WebhookMetaData(
         String principal,
         String email,
@@ -12,4 +14,4 @@ public record WebhookMetaData(
         String country,
         String deliveryInfo,
         String referrer
-) { }
+) implements Serializable { }

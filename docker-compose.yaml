@@ -21,7 +21,7 @@ services:
 #      - ./db/:/docker-entrypoint-initdb.dcd do ch
 
   api:
-#    image: "emmanuelu17/capstone-test:latest"
+    image: "emmanuelu17/capstone-test:latest"
     build: .
 #    container_name: api
     env_file:

@@ -46,7 +46,7 @@ class WorkerProductTest extends MainTest {
     void shouldSuccessfullyCreateAProduct() throws IOException {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA_VALUE);
 
-        final var productDto = TestData
+        final var dto = TestData
                 .createProductDTO(
                         new Faker().commerce().productName(),
                         1,
@@ -54,7 +54,7 @@ class WorkerProductTest extends MainTest {
                 );
 
         // create the json
-        final var multipartData = TestData.mockMultiPart(mapper.writeValueAsString(productDto));
+        final var multipartData = TestData.mockMultiPart(mapper.writeValueAsString(dto));
 
         // request
         var post = testTemplate.postForEntity(

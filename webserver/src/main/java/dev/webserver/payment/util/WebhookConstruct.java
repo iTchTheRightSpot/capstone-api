@@ -2,4 +2,6 @@ package dev.webserver.payment.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public record WebhookConstruct(JsonNode node, String validate) {}
+import java.io.Serializable;
+
+public record WebhookConstruct(JsonNode node, String validate) implements Serializable {}

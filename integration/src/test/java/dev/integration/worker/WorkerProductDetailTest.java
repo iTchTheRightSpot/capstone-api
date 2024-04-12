@@ -50,16 +50,14 @@ class WorkerProductDetailTest extends MainTest {
     void shouldSuccessfullyCreateAProductDetail() throws IOException {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA_VALUE);
 
-        var detailDto = new ProductDetailDto(
+        var dto = new ProductDetailDto(
                 "product-uuid-1",
                 true,
                 "brown",
                 TestData.sizeInventoryDTOArray(3)
         );
 
-        String dto = mapper.writeValueAsString(detailDto);
-
-        MultiValueMap<String, Object> multipartData = TestData.mockMultiPart(dto);
+        MultiValueMap<String, Object> multipartData = TestData.mockMultiPart(mapper.writeValueAsString(dto));
 
         // request
         var post = testTemplate.postForEntity(

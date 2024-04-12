@@ -50,10 +50,10 @@ public class TestData {
     public static MultiValueMap<String, Object> mockMultiPart(String dto) {
         MultiValueMap<String, Object> multipart = new LinkedMultiValueMap<>();
 
-        // create file
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_JPEG_VALUE);
-        multipart.add("files", new HttpEntity<>(resources(), headers));
+        // add image files to request
+        for (Resource resource : resources()) {
+            multipart.add("files", resource);
+        }
 
         // create dto
         HttpHeaders metadataHeaders = new HttpHeaders();

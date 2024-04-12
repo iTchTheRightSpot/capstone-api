@@ -2,13 +2,13 @@ package dev.integration.worker;
 
 import com.github.javafaker.Faker;
 import dev.integration.MainTest;
+import dev.integration.MockRequest;
 import dev.integration.TestData;
 import dev.webserver.category.response.WorkerCategoryResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.http.*;
-import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
 
@@ -22,7 +22,7 @@ class WorkerProductTest extends MainTest {
 
     @BeforeAll
     static void before() {
-        String cookie = TestData.ADMINCOOKIE(testTemplate, PATH);
+        String cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
         assertNotNull(cookie);
 
         headers.set(HttpHeaders.COOKIE, cookie);
@@ -46,7 +46,7 @@ class WorkerProductTest extends MainTest {
     void shouldSuccessfullyCreateAProduct() throws IOException {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA_VALUE);
 
-        var productDto = TestData
+        final var dto = TestData
                 .createProductDTO(
                         new Faker().commerce().productName(),
                         1,
@@ -54,8 +54,7 @@ class WorkerProductTest extends MainTest {
                 );
 
         // create the json
-        MultiValueMap<String, Object> multipartData = TestData
-                .files(mapper.writeValueAsString(productDto));
+        final var multipartData = TestData.mockMultiPart(mapper.writeValueAsString(dto));
 
         // request
         var post = testTemplate.postForEntity(

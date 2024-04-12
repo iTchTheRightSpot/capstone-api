@@ -13,6 +13,9 @@ import dev.webserver.payment.dto.OrderHistoryDTO;
 import dev.webserver.payment.dto.PaymentDTO;
 import dev.webserver.payment.dto.SkuQtyDTO;
 import dev.webserver.payment.response.PaymentResponse;
+import dev.webserver.payment.util.WebhookAuthorization;
+import dev.webserver.payment.util.WebhookConstruct;
+import dev.webserver.payment.util.WebhookMetaData;
 import dev.webserver.product.dto.*;
 import dev.webserver.product.response.DetailResponse;
 import dev.webserver.product.response.Variant;
@@ -80,6 +83,11 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
 
         // Payment
         hints.serialization().registerType(PaymentResponse.class);
+
+        // Webhook
+        hints.serialization().registerType(WebhookMetaData.class);
+        hints.serialization().registerType(WebhookAuthorization.class);
+        hints.serialization().registerType(WebhookConstruct.class);
     }
 
 }

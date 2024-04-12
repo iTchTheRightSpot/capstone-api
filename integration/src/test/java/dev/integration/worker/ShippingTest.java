@@ -1,7 +1,7 @@
 package dev.integration.worker;
 
 import dev.integration.MainTest;
-import dev.integration.TestData;
+import dev.integration.MockRequest;
 import dev.webserver.shipping.ShippingDto;
 import dev.webserver.shipping.ShippingMapper;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,7 +25,7 @@ class ShippingTest extends MainTest {
 
     @BeforeAll
     static void before() {
-        String cookie = TestData.ADMINCOOKIE(testTemplate, PATH);
+        String cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
         assertNotNull(cookie);
 
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);

@@ -3,7 +3,6 @@ package dev.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.testcontainers.containers.DockerComposeContainer;
@@ -14,12 +13,9 @@ import org.testcontainers.junit.jupiter.Container;
 import java.io.File;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.time.Duration;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MainTest {
-
-    static final Logger log = LoggerFactory.getLogger(MainTest.class);
 
     protected static final ObjectMapper mapper = new ObjectMapper();
     protected static final TestRestTemplate testTemplate = new TestRestTemplate();
@@ -31,19 +27,19 @@ public class MainTest {
     private static DockerComposeContainer environment =
             new DockerComposeContainer(new File(Paths.get("../docker-compose.yaml").toUri()))
                     .withExposedService("mysql", 3306, Wait.forListeningPort())
-                    .withExposedService("api", 1997, Wait.forListeningPort()
-                                    .withStartupTimeout(Duration.ofMinutes(30)))
-                    .withLogConsumer("api", new Slf4jLogConsumer(log));
+//                    .withExposedService("api", 1997, Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(30)))
+                    .withExposedService("api", 1997, Wait.forHttp("/actuator/health").forStatusCode(200))
+                    .withLogConsumer("api", new Slf4jLogConsumer(LoggerFactory.getLogger(MainTest.class)));
 
     @BeforeAll
     void beforeAllTests() throws SQLException {
-//        environment.start();
+        environment.start();
 
-//        final String host = environment.getServiceHost("api", 1997);
-//        final int port = environment.getServicePort("api", 1997);
+        final String host = environment.getServiceHost("api", 1997);
+        final int port = environment.getServicePort("api", 1997);
 
-//        PATH = String.format("http://%s:%d/", host, port);
-        PATH = "http://localhost:1997/";
+        PATH = String.format("http://%s:%d/", host, port);
+//        PATH = "http://localhost:1997/";
 
         CustomRunInitScripts.processScript("integration", "integration");
     }

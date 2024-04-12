@@ -1,6 +1,7 @@
 package dev.integration.client;
 
 import dev.integration.MainTest;
+import dev.integration.MockRequest;
 import dev.integration.TestData;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
@@ -61,7 +62,7 @@ class AuthenticationTest extends MainTest {
     @Order(3)
     @Test
     void shouldSuccessfullyRegisterUserToAnAdmin() {
-        var cookie = TestData.ADMINCOOKIE(testTemplate, PATH);
+        var cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
         headers.set(HttpHeaders.COOKIE, cookie);
 
         var dto = new RegisterDto(
@@ -85,7 +86,7 @@ class AuthenticationTest extends MainTest {
     @Order(4)
     @Test
     void shouldSuccessfullyRegisterAnAdmin() {
-        var cookie = TestData.ADMINCOOKIE(testTemplate, PATH);
+        var cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
         headers.set(HttpHeaders.COOKIE, cookie);
 
         var dto = new RegisterDto(

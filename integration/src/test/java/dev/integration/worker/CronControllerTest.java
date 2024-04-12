@@ -2,7 +2,7 @@ package dev.integration.worker;
 
 import dev.integration.CustomRunInitScripts;
 import dev.integration.MainTest;
-import dev.integration.TestData;
+import dev.integration.MockRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.http.*;
@@ -17,7 +17,7 @@ class CronControllerTest extends MainTest {
 
     @Test
     void shouldSuccessfullyTestCronJobMethodNativeMode() throws SQLException {
-        String cookie = TestData.ADMINCOOKIE(testTemplate, PATH);
+        String cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
         assertNotNull(cookie);
 
         final HttpHeaders headers = new HttpHeaders();

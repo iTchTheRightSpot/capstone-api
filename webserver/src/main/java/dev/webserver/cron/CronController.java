@@ -1,7 +1,6 @@
 package dev.webserver.cron;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,7 +13,6 @@ import static org.springframework.http.HttpStatus.OK;
 @RequestMapping(path = "${api.endpoint.baseurl}cron")
 @PreAuthorize(value = "hasRole('ROLE_WORKER')")
 @RequiredArgsConstructor
-@Profile(value = "native-test")
 class CronController {
 
     private final CronJob cronJob;

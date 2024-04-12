@@ -1,6 +1,7 @@
 package dev.integration.worker;
 
 import dev.integration.MainTest;
+import dev.integration.MockRequest;
 import dev.integration.TestData;
 import dev.webserver.product.dto.ProductDetailDto;
 import dev.webserver.product.dto.UpdateProductDetailDto;
@@ -25,7 +26,7 @@ class WorkerProductDetailTest extends MainTest {
 
     @BeforeAll
     static void before() {
-        String cookie = TestData.ADMINCOOKIE(testTemplate, PATH);
+        String cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
         assertNotNull(cookie);
 
         headers.set(HttpHeaders.COOKIE, cookie);
@@ -49,16 +50,14 @@ class WorkerProductDetailTest extends MainTest {
     void shouldSuccessfullyCreateAProductDetail() throws IOException {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA_VALUE);
 
-        var detailDto = new ProductDetailDto(
+        var dto = new ProductDetailDto(
                 "product-uuid-1",
                 true,
                 "brown",
                 TestData.sizeInventoryDTOArray(3)
         );
 
-        String dto = mapper.writeValueAsString(detailDto);
-
-        MultiValueMap<String, Object> multipartData = TestData.files(dto);
+        MultiValueMap<String, Object> multipartData = TestData.mockMultiPart(mapper.writeValueAsString(dto));
 
         // request
         var post = testTemplate.postForEntity(

@@ -1,5 +1,7 @@
 package dev.webserver.auth.service;
 
+import dev.webserver.auth.controller.ClientAuthController;
+import dev.webserver.auth.controller.WorkerAuthController;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
 import dev.webserver.auth.jwt.JwtTokenService;
@@ -31,14 +33,16 @@ import static dev.webserver.enumeration.RoleEnum.WORKER;
 
 @Service
 @RequiredArgsConstructor
-@Setter
 public class AuthService {
 
     @Value(value = "${server.servlet.session.cookie.name}")
+    @Setter
     private String JSESSIONID;
     @Value(value = "${server.servlet.session.cookie.secure}")
+    @Setter
     private boolean secure;
     @Value(value = "${server.servlet.session.cookie.max-age}")
+    @Setter
     private int maxage;
 
     private final UserRepository userRepository;
@@ -48,15 +52,15 @@ public class AuthService {
     private final JwtTokenService tokenService;
 
     /**
-     * Method called by either {@code WorkerAuthController}
-     * and {@code ClientAuthController} to register a user.
+     * Method called by either {@link WorkerAuthController}
+     * and {@link ClientAuthController} to register a user.
      *
-     * @param res is a {@code HttpServletResponse} where we add a jwt token
+     * @param res is a {@link HttpServletResponse} where we add a jwt token
      *            based on the controller class that calls it.
-     * @param dto is an object of {@code RegisterDto} containing the
+     * @param dto is an object of {@link RegisterDto} containing the
      *            necessary details to create a user.
-     * @param key is of {@code RoleEnum}. If is equal to CLIENT, we add a
-     *            jwt cookie to {@code HttpServletResponse}.
+     * @param key is of {@link RoleEnum}. If is equal to CLIENT, we add a
+     *            jwt cookie to {@link HttpServletResponse}.
      */
     @Transactional(rollbackOn = Exception.class)
     public void register(HttpServletResponse res, RegisterDto dto, RoleEnum key) {
@@ -71,8 +75,8 @@ public class AuthService {
      * Responsible for registering a new worker. Logic is throw an error if client
      * has a role of Worker or else add ROLE worker to client.
      *
-     * @param dto of type WorkerRegisterDTO
-     * @throws DuplicateException when user principal exists and has a role of worker
+     * @param dto contains the necessary details to create a {@link SarreBrandUser}.
+     * @throws DuplicateException when user principal exists and has a role of worker.
      */
     void workerRegister(RegisterDto dto) {
         var optional = this.userRepository.userByPrincipal(dto.email().trim());
@@ -89,10 +93,10 @@ public class AuthService {
     }
 
     /**
-     * Registers and automatically signs in a new user
+     * Registers and automatically signs in a new user.
      *
-     * @param dto of type ClientRegisterDTO
-     * @throws DuplicateException when user principal exists
+     * @param dto contains the necessary details to create a {@link SarreBrandUser}.
+     * @throws DuplicateException when user principal exists.
      */
     void clientRegister(RegisterDto dto, HttpServletResponse response) {
         if (this.userRepository.userByPrincipal(dto.email().trim()).isPresent()) {
@@ -102,11 +106,7 @@ public class AuthService {
         var user = createUser(dto);
 
         var authenticated = UsernamePasswordAuthenticationToken
-                .authenticated(
-                        user.getEmail(),
-                        null,
-                        new UserDetailz(user).getAuthorities()
-                );
+                .authenticated(user.getEmail(), null, new UserDetailz(user).getAuthorities());
 
         loginImpl(authenticated, response);
     }

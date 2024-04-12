@@ -10,7 +10,7 @@ COPY . /build
 # maven install in the root of project and native compile webserver directory
 RUN ./mvnw clean install -DskipTests \
     && cd webserver/ \
-    && ./mvnw --no-transfer-progress -Pnative native:compile -Daot.profiles=default -DskipTests
+    && ./mvnw --no-transfer-progress -Pnative native:compile -DskipTests
 
 # stage 2 lightest weight linux OS
 FROM amd64/alpine:3.19.1

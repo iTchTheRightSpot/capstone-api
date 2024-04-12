@@ -24,6 +24,8 @@ services:
 #    image: "emmanuelu17/capstone-test:latest"
     build: .
 #    container_name: api
+    env_file:
+      - .env
     ports:
       - "1997:1997"
     depends_on:
@@ -40,8 +42,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: integration
       SARRE_USD_TO_CENT: 100
       SARRE_NGN_TO_KOBO: 0.37
-      PAYSTACK_PUB_KEY: "public key"
-      PAYSTACK_SECRET_KEY: "you tried it haha"
+      PAYSTACK_PUB_KEY: ${PAYSTACK_PUB_KEY}
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY}
       CORS_UI_DOMAIN: http://localhost:4200/
       AWS_BUCKET: my-bucket
       AWS_PAYSTACK_SECRET_ID: secrete-id

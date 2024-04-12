@@ -45,12 +45,23 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
+      - name: Test env variables
+        run: |
+          echo "repository variable: $REPOSITORY_VAR"
+        shell: bash
+        env:
+          REPOSITORY_VAR: repository-variable
+
       - name: Run tests
         run: |
-          docker compose up -d --build
+#          docker compose up -d --build
+          touch .env
+          echo PAYSTACK_PUB_KEY=$PAYSTACK_PUB_KEY >> .env
+          cat .env
+          echo PAYSTACK_SECRET_KEY=$PAYSTACK_SECRET_KEY >> .env
           mvn clean install -DskipTests
           cd integration/
-          mvn test -DPAYSTACK_PUB_KEY=PAYSTACK_PUB_KEY -DPAYSTACK_SECRET_KEY=PAYSTACK_SECRET_KEY
+          mvn test
         shell: bash
         env:
           PAYSTACK_PUB_KEY: ${{ secrets.PAYSTACK_PUB_KEY }}

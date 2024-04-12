@@ -31,19 +31,19 @@ public class MainTest {
     private static DockerComposeContainer environment =
             new DockerComposeContainer(new File(Paths.get("../docker-compose.yaml").toUri()))
                     .withExposedService("mysql", 3306, Wait.forListeningPort())
-                    .withExposedService("api", 1997, Wait.forListeningPort()
-                                    .withStartupTimeout(Duration.ofMinutes(30)))
+//                    .withExposedService("api", 1997, Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(30)))
+                    .withExposedService("api", 1997, Wait.forHttp("/actuator/health").forStatusCode(200))
                     .withLogConsumer("api", new Slf4jLogConsumer(log));
 
     @BeforeAll
     void beforeAllTests() throws SQLException {
-//        environment.start();
+        environment.start();
 
-//        final String host = environment.getServiceHost("api", 1997);
-//        final int port = environment.getServicePort("api", 1997);
+        final String host = environment.getServiceHost("api", 1997);
+        final int port = environment.getServicePort("api", 1997);
 
-//        PATH = String.format("http://%s:%d/", host, port);
-        PATH = "http://localhost:1997/";
+        PATH = String.format("http://%s:%d/", host, port);
+//        PATH = "http://localhost:1997/";
 
         CustomRunInitScripts.processScript("integration", "integration");
     }

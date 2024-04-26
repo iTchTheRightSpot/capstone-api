@@ -91,7 +91,7 @@ public class WorkerProductService {
      * @return a {@link CompletableFuture} of {@link Page} of {@link ProductResponse}.
      */
     public CompletableFuture<Page<ProductResponse>> allProducts(
-            SarreCurrency currency, int page, int size
+            final SarreCurrency currency, final int page, final int size
     ) {
         var pageOfProducts = this.productRepo
                 .allProductsForAdminFront(currency, PageRequest.of(page, size));
@@ -116,7 +116,7 @@ public class WorkerProductService {
      * @return A list of {@link Supplier}, each representing a task to create a
      * {@link ProductResponse} object.
      */
-    private List<Supplier<ProductResponse>> createTasks(Page<ProductPojo> page) {
+    private List<Supplier<ProductResponse>> createTasks(final Page<ProductPojo> page) {
         return page.stream()
                 .map(p -> (Supplier<ProductResponse>) () -> new ProductResponse(
                         p.getUuid(),

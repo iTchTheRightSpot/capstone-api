@@ -1,4 +1,3 @@
-#version: '3.8'
 services:
   
   mysql:
@@ -42,9 +41,9 @@ services:
       PAYSTACK_PUB_KEY: ${PAYSTACK_PUB_KEY}
       PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY}
       CORS_UI_DOMAIN: http://localhost:4200/
-      AWS_BUCKET: my-bucket
-      AWS_ACCESS_KEY_ID: access-id
-      AWS_SECRET_ACCESS_KEY: secret-id
+      AWS_BUCKET: ${AWS_BUCKET}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_PAYSTACK_SECRET_ID: secrete-id
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:1997/actuator/health" ]

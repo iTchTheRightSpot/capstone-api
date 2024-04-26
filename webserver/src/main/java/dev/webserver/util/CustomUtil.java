@@ -269,7 +269,7 @@ public class CustomUtil {
     ) {
         final List<CompletableFuture<T>> futures = new ArrayList<>();
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            for (T s : schedules) {
+            for (final T s : schedules) {
                 futures.add(CompletableFuture
                         .supplyAsync(() -> s, executor)
                         .exceptionally(e -> {
@@ -291,34 +291,32 @@ public class CustomUtil {
     public static BiFunction<MultipartFile[], StringBuilder, CustomMultiPart[]> transformMultipartFile =
             (files, defaultKey) -> Arrays.stream(files)
                     .map(multipartFile -> {
-                        String name = Objects.requireNonNull(multipartFile.getOriginalFilename());
+                        final String name = Objects.requireNonNull(multipartFile.getOriginalFilename());
 
-                        File file = new File(name);
+                        final File file = new File(name);
 
                         try {
                             multipartFile.transferTo(file);
 
-                            boolean exists = Files.exists(file.toPath());
-
-                            if (!exists) {
-                                throw new IOException("%s does not exist".formatted(name));
-                            }
+                             // if (!Files.exists(file.toPath())) {
+                             //     throw new IOException("%s does not exist".formatted(name));
+                             // }
 
                             // validate file is an image
-                            String contentType = Files.probeContentType(file.toPath());
+                            final String contentType = Files.probeContentType(file.toPath());
                             if (!contentType.startsWith("image/")) {
                                 log.error("File is not an image");
                                 throw new CustomServerError("File is not an image");
                             }
 
                             // create file metadata
-                            Map<String, String> metadata = new HashMap<>();
+                            final Map<String, String> metadata = new HashMap<>();
                             metadata.put("Content-Type", contentType);
                             metadata.put("Title", name);
                             metadata.put("Type", StringUtils.getFilenameExtension(name));
 
                             // file default key
-                            String key = UUID.randomUUID().toString();
+                            final String key = UUID.randomUUID().toString();
                             if (defaultKey.isEmpty()) {
                                 defaultKey.append(key);
                             }

@@ -64,6 +64,15 @@ class WorkerProductTest extends MainTest {
         );
 
         assertEquals(HttpStatusCode.valueOf(201), post.getStatusCode());
+
+        // delete items saved in s3
+        var aws = testTemplate.postForEntity(
+                PATH + "api/v1/native",
+                new HttpEntity<>(null, headers),
+                Void.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(201), aws.getStatusCode());
     }
 
     @Test

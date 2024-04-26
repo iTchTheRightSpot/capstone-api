@@ -8,7 +8,7 @@ ALTER TABLE client_role
     RENAME COLUMN client_role_id TO role_id;
 
 ALTER TABLE client_role
-    MODIFY COLUMN role ENUM ('CLIENT', 'WORKER');
+    MODIFY COLUMN role ENUM ('CLIENT', 'WORKER', 'NATIVE_TEST');
 
 ALTER TABLE price_currency
     MODIFY COLUMN currency ENUM ('NGN', 'USD');

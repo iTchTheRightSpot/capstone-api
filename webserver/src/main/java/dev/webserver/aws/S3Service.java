@@ -56,8 +56,7 @@ public class S3Service {
                     .metadata(metadata)
                     .build();
 
-            RequestBody requestBody = RequestBody.fromFile(file);
-            this.s3Client.putObject(request, requestBody);
+            this.s3Client.putObject(request, RequestBody.fromFile(file));
             log.info("successfully uploaded file to s3 {}", file.getName());
         } catch (Exception e) {
             log.error("Error uploading image to s3 {}", e.getMessage());

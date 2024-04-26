@@ -11,6 +11,7 @@ import dev.webserver.product.entity.Product;
 import dev.webserver.product.projection.ProductPojo;
 import dev.webserver.product.repository.PriceCurrencyRepo;
 import dev.webserver.product.repository.ProductRepo;
+import dev.webserver.product.response.CustomMultiPart;
 import dev.webserver.product.response.ProductResponse;
 import dev.webserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
@@ -134,14 +135,14 @@ public class WorkerProductService {
     /**
      * Create a new {@link Product}.
      *
-     * @param files of type {@link MultipartFile}.
+     * @param multipartFiles of type {@link MultipartFile}.
      * @param dto   of type {@link CreateProductDTO}.
      * @throws CustomNotFoundException is thrown if categoryId name does not exist in database.
      * or currency passed in truncateAmount does not contain in dto property priceCurrency.
      * @throws CustomServerError      is thrown if File is not an image.
      * @throws DuplicateException      is thrown if dto image exists in for Product.
      */
-    public void create(final CreateProductDTO dto, final MultipartFile[] files) {
+    public void create(final CreateProductDTO dto, final MultipartFile[] multipartFiles) {
         if (!CustomUtil.validateContainsCurrencies(dto.priceCurrency())) {
             throw new CustomInvalidFormatException("please check currencies and prices");
         }
@@ -154,7 +155,7 @@ public class WorkerProductService {
         }
 
         StringBuilder defaultImageKey = new StringBuilder();
-        var file = CustomUtil.transformMultipartFile.apply(files, defaultImageKey);
+        var files = CustomUtil.transformMultipartFile.apply(multipartFiles, defaultImageKey);
 
         // build Product
         var p = Product.builder()
@@ -186,7 +187,7 @@ public class WorkerProductService {
         this.skuService.save(dto.sizeInventory(), detail);
 
         // build and save ProductImages (save to s3)
-        this.helperService.saveProductImages(detail, file, BUCKET);
+        this.helperService.saveProductImages(detail, files, BUCKET);
     }
 
     /**

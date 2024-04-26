@@ -323,6 +323,9 @@ public class CustomUtil {
                                 defaultKey.append(key);
                             }
 
+                            // prevents spring from saving files to root folder
+                            file.deleteOnExit();
+
                             return new CustomMultiPart(file, metadata, key);
                         } catch (IOException e) {
                             log.error("error either writing multipart to file or getting file type. {}", e.getMessage());

@@ -59,8 +59,7 @@ class HelperService {
                 .join()
                 .forEach(e -> {
                     CustomMultiPart obj = e.get();
-                    this.repository
-                            .save(new ProductImage(obj.key(), obj.file().getAbsolutePath(), detail));
+                    this.repository.save(new ProductImage(obj.key(), obj.file().getAbsolutePath(), detail));
                 });
     }
 

@@ -16,7 +16,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <aws.java.sdk.version>2.20.101</aws.java.sdk.version>
+        <aws.java.sdk.version>2.25.39</aws.java.sdk.version>
         <!-- as per issue https://github.com/spring-projects/spring-security/issues/14362 -->
         <awaitility.version>4.2.0</awaitility.version>
         <!-- as per spring boot version 3.2.3 release notes https://github.com/spring-projects/spring-boot/releases/tag/v3.2.3 -->

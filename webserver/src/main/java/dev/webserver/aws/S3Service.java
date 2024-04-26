@@ -45,12 +45,11 @@ public class S3Service {
     }
 
     /**
-     * Upload image to s3.
+     * Upload file to s3.
      * @see <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/PutObject.java">aws docs</a>
      * */
     private void uploadToS3Impl(File file, Map<String, String> metadata, String bucket, String key) {
         try {
-            // Create put request
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(bucket) // pass as env variable
                     .key(key)
@@ -58,7 +57,7 @@ public class S3Service {
                     .build();
 
             this.s3Client.putObject(request, RequestBody.fromFile(file));
-        } catch (S3Exception e) {
+        } catch (Exception e) {
             log.error("Error uploading image to s3 {}", e.getMessage());
             throw new CustomServerError("error uploading image. Please try again or call developer");
         }
@@ -109,7 +108,7 @@ public class S3Service {
      *
      * @param bucket is the bucket name
      * @param key is the object key
-     * @return image url
+     * @return an uploaded {@link File} as aws pre-signed url.
      * */
     private String preSignedUrlImpl(String bucket, String key) {
         try {

@@ -25,7 +25,7 @@ public class MainTest {
     @Container
     @SuppressWarnings("all")
     private static DockerComposeContainer environment =
-            new DockerComposeContainer(new File(Paths.get("../docker-compose.yaml").toUri()))
+            new DockerComposeContainer(new File(Paths.get("../compose.yaml").toUri()))
                     .withExposedService("mysql", 3306, Wait.forListeningPort())
 //                    .withExposedService("api", 1997, Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(30)))
                     .withExposedService("api", 1997, Wait.forHttp("/actuator/health").forStatusCode(200))

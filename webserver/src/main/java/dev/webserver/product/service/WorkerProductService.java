@@ -90,7 +90,8 @@ public class WorkerProductService {
      * @return a {@link CompletableFuture} of {@link Page} of {@link ProductResponse}.
      */
     public CompletableFuture<Page<ProductResponse>> allProducts(
-            SarreCurrency currency, int page, int size) {
+            SarreCurrency currency, int page, int size
+    ) {
         var pageOfProducts = this.productRepo
                 .allProductsForAdminFront(currency, PageRequest.of(page, size));
 
@@ -152,9 +153,8 @@ public class WorkerProductService {
             throw new DuplicateException(dto.name() + " exists");
         }
 
-        // validate MultipartFile[] are all images
         StringBuilder defaultImageKey = new StringBuilder();
-        var file = this.helperService.customMultiPartFiles(files, defaultImageKey);
+        var file = CustomUtil.transformMultipartFile.apply(files, defaultImageKey);
 
         // build Product
         var p = Product.builder()

@@ -80,7 +80,7 @@ public class WorkerProductDetailService {
     }
 
     /**
-     * Create new {@link ProductDetail}
+     * Create new {@link ProductDetail}.
      *
      * @param dto of type {@link ProductDetailDto}.
      * @throws CustomNotFoundException is thrown if product uuid does not exist.
@@ -98,8 +98,7 @@ public class WorkerProductDetailService {
             return;
         }
 
-        // validate multipartFiles are all images
-        var files = this.helperService.customMultiPartFiles(multipartFiles, new StringBuilder());
+        var files = CustomUtil.transformMultipartFile.apply(multipartFiles, new StringBuilder());
 
         // save ProductDetail
         var detail = ProductDetail.builder()

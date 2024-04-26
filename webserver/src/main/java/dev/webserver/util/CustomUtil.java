@@ -8,18 +8,25 @@ import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.payment.projection.TotalPojo;
 import dev.webserver.product.dto.PriceCurrencyDto;
+import dev.webserver.product.entity.Product;
+import dev.webserver.product.response.CustomMultiPart;
 import dev.webserver.product.response.Variant;
 import dev.webserver.product.projection.DetailPojo;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
-import java.util.function.Supplier;
+import java.util.function.BiFunction;
 
 import static dev.webserver.enumeration.SarreCurrency.NGN;
 import static dev.webserver.enumeration.SarreCurrency.USD;
@@ -276,4 +283,45 @@ public class CustomUtil {
                 .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
     }
 
+    /**
+     * Validates if items in {@link MultipartFile} array are all images, else an error is thrown.
+     * Note I am returning an array as it is a bit more efficient than arraylist in
+     * terms of memory.
+     */
+    public static BiFunction<MultipartFile[], StringBuilder, CustomMultiPart[]> transformMultipartFile =
+            (files, defaultKey) -> Arrays.stream(files)
+                    .map(multipartFile -> {
+                        String name = Objects.requireNonNull(multipartFile.getOriginalFilename());
+
+                        File file = new File(name);
+
+                        try {
+                            multipartFile.transferTo(file);
+
+                            // validate file is an image
+                            String contentType = Files.probeContentType(file.toPath());
+                            if (!contentType.startsWith("image/")) {
+                                log.error("File is not an image");
+                                throw new CustomServerError("File is not an image");
+                            }
+
+                            // create file metadata
+                            Map<String, String> metadata = new HashMap<>();
+                            metadata.put("Content-Type", contentType);
+                            metadata.put("Title", name);
+                            metadata.put("Type", StringUtils.getFilenameExtension(name));
+
+                            // file default key
+                            String key = UUID.randomUUID().toString();
+                            if (defaultKey.isEmpty()) {
+                                defaultKey.append(key);
+                            }
+
+                            return new CustomMultiPart(file, metadata, key);
+                        } catch (IOException e) {
+                            log.error("error either writing multipart to file or getting file type. {}", e.getMessage());
+                            throw new CustomServerError("please verify files are images");
+                        }
+                    }) //
+                    .toArray(CustomMultiPart[]::new);
 }

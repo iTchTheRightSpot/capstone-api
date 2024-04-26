@@ -17,7 +17,7 @@ services:
       retries: 5
     volumes:
       - db-data:/var/lib/mysql
-#      - ./db/:/docker-entrypoint-initdb.dcd do ch
+  #      - ./db/:/docker-entrypoint-initdb.dcd do ch
 
   api:
     build: .

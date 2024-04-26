@@ -57,3 +57,34 @@ jobs:
         env:
           PAYSTACK_PUB_KEY: ${{ secrets.PAYSTACK_PUB_KEY }}
           PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_SECRET_KEY }}
+
+  deploy-native-image:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK Temurin
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Log into DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: emmanuelu17
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build image
+        run: |
+          mvn clean install -DskipTests
+          docker build --tag capstone-test:latest . --progress=plain
+
+      - name: Push image to dockerhub
+        run: |
+          docker image tag capstone-test:latest emmanuelu17/capstone-test:latest
+          docker push --all-tags emmanuelu17/capstone-test

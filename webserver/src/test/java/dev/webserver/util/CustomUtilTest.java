@@ -4,11 +4,18 @@ import com.github.javafaker.Faker;
 import dev.webserver.AbstractUnitTest;
 import dev.webserver.category.response.CategoryResponse;
 import dev.webserver.checkout.CheckoutPair;
+import dev.webserver.data.TestData;
 import dev.webserver.payment.projection.TotalPojo;
 import dev.webserver.product.dto.PriceCurrencyDto;
+import dev.webserver.product.response.CustomMultiPart;
+import lombok.val;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import static dev.webserver.enumeration.SarreCurrency.NGN;
@@ -34,6 +41,22 @@ class CustomUtilTest extends AbstractUnitTest {
         @Override
         public Double getWeight() {
             return HelperObj.this.weight;
+        }
+    }
+
+    @Test
+    void shouldSuccessfullyCreateTransformMultipartFilesToFile() {
+        // given
+        var mockFiles = TestData.files();
+
+        // when
+        var objs = CustomUtil.transformMultipartFile.apply(mockFiles, new StringBuilder());
+
+        // then
+        for (var obj : objs) {
+            assertTrue(Files.exists(obj.file().toPath()));
+            assertFalse(obj.key().isBlank());
+            assertFalse(obj.metadata().isEmpty());
         }
     }
 

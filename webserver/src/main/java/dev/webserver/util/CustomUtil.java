@@ -8,10 +8,9 @@ import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.payment.projection.TotalPojo;
 import dev.webserver.product.dto.PriceCurrencyDto;
-import dev.webserver.product.entity.Product;
+import dev.webserver.product.projection.DetailPojo;
 import dev.webserver.product.response.CustomMultiPart;
 import dev.webserver.product.response.Variant;
-import dev.webserver.product.projection.DetailPojo;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -33,6 +32,7 @@ import static dev.webserver.enumeration.SarreCurrency.USD;
 import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.FLOOR;
 import static java.math.RoundingMode.UP;
+import static org.hibernate.validator.internal.util.Contracts.assertTrue;
 
 public class CustomUtil {
 
@@ -297,6 +297,12 @@ public class CustomUtil {
 
                         try {
                             multipartFile.transferTo(file);
+
+                            boolean exists = Files.exists(file.toPath());
+
+                            if (!exists) {
+                                throw new IOException("%s does not exist".formatted(name));
+                            }
 
                             // validate file is an image
                             String contentType = Files.probeContentType(file.toPath());

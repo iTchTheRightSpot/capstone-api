@@ -1,8 +1,6 @@
 package dev.webserver.product.controller;
 
-import dev.webserver.aws.S3Service;
 import dev.webserver.enumeration.SarreCurrency;
-import dev.webserver.product.repository.ProductRepo;
 import dev.webserver.product.response.DetailResponse;
 import dev.webserver.product.response.ProductResponse;
 import dev.webserver.product.service.ClientProductService;
@@ -23,8 +21,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class ClientProductController {
 
     private final ClientProductService service;
-//    private final ProductRepo repo;
-//    private final S3Service s3Service;
 
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
@@ -36,13 +32,6 @@ public class ClientProductController {
         var sc = SarreCurrency.valueOf(currency.toUpperCase());
         return this.service.allProductsByCurrency(sc, page, Math.min(size, 20));
     }
-
-//    @GetMapping("/test")
-//    public String test () {
-//        var prod = repo.findAll().getFirst();
-//        System.out.println("product " + prod.toString());
-//        return s3Service.preSignedUrl("my-vps-bucket", prod.getDefaultKey());
-//    }
 
     @ResponseStatus(OK)
     @GetMapping(path = "/find", produces = APPLICATION_JSON_VALUE)

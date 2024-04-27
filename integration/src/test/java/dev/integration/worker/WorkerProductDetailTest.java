@@ -70,13 +70,7 @@ class WorkerProductDetailTest extends MainTest {
         assertEquals(HttpStatusCode.valueOf(201), post.getStatusCode());
 
         // delete items saved in s3
-        var aws = testTemplate.exchange(
-                PATH + "api/v1/native",
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                Value.Str.class
-        );
-
+        var aws = testTemplate.getForEntity(PATH + "api/v1/native", String.class);
         assertEquals(HttpStatusCode.valueOf(200), aws.getStatusCode());
     }
 

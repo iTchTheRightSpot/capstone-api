@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
 
@@ -58,20 +59,20 @@ public class Application {
 
     @Bean
     @Profile(value = "native-test")
-    public CommandLineRunner runner(UserRepository repository, UserRoleRepository roleRepository) {
+    public CommandLineRunner runner(UserRepository repository, UserRoleRepository roleRepository, PasswordEncoder encoder) {
         return args -> {
             if (repository.userByPrincipal(principal).isEmpty()) {
                 var user = repository.save(SarreBrandUser.builder()
                         .firstname("SEJU")
                         .lastname("Development")
                         .email(principal)
-                        .password(password)
-                        .password("0000000000")
+                        .password(encoder.encode(password))
+                        .phoneNumber("0000000000")
                         .enabled(true)
                         .clientRole(new HashSet<>())
                         .build());
                 roleRepository.save(new ClientRole(RoleEnum.WORKER, user));
-                roleRepository.save(new ClientRole(RoleEnum.NATIVE_TEST, user));
+                roleRepository.save(new ClientRole(RoleEnum.NATIVE, user));
             }
         };
     }

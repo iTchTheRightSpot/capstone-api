@@ -4,20 +4,22 @@ import dev.webserver.product.repository.ProductImageRepo;
 import dev.webserver.product.repository.ProductRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 
-import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.OK;
 
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}native")
-@PreAuthorize(value = "hasRole('ROLE_NATIVE_TEST')")
 @RequiredArgsConstructor
+@Profile("native-test")
+@PreAuthorize(value = "hasRole('ROLE_NATIVE')")
 class AwsController {
 
     @Value(value = "${spring.profiles.active}")
@@ -29,11 +31,11 @@ class AwsController {
     private final ProductImageRepo imageRepo;
     private final S3Service s3Service;
 
-    @PostMapping
-    @ResponseStatus(CREATED)
-    void test() {
+    @GetMapping
+    @ResponseStatus(OK)
+    public String testControl() {
         if (!profile.equals("native-test"))
-            throw new CustomAuthException("Last warning else will block your ip.");
+            throw new CustomAuthException("invalid profile.");
 
         final var productKeys = productRepo.findAll().stream()
                 .map(p -> ObjectIdentifier.builder().key(p.getDefaultKey()).build())
@@ -46,6 +48,7 @@ class AwsController {
                 .toList();
 
         s3Service.deleteFromS3(imageKeys, bucket);
+        return "deleted";
     }
 
     private static class CustomAuthException extends AuthenticationException {

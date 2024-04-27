@@ -12,6 +12,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.util.MultiValueMap;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.io.IOException;
 import java.util.List;
@@ -69,13 +70,14 @@ class WorkerProductDetailTest extends MainTest {
         assertEquals(HttpStatusCode.valueOf(201), post.getStatusCode());
 
         // delete items saved in s3
-        var aws = testTemplate.postForEntity(
+        var aws = testTemplate.exchange(
                 PATH + "api/v1/native",
-                new HttpEntity<>(null, headers),
-                Void.class
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                Value.Str.class
         );
 
-        assertEquals(HttpStatusCode.valueOf(201), aws.getStatusCode());
+        assertEquals(HttpStatusCode.valueOf(200), aws.getStatusCode());
     }
 
     @Test

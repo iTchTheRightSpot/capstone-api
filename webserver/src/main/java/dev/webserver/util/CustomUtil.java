@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -295,12 +296,8 @@ public class CustomUtil {
 
                         final File file = new File(name);
 
-                        try {
-                            multipartFile.transferTo(file);
-
-                             // if (!Files.exists(file.toPath())) {
-                             //     throw new IOException("%s does not exist".formatted(name));
-                             // }
+                        try (var stream = new FileOutputStream(file)) {
+                            stream.write(multipartFile.getBytes());
 
                             // validate file is an image
                             final String contentType = Files.probeContentType(file.toPath());
@@ -321,7 +318,7 @@ public class CustomUtil {
                                 defaultKey.append(key);
                             }
 
-                            // prevents spring from saving files to root folder
+                            // prevents files from being saved to root folder
                             file.deleteOnExit();
 
                             return new CustomMultiPart(file, metadata, key);

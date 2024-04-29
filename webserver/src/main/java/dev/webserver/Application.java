@@ -19,6 +19,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -40,39 +41,40 @@ public class Application {
     }
 
     @Bean
-    @Profile(value = {"default", "aws"})
-    public CommandLineRunner commandLineRunner(AuthService service, UserRepository repository) {
+    @Profile(value = {"default", "aws", "native-test"})
+    public CommandLineRunner commandLineRunner(
+            AuthService service,
+            UserRepository repository,
+            UserRoleRepository roleRepository,
+            PasswordEncoder encoder,
+            Environment env
+    ) {
         return args -> {
             if (repository.userByPrincipal(principal).isEmpty()) {
-                var dto = new RegisterDto(
-                        "SEJU",
-                        "Development",
-                        principal,
-                        principal,
-                        "0000000000",
-                        password
-                );
-                service.register(null, dto, RoleEnum.WORKER);
-            }
-        };
-    }
-
-    @Bean
-    @Profile(value = "native-test")
-    public CommandLineRunner runner(UserRepository repository, UserRoleRepository roleRepository, PasswordEncoder encoder) {
-        return args -> {
-            if (repository.userByPrincipal(principal).isEmpty()) {
-                var user = repository.save(SarreBrandUser.builder()
-                        .firstname("SEJU")
-                        .lastname("Development")
-                        .email(principal)
-                        .password(encoder.encode(password))
-                        .phoneNumber("0000000000")
-                        .enabled(true)
-                        .clientRole(new HashSet<>())
-                        .build());
-                roleRepository.save(new ClientRole(RoleEnum.WORKER, user));
-                roleRepository.save(new ClientRole(RoleEnum.NATIVE, user));
+                if (env.matchesProfiles("native-test")) {
+                    var user = repository.save(SarreBrandUser.builder()
+                            .firstname("SEJU")
+                            .lastname("Development")
+                            .email(principal)
+                            .password(encoder.encode(password))
+                            .phoneNumber("0000000000")
+                            .enabled(true)
+                            .clientRole(new HashSet<>())
+                            .build());
+                    roleRepository.save(new ClientRole(RoleEnum.CLIENT, user));
+                    roleRepository.save(new ClientRole(RoleEnum.WORKER, user));
+                    roleRepository.save(new ClientRole(RoleEnum.NATIVE, user));
+                } else {
+                    var dto = new RegisterDto(
+                            "SEJU",
+                            "Development",
+                            principal,
+                            principal,
+                            "0000000000",
+                            password
+                    );
+                    service.register(null, dto, RoleEnum.WORKER);
+                }
             }
         };
     }

@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+import static dev.webserver.enumeration.RoleEnum.NATIVE;
+import static dev.webserver.enumeration.RoleEnum.WORKER;
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.HttpStatus.OK;
@@ -151,9 +153,19 @@ public class SecurityConfig {
                 .cors(withDefaults())
 
                 // Public routes
-                .authorizeHttpRequests(auth -> auth.requestMatchers(pubRoutes).permitAll()
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(pubRoutes).permitAll();
+
+                    auth.requestMatchers(BASEURL + "cron/**").hasRole(NATIVE.name());
+                    auth.requestMatchers(BASEURL + "native/**").hasRole(NATIVE.name());
+
+                    auth.requestMatchers(BASEURL + "shipping/**").hasRole(WORKER.name());
+                    auth.requestMatchers(BASEURL + "tax/**").hasRole(WORKER.name());
+                    auth.requestMatchers(BASEURL + "worker/**").hasRole(WORKER.name());
+                    auth.requestMatchers(BASEURL + "auth/worker").hasRole(WORKER.name());
+
+                    auth.anyRequest().authenticated();
+                })
 
                 // Jwt
                 .addFilterBefore(refreshTokenFilter, BearerTokenAuthenticationFilter.class)

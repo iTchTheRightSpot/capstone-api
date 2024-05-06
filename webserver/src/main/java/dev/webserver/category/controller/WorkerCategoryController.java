@@ -10,7 +10,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.CompletableFuture;
@@ -19,7 +18,6 @@ import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}worker/category")
-@PreAuthorize(value = "hasRole('ROLE_WORKER')")
 @RequiredArgsConstructor
 public class WorkerCategoryController {
 

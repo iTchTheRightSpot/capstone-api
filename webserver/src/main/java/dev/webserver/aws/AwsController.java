@@ -3,9 +3,9 @@ package dev.webserver.aws;
 import dev.webserver.product.repository.ProductImageRepo;
 import dev.webserver.product.repository.ProductRepo;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,9 +18,9 @@ import static org.springframework.http.HttpStatus.OK;
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}native")
 @RequiredArgsConstructor
-@Profile("native-test")
-@PreAuthorize(value = "hasRole('ROLE_NATIVE')")
 class AwsController {
+
+    private static final Logger log = LoggerFactory.getLogger(AwsController.class);
 
     @Value(value = "${spring.profiles.active}")
     private String profile;
@@ -34,8 +34,10 @@ class AwsController {
     @GetMapping
     @ResponseStatus(OK)
     public String testControl() {
+        log.info("Aws Controller current profile {}", profile);
+
         if (!profile.equals("native-test"))
-            throw new CustomAuthException("invalid profile.");
+            return "cant access route. invalid profile";
 
         final var productKeys = productRepo.findAll().stream()
                 .map(p -> ObjectIdentifier.builder().key(p.getDefaultKey()).build())

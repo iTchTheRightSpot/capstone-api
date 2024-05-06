@@ -12,11 +12,13 @@ import dev.webserver.user.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 
 @TestConfiguration(proxyBeanMethods = false)
 class DummyData {
 
     @Bean
+    @Profile(value = "test")
     public CommandLineRunner runner(
             AuthService authService,
             UserRepository repository,

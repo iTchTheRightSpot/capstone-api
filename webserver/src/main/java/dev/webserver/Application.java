@@ -41,7 +41,6 @@ public class Application {
     }
 
     @Bean
-    @Profile(value = {"default", "aws", "native-test"})
     public CommandLineRunner commandLineRunner(
             AuthService service,
             UserRepository repository,

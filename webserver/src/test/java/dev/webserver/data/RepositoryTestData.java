@@ -65,7 +65,7 @@ public class RepositoryTestData {
                     ProductSku.builder()
                             .sku(UUID.randomUUID().toString())
                             .size(UUID.randomUUID().toString())
-                            .inventory(new Faker().number().numberBetween(1, 20))
+                            .inventory(new Faker().number().numberBetween(10, 20))
                             .productDetail(detail)
                             .orderDetails(new HashSet<>())
                             .reservations(new HashSet<>())

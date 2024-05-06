@@ -2,6 +2,7 @@ package dev.webserver.data;
 
 import com.github.javafaker.Faker;
 import dev.webserver.category.entity.ProductCategory;
+import dev.webserver.exception.CustomServerError;
 import dev.webserver.product.dto.*;
 import dev.webserver.product.service.WorkerProductService;
 import dev.webserver.user.entity.ClientRole;
@@ -9,6 +10,7 @@ import dev.webserver.user.entity.SarreBrandUser;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.mock.web.MockMultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -19,6 +21,8 @@ import java.util.Set;
 
 import static dev.webserver.enumeration.RoleEnum.CLIENT;
 import static dev.webserver.enumeration.RoleEnum.WORKER;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestData {
 
@@ -60,28 +64,31 @@ public class TestData {
     }
 
     /**
-     * Converts all files from uploads directory into a MockMultipartFile
+     * Converts all files from uploads directory into a {@link MockMultipartFile}.
      * */
     @NotNull
     public static MockMultipartFile[] files() {
-        return Arrays.stream(new Path[]{Paths.get("src/test/resources/uploads/benzema.JPG")})
-                .map(path -> {
-                    String contentType;
-                    byte[] content;
-                    try {
-                        contentType = Files.probeContentType(path);
-                        content = Files.readAllBytes(path);
-                    } catch (IOException ignored) {
-                        contentType = "text/plain";
-                        content = new byte[3];
-                    }
+        Path path = Paths.get("src/test/resources/uploads/");
 
-                    return new MockMultipartFile(
-                            "files",
-                            path.getFileName().toString(),
-                            contentType,
-                            content
-                    );
+        assertTrue(Files.exists(path));
+
+        File dir = new File(path.toUri());
+        assertNotNull(dir);
+
+        File[] files = dir.listFiles();
+        assertNotNull(files);
+
+        return Arrays.stream(files).map(file -> {
+                    try {
+                        return new MockMultipartFile(
+                                "files",
+                                file.getName(),
+                                Files.probeContentType(file.toPath()),
+                                Files.readAllBytes(file.toPath())
+                        );
+                    } catch (IOException ignored) {
+                        throw new CustomServerError("unable to convert files in %s to a file".formatted(path.toString()));
+                    }
                 })
                 .toArray(MockMultipartFile[]::new);
     }

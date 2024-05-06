@@ -1,13 +1,12 @@
 package dev.integration;
 
 import com.github.javafaker.Faker;
+import dev.webserver.exception.CustomServerError;
 import dev.webserver.product.dto.CreateProductDTO;
 import dev.webserver.product.dto.PriceCurrencyDto;
 import dev.webserver.product.dto.SizeInventoryDTO;
 import dev.webserver.product.dto.UpdateProductDTO;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,11 +18,13 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.HttpCookie;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -51,8 +52,8 @@ public class TestData {
         MultiValueMap<String, Object> multipart = new LinkedMultiValueMap<>();
 
         // add image files to request
-        for (Resource resource : resources()) {
-            multipart.add("files", resource);
+        for (var resource : mockMultipartFiles()) {
+            multipart.add("files", resource.getResource());
         }
 
         // create dto
@@ -64,7 +65,7 @@ public class TestData {
     }
 
     @NotNull
-    private static Resource[] resources() {
+    private static MockMultipartFile[] mockMultipartFiles() {
         Path path = Paths.get("src/test/resources/uploads/");
 
         assertTrue(Files.exists(path));
@@ -75,13 +76,19 @@ public class TestData {
         File[] files = dir.listFiles();
         assertNotNull(files);
 
-        Resource[] resources = new FileSystemResource[files.length];
-
-        for (int i = 0; i < files.length; i++) {
-            resources[i] = new FileSystemResource(files[i]);
-        }
-
-        return resources;
+        return Arrays.stream(files).map(file -> {
+                    try {
+                        return new MockMultipartFile(
+                                file.getName(),
+                                file.getName(),
+                                Files.probeContentType(file.toPath()),
+                                Files.readAllBytes(file.toPath())
+                        );
+                    } catch (IOException ignored) {
+                        throw new CustomServerError("unable to convert files in %s to a file".formatted(path.toString()));
+                    }
+                })
+                .toArray(MockMultipartFile[]::new);
     }
 
     @NotNull

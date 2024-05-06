@@ -2,7 +2,6 @@ package dev.webserver.product.service;
 
 import dev.webserver.aws.S3Service;
 import dev.webserver.exception.CustomServerError;
-import dev.webserver.product.entity.Product;
 import dev.webserver.product.entity.ProductDetail;
 import dev.webserver.product.entity.ProductImage;
 import dev.webserver.product.repository.ProductImageRepo;
@@ -10,27 +9,18 @@ import dev.webserver.product.response.CustomMultiPart;
 import dev.webserver.util.CustomUtil;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(rollbackFor = Exception.class)
 class HelperService {
-
-    private static final Logger log = LoggerFactory.getLogger(HelperService.class);
 
     private final ProductImageRepo repository;
     private final S3Service service;
@@ -39,7 +29,7 @@ class HelperService {
         return this.service.preSignedUrl(bucket, key);
     }
 
-    public void deleteFromS3(List<ObjectIdentifier> keys, String bucket) {
+    public void deleteFromS3(@NotNull List<ObjectIdentifier> keys, @NotNull String bucket) {
         this.service.deleteFromS3(keys, bucket);
     }
 
@@ -56,7 +46,7 @@ class HelperService {
      *               be uploaded.
      * @throws CustomServerError if there is an error executing the tasks.
      */
-    public void saveProductImages(ProductDetail detail, CustomMultiPart[] files, String bucket) {
+    public void saveProductImages(@NotNull ProductDetail detail, @NotNull CustomMultiPart[] files, @NotNull String bucket) {
         var future = Arrays.stream(files)
                 .map(file -> (Supplier<CustomMultiPart>) () -> {
                     service.uploadToS3(file.file(), file.metadata(), bucket, file.key());
@@ -69,64 +59,8 @@ class HelperService {
                 .join()
                 .forEach(e -> {
                     CustomMultiPart obj = e.get();
-                    this.repository
-                            .save(new ProductImage(obj.key(), obj.file().getAbsolutePath(), detail));
+                    this.repository.save(new ProductImage(obj.key(), obj.file().getAbsolutePath(), detail));
                 });
-    }
-
-    /**
-     * Validates if items in MultipartFile array are all images, else an error is thrown.
-     * Note I am returning an array as it is a bit more efficient than arraylist in
-     * terms of memory.
-     *
-     * @param multipartFiles is an array of {@link MultipartFile}.
-     * @param defaultKey A property of {@link Product}.
-     * @return A custom {@link CustomMultiPart} array.
-     * @throws CustomServerError if an error occurs validating if multipartFiles are images.
-     */
-    public CustomMultiPart[] customMultiPartFiles(MultipartFile[] multipartFiles, StringBuilder defaultKey) {
-        return Arrays.stream(multipartFiles)
-                .map(multipartFile -> {
-                    String originalFileName = Objects.requireNonNull(multipartFile.getOriginalFilename());
-
-                    File file = new File(originalFileName);
-
-                    try (FileOutputStream stream = new FileOutputStream(file)) {
-                        // write MultipartFile to file
-                        stream.write(multipartFile.getBytes());
-
-                        // Validate file is an image
-                        String contentType = Files.probeContentType(file.toPath());
-                        if (!contentType.startsWith("image/")) {
-                            log.error("File is not an image");
-                            throw new CustomServerError("File is not an image");
-                        }
-
-                        // Create image metadata for storing in AWS
-                        Map<String, String> metadata = new HashMap<>();
-                        metadata.put("Content-Type", contentType);
-                        metadata.put("Title", originalFileName);
-                        metadata.put("Type", StringUtils.getFilenameExtension(originalFileName));
-
-                        // Default key
-                        String key = UUID.randomUUID().toString();
-                        if (defaultKey.isEmpty()) {
-                            defaultKey.append(key);
-                        }
-
-                        CustomMultiPart result = new CustomMultiPart(file, metadata, key);
-
-                        stream.close();
-                        // prevents spring from saving files to root folder
-                        file.delete();
-
-                        return result;
-                    } catch (IOException ex) {
-                        log.error("error either writing multipart to file or getting file type. {}", ex.getMessage());
-                        throw new CustomServerError("please verify files are images");
-                    }
-                }) //
-                .toArray(CustomMultiPart[]::new);
     }
 
 }

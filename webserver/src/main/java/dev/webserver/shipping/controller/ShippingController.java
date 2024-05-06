@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +17,6 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}shipping")
 @RequiredArgsConstructor
-@PreAuthorize(value = "hasRole('ROLE_WORKER')")
 public class ShippingController {
 
     private final ShippingService service;

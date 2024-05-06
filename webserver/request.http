@@ -54,3 +54,6 @@ DELETE http://localhost:1997/api/v1/worker/product/Aerodynamic Concrete Watch/3e
 
 ### Get All Products Client
 GET http://localhost:1997/api/v1/client/category/products?category_id=5
+
+### Get presigned url
+GET http://localhost:1997/api/v1/client/product/test

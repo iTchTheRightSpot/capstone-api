@@ -11,6 +11,7 @@ import dev.webserver.product.entity.Product;
 import dev.webserver.product.projection.ProductPojo;
 import dev.webserver.product.repository.PriceCurrencyRepo;
 import dev.webserver.product.repository.ProductRepo;
+import dev.webserver.product.response.CustomMultiPart;
 import dev.webserver.product.response.ProductResponse;
 import dev.webserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
@@ -90,7 +91,8 @@ public class WorkerProductService {
      * @return a {@link CompletableFuture} of {@link Page} of {@link ProductResponse}.
      */
     public CompletableFuture<Page<ProductResponse>> allProducts(
-            SarreCurrency currency, int page, int size) {
+            final SarreCurrency currency, final int page, final int size
+    ) {
         var pageOfProducts = this.productRepo
                 .allProductsForAdminFront(currency, PageRequest.of(page, size));
 
@@ -114,7 +116,7 @@ public class WorkerProductService {
      * @return A list of {@link Supplier}, each representing a task to create a
      * {@link ProductResponse} object.
      */
-    private List<Supplier<ProductResponse>> createTasks(Page<ProductPojo> page) {
+    private List<Supplier<ProductResponse>> createTasks(final Page<ProductPojo> page) {
         return page.stream()
                 .map(p -> (Supplier<ProductResponse>) () -> new ProductResponse(
                         p.getUuid(),
@@ -133,14 +135,14 @@ public class WorkerProductService {
     /**
      * Create a new {@link Product}.
      *
-     * @param files of type {@link MultipartFile}.
+     * @param multipartFiles of type {@link MultipartFile}.
      * @param dto   of type {@link CreateProductDTO}.
      * @throws CustomNotFoundException is thrown if categoryId name does not exist in database.
      * or currency passed in truncateAmount does not contain in dto property priceCurrency.
      * @throws CustomServerError      is thrown if File is not an image.
      * @throws DuplicateException      is thrown if dto image exists in for Product.
      */
-    public void create(final CreateProductDTO dto, final MultipartFile[] files) {
+    public void create(final CreateProductDTO dto, final MultipartFile[] multipartFiles) {
         if (!CustomUtil.validateContainsCurrencies(dto.priceCurrency())) {
             throw new CustomInvalidFormatException("please check currencies and prices");
         }
@@ -152,9 +154,8 @@ public class WorkerProductService {
             throw new DuplicateException(dto.name() + " exists");
         }
 
-        // validate MultipartFile[] are all images
         StringBuilder defaultImageKey = new StringBuilder();
-        var file = this.helperService.customMultiPartFiles(files, defaultImageKey);
+        var files = CustomUtil.transformMultipartFile.apply(multipartFiles, defaultImageKey);
 
         // build Product
         var p = Product.builder()
@@ -186,7 +187,7 @@ public class WorkerProductService {
         this.skuService.save(dto.sizeInventory(), detail);
 
         // build and save ProductImages (save to s3)
-        this.helperService.saveProductImages(detail, file, BUCKET);
+        this.helperService.saveProductImages(detail, files, BUCKET);
     }
 
     /**

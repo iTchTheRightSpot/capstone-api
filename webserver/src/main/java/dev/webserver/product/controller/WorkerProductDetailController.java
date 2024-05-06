@@ -1,14 +1,13 @@
 package dev.webserver.product.controller;
 
-import dev.webserver.product.service.ProductSkuService;
-import dev.webserver.product.service.WorkerProductDetailService;
-import dev.webserver.product.response.DetailResponse;
 import dev.webserver.product.dto.ProductDetailDto;
 import dev.webserver.product.dto.UpdateProductDetailDto;
+import dev.webserver.product.response.DetailResponse;
+import dev.webserver.product.service.ProductSkuService;
+import dev.webserver.product.service.WorkerProductDetailService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,7 +20,6 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
 @RequestMapping("${api.endpoint.baseurl}worker/product/detail")
-@PreAuthorize(value = "hasRole('ROLE_WORKER')")
 @RequiredArgsConstructor
 public class WorkerProductDetailController {
 

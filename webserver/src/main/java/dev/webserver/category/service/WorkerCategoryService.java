@@ -13,7 +13,6 @@ import dev.webserver.exception.DuplicateException;
 import dev.webserver.exception.ResourceAttachedException;
 import dev.webserver.product.response.ProductResponse;
 import dev.webserver.util.CustomUtil;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
@@ -30,7 +30,7 @@ import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(rollbackOn = Exception.class)
+@Transactional(rollbackFor = Exception.class)
 public class WorkerCategoryService {
 
     private static final Logger log = LoggerFactory.getLogger(WorkerCategoryService.class);

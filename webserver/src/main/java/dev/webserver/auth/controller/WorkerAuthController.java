@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import static dev.webserver.enumeration.RoleEnum.WORKER;
@@ -23,7 +22,6 @@ public class WorkerAuthController {
 
     @ResponseStatus(CREATED)
     @PostMapping(path = "/register", consumes = "application/json")
-    @PreAuthorize(value = "hasRole('ROLE_WORKER')")
     public void register(@Valid @RequestBody RegisterDto dto, HttpServletResponse res) {
         this.service.register(res, dto, WORKER);
     }

@@ -33,8 +33,7 @@ public class S3Service {
 
         String active = env.getProperty("spring.profiles.active", "default");
 
-        this.profile = active.equalsIgnoreCase("native-test")
-                || active.equalsIgnoreCase("test");
+        this.profile = active.equalsIgnoreCase("test");
     }
 
     public void uploadToS3(File file, Map<String, String> metadata, String bucket, String key) {
@@ -45,20 +44,19 @@ public class S3Service {
     }
 
     /**
-     * Upload image to s3.
+     * Upload file to s3.
      * @see <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/PutObject.java">aws docs</a>
      * */
     private void uploadToS3Impl(File file, Map<String, String> metadata, String bucket, String key) {
+        PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .metadata(metadata)
+                .build();
         try {
-            // Create put request
-            PutObjectRequest request = PutObjectRequest.builder()
-                    .bucket(bucket) // pass as env variable
-                    .key(key)
-                    .metadata(metadata)
-                    .build();
-
             this.s3Client.putObject(request, RequestBody.fromFile(file));
-        } catch (S3Exception e) {
+            log.info("successfully uploaded file to s3 {}", file.getName());
+        } catch (Exception e) {
             log.error("Error uploading image to s3 {}", e.getMessage());
             throw new CustomServerError("error uploading image. Please try again or call developer");
         }
@@ -76,16 +74,16 @@ public class S3Service {
      * @see <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/DeleteObjects.java">aws docs</a>
      * */
     private void deleteFromS3Impl(List<ObjectIdentifier> keys, String bucketName) {
-        Delete del = Delete.builder().objects(keys).build();
+        DeleteObjectsRequest build = DeleteObjectsRequest.builder()
+                .bucket(bucketName)
+                .delete(Delete.builder().objects(keys).build())
+                .build();
         try {
-            DeleteObjectsRequest multiObjectDeleteRequest = DeleteObjectsRequest.builder()
-                    .bucket(bucketName)
-                    .delete(del)
-                    .build();
-            this.s3Client.deleteObjects(multiObjectDeleteRequest);
+            this.s3Client.deleteObjects(build);
+            log.info("successfully deleted files from s3");
         } catch (S3Exception e) {
-            log.error("Error deleting image from s3 {}", e.getMessage());
-            throw new CustomServerError("Error deleting image. Please try again later or call developer");
+            log.error("error deleting image from s3 {}", e.getMessage());
+            throw new CustomServerError("error deleting image. Please try again later or call developer");
         }
     }
 
@@ -109,20 +107,19 @@ public class S3Service {
      *
      * @param bucket is the bucket name
      * @param key is the object key
-     * @return image url
+     * @return an uploaded {@link File} as aws pre-signed url.
      * */
     private String preSignedUrlImpl(String bucket, String key) {
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+
+        GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(30))
+                .getObjectRequest(getObjectRequest)
+                .build();
         try {
-            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .build();
-
-            GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
-                    .signatureDuration(Duration.ofMinutes(30))
-                    .getObjectRequest(getObjectRequest)
-                    .build();
-
             PresignedGetObjectRequest request = this.s3Presigner.presignGetObject(getObjectPresignRequest);
             log.info("successfully retrieved object preassigned URL");
             return request.url().toString();

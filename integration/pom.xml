@@ -34,12 +34,6 @@
             <!-- scope provided as we need the jar file of webserver to generate a native image. -->
             <scope>provided</scope>
         </dependency>
-
-<!--        <dependency>-->
-<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
-<!--            <artifactId>jackson-databind</artifactId>-->
-<!--            <version>2.16.1</version>-->
-<!--        </dependency>-->
     </dependencies>
 
 </project>

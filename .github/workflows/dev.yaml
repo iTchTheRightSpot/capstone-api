@@ -38,8 +38,8 @@ jobs:
       - name: Checkout master
         uses: actions/checkout@v4
 
-      - name: Set up JDK Temurin
-        uses: actions/setup-java@v4
+      - name: Set up JDK graal
+        uses: graalvm/setup-graalvm@v1
         with:
           java-version: '21'
           distribution: 'graalvm'

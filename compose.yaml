@@ -18,8 +18,7 @@ services:
       - db-data:/var/lib/mysql
 
   api:
-#    build: .
-    image: "emmanuelu17/webserver:latest"
+    build: .
     env_file:
       - .env
     ports:

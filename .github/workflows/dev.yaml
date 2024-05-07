@@ -41,9 +41,8 @@ jobs:
       - name: Set up JDK Temurin
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
           java-version: '21'
-          cache: 'maven'
+          distribution: 'graalvm'
 
       - name: Set env variables
         run: |

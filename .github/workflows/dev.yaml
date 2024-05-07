@@ -68,7 +68,8 @@ jobs:
 
       - name: Compose up
         run: |
-          cd ..
+          ls
+          docker image ls
           docker compose up -d
 
       - name: Run tests
@@ -78,5 +79,4 @@ jobs:
 
       - name: Compose down
         run: |
-          cd ..
           docker compose down -v

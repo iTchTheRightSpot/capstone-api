@@ -36,5 +36,5 @@ jobs:
 
       - name: Push image to dockerhub
         run: |
-          docker image tag webserver-native:latest emmanuelu17/capstone-api:latest
+          docker image tag emmanuelu17/webserver:latest emmanuelu17/capstone-api:latest
           docker push --all-tags emmanuelu17/capstone-api

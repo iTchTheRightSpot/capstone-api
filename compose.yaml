@@ -19,7 +19,7 @@ services:
 
   api:
 #    build: .
-    image: "webserver-native:latest"
+    image: "emmanuelu17/webserver:latest"
     env_file:
       - .env
     ports:

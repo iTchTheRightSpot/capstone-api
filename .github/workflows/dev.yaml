@@ -45,7 +45,7 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
-      - name: Run tests
+      - name: Set env variables
         run: |
           touch .env
           echo PAYSTACK_PUB_KEY=$PAYSTACK_PUB_KEY >> .env
@@ -53,9 +53,6 @@ jobs:
           echo AWS_BUCKET=$AWS_BUCKET >> .env
           echo AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID >> .env
           echo AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY >> .env
-          mvn clean install -DskipTests
-          cd integration/
-          mvn test
         shell: bash
         env:
           PAYSTACK_PUB_KEY: ${{ secrets.PAYSTACK_PUB_KEY }}
@@ -63,3 +60,24 @@ jobs:
           AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Build native image
+        run: |
+          mvn clean install -DskipTests
+          cd webserver/
+          mvn spring-boot:build-image -Pnative -DskipTests
+
+      - name: Compose up
+        run: |
+          cd ..
+          docker compose up -d
+
+      - name: Run tests
+        run: |
+          cd integration
+          mvn test
+
+      - name: Compose down
+        run: |
+          cd ..
+          docker compose down -v

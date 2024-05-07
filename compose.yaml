@@ -18,7 +18,8 @@ services:
       - db-data:/var/lib/mysql
 
   api:
-    build: .
+#    build: .
+    image: "webserver-native:latest"
     env_file:
       - .env
     ports:

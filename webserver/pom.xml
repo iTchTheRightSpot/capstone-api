@@ -57,8 +57,8 @@
     <profiles>
         <profile>
             <id>native</id>
-
             <build>
+                <finalName>webserver-native</finalName>
                 <plugins>
                     <!-- https://docs.jboss.org/hibernate/orm/5.4/topical/html_single/bytecode/BytecodeEnhancement.html -->
                     <plugin>

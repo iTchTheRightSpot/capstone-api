@@ -32,9 +32,10 @@ jobs:
       - name: Build image
         run: |
           mvn clean install -DskipTests
-          docker build --tag capstone-api:latest . --progress=plain
+          cd webserver/
+          mvn spring-boot:build-image -Pnative -DskipTests
 
       - name: Push image to dockerhub
         run: |
-          docker image tag capstone-api:latest emmanuelu17/capstone-api:latest
+          docker image tag webserver-native:latest emmanuelu17/capstone-api:latest
           docker push --all-tags emmanuelu17/capstone-api

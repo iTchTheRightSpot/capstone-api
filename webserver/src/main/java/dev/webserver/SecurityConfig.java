@@ -1,7 +1,7 @@
-package dev.webserver.auth.config;
+package dev.webserver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.webserver.auth.jwt.RefreshTokenFilter;
+import dev.webserver.jwt.RefreshTokenFilter;
 import dev.webserver.exception.ExceptionResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;

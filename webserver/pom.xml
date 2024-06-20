@@ -25,7 +25,7 @@
     </properties>
 
     <build>
-        <finalName>webserver</finalName>
+        <finalName>${project.name}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -95,7 +95,7 @@
                             <skip>false</skip>
                             <skipNativeTests>true</skipNativeTests>
                             <skipTests>true</skipTests>
-                            <imageName>api</imageName>
+                            <imageName>${project.name}</imageName>
                             <buildArgs>--static --libc=musl</buildArgs>
                         </configuration>
                     </plugin>

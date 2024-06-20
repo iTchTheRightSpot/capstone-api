@@ -1,4 +1,4 @@
-package dev.webserver.auth.config;
+package dev.webserver;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

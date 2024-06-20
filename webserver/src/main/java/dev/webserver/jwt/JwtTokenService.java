@@ -1,4 +1,4 @@
-package dev.webserver.auth.jwt;
+package dev.webserver.jwt;
 
 import dev.webserver.enumeration.RoleEnum;
 import jakarta.servlet.http.Cookie;

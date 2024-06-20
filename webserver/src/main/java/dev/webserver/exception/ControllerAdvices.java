@@ -4,9 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -22,7 +19,7 @@ import static org.springframework.http.HttpStatus.*;
 @ControllerAdvice
 @Order(HIGHEST_PRECEDENCE)
 @RequiredArgsConstructor
-public class ControllerAdvices {
+class ControllerAdvices {
 
     private final Environment environment;
 
@@ -36,18 +33,6 @@ public class ControllerAdvices {
     public ResponseEntity<ExceptionResponse> customNotFoundException(Exception ex) {
         var res = new ExceptionResponse(ex.getMessage(), NOT_FOUND);
         return new ResponseEntity<>(res, NOT_FOUND);
-    }
-
-    @ExceptionHandler(value = {AuthenticationException.class, UsernameNotFoundException.class})
-    public ResponseEntity<ExceptionResponse> authenticationException(Exception e) {
-        var r = new ExceptionResponse(e.getMessage(), UNAUTHORIZED);
-        return new ResponseEntity<>(r, UNAUTHORIZED);
-    }
-
-    @ExceptionHandler(value = {AccessDeniedException.class})
-    public ResponseEntity<ExceptionResponse> accessException(Exception e) {
-        var res = new ExceptionResponse(e.getMessage(), FORBIDDEN);
-        return new ResponseEntity<>(res, FORBIDDEN);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

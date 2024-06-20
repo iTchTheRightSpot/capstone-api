@@ -1,4 +1,4 @@
-package dev.webserver.auth.jwt;
+package dev.webserver.jwt;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWKSet;

@@ -3,7 +3,7 @@ package dev.webserver.auth.service;
 import dev.webserver.AbstractUnitTest;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
-import dev.webserver.auth.jwt.JwtTokenService;
+import dev.webserver.jwt.JwtTokenService;
 import dev.webserver.data.TestData;
 import dev.webserver.exception.DuplicateException;
 import dev.webserver.user.entity.ClientRole;

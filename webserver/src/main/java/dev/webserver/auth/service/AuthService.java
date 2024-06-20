@@ -4,7 +4,7 @@ import dev.webserver.auth.controller.ClientAuthController;
 import dev.webserver.auth.controller.WorkerAuthController;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
-import dev.webserver.auth.jwt.JwtTokenService;
+import dev.webserver.jwt.JwtTokenService;
 import dev.webserver.enumeration.RoleEnum;
 import dev.webserver.exception.DuplicateException;
 import dev.webserver.user.entity.ClientRole;

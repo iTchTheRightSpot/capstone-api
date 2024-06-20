@@ -1,6 +1,8 @@
 package dev.webserver.auth.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.auth.jwt.RefreshTokenFilter;
+import dev.webserver.exception.ExceptionResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -41,7 +43,7 @@ import static dev.webserver.enumeration.RoleEnum.NATIVE;
 import static dev.webserver.enumeration.RoleEnum.WORKER;
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
-import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.*;
 import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
@@ -118,7 +120,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(
             HttpSecurity http,
-            AuthEntryPoint authEntryPoint,
+            ObjectMapper mapper,
             RefreshTokenFilter refreshTokenFilter,
             JwtAuthenticationConverter converter
     ) throws Exception {
@@ -175,8 +177,20 @@ public class SecurityConfig {
                 // Session Management
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
 
-                // Exception Handling.
-                .exceptionHandling((ex) -> ex.authenticationEntryPoint(authEntryPoint))
+                // global exception handing
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, exception) -> {
+                            final String str = mapper.writeValueAsString(new ExceptionResponse(exception.getMessage(), UNAUTHORIZED));
+                            response.setStatus(UNAUTHORIZED.value());
+                            response.getWriter().write(str);
+                            response.flushBuffer();
+                        })
+                        .accessDeniedHandler((request, response, exception) -> {
+                            final String str = mapper.writeValueAsString(new ExceptionResponse("Access Denied", FORBIDDEN));
+                            response.setStatus(FORBIDDEN.value());
+                            response.getWriter().write(str);
+                            response.flushBuffer();
+                        }))
 
                 // Logout
                 // https://docs.spring.io/spring-security/reference/servlet/authentication/logout.html

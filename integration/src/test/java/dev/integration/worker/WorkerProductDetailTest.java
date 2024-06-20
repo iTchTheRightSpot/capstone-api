@@ -1,6 +1,6 @@
 package dev.integration.worker;
 
-import dev.integration.MainTest;
+import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
 import dev.integration.TestData;
 import dev.webserver.product.dto.ProductDetailDto;
@@ -27,7 +27,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class WorkerProductDetailTest extends MainTest {
+class WorkerProductDetailTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
 

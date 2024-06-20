@@ -1,6 +1,6 @@
 package dev.integration.client;
 
-import dev.integration.MainTest;
+import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
 import dev.webserver.cart.dto.CartDTO;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CartControllerTest extends MainTest {
+class CartControllerTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
 

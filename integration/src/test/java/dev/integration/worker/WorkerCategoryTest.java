@@ -1,6 +1,6 @@
 package dev.integration.worker;
 
-import dev.integration.MainTest;
+import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
 import dev.webserver.category.dto.CategoryDTO;
 import dev.webserver.category.dto.UpdateCategoryDTO;
@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class WorkerCategoryTest extends MainTest {
+class WorkerCategoryTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
 

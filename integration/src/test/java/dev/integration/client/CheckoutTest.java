@@ -1,6 +1,6 @@
 package dev.integration.client;
 
-import dev.integration.MainTest;
+import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
 import dev.webserver.cart.dto.CartDTO;
 import dev.webserver.checkout.Checkout;
@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CheckoutTest extends MainTest {
+class CheckoutTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
 

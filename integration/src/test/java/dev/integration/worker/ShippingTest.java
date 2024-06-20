@@ -1,6 +1,6 @@
 package dev.integration.worker;
 
-import dev.integration.MainTest;
+import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
 import dev.webserver.shipping.ShippingDto;
 import dev.webserver.shipping.ShippingMapper;
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ShippingTest extends MainTest {
+class ShippingTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
     private final String path = PATH + "api/v1/shipping";

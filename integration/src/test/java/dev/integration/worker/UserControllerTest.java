@@ -1,6 +1,6 @@
 package dev.integration.worker;
 
-import dev.integration.MainTest;
+import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class UserControllerTest extends MainTest {
+class UserControllerTest extends AbstractNative {
     private static final HttpHeaders headers = new HttpHeaders();
 
     @BeforeAll

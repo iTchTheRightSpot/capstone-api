@@ -1,8 +1,7 @@
 package dev.integration.client;
 
-import dev.integration.MainTest;
+import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
-import dev.integration.TestData;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
 import org.junit.jupiter.api.BeforeAll;
@@ -17,7 +16,7 @@ import org.springframework.http.MediaType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AuthenticationTest extends MainTest {
+class AuthenticationTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
 

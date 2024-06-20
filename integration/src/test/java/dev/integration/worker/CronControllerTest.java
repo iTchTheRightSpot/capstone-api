@@ -1,7 +1,7 @@
 package dev.integration.worker;
 
 import dev.integration.CustomRunInitScripts;
-import dev.integration.MainTest;
+import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CronControllerTest extends MainTest {
+class CronControllerTest extends AbstractNative {
 
     @Test
     void shouldSuccessfullyTestCronJobMethodNativeMode() throws SQLException {

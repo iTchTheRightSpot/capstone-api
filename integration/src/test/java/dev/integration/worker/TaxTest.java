@@ -1,6 +1,6 @@
 package dev.integration.worker;
 
-import dev.integration.MainTest;
+import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
 import dev.webserver.tax.TaxDto;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TaxTest extends MainTest {
+class TaxTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
 

@@ -1,7 +1,7 @@
 package dev.integration.worker;
 
 import com.github.javafaker.Faker;
-import dev.integration.MainTest;
+import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
 import dev.integration.TestData;
 import dev.webserver.category.response.WorkerCategoryResponse;
@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class WorkerProductTest extends MainTest {
+class WorkerProductTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
 

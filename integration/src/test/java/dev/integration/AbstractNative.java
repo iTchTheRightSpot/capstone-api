@@ -82,7 +82,7 @@ public abstract class AbstractNative {
 
                 // for some reason waitingFor is not respected, so we're hacking
                 try {
-                    Thread.sleep(Duration.ofSeconds(25));
+                    Thread.sleep(Duration.ofSeconds(5));
                 } catch (InterruptedException e) {
                     throw new RuntimeException("error thread sleeping: " + e.getMessage());
                 }

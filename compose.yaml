@@ -17,12 +17,5 @@ services:
     volumes:
       - db-data:/var/lib/mysql
 
-  capstone-ui:
-    image: 'emmanuelu17/capstone:latest'
-    container_name: capstone-ui
-    restart: always
-    ports:
-      - 4200:80
-
 volumes:
   db-data: {}

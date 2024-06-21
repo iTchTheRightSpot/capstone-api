@@ -8,6 +8,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.startupcheck.MinimumDurationRunningStartupCheckStrategy;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.PullPolicy;
 import org.testcontainers.junit.jupiter.Container;
@@ -38,7 +39,7 @@ public abstract class AbstractNative {
             .withNetwork(network)
             .withNetworkAliases("mysql")
             .withLogConsumer(new Slf4jLogConsumer(log))
-            .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(10)))
+            .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(2)))
             .withImagePullPolicy(PullPolicy.alwaysPull());
 
     @SuppressWarnings("all")
@@ -61,7 +62,7 @@ public abstract class AbstractNative {
                     .withEnv("SARRE_NGN_TO_KOBO", "0.37")
                     .withEnv("AWS_PAYSTACK_SECRET_ID", "secrete-id")
                     .dependsOn(mysql)
-                     .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(10)))
+                    .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(60)))
                     .withLogConsumer(new Slf4jLogConsumer(log))
                     .withImagePullPolicy(PullPolicy.defaultPolicy());
 
@@ -80,8 +81,9 @@ public abstract class AbstractNative {
             if (!container.isCreated() || !container.isRunning()) {
                 container.start();
 
+                // for some reason waitingFor is not respected, so we're hacking
                 try {
-                    Thread.sleep(Duration.ofMinutes(3));
+                    Thread.sleep(Duration.ofSeconds(25));
                 } catch (InterruptedException e) {
                     throw new RuntimeException("error thread sleeping: " + e.getMessage());
                 }

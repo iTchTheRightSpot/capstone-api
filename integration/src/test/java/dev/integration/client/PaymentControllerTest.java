@@ -21,7 +21,7 @@ class PaymentControllerTest extends AbstractNative {
 
     @BeforeAll
     static void before() {
-        String cartcookie = MockRequest.CARTCOOKIE(testTemplate, PATH);
+        String cartcookie = MockRequest.CARTCOOKIE(testTemplate, route);
 
         assertNotNull(cartcookie);
 
@@ -32,7 +32,7 @@ class PaymentControllerTest extends AbstractNative {
     void shouldSuccessfullyCallRaceConditionMethod() {
         // add to shopping cart
         var cart = testTemplate.postForEntity(
-                PATH + "api/v1/cart",
+                route + "cart",
                 new HttpEntity<>(new CartDTO("product-sku-1", 4), headers),
                 Void.class
         );
@@ -41,7 +41,7 @@ class PaymentControllerTest extends AbstractNative {
 
         // access race condition route
         var post = testTemplate.postForEntity(
-                PATH + "api/v1/payment?country=france&currency=ngn",
+                route + "payment?country=france&currency=ngn",
                 new HttpEntity<>(headers),
                 PaymentResponse.class
         );

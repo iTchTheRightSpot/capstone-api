@@ -38,7 +38,7 @@ class AuthenticationTest extends AbstractNative {
         );
 
         var register = testTemplate.postForEntity(
-                PATH + "api/v1/client/auth/register",
+                route + "client/auth/register",
                 new HttpEntity<>(dto, headers),
                 Void.class
         );
@@ -50,7 +50,7 @@ class AuthenticationTest extends AbstractNative {
     @Test
     void shouldSuccessfullyLoginAUser() {
         var login = testTemplate.postForEntity(
-                PATH + "api/v1/client/auth/login",
+                route + "client/auth/login",
                 new HttpEntity<>(new LoginDto("SEUY@SEUY.com", "password123"), headers),
                 Void.class
         );
@@ -61,7 +61,7 @@ class AuthenticationTest extends AbstractNative {
     @Order(3)
     @Test
     void shouldSuccessfullyRegisterUserToAnAdmin() {
-        var cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
+        var cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
         headers.set(HttpHeaders.COOKIE, cookie);
 
         var dto = new RegisterDto(
@@ -74,7 +74,7 @@ class AuthenticationTest extends AbstractNative {
         );
 
         var register = testTemplate.postForEntity(
-                PATH + "api/v1/worker/auth/register",
+                route + "worker/auth/register",
                 new HttpEntity<>(dto, headers),
                 Void.class
         );
@@ -85,7 +85,7 @@ class AuthenticationTest extends AbstractNative {
     @Order(4)
     @Test
     void shouldSuccessfullyRegisterAnAdmin() {
-        var cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
+        var cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
         headers.set(HttpHeaders.COOKIE, cookie);
 
         var dto = new RegisterDto(
@@ -98,7 +98,7 @@ class AuthenticationTest extends AbstractNative {
         );
 
         var register = testTemplate.postForEntity(
-                PATH + "api/v1/worker/auth/register",
+                route + "worker/auth/register",
                 new HttpEntity<>(dto, headers),
                 Void.class
         );

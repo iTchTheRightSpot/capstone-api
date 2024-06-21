@@ -22,7 +22,7 @@ class TaxTest extends AbstractNative {
 
     @BeforeAll
     static void before() {
-        String cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
+        String cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
         assertNotNull(cookie);
 
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -33,7 +33,7 @@ class TaxTest extends AbstractNative {
     @Test
     void shouldSuccessfullyRetrieveATaxDto() {
         var get = testTemplate.exchange(
-                PATH + "api/v1/tax",
+                route + "tax",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 new ParameterizedTypeReference<List<TaxDto>>() {}
@@ -46,7 +46,7 @@ class TaxTest extends AbstractNative {
     @Test
     void shouldSuccessfullyUpdateTax() {
         var put = testTemplate.exchange(
-                PATH + "api/v1/tax",
+                route + "tax",
                 HttpMethod.PUT,
                 new HttpEntity<>(new TaxDto(1L, "tax", 6.5), headers),
                 Void.class

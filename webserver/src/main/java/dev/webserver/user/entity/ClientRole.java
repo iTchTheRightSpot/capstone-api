@@ -27,6 +27,10 @@ public class ClientRole implements Serializable {
     @JoinColumn(name = "client_id", nullable = false, referencedColumnName = "client_id")
     private SarreBrandUser sarreBrandUser;
 
+    public ClientRole(RoleEnum role) {
+        this.role = role;
+    }
+
     public ClientRole(RoleEnum role, SarreBrandUser sarreBrandUser) {
         this.role = role;
         this.sarreBrandUser = sarreBrandUser;

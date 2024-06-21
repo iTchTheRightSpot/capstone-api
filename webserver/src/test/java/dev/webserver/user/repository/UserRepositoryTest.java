@@ -6,13 +6,11 @@ import dev.webserver.user.entity.SarreBrandUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Transactional
 class UserRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired

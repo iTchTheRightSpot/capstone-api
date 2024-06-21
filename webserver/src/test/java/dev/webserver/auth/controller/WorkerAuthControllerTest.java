@@ -1,82 +1,77 @@
 package dev.webserver.auth.controller;
 
+import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
-import dev.webserver.auth.service.AuthService;
-import dev.webserver.enumeration.RoleEnum;
+import dev.webserver.auth.service.UserDetailz;
 import dev.webserver.exception.DuplicateException;
+import dev.webserver.jwt.JwtService;
+import dev.webserver.user.entity.ClientRole;
+import dev.webserver.user.entity.SarreBrandUser;
 import dev.webserver.user.repository.UserRepository;
+import dev.webserver.user.repository.UserRoleRepository;
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import static dev.webserver.enumeration.RoleEnum.CLIENT;
+import static dev.webserver.enumeration.RoleEnum.WORKER;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.security.authentication.UsernamePasswordAuthenticationToken.authenticated;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class WorkerAuthControllerTest extends AbstractIntegration {
-
-    private final String PRINCIPAL = "SEJU@development.com";
-    private final String PASSWORD = "123#-SEJU-Development";
 
     @Value(value = "/${api.endpoint.baseurl}worker/auth/")
     private String route;
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
 
-    @Autowired
-    private UserRepository repository;
-    @Autowired
-    private AuthService service;
+    private SarreBrandUser user = null;
+    private String jwt = null;
 
-    @AfterEach
-    void after() {
-        repository.deleteAll();
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private JwtService jwtService;
+    @Autowired
+    private PasswordEncoder encoder;
+
+    @BeforeEach
+    void setup() {
+        if (user == null) {
+            user = userRepository.save(
+                    SarreBrandUser.builder()
+                            .firstname(new Faker().name().firstName())
+                            .lastname(new Faker().name().lastName())
+                            .email(new Faker().internet().emailAddress())
+                            .phoneNumber("000000000")
+                            .password(encoder.encode("password123"))
+                            .enabled(true)
+                            .clientRole(Set.of(new ClientRole(CLIENT), new ClientRole(WORKER, user)))
+                            .paymentDetail(new HashSet<>())
+                            .build());
+
+            jwt = jwtService.generateToken(
+                    authenticated(user.getEmail(), null, new UserDetailz(user).getAuthorities()));
+        }
     }
 
-    /**
-     * Method does two things in one. Login and Register. To register, worker has to have a role WORKER
-     */
     @Test
-    @Order(1)
     void register() throws Exception {
-        // given
-        this.service.register(
-                null,
-                new RegisterDto(
-                        "SEJU",
-                        "Development",
-                        PRINCIPAL,
-                        "",
-                        "000-000-0000",
-                        PASSWORD
-                ),
-                RoleEnum.WORKER
-        );
-
-        // when
-        MvcResult login = this.mockMvc
-                .perform(post(route + "login")
-                        .with(csrf())
-                        .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(new LoginDto(PRINCIPAL, PASSWORD)))
-                )
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // Register
         var dto = new RegisterDto(
                 "James",
                 "james@james.com",
@@ -91,48 +86,20 @@ class WorkerAuthControllerTest extends AbstractIntegration {
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(dto))
-                        .cookie(login.getResponse().getCookie(JSESSIONID))
+                        .cookie(new Cookie(JSESSIONID, jwt))
                 )
                 .andExpect(status().isCreated());
     }
 
-    /**
-     * Simulates registering an existing worker
-     */
     @Test
-    @Order(2)
     void register_with_existing_credentials() throws Exception {
-        // given
-        this.service.register(
-                null,
-                new RegisterDto(
-                        "SEJU",
-                        "Development",
-                        PRINCIPAL,
-                        "",
-                        "000-000-0000",
-                        PASSWORD
-                ),
-                RoleEnum.WORKER
-        );
-
-        // when
-        MvcResult login = this.mockMvc
-                .perform(post(route + "login")
-                        .with(csrf())
-                        .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(new LoginDto(PRINCIPAL, PASSWORD)))
-                )
-                .andExpect(status().isOk())
-                .andReturn();
-
         var dto = new RegisterDto(
                 "SEJU",
                 "Development",
-                PRINCIPAL,
+                user.getEmail(),
                 "",
                 "00-000-0000",
-                PASSWORD
+                "password123"
         );
 
         this.mockMvc
@@ -140,31 +107,15 @@ class WorkerAuthControllerTest extends AbstractIntegration {
                         .contentType(APPLICATION_JSON)
                         .with(csrf())
                         .content(this.objectMapper.writeValueAsString(dto))
-                        .cookie(login.getResponse().getCookie(JSESSIONID))
+                        .cookie(new Cookie(JSESSIONID, jwt))
                 )
                 .andExpect(result -> assertInstanceOf(DuplicateException.class, result.getResolvedException()));
     }
 
     @Test
-    @Order(3)
     void login_wrong_password() throws Exception {
-        // given
-        this.service.register(
-                null,
-                new RegisterDto(
-                        "SEJU",
-                        "Development",
-                        PRINCIPAL,
-                        "",
-                        "000-000-0000",
-                        PASSWORD
-                ),
-                RoleEnum.WORKER
-        );
-
-        // when
         String payload = this.objectMapper
-                .writeValueAsString(new LoginDto(PRINCIPAL, "fFeubfrom@#$%^124234"));
+                .writeValueAsString(new LoginDto(user.getPassword(), "fFeubfrom@#$%^124234"));
         this.mockMvc
                 .perform(post(route + "login")
                         .with(csrf())
@@ -175,55 +126,22 @@ class WorkerAuthControllerTest extends AbstractIntegration {
                 .andExpect(jsonPath("$.message").value("Bad credentials"));
     }
 
-    /**
-     * Validates cookie has been cleared.
-     */
     @Test
-    @Order(4)
     void logout() throws Exception {
-        // given
-        this.service.register(
-                null,
-                new RegisterDto(
-                        "SEJU",
-                        "Development",
-                        PRINCIPAL,
-                        "",
-                        "000-000-0000",
-                        PASSWORD
-                ),
-                RoleEnum.WORKER
-        );
-
-        // then
-        MvcResult login = this.mockMvc
-                .perform(post(route + "login")
-                        .with(csrf())
-                        .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(new LoginDto(PRINCIPAL, PASSWORD)))
-                )
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // Jwt Cookie
-        Cookie cookie = login.getResponse().getCookie(JSESSIONID);
-        assertNotNull(cookie);
-
         // Logout
-        MvcResult logout = this.mockMvc
-                .perform(post("/api/v1/logout").cookie(cookie).with(csrf()))
+        MvcResult logout = super.mockMvc
+                .perform(post("/api/v1/logout").cookie(new Cookie(JSESSIONID, jwt)).with(csrf()))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        cookie = logout.getResponse().getCookie(JSESSIONID); // This should be empty
+        Cookie cookie = logout.getResponse().getCookie(JSESSIONID); // This should be empty
 
         // Access protected route with invalid cookie
-        this.mockMvc
+        super.mockMvc
                 .perform(get("/test/worker").cookie(cookie))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message")
-                        .value("Full authentication is required to access this resource")
-                );
+                        .value("Full authentication is required to access this resource"));
     }
 
 }

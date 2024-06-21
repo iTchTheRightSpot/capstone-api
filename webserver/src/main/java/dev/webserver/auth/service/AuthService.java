@@ -4,7 +4,7 @@ import dev.webserver.auth.controller.ClientAuthController;
 import dev.webserver.auth.controller.WorkerAuthController;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
-import dev.webserver.jwt.JwtTokenService;
+import dev.webserver.jwt.JwtService;
 import dev.webserver.enumeration.RoleEnum;
 import dev.webserver.exception.DuplicateException;
 import dev.webserver.user.entity.ClientRole;
@@ -15,6 +15,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,7 +37,7 @@ import static dev.webserver.enumeration.RoleEnum.WORKER;
 public class AuthService {
 
     @Value(value = "${server.servlet.session.cookie.name}")
-    @Setter
+    @Setter @Getter
     private String JSESSIONID;
     @Value(value = "${server.servlet.session.cookie.secure}")
     @Setter
@@ -49,7 +50,7 @@ public class AuthService {
     private final UserRoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authManager;
-    private final JwtTokenService tokenService;
+    private final JwtService tokenService;
 
     /**
      * Method called by either {@link WorkerAuthController}

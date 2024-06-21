@@ -3,9 +3,9 @@ package dev.webserver.auth.service;
 import dev.webserver.AbstractUnitTest;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
-import dev.webserver.jwt.JwtTokenService;
 import dev.webserver.data.TestData;
 import dev.webserver.exception.DuplicateException;
+import dev.webserver.jwt.JwtService;
 import dev.webserver.user.entity.ClientRole;
 import dev.webserver.user.entity.SarreBrandUser;
 import dev.webserver.user.repository.UserRepository;
@@ -16,7 +16,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,7 +34,6 @@ import static org.mockito.Mockito.*;
 
 class AuthServiceTest extends AbstractUnitTest {
 
-    @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;
 
     private AuthService authService;
@@ -44,7 +42,7 @@ class AuthServiceTest extends AbstractUnitTest {
     @Mock private UserRoleRepository roleRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private AuthenticationManager manager;
-    @Mock private JwtTokenService tokenService;
+    @Mock private JwtService tokenService;
 
     @BeforeEach
     void setUp() {
@@ -55,7 +53,9 @@ class AuthServiceTest extends AbstractUnitTest {
                 this.manager,
                 this.tokenService
         );
-        this.authService.setJSESSIONID(JSESSIONID);
+
+        this.authService.setJSESSIONID("JSESSIONID");
+        JSESSIONID = authService.getJSESSIONID();
     }
 
     @Test

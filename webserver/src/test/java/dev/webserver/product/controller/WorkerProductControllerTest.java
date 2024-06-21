@@ -18,7 +18,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 
@@ -27,11 +26,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Transactional
 class WorkerProductControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}worker/product")
@@ -116,14 +113,12 @@ class WorkerProductControllerTest extends AbstractIntegration {
                         .param("page", "0")
                         .param("size", "30")
                 )
-                .andDo(print())
                 .andExpect(request().asyncStarted())
                 .andExpect(status().isOk())
                 .andReturn();
 
         this.mockMvc
                 .perform(asyncDispatch(result))
-                .andDo(print())
                 .andExpect(content().contentType("application/json"))
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content").isNotEmpty())

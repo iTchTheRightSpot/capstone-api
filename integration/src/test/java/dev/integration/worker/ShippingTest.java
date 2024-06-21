@@ -21,11 +21,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class ShippingTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
-    private final String path = PATH + "api/v1/shipping";
+    private final String path = route + "shipping";
 
     @BeforeAll
     static void before() {
-        String cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
+        String cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
         assertNotNull(cookie);
 
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);

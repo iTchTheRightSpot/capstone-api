@@ -33,7 +33,7 @@ class WorkerProductDetailTest extends AbstractNative {
 
     @BeforeAll
     static void before() {
-        String cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
+        String cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
         assertNotNull(cookie);
 
         headers.set(COOKIE, cookie);
@@ -44,7 +44,7 @@ class WorkerProductDetailTest extends AbstractNative {
         headers.set(CONTENT_TYPE, APPLICATION_JSON_VALUE);
 
         var get = testTemplate.exchange(
-                PATH + "api/v1/worker/product/detail?id=product-uuid",
+                route + "worker/product/detail?id=product-uuid",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 new ParameterizedTypeReference<List<DetailResponse>>() {}
@@ -68,16 +68,12 @@ class WorkerProductDetailTest extends AbstractNative {
 
         // request
         var post = testTemplate.postForEntity(
-                PATH + "api/v1/worker/product/detail",
+                route + "worker/product/detail",
                 new HttpEntity<>(multipartData, headers),
                 Void.class
         );
 
         assertEquals(HttpStatusCode.valueOf(201), post.getStatusCode());
-
-        // delete items saved in s3
-//        var aws = testTemplate.getForEntity(PATH + "api/v1/native", String.class);
-//        assertEquals(HttpStatusCode.valueOf(200), aws.getStatusCode());
     }
 
     @Test
@@ -87,7 +83,7 @@ class WorkerProductDetailTest extends AbstractNative {
         var dto = new UpdateProductDetailDto("product-sku-2", "green", true, 4, "large");
 
         var update = testTemplate.exchange(
-                PATH + "api/v1/worker/product/detail",
+                route + "worker/product/detail",
                 HttpMethod.PUT,
                 new HttpEntity<>(dto, headers),
                 Void.class
@@ -101,7 +97,7 @@ class WorkerProductDetailTest extends AbstractNative {
         headers.set(CONTENT_TYPE, APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
-                PATH + "api/v1/worker/product/detail/product-sku-3",
+                route + "worker/product/detail/product-sku-3",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class
@@ -115,7 +111,7 @@ class WorkerProductDetailTest extends AbstractNative {
         headers.set(CONTENT_TYPE, APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
-                PATH + "api/v1/worker/product/detail/sku?sku=product-sku-2",
+                route + "worker/product/detail/sku?sku=product-sku-2",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class

@@ -3,27 +3,21 @@ package dev.webserver.payment.controller;
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
 import dev.webserver.cart.dto.CartDTO;
-import dev.webserver.cart.repository.CartItemRepo;
 import dev.webserver.category.entity.ProductCategory;
 import dev.webserver.category.repository.CategoryRepository;
 import dev.webserver.data.TestData;
-import dev.webserver.payment.repository.OrderDetailRepository;
-import dev.webserver.payment.repository.OrderReservationRepo;
 import dev.webserver.product.dto.PriceCurrencyDto;
 import dev.webserver.product.entity.ProductSku;
-import dev.webserver.product.repository.ProductDetailRepo;
-import dev.webserver.product.repository.ProductRepo;
 import dev.webserver.product.repository.ProductSkuRepo;
 import dev.webserver.product.service.WorkerProductService;
 import dev.webserver.shipping.entity.ShipSetting;
 import dev.webserver.shipping.repository.ShippingRepo;
 import dev.webserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.BeforeEach;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
@@ -31,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 import static dev.webserver.enumeration.SarreCurrency.NGN;
 import static dev.webserver.enumeration.SarreCurrency.USD;
@@ -40,11 +34,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class PaymentControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}payment")
@@ -61,38 +53,11 @@ class PaymentControllerTest extends AbstractIntegration {
     @Autowired
     private WorkerProductService productService;
     @Autowired
-    private ProductRepo productRepo;
-    @Autowired
     private ProductSkuRepo productSkuRepo;
-    @Autowired
-    private ProductDetailRepo productDetailRepo;
     @Autowired
     private CategoryRepository categoryRepository;
     @Autowired
     private ShippingRepo shippingRepo;
-    @Autowired
-    private OrderDetailRepository detailRepository;
-    @Autowired
-    private OrderReservationRepo reservationRepo;
-    @Autowired
-    private CartItemRepo cartItemRepo;
-
-    @BeforeEach
-    void before() {
-        detailRepository.deleteAll();
-        reservationRepo.deleteAll();
-        cartItemRepo.deleteAll();
-        shippingRepo.deleteAll();
-        productSkuRepo.deleteAll();
-        productDetailRepo.deleteAll();
-        productRepo.deleteAll();
-        categoryRepository.deleteAll();
-
-        // as we are deleting all from Shipping,
-        // we need to save default object again
-        shippingRepo
-                .save(new ShipSetting("default", new BigDecimal("0.00"), new BigDecimal("0.00")));
-    }
 
     private void preSaveNecessaryData() {
         shippingRepo
@@ -340,38 +305,13 @@ class PaymentControllerTest extends AbstractIntegration {
         // numOfUsers add last item to their cart
         Cookie[] cookies = impl(numOfUsers);
 
-        List<CompletableFuture<MvcResult>> futures = new ArrayList<>();
-
-        for (int i = 0; i < cookies.length; i++) {
-            final int curr = i;
-            futures.add(
-                    CompletableFuture.supplyAsync(() -> {
-                                try {
-                                    var c = curr % 2 == 0 ? USD.getCurrency() : NGN.getCurrency();
-                                    var country = curr % 2 == 0 ? "nigeria" : "Canada";
-                                    return super.mockMvc
-                                            .perform(post(path)
-                                                    .param("currency", c)
-                                                    .param("country", country)
-                                                    .with(csrf())
-                                                    .cookie(cookies[curr])
-                                            )
-                                            .andReturn();
-                                } catch (Exception e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                    ));
-        }
-
-        // complete all CompletableFuture
-        CustomUtil.asynchronousTasks(futures, PaymentControllerTest.class);
-
-        List<Integer> results = new ArrayList<>();
-
-        for (CompletableFuture<MvcResult> future : futures) {
-            results.add(future.join().getResponse().getStatus());
-        }
+        List<Integer> results = CustomUtil
+                .asynchronousTasks(getSuppliers(cookies), PaymentControllerTest.class)
+                .join()
+                .stream()
+                .map(Supplier::get)
+                .map(result -> result.getResponse().getStatus())
+                .toList();
 
         assertEquals(1, Collections.frequency(results, 200));
         assertEquals(numOfUsers - 1, Collections.frequency(results, 409));
@@ -379,6 +319,31 @@ class PaymentControllerTest extends AbstractIntegration {
         var skus = productSkuRepo.findAll();
         assertEquals(1, skus.size());
         assertEquals(0, skus.getFirst().getInventory());
+    }
+
+    private @NotNull List<Supplier<MvcResult>> getSuppliers(Cookie[] cookies) {
+        List<Supplier<MvcResult>> asyncSuppliers = new ArrayList<>();
+
+        for (int i = 0; i < cookies.length; i++) {
+            var c = i % 2 == 0 ? USD.getCurrency() : NGN.getCurrency();
+            var country = i % 2 == 0 ? "nigeria" : "Canada";
+            int finalI = i;
+            asyncSuppliers.add(() -> {
+                try {
+                    return super.mockMvc
+                            .perform(post(path)
+                                    .param("currency", c)
+                                    .param("country", country)
+                                    .with(csrf())
+                                    .cookie(cookies[finalI])
+                            )
+                            .andReturn();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+        return asyncSuppliers;
     }
 
     private Cookie createNewShoppingSession() throws Exception {
@@ -462,7 +427,6 @@ class PaymentControllerTest extends AbstractIntegration {
                         .with(csrf())
                         .cookie(cookie)
                 )
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpectAll(jsonPath("$.total").isNotEmpty())
                 // because trailing zero is removed
@@ -525,7 +489,6 @@ class PaymentControllerTest extends AbstractIntegration {
                         .with(csrf())
                         .cookie(cookie)
                 )
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpectAll(jsonPath("$.total").isNotEmpty())
                 // because trailing zero is removed

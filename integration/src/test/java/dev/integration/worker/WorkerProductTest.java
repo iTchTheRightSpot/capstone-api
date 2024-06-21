@@ -22,7 +22,7 @@ class WorkerProductTest extends AbstractNative {
 
     @BeforeAll
     static void before() {
-        String cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
+        String cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
         assertNotNull(cookie);
 
         headers.set(HttpHeaders.COOKIE, cookie);
@@ -33,7 +33,7 @@ class WorkerProductTest extends AbstractNative {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var get = testTemplate.exchange(
-                PATH + "api/v1/worker/product",
+                route + "worker/product",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 WorkerCategoryResponse.class
@@ -58,16 +58,12 @@ class WorkerProductTest extends AbstractNative {
 
         // request
         var post = testTemplate.postForEntity(
-                PATH + "api/v1/worker/product",
+                route + "worker/product",
                 new HttpEntity<>(multipartData, headers),
                 Void.class
         );
 
         assertEquals(HttpStatusCode.valueOf(201), post.getStatusCode());
-
-        // delete items saved in s3
-//        var aws = testTemplate.getForEntity(PATH + "api/v1/native", String.class);
-//        assertEquals(HttpStatusCode.valueOf(200), aws.getStatusCode());
     }
 
     @Test
@@ -82,7 +78,7 @@ class WorkerProductTest extends AbstractNative {
                 );
 
         var update = testTemplate.exchange(
-                PATH + "api/v1/worker/product",
+                route + "worker/product",
                 HttpMethod.PUT,
                 new HttpEntity<>(dto, headers),
                 Void.class
@@ -96,7 +92,7 @@ class WorkerProductTest extends AbstractNative {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
-                PATH + "api/v1/worker/product?id=product-uuid-2",
+                route + "worker/product?id=product-uuid-2",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class
@@ -110,7 +106,7 @@ class WorkerProductTest extends AbstractNative {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
-                PATH + "api/v1/worker/product?id=product-uuid-1",
+                route + "worker/product?id=product-uuid-1",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class

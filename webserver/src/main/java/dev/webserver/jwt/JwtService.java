@@ -24,14 +24,16 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 @RequiredArgsConstructor
 @Getter
 @Setter
-public class JwtTokenService {
+public class JwtService {
 
-    private static final Logger log = LoggerFactory.getLogger(JwtTokenService.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(JwtService.class.getName());
 
     @Value(value = "${server.servlet.session.cookie.max-age}")
     private int maxAge; // seconds
     @Value(value = "${jwt.claim}")
     private String claim;
+    @Value("${spring.application.name}")
+    private String application;
 
     private int boundToSendRefreshToken = 15; // minutes
 
@@ -53,7 +55,7 @@ public class JwtTokenService {
                 .toArray(String[]::new);
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer("self")
+                .issuer(application)
                 .issuedAt(now)
                 .expiresAt(now.plus(maxAge, SECONDS))
                 .subject(authentication.getName())

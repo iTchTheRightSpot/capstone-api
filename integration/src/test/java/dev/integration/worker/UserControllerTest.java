@@ -16,7 +16,7 @@ class UserControllerTest extends AbstractNative {
 
     @BeforeAll
     static void before() {
-        String cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
+        String cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
         assertNotNull(cookie);
 
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -26,7 +26,7 @@ class UserControllerTest extends AbstractNative {
     @Test
     void shouldSuccessfullyRetrieveAllUsers() {
         var get = testTemplate.exchange(
-                PATH + "api/v1/worker/user",
+                route + "worker/user",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 Object.class

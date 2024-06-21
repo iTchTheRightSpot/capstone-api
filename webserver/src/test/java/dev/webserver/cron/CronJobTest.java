@@ -14,7 +14,6 @@ import dev.webserver.product.service.WorkerProductService;
 import dev.webserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Date;
@@ -24,7 +23,6 @@ import static dev.webserver.enumeration.ReservationStatus.PENDING;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Transactional
 class CronJobTest extends AbstractIntegration {
 
     @Autowired
@@ -50,6 +48,10 @@ class CronJobTest extends AbstractIntegration {
 
     @Test
     void shouldSuccessfullyValidateFromPayStack() {
+        if (!Boolean.parseBoolean(System.getProperty("CI_PROFILE"))) {
+            return;
+        }
+
         // given
         var sku = productSku();
 

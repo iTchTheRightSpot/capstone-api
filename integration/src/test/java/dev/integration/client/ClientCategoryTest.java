@@ -26,7 +26,7 @@ class ClientCategoryTest extends AbstractNative {
     @Test
     void shouldSuccessfullyRetrieveAllCategories() {
         var get = testTemplate.exchange(
-                PATH + "api/v1/client/category",
+                route + "client/category",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 new ParameterizedTypeReference<List<CategoryResponse>>() {}
@@ -40,7 +40,7 @@ class ClientCategoryTest extends AbstractNative {
     @Test
     void shouldSuccessfullyRetrieveProductsBaseOnCategory() {
         var get = testTemplate.exchange(
-                PATH + "api/v1/client/category/products?category_id=1",
+                route + "client/category/products?category_id=1",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 String.class

@@ -16,7 +16,6 @@ import dev.webserver.payment.projection.OrderPojo;
 import dev.webserver.product.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -25,7 +24,6 @@ import java.util.HashSet;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Transactional
 class OrderDetailRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired

@@ -15,7 +15,7 @@ class CronControllerTest extends AbstractNative {
 
     @Test
     void shouldSuccessfullyTestCronJobMethodNativeMode() throws SQLException {
-        String cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
+        String cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
         assertNotNull(cookie);
 
         final HttpHeaders headers = new HttpHeaders();
@@ -25,7 +25,7 @@ class CronControllerTest extends AbstractNative {
         CustomRunInitScripts.insertDummyOrderReservation(dburl, dbUser, dbPass);
 
         final var get = testTemplate.exchange(
-                PATH + "api/v1/cron",
+                route + "cron",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 Void.class

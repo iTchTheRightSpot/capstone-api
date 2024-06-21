@@ -26,7 +26,7 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
     @Value(value = "${server.servlet.session.cookie.max-age}")
     private int MAXAGE;
 
-    private final JwtTokenService tokenService;
+    private final JwtService tokenService;
     private final UserDetailsService userDetailsService;
 
     /**

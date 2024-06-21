@@ -12,7 +12,6 @@ import dev.webserver.product.repository.*;
 import dev.webserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Date;
@@ -25,7 +24,6 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Transactional
 class OrderReservationRepoTest extends AbstractRepositoryTest {
 
     @Autowired

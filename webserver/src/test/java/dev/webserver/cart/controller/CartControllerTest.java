@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 
@@ -24,11 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Transactional
 class CartControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}cart")
@@ -126,7 +123,6 @@ class CartControllerTest extends AbstractIntegration {
     void addToExistingShoppingSession() throws Exception {
         MvcResult result1 = this.mockMvc
                 .perform(get(path).with(csrf()))
-                .andDo(print())
                 .andReturn();
 
         Cookie cookie1 = result1.getResponse().getCookie(CARTCOOKIE);

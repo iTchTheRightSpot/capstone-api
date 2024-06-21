@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -23,7 +22,6 @@ import static org.mockito.Mockito.*;
 
 class CartServiceTest extends AbstractUnitTest {
 
-    @Value("${cart.cookie.name}")
     private String CARTCOOKIE;
 
     private CartService cartService;
@@ -47,8 +45,9 @@ class CartServiceTest extends AbstractUnitTest {
         );
 
         this.cartService.setSplit("%");
-        long bound = 5;
-        this.cartService.setBound(bound);
+        this.cartService.setBound(5);
+        cartService.setCARTCOOKIE("CARTCOOKIE");
+        CARTCOOKIE = cartService.getCARTCOOKIE();
     }
 
     @Test

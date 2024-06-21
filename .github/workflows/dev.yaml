@@ -26,7 +26,7 @@ jobs:
       - name: Run tests
         run: |
           cd webserver/
-          mvn test -DPAYSTACK_PUB_KEY=PAYSTACK_PUB_KEY -DPAYSTACK_SECRET_KEY=PAYSTACK_SECRET_KEY
+          mvn test -DCI_PROFILE=true -DPAYSTACK_PUB_KEY=PAYSTACK_PUB_KEY -DPAYSTACK_SECRET_KEY=PAYSTACK_SECRET_KEY
         shell: bash
         env:
           PAYSTACK_PUB_KEY: ${{ secrets.PAYSTACK_PUB_KEY }}

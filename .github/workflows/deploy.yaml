@@ -1,8 +1,5 @@
-name: Capstone Server
+name: Capstone Api deploy
 on:
-  push:
-    branches:
-      - master
   pull_request:
     branches:
       - master
@@ -28,13 +25,13 @@ jobs:
           username: emmanuelu17
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build image
-        run: |
-          mvn clean install -DskipTests
-          cd webserver/
-          mvn spring-boot:build-image -Pnative -DskipTests
+      - name: Maven install
+        run: mvn clean install -DskipTests
+
+      - name: Build Native Image
+        run: docker build --tag capstone-api:latest . --progress=plain
 
       - name: Push image to dockerhub
         run: |
-          docker image tag emmanuelu17/webserver:latest emmanuelu17/capstone-api:latest
+          docker image tag capstone-api:latest emmanuelu17/capstone-api:latest
           docker push --all-tags emmanuelu17/capstone-api

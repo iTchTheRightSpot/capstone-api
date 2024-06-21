@@ -80,7 +80,6 @@ management:
     web:
       exposure:
         include: health
-        exclude: '*'
 
 api:
   endpoint:
@@ -89,7 +88,7 @@ api:
 application:
   log:
     webhook:
-      discord: discord
+      discord: ${APPLICATION_LOG_WEBHOOK_DISCORD:discord}
 
 user:
   principal: ${USER_PRINCIPAL:admin@admin.com}

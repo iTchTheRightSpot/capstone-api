@@ -118,7 +118,6 @@ class ApplicationTest {
             catService.create(new CategoryDTO("winter 2024", true, 5L));
             TestData.dummyProducts(winter, 15, service);
         }
-
     }
 
 }

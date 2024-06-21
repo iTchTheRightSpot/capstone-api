@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -17,13 +18,12 @@ class LogEventPublisher implements ILogEventPublisher {
     private final ApplicationEventPublisher publisher;
 
     @Override
-    public void publishLog(Queue<String> deque) {
+    public void publishLog(final Queue<String> deque) {
         publisher.publishEvent(new LogEvent(this, deque));
     }
 
     @Override
     public void publishPurchase(final String name, final String email) {
-        final Queue<String> queue = new ConcurrentLinkedDeque<>();
         final LocalDateTime utc = LocalDateTime.now(ZoneOffset.UTC);
         final String date = utc.toLocalDate().format(DateTimeFormatter.ofPattern("E dd MMMM uuuu"));
         final String time = utc.toLocalTime().format(DateTimeFormatter.ofPattern("H:m a"));
@@ -32,8 +32,7 @@ class LogEventPublisher implements ILogEventPublisher {
                 ### <--- Name: %s ---> <--- Email: %s --->
                 """.formatted(date, time, name, email);
 
-        queue.add(message);
-        publisher.publishEvent(new LogEvent(this, queue));
+        publisher.publishEvent(new LogEvent(this, new ConcurrentLinkedDeque<>(List.of(message))));
     }
 
 }

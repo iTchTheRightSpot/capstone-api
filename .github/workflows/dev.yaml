@@ -1,8 +1,11 @@
 name: Run tests before merging into master
 on:
   push:
-    branches:
-      - dev
+    branches-ignore:
+      - master
+  pull_request:
+    branches-ignore:
+      - master
 
 jobs:
   TDD-test:

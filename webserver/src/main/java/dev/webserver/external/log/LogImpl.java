@@ -47,10 +47,11 @@ class LogImpl extends AppenderBase<ILoggingEvent> {
             if (!set.contains(message)) {
                 queue.add(message);
                 set.add(message);
+                publisher.publishLog(queue);
             }
         }
 
-        if (!queue.isEmpty()) publisher.publishLog(queue);
+        queue.clear();
         set.clear();
         queue.clear();
     }

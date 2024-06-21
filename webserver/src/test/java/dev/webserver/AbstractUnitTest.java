@@ -7,6 +7,5 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith({ MockitoExtension.class, SpringExtension.class })
-@ActiveProfiles("test")
-@TestPropertySource(locations = "classpath:application-test.properties")
+@TestPropertySource(locations = "classpath:application.properties")
 public abstract class AbstractUnitTest{ }

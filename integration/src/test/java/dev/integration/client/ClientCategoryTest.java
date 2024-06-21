@@ -43,7 +43,7 @@ class ClientCategoryTest extends AbstractNative {
                 PATH + "api/v1/client/category/products?category_id=1",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                Object.class
+                String.class
         );
 
         assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());

@@ -36,7 +36,7 @@ public abstract class AbstractNative {
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(3)));
 
     private static final GenericContainer<?> container = new GenericContainer<>(
-            DockerImageName.parse("capstone-api:latest"))
+            DockerImageName.parse("emmanuelu17/capstone-api:latest"))
             .withNetwork(network)
             .withExposedPorts(1997)
             .withEnv("USER_PRINCIPAL", "admin@admin.com")
@@ -52,7 +52,7 @@ public abstract class AbstractNative {
             .withEnv("SARRE_NGN_TO_KOBO", "0.37")
             .withEnv("AWS_PAYSTACK_SECRET_ID", "secrete-id")
             .dependsOn(mysql)
-            .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(5)))
+            .waitingFor(Wait.forHttp("/actuator/health").forStatusCodeMatching(it -> it >= 200 && it < 300 || it == 500))
             .withLogConsumer(new Slf4jLogConsumer(log));
 
     static {
@@ -85,7 +85,10 @@ public abstract class AbstractNative {
         }
 
         try {
-            CustomRunInitScripts.processScript(dburl, "capstone", "capstone");
+            log.info("DB URL {}", dburl);
+            log.info("DB USER {}", dbUser);
+            log.info("DB PASSWORD {}", dbPass);
+            CustomRunInitScripts.processScript(dburl, dbUser, dbPass);
         } catch (Exception e) {
             throw new RuntimeException("error running native test init sql script");
         }

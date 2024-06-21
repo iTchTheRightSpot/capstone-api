@@ -5,10 +5,10 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: integration
-      MYSQL_DATABASE: integration_db
-      MYSQL_USER: integration
-      MYSQL_PASSWORD: integration
+      MYSQL_ROOT_PASSWORD: capstone
+      MYSQL_DATABASE: capstone_db
+      MYSQL_USER: capstone
+      MYSQL_PASSWORD: capstone
     healthcheck:
       test: [ "CMD-SHELL", "mysqladmin ping -h localhost" ]
       interval: 10s

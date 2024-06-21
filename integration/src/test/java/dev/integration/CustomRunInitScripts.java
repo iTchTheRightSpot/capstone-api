@@ -90,16 +90,12 @@ public class CustomRunInitScripts {
         if (scriptsBeenRan(dburl, username, password))
             return;
 
-        var path = Paths.get("src/test/resources/db/init.sql");
-
-        dbInteraction(dburl, username, password, path);
+        dbInteraction(dburl, username, password, Paths.get("src/test/resources/db/init.sql"));
     }
 
     public static void insertDummyOrderReservation(String dburl, String username, String password) throws SQLException {
-        var path = Paths.get("src/test/resources/db/reservation.sql");
-
         processScript(dburl, username, password);
-        dbInteraction(dburl, username, password, path);
+        dbInteraction(dburl, username, password, Paths.get("src/test/resources/db/reservation.sql"));
     }
 
 }

@@ -24,9 +24,9 @@ public class TestConfig {
 //    @RestartScope
     static MySQLContainer<?> mySQLContainer() {
         try (var sql = new MySQLContainer<>("mysql:8.0")) {
-            return sql.withDatabaseName("sara_brand_db")
-                    .withUsername("sara")
-                    .withPassword("sara");
+            return sql.withDatabaseName("capstone_db")
+                    .withUsername("capstone")
+                    .withPassword("capstone");
         } catch (RuntimeException ex) {
             log.error("failed to start up MySQL in test/dev mode");
             throw new RuntimeException();

@@ -33,7 +33,7 @@ public class S3Service {
 
         String active = env.getProperty("spring.profiles.active", "default");
 
-        this.profile = active.equalsIgnoreCase("test");
+        this.profile = active.endsWith("test");
     }
 
     public void uploadToS3(File file, Map<String, String> metadata, String bucket, String key) {

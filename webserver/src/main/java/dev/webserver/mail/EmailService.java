@@ -1,7 +1,9 @@
 package dev.webserver.mail;
 
-public class EmailService {
+class EmailService implements IEmailService {
 
-    public void _sendEmail(String _sender, String _recipient, String _message) { }
+    @Override
+    public void confirmationEmail(final String to, final String name, final ProductInformation detail) {
 
+    }
 }

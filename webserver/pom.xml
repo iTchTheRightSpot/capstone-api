@@ -97,6 +97,7 @@
                             <skipTests>true</skipTests>
                             <imageName>${project.name}</imageName>
                             <buildArgs>--static --libc=musl</buildArgs>
+                            <mainClass>dev.webserver.Application</mainClass>
                         </configuration>
                     </plugin>
                 </plugins>

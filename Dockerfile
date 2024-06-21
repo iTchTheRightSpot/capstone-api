@@ -10,8 +10,8 @@ RUN ./mvnw clean install -DskipTests \
     && ./mvnw --no-transfer-progress -Pnative native:compile -DskipTests
 
 # Stage 2
-#FROM gcr.io/distroless/static-debian12
-FROM alpine:3.20.1
+FROM gcr.io/distroless/static-debian12
+#FROM alpine:3.20.1
 
 COPY --from=builder /build/webserver/target/webserver ./
 

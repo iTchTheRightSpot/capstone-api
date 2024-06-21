@@ -1,13 +1,14 @@
 package dev.webserver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.webserver.jwt.RefreshTokenFilter;
 import dev.webserver.exception.ExceptionResponse;
+import dev.webserver.jwt.RefreshTokenFilter;
+import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,7 +29,6 @@ import org.springframework.security.web.authentication.logout.HttpStatusReturnin
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.session.web.http.CookieSerializer;
 import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.cors.CorsConfiguration;
@@ -43,27 +43,48 @@ import static dev.webserver.enumeration.RoleEnum.NATIVE;
 import static dev.webserver.enumeration.RoleEnum.WORKER;
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.HttpMethod.*;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    /**
+     * Reason for Consumer<ResponseCookie.ResponseCookieBuilder> as per docs secure, domain
+     * name and path are deprecated.
+     *
+     * @see <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">documentation</a>
+     */
+    static final BiFunction<Boolean, String, CookieCsrfTokenRepository> csrfRepo = (secure, sameSite) -> {
+        final Consumer<ResponseCookie.ResponseCookieBuilder> consumer = (cookie) -> cookie
+                .httpOnly(false)
+                .secure(secure)
+                .path("/")
+                .sameSite(sameSite)
+                .maxAge(-1);
+
+        var csrf = new CookieCsrfTokenRepository();
+        csrf.setCookieCustomizer(consumer);
+        return csrf;
+    };
+
     @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
+    private String jsessionid;
     @Value(value = "${server.servlet.session.cookie.secure}")
-    private boolean COOKIESECURE;
+    private boolean cookiesecure;
     @Value(value = "${server.servlet.session.cookie.same-site}")
-    private String SAMESITE;
+    private String samesite;
     @Value(value = "${cors.ui.domain}")
-    private String CORSDOMAIN;
+    private String corsdomain;
     @Value("/${api.endpoint.baseurl}")
-    private String BASEURL;
+    private String baseurl;
     @Value("${spring.profiles.active}")
-    private String PROFILE;
+    private String profile;
 
     @Bean
     public AuthenticationProvider provider(UserDetailsService service, PasswordEncoder encoder) {
@@ -74,7 +95,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
+    public AuthenticationManager manager(
             AuthenticationProvider provider,
             @Qualifier(value = "authenticationEventPublisher") AuthenticationEventPublisher publisher
     ) {
@@ -85,8 +106,6 @@ public class SecurityConfig {
     }
 
     /**
-     * Needed as we are sending jwt token as a http token
-     * @see
      * <a href="https://docs.spring.io/spring-session/reference/guides/java-custom-cookie.html">documentation</a>
      */
     @Bean
@@ -104,8 +123,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         var config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(this.CORSDOMAIN));
-        config.setAllowedMethods(List.of("GET", "PUT", "POST", "DELETE", "OPTIONS"));
+        config.setAllowedOrigins(List.of(corsdomain));
+        config.setAllowedMethods(List.of(GET.name(), PUT.name(), POST.name(), DELETE.name(), OPTIONS.name()));
         config.setAllowedHeaders(List.of(CONTENT_TYPE, ACCEPT, "X-XSRF-TOKEN"));
         config.setAllowCredentials(true);
 
@@ -125,59 +144,49 @@ public class SecurityConfig {
             JwtAuthenticationConverter converter
     ) throws Exception {
 
-        if (PROFILE.equals("native-test")) {
-            http.csrf(AbstractHttpConfigurer::disable);
+        if (profile.equals("native-test")) {
+            http.csrf(AbstractHttpConfigurer::disable)
+                    .authorizeHttpRequests(registry -> registry.anyRequest().permitAll());
         } else {
-            var csrfTokenRepository = csrfRepo.apply(this.COOKIESECURE, this.SAMESITE);
-            // CSRF Config
+            final String[] pubRoutes = {"/error", "/actuator/health", baseurl + "csrf", baseurl + "client/**", baseurl + "worker/auth/login", baseurl + "cart/**", baseurl + "payment/**", baseurl + "checkout/**"};
+            var csrfTokenRepository = csrfRepo.apply(cookiesecure, samesite);
+
+            // csrf config
             // https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html
             http
-                    .csrf(csrf -> csrf.ignoringRequestMatchers(AntPathRequestMatcher
-                                    .antMatcher(HttpMethod.POST, this.BASEURL + "payment/webhook"))
+                    .csrf(csrf -> csrf
+                            .ignoringRequestMatchers(antMatcher(POST, baseurl + "payment/webhook"))
                             .csrfTokenRepository(csrfTokenRepository)
                             .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
-                    .addFilterAfter(new CookieCsrfFilter(), BasicAuthenticationFilter.class);
+                    .addFilterAfter(new CookieCsrfFilter(), BasicAuthenticationFilter.class)
+                    .authorizeHttpRequests(registry -> registry
+                            .requestMatchers(pubRoutes).permitAll()
+                            .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
+                            .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+                            .requestMatchers(baseurl + "cron/**").hasRole(NATIVE.name())
+                            .requestMatchers(baseurl + "native/**").hasRole(NATIVE.name())
+                            .requestMatchers(baseurl + "shipping/**").hasRole(WORKER.name())
+                            .requestMatchers(baseurl + "tax/**").hasRole(WORKER.name())
+                            .requestMatchers(baseurl + "worker/**").hasRole(WORKER.name())
+                            .requestMatchers(baseurl + "auth/worker").hasRole(WORKER.name())
+                            .requestMatchers("/actuator/**").denyAll()
+                            .anyRequest().authenticated());
         }
-
-        final String[] pubRoutes = {
-                "/actuator/**",
-                this.BASEURL + "csrf",
-                this.BASEURL + "client/**",
-                this.BASEURL + "worker/auth/login",
-                this.BASEURL + "cart/**",
-                this.BASEURL + "payment/**",
-                this.BASEURL + "checkout/**"
-        };
 
         return http
 
-                // Cors Config
+                // cors config
                 .cors(withDefaults())
 
-                // Public routes
-                .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(pubRoutes).permitAll();
-
-                    auth.requestMatchers(BASEURL + "cron/**").hasRole(NATIVE.name());
-                    auth.requestMatchers(BASEURL + "native/**").hasRole(NATIVE.name());
-
-                    auth.requestMatchers(BASEURL + "shipping/**").hasRole(WORKER.name());
-                    auth.requestMatchers(BASEURL + "tax/**").hasRole(WORKER.name());
-                    auth.requestMatchers(BASEURL + "worker/**").hasRole(WORKER.name());
-                    auth.requestMatchers(BASEURL + "auth/worker").hasRole(WORKER.name());
-
-                    auth.anyRequest().authenticated();
-                })
-
-                // Jwt
+                // jwt
                 .addFilterBefore(refreshTokenFilter, BearerTokenAuthenticationFilter.class)
                 // https://docs.spring.io/spring-security/reference/6.0/servlet/oauth2/resource-server/jwt.html
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)))
 
-                // Session Management
+                // session management
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
 
-                // global exception handing
+                // global security exception handing
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, exception) -> {
                             final String str = mapper.writeValueAsString(new ExceptionResponse(exception.getMessage(), UNAUTHORIZED));
@@ -192,33 +201,14 @@ public class SecurityConfig {
                             response.flushBuffer();
                         }))
 
-                // Logout
+                // logout
                 // https://docs.spring.io/spring-security/reference/servlet/authentication/logout.html
-                .logout((logoutConfig) -> logoutConfig
-                        .logoutUrl(this.BASEURL + "logout")
-                        .deleteCookies(this.JSESSIONID)
+                .logout(config -> config
+                        .logoutUrl(baseurl + "logout")
+                        .deleteCookies(jsessionid)
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(OK))
                 )
                 .build();
     }
-
-    /**
-     * Reason for Consumer<ResponseCookie.ResponseCookieBuilder> as per docs secure, domain
-     * name and path are deprecated.
-     * @see
-     * <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">documentation</a>
-     */
-    static final BiFunction<Boolean, String, CookieCsrfTokenRepository> csrfRepo = (secure, sameSite) -> {
-        final Consumer<ResponseCookie.ResponseCookieBuilder> consumer = (cookie) -> cookie
-                .httpOnly(false)
-                .secure(secure)
-                .path("/")
-                .sameSite(sameSite)
-                .maxAge(-1);
-
-        var csrf = new CookieCsrfTokenRepository();
-        csrf.setCookieCustomizer(consumer);
-        return csrf;
-    };
 
 }

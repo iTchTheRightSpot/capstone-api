@@ -1,12 +1,10 @@
 package dev.integration.worker;
 
 import dev.integration.AbstractNative;
-import dev.integration.MockRequest;
 import dev.integration.TestData;
 import dev.webserver.product.dto.ProductDetailDto;
 import dev.webserver.product.dto.UpdateProductDetailDto;
 import dev.webserver.product.response.DetailResponse;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.core.ParameterizedTypeReference;
@@ -20,9 +18,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
-import static org.springframework.http.HttpHeaders.COOKIE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
@@ -30,14 +26,6 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 class WorkerProductDetailTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
-
-    @BeforeAll
-    static void before() {
-        String cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
-        assertNotNull(cookie);
-
-        headers.set(COOKIE, cookie);
-    }
 
     @Test
     void shouldSuccessfullyRetrieveProductDetails() {

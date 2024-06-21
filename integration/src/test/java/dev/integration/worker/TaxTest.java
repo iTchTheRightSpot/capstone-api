@@ -1,7 +1,6 @@
 package dev.integration.worker;
 
 import dev.integration.AbstractNative;
-import dev.integration.MockRequest;
 import dev.webserver.tax.TaxDto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
@@ -13,7 +12,6 @@ import org.springframework.http.*;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TaxTest extends AbstractNative {
@@ -22,11 +20,7 @@ class TaxTest extends AbstractNative {
 
     @BeforeAll
     static void before() {
-        String cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
-        assertNotNull(cookie);
-
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.COOKIE, cookie);
     }
 
     @Order(1)

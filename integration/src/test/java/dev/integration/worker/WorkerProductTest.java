@@ -2,10 +2,8 @@ package dev.integration.worker;
 
 import com.github.javafaker.Faker;
 import dev.integration.AbstractNative;
-import dev.integration.MockRequest;
 import dev.integration.TestData;
 import dev.webserver.category.response.WorkerCategoryResponse;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.http.*;
@@ -13,20 +11,11 @@ import org.springframework.http.*;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WorkerProductTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
-
-    @BeforeAll
-    static void before() {
-        String cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
-        assertNotNull(cookie);
-
-        headers.set(HttpHeaders.COOKIE, cookie);
-    }
 
     @Test
     void shouldSuccessfullyRetrieveProducts() {

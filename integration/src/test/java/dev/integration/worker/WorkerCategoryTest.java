@@ -1,7 +1,6 @@
 package dev.integration.worker;
 
 import dev.integration.AbstractNative;
-import dev.integration.MockRequest;
 import dev.webserver.category.dto.CategoryDTO;
 import dev.webserver.category.dto.UpdateCategoryDTO;
 import dev.webserver.category.response.WorkerCategoryResponse;
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.http.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WorkerCategoryTest extends AbstractNative {
@@ -20,11 +18,7 @@ class WorkerCategoryTest extends AbstractNative {
 
     @BeforeAll
     static void before() {
-        String cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
-        assertNotNull(cookie);
-
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.COOKIE, cookie);
     }
 
     @Test

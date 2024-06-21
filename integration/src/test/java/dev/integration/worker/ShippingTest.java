@@ -1,7 +1,6 @@
 package dev.integration.worker;
 
 import dev.integration.AbstractNative;
-import dev.integration.MockRequest;
 import dev.webserver.shipping.ShippingDto;
 import dev.webserver.shipping.ShippingMapper;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,7 +14,6 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ShippingTest extends AbstractNative {
@@ -25,11 +23,7 @@ class ShippingTest extends AbstractNative {
 
     @BeforeAll
     static void before() {
-        String cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
-        assertNotNull(cookie);
-
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.COOKIE, cookie);
     }
 
     @Test

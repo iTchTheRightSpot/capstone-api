@@ -61,9 +61,6 @@ class AuthenticationTest extends AbstractNative {
     @Order(3)
     @Test
     void shouldSuccessfullyRegisterUserToAnAdmin() {
-        var cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
-        headers.set(HttpHeaders.COOKIE, cookie);
-
         var dto = new RegisterDto(
                 "SEUY",
                 "Development",
@@ -85,9 +82,6 @@ class AuthenticationTest extends AbstractNative {
     @Order(4)
     @Test
     void shouldSuccessfullyRegisterAnAdmin() {
-        var cookie = MockRequest.ADMINCOOKIE(testTemplate, route);
-        headers.set(HttpHeaders.COOKIE, cookie);
-
         var dto = new RegisterDto(
                 "SEUY",
                 "Development",

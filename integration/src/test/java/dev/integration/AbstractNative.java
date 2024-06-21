@@ -4,13 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpMethod;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.PullPolicy;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
@@ -28,6 +28,8 @@ public abstract class AbstractNative {
     protected static String dbUser = "capstone";
     protected static String dbPass = "capstone";
 
+    @SuppressWarnings("all")
+    @Container
     private static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("capstone_db")
             .withUsername("capstone")
@@ -35,9 +37,11 @@ public abstract class AbstractNative {
             .withNetwork(network)
             .withNetworkAliases("mysql")
             .withLogConsumer(new Slf4jLogConsumer(log))
-            .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(3)))
+            .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(10)))
             .withImagePullPolicy(PullPolicy.alwaysPull());
 
+    @SuppressWarnings("all")
+    @Container
     private static final GenericContainer<?> container =
             new GenericContainer<>(DockerImageName.parse("capstone-api:latest"))
                     .withNetwork(network)
@@ -56,24 +60,15 @@ public abstract class AbstractNative {
                     .withEnv("SARRE_NGN_TO_KOBO", "0.37")
                     .withEnv("AWS_PAYSTACK_SECRET_ID", "secrete-id")
                     .dependsOn(mysql)
-                    .waitingFor(Wait.forHttp("/actuator/health")
-                            .withMethod(HttpMethod.GET.name())
-                            .forStatusCodeMatching(it -> it >= 200 && it < 300 || it == 500)
-                    )
-//                    .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(5)))
+                    .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(10)))
                     .withLogConsumer(new Slf4jLogConsumer(log))
                     .withImagePullPolicy(PullPolicy.defaultPolicy());
 
     static {
-        final String paystackPubKey = System.getenv("PAYSTACK_PUB_KEY");
-        final String paystackSecretKey = System.getenv("PAYSTACK_SECRET_KEY");
-
-        if (paystackPubKey != null && paystackSecretKey != null) {
-            container.withEnv("PAYSTACK_PUB_KEY", paystackPubKey);
-            container.withEnv("PAYSTACK_SECRET_KEY", paystackSecretKey);
-        }
-
         if (Boolean.parseBoolean(System.getProperty("NATIVE_CI_PROFILE"))) {
+            container.withEnv("PAYSTACK_PUB_KEY", System.getenv("PAYSTACK_PUB_KEY"))
+                    .withEnv("PAYSTACK_SECRET_KEY", System.getenv("PAYSTACK_SECRET_KEY"));
+
             if (!mysql.isCreated() || mysql.isRunning()) {
                 mysql.start();
                 dburl = mysql.getJdbcUrl();

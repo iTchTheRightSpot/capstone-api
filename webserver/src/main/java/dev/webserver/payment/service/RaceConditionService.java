@@ -16,7 +16,7 @@ import dev.webserver.payment.response.PaymentResponse;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.ProductSkuRepo;
 import dev.webserver.shipping.entity.ShipSetting;
-import dev.webserver.thirdparty.ThirdPartyPaymentService;
+import dev.webserver.external.ThirdPartyPaymentService;
 import dev.webserver.util.CustomUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

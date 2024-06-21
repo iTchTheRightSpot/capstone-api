@@ -77,22 +77,6 @@ spring:
   sql:
     init:
       mode: always
-  mail:
-    host: smtp.gmail.com
-    protocol: smtp
-    port: 587
-    username: ${SPRING_MAIL_USERNAME:mail-username}
-    password: ${SPRING_MAIL_PASSWORD:mail-password}
-    default-encoding: UTF-8 # default but look into other encoding
-    properties:
-      "[mail.mime.charset]": UTF
-      "[mail.smtp.connectiontimeout]": 10000 # 10 secs
-      "[mail.smtp.timeout]": 10000
-      "[mail.smtp.writetimeout]": 10000
-      "[mail.smtp.auth]": true
-      "[mail.smtp.starttls.enable]": true
-      "[mail.smtp.starttls.required]": true
-    owner: ${SPRING_MAIL_OWNER:SEU}
 
 management:
   endpoints:
@@ -140,6 +124,11 @@ sarre:
   ngn:
     to:
       kobo: 0.34
+
+application:
+  log:
+    webhook:
+      discord: ${APPLICATION_LOG_WEBHOOK_DISCORD:discord}
 
 race-condition:
   expiration:

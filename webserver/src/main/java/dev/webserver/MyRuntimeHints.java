@@ -22,7 +22,7 @@ import dev.webserver.product.response.Variant;
 import dev.webserver.shipping.ShippingDto;
 import dev.webserver.shipping.ShippingMapper;
 import dev.webserver.tax.TaxDto;
-import dev.webserver.thirdparty.PaymentCredentialObj;
+import dev.webserver.external.PaymentCredentialObj;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 

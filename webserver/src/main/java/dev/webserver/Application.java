@@ -5,7 +5,7 @@ import dev.webserver.auth.service.AuthService;
 import dev.webserver.enumeration.RoleEnum;
 import dev.webserver.payment.dto.PayloadMapper;
 import dev.webserver.product.response.Variant;
-import dev.webserver.thirdparty.PaymentCredentialObj;
+import dev.webserver.external.PaymentCredentialObj;
 import dev.webserver.user.entity.ClientRole;
 import dev.webserver.user.entity.SarreBrandUser;
 import dev.webserver.user.repository.UserRepository;

@@ -1,4 +1,4 @@
-package dev.webserver.thirdparty;
+package dev.webserver.external;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.exception.CustomServerError;

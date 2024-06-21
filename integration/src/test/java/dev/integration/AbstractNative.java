@@ -13,6 +13,7 @@ import org.testcontainers.images.PullPolicy;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
 
+import java.sql.SQLException;
 import java.time.Duration;
 
 public abstract class AbstractNative {
@@ -60,7 +61,7 @@ public abstract class AbstractNative {
                     .withEnv("SARRE_NGN_TO_KOBO", "0.37")
                     .withEnv("AWS_PAYSTACK_SECRET_ID", "secrete-id")
                     .dependsOn(mysql)
-                    .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(10)))
+                     .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(10)))
                     .withLogConsumer(new Slf4jLogConsumer(log))
                     .withImagePullPolicy(PullPolicy.defaultPolicy());
 
@@ -78,14 +79,20 @@ public abstract class AbstractNative {
 
             if (!container.isCreated() || !container.isRunning()) {
                 container.start();
+
+                try {
+                    Thread.sleep(Duration.ofMinutes(3));
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("error thread sleeping: " + e.getMessage());
+                }
             }
             route = String.format("http://%s:%d/api/v1/", container.getHost(), container.getFirstMappedPort());
         }
 
         try {
             CustomRunInitScripts.processScript(dburl, dbUser, dbPass);
-        } catch (Exception e) {
-            throw new RuntimeException("error running native test init sql script");
+        } catch (SQLException e) {
+            throw new RuntimeException("error running native test init sql script: " + e.getMessage());
         }
     }
 

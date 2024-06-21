@@ -1,4 +1,4 @@
-package dev.webserver.thirdparty;
+package dev.webserver.external;
 
 import java.io.Serializable;
 

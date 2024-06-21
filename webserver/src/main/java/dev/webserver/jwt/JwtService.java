@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +39,21 @@ public class JwtService {
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
 
+    private static boolean isEmpty(final String str) {
+        return str == null || str.isEmpty();
+    }
+
+    private static String substringAfter(final String str, final String separator) {
+        if (isEmpty(str)) {
+            return str;
+        } else if (separator == null) {
+            return "";
+        }
+
+        int pos = str.indexOf(separator);
+        return pos == -1 ? "" : str.substring(pos + separator.length());
+    }
+
     /**
      * Generates a jwt token
      *
@@ -51,7 +65,7 @@ public class JwtService {
 
         String[] role = authentication.getAuthorities() //
                 .stream() //
-                .map(authority -> StringUtils.substringAfter(authority.getAuthority(), "ROLE_"))
+                .map(authority -> substringAfter(authority.getAuthority(), "ROLE_"))
                 .toArray(String[]::new);
 
         JwtClaimsSet claims = JwtClaimsSet.builder()

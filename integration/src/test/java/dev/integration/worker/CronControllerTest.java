@@ -24,7 +24,7 @@ class CronControllerTest extends AbstractNative {
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         headers.set(HttpHeaders.COOKIE, cookie);
 
-        CustomRunInitScripts.insertDummyOrderReservation("integration", "integration");
+        CustomRunInitScripts.insertDummyOrderReservation(dburl, dbUser, dbPass);
 
         final var get = testTemplate.exchange(
                 PATH + "api/v1/cron",

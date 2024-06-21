@@ -22,6 +22,9 @@ public abstract class AbstractNative {
     protected static final TestRestTemplate testTemplate = new TestRestTemplate();
 
     protected static String PATH = "http://localhost:1997/";
+    protected static String dburl = "jdbc:mysql://localhost:3306/capstone_db";
+    protected static String dbUser = "capstone";
+    protected static String dbPass = "capstone";
 
     private static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("capstone_db")
@@ -70,6 +73,9 @@ public abstract class AbstractNative {
         if (Boolean.parseBoolean(System.getProperty("NATIVE_CI_PROFILE"))) {
             if (!mysql.isCreated() || mysql.isRunning()) {
                 mysql.start();
+                dburl = mysql.getJdbcUrl();
+                dbUser = mysql.getUsername();
+                dbPass = mysql.getPassword();
             }
 
             if (!container.isCreated() || !container.isRunning()) {
@@ -79,9 +85,9 @@ public abstract class AbstractNative {
         }
 
         try {
-            CustomRunInitScripts.processScript("capstone", "capstone");
+            CustomRunInitScripts.processScript(dburl, "capstone", "capstone");
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("error running native test init sql script");
         }
     }
 

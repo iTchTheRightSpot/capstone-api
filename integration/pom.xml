@@ -32,7 +32,7 @@
             <artifactId>webserver</artifactId>
             <version>${webserver.version}</version>
             <!-- scope provided as we need the jar file of webserver to generate a native image. -->
-            <scope>provided</scope>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -20,9 +20,11 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
+      - name: Maven install
+        run: mvn clean install -DskipTests
+
       - name: Run tests
         run: |
-          mvn clean install -DskipTests
           cd webserver/
           mvn test -DPAYSTACK_PUB_KEY=PAYSTACK_PUB_KEY -DPAYSTACK_SECRET_KEY=PAYSTACK_SECRET_KEY
         shell: bash

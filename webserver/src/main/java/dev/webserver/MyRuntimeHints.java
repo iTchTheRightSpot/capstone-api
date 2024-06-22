@@ -9,6 +9,7 @@ import dev.webserver.category.dto.UpdateCategoryDTO;
 import dev.webserver.category.response.WorkerCategoryResponse;
 import dev.webserver.checkout.CheckoutPair;
 import dev.webserver.checkout.CustomObject;
+import dev.webserver.external.log.DiscordPayload;
 import dev.webserver.payment.dto.OrderHistoryDTO;
 import dev.webserver.payment.dto.PaymentDTO;
 import dev.webserver.payment.dto.SkuQtyDTO;
@@ -88,6 +89,9 @@ final class MyRuntimeHints implements RuntimeHintsRegistrar {
         hints.serialization().registerType(WebhookMetaData.class);
         hints.serialization().registerType(WebhookAuthorization.class);
         hints.serialization().registerType(WebhookConstruct.class);
+
+        // logs
+        hints.serialization().registerType(DiscordPayload.class);
     }
 
 }

@@ -17,5 +17,33 @@ services:
     volumes:
       - db-data:/var/lib/mysql
 
+  capstone-api:
+    image: 'emmanuelu17/capstone-api:latest'
+    container_name: capstone-api
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - 1997:1997
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      USER_PRINCIPAL: 'admin@admin.com'
+      USER_PASSWORD: 'password123'
+      SERVER_PORT: 1997
+      API_PREFIX: 'api/v1/'
+      SPRING_DATASOURCE_URL: 'jdbc:mysql://mysql:3306/capstone_db'
+      SPRING_DATASOURCE_USERNAME: 'capstone'
+      SPRING_DATASOURCE_PASSWORD: 'capstone'
+      PAYSTACK_PUB_KEY: ${PAYSTACK_PUB_KEY}
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY}
+      CORS_UI_DOMAIN: 'http://localhost:4200/'
+      AWS_BUCKET: ${AWS_BUCKET}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_PAYSTACK_SECRET_ID: ${AWS_PAYSTACK_SECRET_ID}
+      APPLICATION_LOG_WEBHOOK_DISCORD: ${APPLICATION_LOG_WEBHOOK_DISCORD}
+
 volumes:
   db-data: {}

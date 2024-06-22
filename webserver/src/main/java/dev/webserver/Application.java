@@ -3,6 +3,7 @@ package dev.webserver;
 import dev.webserver.auth.dto.RegisterDto;
 import dev.webserver.auth.service.AuthService;
 import dev.webserver.enumeration.RoleEnum;
+import dev.webserver.external.log.DiscordPayload;
 import dev.webserver.payment.dto.PayloadMapper;
 import dev.webserver.product.response.Variant;
 import dev.webserver.external.PaymentCredentialObj;
@@ -27,7 +28,7 @@ import java.util.HashSet;
 @SpringBootApplication
 @EnableScheduling
 @ImportRuntimeHints(value = {MyRuntimeHints.class})
-@RegisterReflectionForBinding(value = {Variant.class, PayloadMapper.class, PaymentCredentialObj.class})
+@RegisterReflectionForBinding(value = {Variant.class, PayloadMapper.class, PaymentCredentialObj.class, DiscordPayload.class})
 public class Application {
 
     @Value(value = "${user.principal}")

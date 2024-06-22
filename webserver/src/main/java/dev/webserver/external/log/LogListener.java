@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -25,7 +27,7 @@ class LogListener implements ApplicationListener<LogEvent> {
     private static final BiFunction<URI, String, HttpRequest> request = (uri, payload) -> HttpRequest
             .newBuilder(uri)
             .timeout(Duration.ofSeconds(10))
-            .header("Content-Type", "application/json")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .POST(HttpRequest.BodyPublishers.ofString(payload))
             .build();
 
@@ -43,6 +45,8 @@ class LogListener implements ApplicationListener<LogEvent> {
 
         while (!event.queue().isEmpty()) {
             final String payload = mapper.writeValueAsString(new DiscordPayload(event.queue().poll()));
+
+            log.info("LogListener payload {}", payload);
 
             client.sendAsync(request.apply(URI.create(discord), payload), HttpResponse.BodyHandlers.ofString())
                     .thenApply(HttpResponse::body)

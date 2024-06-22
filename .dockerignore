@@ -34,3 +34,5 @@ build/
 .aws-sam/build
 
 db-data
+
+*.env

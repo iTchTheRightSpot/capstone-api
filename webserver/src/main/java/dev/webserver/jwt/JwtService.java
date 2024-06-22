@@ -1,4 +1,4 @@
-package dev.webserver.auth.jwt;
+package dev.webserver.jwt;
 
 import dev.webserver.enumeration.RoleEnum;
 import jakarta.servlet.http.Cookie;
@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,19 +23,36 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 @RequiredArgsConstructor
 @Getter
 @Setter
-public class JwtTokenService {
+public class JwtService {
 
-    private static final Logger log = LoggerFactory.getLogger(JwtTokenService.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(JwtService.class.getName());
 
     @Value(value = "${server.servlet.session.cookie.max-age}")
     private int maxAge; // seconds
     @Value(value = "${jwt.claim}")
     private String claim;
+    @Value("${spring.application.name}")
+    private String application;
 
     private int boundToSendRefreshToken = 15; // minutes
 
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
+
+    private static boolean isEmpty(final String str) {
+        return str == null || str.isEmpty();
+    }
+
+    private static String substringAfter(final String str, final String separator) {
+        if (isEmpty(str)) {
+            return str;
+        } else if (separator == null) {
+            return "";
+        }
+
+        int pos = str.indexOf(separator);
+        return pos == -1 ? "" : str.substring(pos + separator.length());
+    }
 
     /**
      * Generates a jwt token
@@ -49,11 +65,11 @@ public class JwtTokenService {
 
         String[] role = authentication.getAuthorities() //
                 .stream() //
-                .map(authority -> StringUtils.substringAfter(authority.getAuthority(), "ROLE_"))
+                .map(authority -> substringAfter(authority.getAuthority(), "ROLE_"))
                 .toArray(String[]::new);
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer("self")
+                .issuer(application)
                 .issuedAt(now)
                 .expiresAt(now.plus(maxAge, SECONDS))
                 .subject(authentication.getName())

@@ -1,8 +1,7 @@
 package dev.integration.client;
 
-import dev.integration.MainTest;
+import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
-import dev.integration.TestData;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
 import org.junit.jupiter.api.BeforeAll;
@@ -17,7 +16,7 @@ import org.springframework.http.MediaType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AuthenticationTest extends MainTest {
+class AuthenticationTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
 
@@ -39,7 +38,7 @@ class AuthenticationTest extends MainTest {
         );
 
         var register = testTemplate.postForEntity(
-                PATH + "api/v1/client/auth/register",
+                route + "client/auth/register",
                 new HttpEntity<>(dto, headers),
                 Void.class
         );
@@ -51,7 +50,7 @@ class AuthenticationTest extends MainTest {
     @Test
     void shouldSuccessfullyLoginAUser() {
         var login = testTemplate.postForEntity(
-                PATH + "api/v1/client/auth/login",
+                route + "client/auth/login",
                 new HttpEntity<>(new LoginDto("SEUY@SEUY.com", "password123"), headers),
                 Void.class
         );
@@ -62,9 +61,6 @@ class AuthenticationTest extends MainTest {
     @Order(3)
     @Test
     void shouldSuccessfullyRegisterUserToAnAdmin() {
-        var cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
-        headers.set(HttpHeaders.COOKIE, cookie);
-
         var dto = new RegisterDto(
                 "SEUY",
                 "Development",
@@ -75,7 +71,7 @@ class AuthenticationTest extends MainTest {
         );
 
         var register = testTemplate.postForEntity(
-                PATH + "api/v1/worker/auth/register",
+                route + "worker/auth/register",
                 new HttpEntity<>(dto, headers),
                 Void.class
         );
@@ -86,9 +82,6 @@ class AuthenticationTest extends MainTest {
     @Order(4)
     @Test
     void shouldSuccessfullyRegisterAnAdmin() {
-        var cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
-        headers.set(HttpHeaders.COOKIE, cookie);
-
         var dto = new RegisterDto(
                 "SEUY",
                 "Development",
@@ -99,7 +92,7 @@ class AuthenticationTest extends MainTest {
         );
 
         var register = testTemplate.postForEntity(
-                PATH + "api/v1/worker/auth/register",
+                route + "worker/auth/register",
                 new HttpEntity<>(dto, headers),
                 Void.class
         );

@@ -2,9 +2,10 @@ package dev.webserver.payment.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.webserver.exception.CustomServerError;
+import dev.webserver.external.log.ILogEventPublisher;
 import dev.webserver.payment.util.WebHookUtil;
 import dev.webserver.payment.util.WebhookConstruct;
-import dev.webserver.thirdparty.ThirdPartyPaymentService;
+import dev.webserver.external.ThirdPartyPaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ public class WebhookService {
 
     private final ThirdPartyPaymentService thirdPartyService;
     private final PaymentDetailService paymentDetailService;
+    private final ILogEventPublisher publisher;
 
     /**
      * Processes a payment received via webhook from Paystack.
@@ -47,10 +49,13 @@ public class WebhookService {
                 throw new CustomServerError("invalid webhook from paystack");
             }
 
+            JsonNode data = pair.node().get("data");
             if (pair.node().get("event").textValue().equals("charge.success")
-                    && pair.node().get("data").get("status").textValue().equals("success")
+                    && data.get("status").textValue().equals("success")
             ) {
-                onSuccessWebHook(pair.node().get("data"));
+                onSuccessWebHook(data);
+                JsonNode metadata = data.get("metadata");
+                publisher.publishPurchase(metadata.get("name").asText(), metadata.get("email").asText());
                 log.info("successfully performed business logic on successful webhook request.");
             } else {
                 log.info("failed payment");

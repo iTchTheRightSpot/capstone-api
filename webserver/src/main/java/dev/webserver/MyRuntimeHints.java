@@ -1,4 +1,4 @@
-package dev.webserver.graal;
+package dev.webserver;
 
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
@@ -22,7 +22,7 @@ import dev.webserver.product.response.Variant;
 import dev.webserver.shipping.ShippingDto;
 import dev.webserver.shipping.ShippingMapper;
 import dev.webserver.tax.TaxDto;
-import dev.webserver.thirdparty.PaymentCredentialObj;
+import dev.webserver.external.PaymentCredentialObj;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 
@@ -30,7 +30,7 @@ import org.springframework.aot.hint.RuntimeHintsRegistrar;
  * As per
  * <a href="https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html#native-image.advanced.custom-hints">docs</a>
  * */
-public class MyRuntimeHints implements RuntimeHintsRegistrar {
+final class MyRuntimeHints implements RuntimeHintsRegistrar {
 
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {

@@ -1,6 +1,6 @@
 package dev.integration.client;
 
-import dev.integration.MainTest;
+import dev.integration.AbstractNative;
 import dev.webserver.category.response.CategoryResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,7 +14,7 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ClientCategoryTest extends MainTest {
+class ClientCategoryTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
 
@@ -26,7 +26,7 @@ class ClientCategoryTest extends MainTest {
     @Test
     void shouldSuccessfullyRetrieveAllCategories() {
         var get = testTemplate.exchange(
-                PATH + "api/v1/client/category",
+                route + "client/category",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 new ParameterizedTypeReference<List<CategoryResponse>>() {}
@@ -40,10 +40,10 @@ class ClientCategoryTest extends MainTest {
     @Test
     void shouldSuccessfullyRetrieveProductsBaseOnCategory() {
         var get = testTemplate.exchange(
-                PATH + "api/v1/client/category/products?category_id=1",
+                route + "client/category/products?category_id=1",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                Object.class
+                String.class
         );
 
         assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());

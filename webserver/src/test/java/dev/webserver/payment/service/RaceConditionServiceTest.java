@@ -12,7 +12,7 @@ import dev.webserver.payment.projection.RaceConditionCartPojo;
 import dev.webserver.payment.repository.OrderReservationRepo;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.ProductSkuRepo;
-import dev.webserver.thirdparty.ThirdPartyPaymentService;
+import dev.webserver.external.ThirdPartyPaymentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

@@ -9,6 +9,7 @@ import dev.webserver.category.entity.ProductCategory;
 import dev.webserver.category.repository.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
 import dev.webserver.enumeration.PaymentStatus;
+import dev.webserver.enumeration.ReservationStatus;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.payment.entity.OrderDetail;
 import dev.webserver.payment.entity.OrderReservation;
@@ -18,13 +19,11 @@ import dev.webserver.payment.repository.OrderReservationRepo;
 import dev.webserver.payment.repository.PaymentDetailRepo;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.util.CustomUtil;
-import dev.webserver.enumeration.ReservationStatus;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.jpa.JpaSystemException;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -35,7 +34,6 @@ import java.util.UUID;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Transactional
 class ProductSkuRepoTest extends AbstractRepositoryTest {
 
     @Autowired

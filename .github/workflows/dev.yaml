@@ -1,8 +1,11 @@
 name: Run tests before merging into master
 on:
   push:
-    branches:
-      - dev
+    branches-ignore:
+      - master
+  pull_request:
+    branches-ignore:
+      - master
 
 jobs:
   TDD-test:
@@ -20,11 +23,13 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
+      - name: Maven install
+        run: mvn clean install -DskipTests
+
       - name: Run tests
         run: |
-          mvn clean install -DskipTests
           cd webserver/
-          mvn test -DPAYSTACK_PUB_KEY=PAYSTACK_PUB_KEY -DPAYSTACK_SECRET_KEY=PAYSTACK_SECRET_KEY
+          mvn test -DCI_PROFILE=true -DPAYSTACK_PUB_KEY=PAYSTACK_PUB_KEY -DPAYSTACK_SECRET_KEY=PAYSTACK_SECRET_KEY
         shell: bash
         env:
           PAYSTACK_PUB_KEY: ${{ secrets.PAYSTACK_PUB_KEY }}
@@ -45,21 +50,15 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
-      - name: Run tests
+      - name: Maven install
+        run: mvn clean install -DskipTests
+
+      - name: Build Native Image
+        run: docker build --tag capstone-api:latest . --progress=plain
+
+      - name: Test against native image
         run: |
-          touch .env
-          echo PAYSTACK_PUB_KEY=$PAYSTACK_PUB_KEY >> .env
-          echo PAYSTACK_SECRET_KEY=$PAYSTACK_SECRET_KEY >> .env
-          echo AWS_BUCKET=$AWS_BUCKET >> .env
-          echo AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID >> .env
-          echo AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY >> .env
-          mvn clean install -DskipTests
+          export PAYSTACK_PUB_KEY=${{ secrets.PAYSTACK_PUB_KEY }}
+          export PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}
           cd integration/
-          mvn test
-        shell: bash
-        env:
-          PAYSTACK_PUB_KEY: ${{ secrets.PAYSTACK_PUB_KEY }}
-          PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_SECRET_KEY }}
-          AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          mvn test -DNATIVE_CI_PROFILE=true

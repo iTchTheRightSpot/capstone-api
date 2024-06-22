@@ -1,0 +1,135 @@
+server:
+  port: ${SERVER_PORT:1997}
+  error:
+    include-binding-errors: always
+    include-message: always
+    include-stacktrace: on_param
+  servlet:
+    application-display-name: 'Capstone Api'
+    session:
+      tracking-modes: cookie
+      cookie:
+        http-only: true
+        name: 'JSESSIONID'
+        path: /
+        same-site: lax
+        max-age: 18000
+        secure: false
+
+logging:
+  level:
+    org:
+      hibernate: error
+      springframework:
+        jdbc: trace
+        security: trace
+
+spring:
+  application:
+    name: 'Capstone Api'
+  threads:
+    virtual:
+      enabled: true
+  profiles:
+    active: test
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/capstone_db}
+    username: ${SPRING_DATASOURCE_USERNAME:capstone}
+    password: ${SPRING_DATASOURCE_PASSWORD:capstone}
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-description: init
+    baseline-version: 0
+    table: flyway_schema_history
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      fail-on-empty-beans: false
+      close-closeable: true
+      flush-after-write-value: true
+      write-date-keys-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+  servlet:
+    multipart:
+      max-file-size: 6MB
+      max-request-size: 10MB
+      enabled: true
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: validate
+    properties:
+      jakarta:
+        persistence:
+          sharedCache:
+            mode: ALL
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    open-in-view: false
+    defer-datasource-initialization: false
+  sql:
+    init:
+      mode: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+api:
+  endpoint:
+    baseurl: ${API_PREFIX:api/v1/}
+
+application:
+  log:
+    webhook:
+      discord: ${APPLICATION_LOG_WEBHOOK_DISCORD:discord}
+
+user:
+  principal: ${USER_PRINCIPAL:admin@admin.com}
+  password: ${USER_PASSWORD:password123}
+
+paystack:
+  pub:
+    key: ${PAYSTACK_PUB_KEY:paystack-pub}
+  secret:
+    key: ${PAYSTACK_SECRET_KEY:paystack-secret}
+
+jwt:
+  claim: role
+
+cors:
+  ui:
+    domain: http://localhost:4200/
+
+aws:
+  bucket: development
+  paystack:
+    secret:
+      id: ${AWS_PAYSTACK_SECRET_ID:pay}
+
+cart:
+  cookie:
+    name: 'CARTCOOKIE'
+  split: '%'
+
+sarre:
+  usd:
+    to:
+      cent: 100
+  ngn:
+    to:
+      kobo: 0.34
+
+race-condition:
+  expiration:
+    bound: 15
+shopping:
+  session:
+    expiration:
+      bound: 5

@@ -4,19 +4,18 @@ import dev.webserver.AbstractRepositoryTest;
 import dev.webserver.category.entity.ProductCategory;
 import dev.webserver.category.repository.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
-import dev.webserver.product.projection.PriceCurrencyPojo;
 import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.product.projection.PriceCurrencyPojo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Transactional
 class PriceCurrencyRepoTest extends AbstractRepositoryTest {
 
     @Autowired

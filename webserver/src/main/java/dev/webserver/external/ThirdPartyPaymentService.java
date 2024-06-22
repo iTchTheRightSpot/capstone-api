@@ -1,4 +1,4 @@
-package dev.webserver.thirdparty;
+package dev.webserver.external;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.exception.CustomServerError;
@@ -48,7 +48,7 @@ public class ThirdPartyPaymentService {
             return this.objectMapper.readValue(str, clazz);
         } catch (Exception e) {
             String err = "error can either be from retrieving aws secret or converting secret to custom object";
-            log.error(err + e.getMessage());
+            log.error("{}{}", err, e.getMessage());
             String ui = """
                     We apologize for the inconvenience. Our payment processing service is
                     currently experiencing technical difficulties. Please try again later.

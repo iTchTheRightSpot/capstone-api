@@ -13,7 +13,6 @@ import dev.webserver.util.CustomUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Date;
@@ -24,7 +23,6 @@ import static dev.webserver.enumeration.SarreCurrency.USD;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Transactional
 class ShoppingSessionRepoTest extends AbstractRepositoryTest {
 
     @Autowired

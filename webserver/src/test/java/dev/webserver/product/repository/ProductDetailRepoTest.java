@@ -14,7 +14,6 @@ import dev.webserver.product.response.Variant;
 import dev.webserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -23,7 +22,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Transactional
 class ProductDetailRepoTest extends AbstractRepositoryTest {
 
     @Autowired

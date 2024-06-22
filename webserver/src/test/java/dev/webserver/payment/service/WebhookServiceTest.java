@@ -4,7 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.thirdparty.ThirdPartyPaymentService;
+import dev.webserver.external.ThirdPartyPaymentService;
+import dev.webserver.external.log.ILogEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -17,10 +18,12 @@ class WebhookServiceTest extends AbstractUnitTest {
     private ThirdPartyPaymentService thirdPartyPaymentService;
     @Mock
     private PaymentDetailService paymentDetailService;
+    @Mock
+    private ILogEventPublisher publisher;
 
     @BeforeEach
     void setUpWebHookService() {
-        webhookService = new WebhookService(thirdPartyPaymentService, paymentDetailService);
+        webhookService = new WebhookService(thirdPartyPaymentService, paymentDetailService, publisher);
     }
 
     @Test

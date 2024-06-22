@@ -10,7 +10,7 @@ import dev.webserver.payment.repository.OrderReservationRepo;
 import dev.webserver.payment.service.PaymentDetailService;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.ProductSkuRepo;
-import dev.webserver.thirdparty.ThirdPartyPaymentService;
+import dev.webserver.external.ThirdPartyPaymentService;
 import dev.webserver.util.CustomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

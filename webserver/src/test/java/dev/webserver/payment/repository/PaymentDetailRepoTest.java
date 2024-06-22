@@ -7,7 +7,6 @@ import dev.webserver.payment.entity.PaymentDetail;
 import dev.webserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -16,7 +15,6 @@ import java.util.HashSet;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Transactional
 class PaymentDetailRepoTest extends AbstractRepositoryTest {
 
     @Autowired

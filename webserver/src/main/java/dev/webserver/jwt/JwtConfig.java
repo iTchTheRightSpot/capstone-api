@@ -1,4 +1,4 @@
-package dev.webserver.auth.jwt;
+package dev.webserver.jwt;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -64,14 +64,14 @@ public class JwtConfig {
      * @see <a href="https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/bearer-tokens.html">documentation</a>
      */
     @Bean
-    public BearerTokenResolver bearerTokenResolver(JwtDecoder decoder, JwtTokenService service) {
+    public BearerTokenResolver bearerTokenResolver(JwtDecoder decoder, JwtService service) {
         return new BearerResolver(JSESSIONID, decoder, service);
     }
 
     private record BearerResolver(
             String JSESSIONID,
             JwtDecoder decoder,
-            JwtTokenService service
+            JwtService service
     ) implements BearerTokenResolver {
         @Override
         public String resolve(HttpServletRequest request) {

@@ -1,7 +1,6 @@
 package dev.integration.worker;
 
-import dev.integration.MainTest;
-import dev.integration.MockRequest;
+import dev.integration.AbstractNative;
 import dev.webserver.category.dto.CategoryDTO;
 import dev.webserver.category.dto.UpdateCategoryDTO;
 import dev.webserver.category.response.WorkerCategoryResponse;
@@ -11,26 +10,21 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.http.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class WorkerCategoryTest extends MainTest {
+class WorkerCategoryTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
 
     @BeforeAll
     static void before() {
-        String cookie = MockRequest.ADMINCOOKIE(testTemplate, PATH);
-        assertNotNull(cookie);
-
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.COOKIE, cookie);
     }
 
     @Test
     void shouldSuccessfullyRetrieveACategory() {
         var get = testTemplate.exchange(
-                PATH + "api/v1/worker/category",
+                route + "worker/category",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 WorkerCategoryResponse.class
@@ -42,7 +36,7 @@ class WorkerCategoryTest extends MainTest {
     @Test
     void shouldSuccessfullyRetrieveProductsBaseOnCategory() {
         var get = testTemplate.exchange(
-                PATH + "api/v1/worker/category/products?category_id=1",
+                route + "worker/category/products?category_id=1",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 Object.class
@@ -54,7 +48,7 @@ class WorkerCategoryTest extends MainTest {
     @Test
     void shouldSuccessfullyCreateACategory() {
         var post = testTemplate.postForEntity(
-                PATH + "api/v1/worker/category",
+                route + "worker/category",
                 new HttpEntity<>(new CategoryDTO("worker-cat", true, null), headers),
                 Void.class
         );
@@ -65,7 +59,7 @@ class WorkerCategoryTest extends MainTest {
     @Test
     void shouldSuccessfullyUpdateACategory() {
         var update = testTemplate.exchange(
-                PATH + "api/v1/worker/category",
+                route + "worker/category",
                 HttpMethod.PUT,
                 new HttpEntity<>(new UpdateCategoryDTO(1L, null, "frank", false), headers),
                 Void.class
@@ -77,7 +71,7 @@ class WorkerCategoryTest extends MainTest {
     @Test
     void shouldSuccessfullyDeleteACategory() {
         var delete = testTemplate.exchange(
-                PATH + "api/v1/worker/category/2",
+                route + "worker/category/2",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class
@@ -89,7 +83,7 @@ class WorkerCategoryTest extends MainTest {
     @Test
     void shouldThrowErrorWhenDeletingACategoryAsItHasDetailsAttached() {
         var delete = testTemplate.exchange(
-                PATH + "api/v1/worker/category/1",
+                route + "worker/category/1",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class

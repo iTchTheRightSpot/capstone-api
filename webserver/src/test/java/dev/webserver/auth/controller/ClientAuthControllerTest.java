@@ -1,17 +1,22 @@
 package dev.webserver.auth.controller;
 
+import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
+import dev.webserver.enumeration.RoleEnum;
+import dev.webserver.user.entity.ClientRole;
+import dev.webserver.user.entity.SarreBrandUser;
 import dev.webserver.user.repository.UserRepository;
-import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -20,7 +25,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ClientAuthControllerTest extends AbstractIntegration {
 
     @Value(value = "${server.servlet.session.cookie.name}")
@@ -28,25 +32,42 @@ class ClientAuthControllerTest extends AbstractIntegration {
     @Value(value = "/${api.endpoint.baseurl}client/auth/")
     private String path;
 
+    private SarreBrandUser user = null;
+
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder encoder;
 
-    @AfterEach
-    void after() {
-        userRepository.deleteAll();
+    @BeforeEach
+    void setup() {
+        if (user == null) {
+            user = userRepository.save(
+                    SarreBrandUser.builder()
+                            .firstname(new Faker().name().firstName())
+                            .lastname(new Faker().name().lastName())
+                            .email(new Faker().internet().emailAddress())
+                            .phoneNumber("000000000")
+                            .password(encoder.encode("password123"))
+                            .enabled(true)
+                            .clientRole(Set.of(new ClientRole(RoleEnum.CLIENT)))
+                            .paymentDetail(new HashSet<>())
+                            .build());
+        }
     }
 
-    Cookie cookie(String principal, String password) throws Exception {
+    @Test
+    void register() throws Exception {
         var dto = new RegisterDto(
                 "SEUY",
                 "Development",
-                principal,
+                "fresh@prince.com",
                 "",
                 "0000000000",
-                password
+                "password123#"
         );
 
-        return this.mockMvc
+        super.mockMvc
                 .perform(post(this.path + "register")
                         .contentType(APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(dto))
@@ -56,18 +77,12 @@ class ClientAuthControllerTest extends AbstractIntegration {
                 .andReturn()
                 .getResponse()
                 .getCookie(JSESSIONID);
+
     }
 
     @Test
-    @Order(1)
-    void register_and_login() throws Exception {
-        String principal = "fresh@prince.com";
-        String password = "password123#";
-
-        Cookie c = cookie(principal, password);
-        assertNotNull(c);
-
-        String dto = this.objectMapper.writeValueAsString(new LoginDto(principal, password));
+    void shouldSuccessfullyLogin() throws Exception {
+        String dto = this.objectMapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
 
         MvcResult login = this.mockMvc
                 .perform(post(this.path + "login")
@@ -82,17 +97,16 @@ class ClientAuthControllerTest extends AbstractIntegration {
 
         assertNotNull(cookie);
 
-        this.mockMvc
+        super.mockMvc
                 .perform(get("/test/client").cookie(cookie))
                 .andExpect(status().isOk());
     }
 
     @Test
-    @Order(2)
     void simulate_logging_in_with_none_existent_user() throws Exception {
-        String dto = this.objectMapper
+        String dto = super.objectMapper
                 .writeValueAsString(new LoginDto("admin@admin.com", "password123"));
-        this.mockMvc
+        super.mockMvc
                 .perform(post(this.path + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
@@ -102,15 +116,8 @@ class ClientAuthControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @Order(3)
     void client_trying_to_access_worker_route() throws Exception {
-        String principal = "freshprince@prince.com";
-        String password = "password123#";
-
-        Cookie c = cookie(principal, password);
-        assertNotNull(c);
-
-        String dto = this.objectMapper.writeValueAsString(new LoginDto(principal, password));
+        String dto = this.objectMapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
 
         MvcResult login = this.mockMvc
                 .perform(post(this.path + "login")

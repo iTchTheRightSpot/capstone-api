@@ -5,18 +5,17 @@ import dev.webserver.AbstractRepositoryTest;
 import dev.webserver.category.entity.ProductCategory;
 import dev.webserver.category.repository.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
+import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.product.entity.PriceCurrency;
 import dev.webserver.product.entity.Product;
 import dev.webserver.product.projection.ImagePojo;
 import dev.webserver.product.projection.ProductPojo;
-import dev.webserver.enumeration.SarreCurrency;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -24,7 +23,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Transactional
 class ProductRepoTest extends AbstractRepositoryTest {
 
     @Autowired

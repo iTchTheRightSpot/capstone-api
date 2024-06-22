@@ -3,6 +3,8 @@ package dev.webserver.external.log;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
@@ -17,6 +19,8 @@ import java.util.function.BiFunction;
 @Component
 @RequiredArgsConstructor
 class LogListener implements ApplicationListener<LogEvent> {
+    private static final Logger log = LoggerFactory.getLogger(LogListener.class);
+
     private static final HttpClient client = HttpClient.newHttpClient();
     private static final BiFunction<URI, String, HttpRequest> request = (uri, payload) -> HttpRequest
             .newBuilder(uri)
@@ -42,6 +46,7 @@ class LogListener implements ApplicationListener<LogEvent> {
 
             client.sendAsync(request.apply(URI.create(discord), payload), HttpResponse.BodyHandlers.ofString())
                     .thenApply(HttpResponse::body)
+                    .thenAccept(e -> log.info("LogListener response {}", e))
                     .join();
         }
     }

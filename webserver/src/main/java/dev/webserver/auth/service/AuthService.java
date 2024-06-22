@@ -4,9 +4,10 @@ import dev.webserver.auth.controller.ClientAuthController;
 import dev.webserver.auth.controller.WorkerAuthController;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
-import dev.webserver.jwt.JwtService;
 import dev.webserver.enumeration.RoleEnum;
 import dev.webserver.exception.DuplicateException;
+import dev.webserver.external.log.ILogEventPublisher;
+import dev.webserver.jwt.JwtService;
 import dev.webserver.user.entity.ClientRole;
 import dev.webserver.user.entity.SarreBrandUser;
 import dev.webserver.user.repository.UserRepository;
@@ -26,8 +27,13 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static dev.webserver.enumeration.RoleEnum.CLIENT;
 import static dev.webserver.enumeration.RoleEnum.WORKER;
@@ -51,6 +57,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authManager;
     private final JwtService tokenService;
+    private final ILogEventPublisher publisher;
 
     /**
      * Method called by either {@link WorkerAuthController}
@@ -70,6 +77,16 @@ public class AuthService {
         } else {
             workerRegister(dto);
         }
+
+        final LocalDateTime utc = LocalDateTime.now(ZoneOffset.UTC);
+        final String date = utc.toLocalDate().format(DateTimeFormatter.ofPattern("E dd MMMM uuuu"));
+        final String time = utc.toLocalTime().format(DateTimeFormatter.ofPattern("H:m a"));
+
+        final String message = """
+                    ## __**%s with role %s**__ registered on %s at %s @everyone
+                    """.formatted(dto.firstname(), key.name(), date, time);
+
+        publisher.publishLog(new ConcurrentLinkedQueue<>(List.of(message)));
     }
 
     /**
@@ -140,6 +157,16 @@ public class AuthService {
         var authenticated = this.authManager.authenticate(unauthenticated);
 
         loginImpl(authenticated, res);
+
+        final LocalDateTime utc = LocalDateTime.now(ZoneOffset.UTC);
+        final String date = utc.toLocalDate().format(DateTimeFormatter.ofPattern("E dd MMMM uuuu"));
+        final String time = utc.toLocalTime().format(DateTimeFormatter.ofPattern("H:m a"));
+
+        final String message = """
+                    ## __**%s with role %s**__ logged in on %s at %s @everyone
+                    """.formatted(dto.principal(), key.name(), date, time);
+
+        publisher.publishLog(new ConcurrentLinkedQueue<>(List.of(message)));
     }
 
     private void loginImpl(Authentication auth, HttpServletResponse response) {

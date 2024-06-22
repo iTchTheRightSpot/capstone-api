@@ -5,6 +5,7 @@ import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
 import dev.webserver.data.TestData;
 import dev.webserver.exception.DuplicateException;
+import dev.webserver.external.log.ILogEventPublisher;
 import dev.webserver.jwt.JwtService;
 import dev.webserver.user.entity.ClientRole;
 import dev.webserver.user.entity.SarreBrandUser;
@@ -34,8 +35,6 @@ import static org.mockito.Mockito.*;
 
 class AuthServiceTest extends AbstractUnitTest {
 
-    private String JSESSIONID;
-
     private AuthService authService;
 
     @Mock private UserRepository userRepository;
@@ -43,6 +42,7 @@ class AuthServiceTest extends AbstractUnitTest {
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private AuthenticationManager manager;
     @Mock private JwtService tokenService;
+    @Mock private ILogEventPublisher publisher;
 
     @BeforeEach
     void setUp() {
@@ -51,11 +51,11 @@ class AuthServiceTest extends AbstractUnitTest {
                 this.roleRepository,
                 this.passwordEncoder,
                 this.manager,
-                this.tokenService
+                this.tokenService,
+                publisher
         );
 
         this.authService.setJSESSIONID("JSESSIONID");
-        JSESSIONID = authService.getJSESSIONID();
     }
 
     @Test

@@ -5,6 +5,7 @@ import dev.webserver.auth.dto.RegisterDto;
 import dev.webserver.auth.service.AuthService;
 import dev.webserver.category.dto.CategoryDTO;
 import dev.webserver.category.entity.ProductCategory;
+import dev.webserver.category.repository.CategoryRepository;
 import dev.webserver.category.service.WorkerCategoryService;
 import dev.webserver.data.TestData;
 import dev.webserver.enumeration.RoleEnum;
@@ -62,10 +63,14 @@ class ApplicationTest {
                 AuthService authService,
                 UserRepository repository,
                 WorkerCategoryService catService,
-                WorkerProductService workerProductService
+                WorkerProductService workerProductService,
+                CategoryRepository categoryRepository
         ) {
             return args -> {
-                extracted(catService, workerProductService);
+
+                if (categoryRepository.findByName("category").isEmpty()) {
+                    extracted(catService, workerProductService);
+                }
 
                 if (repository.userByPrincipal("admin@admin.com").isEmpty()) {
                     var dto = new RegisterDto(

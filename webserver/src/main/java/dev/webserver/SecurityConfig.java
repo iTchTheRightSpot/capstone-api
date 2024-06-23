@@ -3,6 +3,7 @@ package dev.webserver;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.exception.ExceptionResponse;
 import dev.webserver.jwt.RefreshTokenFilter;
+import dev.webserver.user.repository.UserRepository;
 import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +13,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -20,6 +20,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -87,19 +88,24 @@ public class SecurityConfig {
     private String profile;
 
     @Bean
-    public AuthenticationProvider provider(UserDetailsService service, PasswordEncoder encoder) {
-        var provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(service);
-        provider.setPasswordEncoder(encoder);
-        return provider;
+    public UserDetailsService userDetailsService(UserRepository repository) {
+        return username -> repository
+                .userByPrincipal(username)
+                .map(CapstoneUserDetails::new)
+                .orElseThrow(() -> new UsernameNotFoundException(username + " not found"));
     }
 
     @Bean
     public AuthenticationManager manager(
-            AuthenticationProvider provider,
+            UserDetailsService service,
+            PasswordEncoder encoder,
             @Qualifier(value = "authenticationEventPublisher") AuthenticationEventPublisher publisher
     ) {
-        var manager = new ProviderManager(provider);
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(service);
+        provider.setPasswordEncoder(encoder);
+
+        ProviderManager manager = new ProviderManager(provider);
         manager.setAuthenticationEventPublisher(publisher);
         manager.setEraseCredentialsAfterAuthentication(true);
         return manager;

@@ -1,5 +1,6 @@
 package dev.webserver.auth.service;
 
+import dev.webserver.CapstoneUserDetails;
 import dev.webserver.auth.controller.ClientAuthController;
 import dev.webserver.auth.controller.WorkerAuthController;
 import dev.webserver.auth.dto.LoginDto;
@@ -33,6 +34,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static dev.webserver.enumeration.RoleEnum.CLIENT;
@@ -126,7 +128,7 @@ public class AuthService {
         var user = createUser(dto);
 
         var authenticated = UsernamePasswordAuthenticationToken
-                .authenticated(user.getEmail(), null, new UserDetailz(user).getAuthorities());
+                .authenticated(user.getEmail(), null, new CapstoneUserDetails(user).getAuthorities());
 
         loginImpl(authenticated, response);
     }
@@ -219,20 +221,21 @@ public class AuthService {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) return false;
 
-        Arrays.stream(cookies)
+        Optional<Cookie> first = Arrays.stream(cookies)
                 .filter(cookie -> cookie.getName().equals(jsessionid) && tokenService.matchesRole(cookie, role))
-                .findFirst()
-                .ifPresent(cookie -> {
-                    cookie.setValue(cookie.getValue());
-                    cookie.setHttpOnly(true);
-                    cookie.setMaxAge(cookie.getMaxAge());
-                    cookie.setPath(path);
+                .findFirst();
 
-                    // add cookie to response
-                    response.addCookie(cookie);
-                });
+        first.ifPresent(cookie -> {
+            cookie.setValue(cookie.getValue());
+            cookie.setHttpOnly(true);
+            cookie.setMaxAge(cookie.getMaxAge());
+            cookie.setPath(path);
 
-        return true;
+            // add cookie to response
+            response.addCookie(cookie);
+        });
+
+        return first.isPresent();
     }
 
 }

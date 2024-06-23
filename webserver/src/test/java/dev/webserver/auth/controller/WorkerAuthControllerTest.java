@@ -4,13 +4,12 @@ import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
-import dev.webserver.auth.service.UserDetailz;
+import dev.webserver.CapstoneUserDetails;
 import dev.webserver.exception.DuplicateException;
 import dev.webserver.jwt.JwtService;
 import dev.webserver.user.entity.ClientRole;
 import dev.webserver.user.entity.SarreBrandUser;
 import dev.webserver.user.repository.UserRepository;
-import dev.webserver.user.repository.UserRoleRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,7 +65,7 @@ class WorkerAuthControllerTest extends AbstractIntegration {
                             .build());
 
             jwt = jwtService.generateToken(
-                    authenticated(user.getEmail(), null, new UserDetailz(user).getAuthorities()));
+                    authenticated(user.getEmail(), null, new CapstoneUserDetails(user).getAuthorities()));
         }
     }
 

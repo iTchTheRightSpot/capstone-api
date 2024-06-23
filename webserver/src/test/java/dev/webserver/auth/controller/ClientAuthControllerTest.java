@@ -4,7 +4,7 @@ import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
-import dev.webserver.auth.service.UserDetailz;
+import dev.webserver.CapstoneUserDetails;
 import dev.webserver.enumeration.RoleEnum;
 import dev.webserver.jwt.JwtUtil;
 import dev.webserver.user.entity.ClientRole;
@@ -99,10 +99,10 @@ class ClientAuthControllerTest extends AbstractIntegration {
 
     @Test
     void shouldSuccessfullyLogin() throws Exception {
-        String dto = this.objectMapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
+        String dto = super.objectMapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
 
-        MvcResult login = this.mockMvc
-                .perform(post(this.path + "login")
+        MvcResult login = super.mockMvc
+                .perform(post(path + "login")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content(dto)
@@ -143,7 +143,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
     private String generateShortLivedJwt() {
         Instant now = Instant.now();
 
-        String[] role = new UserDetailz(user).getAuthorities() //
+        String[] role = new CapstoneUserDetails(user).getAuthorities() //
                 .stream() //
                 .map(authority -> JwtUtil.substringAfter(authority.getAuthority(), "ROLE_"))
                 .toArray(String[]::new);

@@ -20,11 +20,11 @@ import java.util.Arrays;
 public class RefreshTokenFilter extends OncePerRequestFilter {
 
     @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
+    private String jsessionid;
     @Value(value = "${server.servlet.session.cookie.path}")
-    private String PATH;
+    private String path;
     @Value(value = "${server.servlet.session.cookie.max-age}")
-    private int MAXAGE;
+    private int maxage;
 
     private final JwtService tokenService;
     private final UserDetailsService userDetailsService;
@@ -37,42 +37,39 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
      * */
     @Override
     protected void doFilterInternal(
-            HttpServletRequest req,
-            HttpServletResponse res,
+            HttpServletRequest request,
+            HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        Cookie[] cookies = req.getCookies();
+        Cookie[] cookies = request.getCookies();
 
         // Base case
-        if (cookies == null || req.getRequestURI().endsWith("logout")) {
-            filterChain.doFilter(req, res);
+        if (cookies == null || request.getRequestURI().endsWith("logout")) {
+            filterChain.doFilter(request, response);
             return;
         }
 
         // validate refresh token is needed
         Arrays.stream(cookies)
-                .filter(cookie -> cookie.getName().equals(JSESSIONID))
-                .filter(this.tokenService::_refreshTokenNeeded)
+                .filter(cookie -> cookie.getName().equals(jsessionid) && tokenService.refreshTokenNeeded(cookie))
                 .findFirst()
                 .ifPresent(cookie -> {
-                    String principal = this.tokenService.extractSubject(cookie);
-                    var userDetails = this.userDetailsService.loadUserByUsername(principal);
+                    String principal = tokenService.extractSubject(cookie);
+                    var userDetails = userDetailsService.loadUserByUsername(principal);
 
-                    var authenticated = UsernamePasswordAuthenticationToken
-                            .authenticated(userDetails, null, userDetails.getAuthorities());
-
-                    String jwt = this.tokenService.generateToken(authenticated);
+                    String jwt = tokenService.generateToken(UsernamePasswordAuthenticationToken.authenticated(principal, null, userDetails.getAuthorities()));
 
                     // update cookie
                     cookie.setValue(jwt);
-                    cookie.setMaxAge(MAXAGE);
-                    cookie.setPath(PATH);
+                    cookie.setMaxAge(maxage);
+                    cookie.setHttpOnly(true);
+                    cookie.setPath(path);
 
                     // add cookie to response
-                    res.addCookie(cookie);
+                    response.addCookie(cookie);
                 });
 
-        filterChain.doFilter(req, res);
+        filterChain.doFilter(request, response);
     }
 
 }

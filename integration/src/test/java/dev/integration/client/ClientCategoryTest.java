@@ -32,8 +32,6 @@ class ClientCategoryTest extends AbstractNative {
                 new ParameterizedTypeReference<List<CategoryResponse>>() {}
         );
 
-        Objects.requireNonNull(get.getBody()).forEach(System.out::println);
-
         assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
     }
 

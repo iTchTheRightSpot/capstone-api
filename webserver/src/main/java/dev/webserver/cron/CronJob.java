@@ -5,12 +5,13 @@ import dev.webserver.cart.entity.CartItem;
 import dev.webserver.cart.entity.ShoppingSession;
 import dev.webserver.cart.repository.CartItemRepo;
 import dev.webserver.cart.repository.ShoppingSessionRepo;
+import dev.webserver.external.ThirdPartyPaymentService;
+import dev.webserver.external.log.ILogEventPublisher;
 import dev.webserver.payment.entity.OrderReservation;
 import dev.webserver.payment.repository.OrderReservationRepo;
 import dev.webserver.payment.service.PaymentDetailService;
 import dev.webserver.product.entity.ProductSku;
 import dev.webserver.product.repository.ProductSkuRepo;
-import dev.webserver.external.ThirdPartyPaymentService;
 import dev.webserver.util.CustomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ class CronJob {
     private final CartItemRepo cartItemRepo;
     private final PaymentDetailService paymentDetailService;
     private final String secretKey;
+    private final ILogEventPublisher publisher;
 
     public CronJob(
             RestClient.Builder clientBuilder,
@@ -52,7 +54,8 @@ class CronJob {
             ShoppingSessionRepo sessionRepo,
             CartItemRepo cartItemRepo,
             PaymentDetailService paymentDetailService,
-            ThirdPartyPaymentService paymentService
+            ThirdPartyPaymentService paymentService,
+            ILogEventPublisher publisher
     ) {
         this.skuRepo = skuRepo;
         this.reservationRepo = reservationRepo;
@@ -61,6 +64,7 @@ class CronJob {
         this.paymentDetailService = paymentDetailService;
         this.secretKey = paymentService.payStackCredentials().secretKey();
         this.restClient = clientBuilder.build();
+        this.publisher = publisher;
     }
 
     /**
@@ -107,17 +111,17 @@ class CronJob {
 
         onResponseFromPaystack(reservations)
                 .stream()
-                .filter(reservation -> onSuccess(reservation)
-                        || reservation.status().equals(BAD_REQUEST)
-                        || reservation.status().equals(NOT_FOUND)
-                )
+                .filter(reservation -> onSuccess(reservation) || reservation.status().equals(BAD_REQUEST) || reservation.status().equals(NOT_FOUND))
                 .forEach(obj -> {
                     if (obj.status().equals(OK)) {
-                        var email = obj.node().get("data").get("customer").get("email").textValue();
-                        var reference = obj.node().get("data").get("reference").textValue();
+                        JsonNode data = obj.node().get("data");
+                        JsonNode metadata = data.get("metadata");
+                        String email = metadata.get("email").asText();
+                        String reference = data.get("reference").textValue();
 
                         if (!paymentDetailService.paymentDetailExists(email, reference)) {
-                            paymentDetailService.onSuccessfulPayment(obj.node().get("data"));
+                            paymentDetailService.onSuccessfulPayment(data);
+                            publisher.publishPurchase(metadata.get("name").asText(), email);
                         }
                     }
 

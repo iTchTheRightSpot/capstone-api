@@ -8,7 +8,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.UUID;
 
-record RSAConfig() {
+public record JwtUtil() {
 
     /**
      * generates a java.security.KeyPair pub & priv key at runtime
@@ -34,6 +34,17 @@ record RSAConfig() {
                 .privateKey(privateKey)
                 .keyID(UUID.randomUUID().toString())
                 .build();
+    }
+
+    public static String substringAfter(final String str, final String separator) {
+        if (str == null || str.isEmpty()) {
+            return str;
+        } else if (separator == null) {
+            return "";
+        }
+
+        int pos = str.indexOf(separator);
+        return pos == -1 ? "" : str.substring(pos + separator.length());
     }
 
 }

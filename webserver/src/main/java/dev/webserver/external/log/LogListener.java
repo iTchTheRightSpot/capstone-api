@@ -46,8 +46,6 @@ class LogListener implements ApplicationListener<LogEvent> {
         while (!event.queue().isEmpty()) {
             final String payload = mapper.writeValueAsString(new DiscordPayload(event.queue().poll()));
 
-            log.info("LogListener payload {}", payload);
-
             client.sendAsync(request.apply(URI.create(discord), payload), HttpResponse.BodyHandlers.ofString())
                     .thenApply(HttpResponse::body)
                     .thenAccept(e -> log.info("LogListener response {}", e))

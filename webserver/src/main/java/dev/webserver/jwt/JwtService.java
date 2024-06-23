@@ -14,7 +14,8 @@ import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -28,7 +29,7 @@ public class JwtService {
     private static final Logger log = LoggerFactory.getLogger(JwtService.class.getName());
 
     @Value(value = "${server.servlet.session.cookie.max-age}")
-    private int maxAge; // seconds
+    private int maxage; // seconds
     @Value(value = "${jwt.claim}")
     private String claim;
     @Value("${spring.application.name}")
@@ -38,21 +39,6 @@ public class JwtService {
 
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
-
-    private static boolean isEmpty(final String str) {
-        return str == null || str.isEmpty();
-    }
-
-    private static String substringAfter(final String str, final String separator) {
-        if (isEmpty(str)) {
-            return str;
-        } else if (separator == null) {
-            return "";
-        }
-
-        int pos = str.indexOf(separator);
-        return pos == -1 ? "" : str.substring(pos + separator.length());
-    }
 
     /**
      * Generates a jwt token
@@ -65,18 +51,18 @@ public class JwtService {
 
         String[] role = authentication.getAuthorities() //
                 .stream() //
-                .map(authority -> substringAfter(authority.getAuthority(), "ROLE_"))
+                .map(authority -> JwtUtil.substringAfter(authority.getAuthority(), "ROLE_"))
                 .toArray(String[]::new);
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer(application)
                 .issuedAt(now)
-                .expiresAt(now.plus(maxAge, SECONDS))
+                .expiresAt(now.plus(maxage, SECONDS))
                 .subject(authentication.getName())
                 .claim(claim, role)
                 .build();
 
-        return this.jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
     /**
@@ -84,22 +70,19 @@ public class JwtService {
      * */
     public boolean matchesRole(@NotNull final Cookie cookie, @NotNull final RoleEnum role) {
         try {
-            return this.jwtDecoder
-                    .decode(cookie.getValue()) //
-                    .getClaims() //
-                    .entrySet() //
-                    .stream() //
-                    .filter(map -> map.getKey().equals(claim)) //
-                    .anyMatch(map -> {
-                        // TODO come back to when upgraded to java 21
-                        ArrayList<String> list = null;
-
-                        if (map.getValue() instanceof ArrayList) {
-                            list = (ArrayList<String>) map.getValue();
-                        }
-
-                        return list != null && list.contains(role.name());
-                    });
+            return jwtDecoder
+                    .decode(cookie.getValue())
+                    .getClaims()
+                    .entrySet()
+                    .stream()
+                    .filter(entry -> claim.equals(entry.getKey()))
+                    .map(Map.Entry::getValue)
+                    .filter(value -> value instanceof List<?>)
+                    .map(value -> (List<?>) value)
+                    .flatMap(List::stream)
+                    .filter(item -> item instanceof String)
+                    .map(item -> (String) item)
+                    .anyMatch(roleName -> roleName.equals(role.name()));
         } catch (JwtException | NullPointerException e) {
             return false;
         }
@@ -123,12 +106,13 @@ public class JwtService {
      * @param cookie of type jakarta.servlet.http.Cookie
      * @return boolean
      * */
-    public boolean _refreshTokenNeeded(@NotNull final Cookie cookie) {
+    public boolean refreshTokenNeeded(@NotNull final Cookie cookie) {
         try {
-            Jwt jwt = this.jwtDecoder.decode(cookie.getValue()); // throws an error if jwt is not valid
+            Jwt jwt = jwtDecoder.decode(cookie.getValue()); // throws an error if jwt is not valid
             var expiresAt = jwt.getExpiresAt();
             var now = Instant.now();
             var bound = now.plus(boundToSendRefreshToken, MINUTES);
+            assert expiresAt != null;
             return expiresAt.isAfter(now) && expiresAt.isBefore(bound);
         } catch (JwtException | NullPointerException e) {
             log.error("JWT exception %s, %s".formatted(e.getMessage(), RefreshTokenFilter.class));
@@ -137,7 +121,7 @@ public class JwtService {
     }
 
     public String extractSubject(final Cookie cookie) {
-        return this.jwtDecoder.decode(cookie.getValue()).getSubject();
+        return jwtDecoder.decode(cookie.getValue()).getSubject();
     }
 
 }

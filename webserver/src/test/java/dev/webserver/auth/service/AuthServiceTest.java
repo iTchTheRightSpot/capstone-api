@@ -55,7 +55,7 @@ class AuthServiceTest extends AbstractUnitTest {
                 publisher
         );
 
-        this.authService.setJSESSIONID("JSESSIONID");
+        this.authService.setJsessionid("JSESSIONID");
     }
 
     @Test

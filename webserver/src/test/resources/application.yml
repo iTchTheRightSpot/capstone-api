@@ -13,7 +13,7 @@ server:
         name: 'JSESSIONID'
         path: /
         same-site: lax
-        max-age: 18000
+        max-age: 3600 # 60 mins
         secure: false
 
 logging:

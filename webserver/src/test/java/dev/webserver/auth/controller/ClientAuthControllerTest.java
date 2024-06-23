@@ -4,33 +4,48 @@ import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
 import dev.webserver.auth.dto.LoginDto;
 import dev.webserver.auth.dto.RegisterDto;
+import dev.webserver.auth.service.UserDetailz;
 import dev.webserver.enumeration.RoleEnum;
+import dev.webserver.jwt.JwtUtil;
 import dev.webserver.user.entity.ClientRole;
 import dev.webserver.user.entity.SarreBrandUser;
 import dev.webserver.user.repository.UserRepository;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.Instant;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
+import static java.time.temporal.ChronoUnit.MINUTES;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class ClientAuthControllerTest extends AbstractIntegration {
 
     @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
+    private String jsessionid;
     @Value(value = "/${api.endpoint.baseurl}client/auth/")
     private String path;
+    @Value(value = "${jwt.claim}")
+    private String claim;
+    @Value("${spring.application.name}")
+    private String application;
 
     private SarreBrandUser user = null;
 
@@ -38,6 +53,8 @@ class ClientAuthControllerTest extends AbstractIntegration {
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder encoder;
+    @Autowired
+    private JwtEncoder jwtEncoder;
 
     @BeforeEach
     void setup() {
@@ -76,7 +93,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
-                .getCookie(JSESSIONID);
+                .getCookie(jsessionid);
 
     }
 
@@ -91,15 +108,72 @@ class ClientAuthControllerTest extends AbstractIntegration {
                         .content(dto)
                 )
                 .andExpect(status().isOk())
+                .andExpect(cookie().exists(jsessionid))
                 .andReturn();
 
-        var cookie = login.getResponse().getCookie(JSESSIONID);
+        super.mockMvc
+                .perform(get("/test/client").cookie(login.getResponse().getCookie(jsessionid)))
+                .andExpect(status().isOk());
+    }
 
-        assertNotNull(cookie);
+    @Test
+    void shouldPreventLoginRequestIfRequestContainsValidJwt() throws Exception {
+        String dto = super.objectMapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
+
+        MvcResult login = super.mockMvc
+                .perform(post(path + "login")
+                        .with(csrf())
+                        .contentType(APPLICATION_JSON)
+                        .content(dto))
+                .andExpect(status().isOk())
+                .andExpect(cookie().exists(jsessionid))
+                .andReturn();
 
         super.mockMvc
-                .perform(get("/test/client").cookie(cookie))
-                .andExpect(status().isOk());
+                .perform(post(path + "login")
+                        .with(csrf())
+                        .cookie(login.getResponse().getCookie(jsessionid))
+                        .contentType(APPLICATION_JSON)
+                        .content(dto))
+                .andExpect(status().isOk())
+                .andExpect(cookie().exists(jsessionid))
+                .andExpect(cookie().value(jsessionid, login.getResponse().getCookie(jsessionid).getValue()));
+    }
+
+    private String generateShortLivedJwt() {
+        Instant now = Instant.now();
+
+        String[] role = new UserDetailz(user).getAuthorities() //
+                .stream() //
+                .map(authority -> JwtUtil.substringAfter(authority.getAuthority(), "ROLE_"))
+                .toArray(String[]::new);
+
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer(application)
+                .issuedAt(now)
+                .expiresAt(now.plus(2, MINUTES))
+                .subject(user.getEmail())
+                .claim(claim, role)
+                .build();
+
+        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+    }
+
+    @Test
+    void shouldValidateRefreshTokenIsAddedToJwtThatIsWithinExpirationBound() throws Exception {
+        String jwt = generateShortLivedJwt();
+
+        String dto = super.objectMapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
+
+        super.mockMvc
+                .perform(post(path + "login")
+                        .with(csrf())
+                        .cookie(new Cookie(jsessionid, jwt))
+                        .contentType(APPLICATION_JSON)
+                        .content(dto))
+                .andExpect(status().isOk())
+                .andExpect(cookie().exists(jsessionid))
+                .andExpect((result) -> assertThat(jwt).isNotEqualTo(Objects.requireNonNull(result.getResponse().getCookie(jsessionid)).getValue()));
     }
 
     @Test
@@ -128,7 +202,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        var cookie = login.getResponse().getCookie(JSESSIONID);
+        var cookie = login.getResponse().getCookie(jsessionid);
 
         assertNotNull(cookie);
 

@@ -225,18 +225,15 @@ public class AuthService {
                 .filter(cookie -> cookie.getName().equals(jsessionid) && tokenService.matchesRole(cookie, role))
                 .findFirst();
 
-        if (first.isPresent()) {
-            first
-                    .ifPresent(cookie -> {
-                        cookie.setValue(cookie.getValue());
-                        cookie.setHttpOnly(true);
-                        cookie.setMaxAge(cookie.getMaxAge());
-                        cookie.setPath(path);
+        first.ifPresent(cookie -> {
+            cookie.setValue(cookie.getValue());
+            cookie.setHttpOnly(true);
+            cookie.setMaxAge(cookie.getMaxAge());
+            cookie.setPath(path);
 
-                        // add cookie to response
-                        response.addCookie(cookie);
-                    });
-        }
+            // add cookie to response
+            response.addCookie(cookie);
+        });
 
         return first.isPresent();
     }

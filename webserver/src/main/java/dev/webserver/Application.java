@@ -20,15 +20,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
 
+import static org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO;
+
 @SpringBootApplication
 @EnableScheduling
 @ImportRuntimeHints(value = {MyRuntimeHints.class})
 @RegisterReflectionForBinding(value = {Variant.class, PayloadMapper.class, PaymentCredentialObj.class, DiscordPayload.class})
+@EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)
 public class Application {
 
     @Value(value = "${user.principal}")

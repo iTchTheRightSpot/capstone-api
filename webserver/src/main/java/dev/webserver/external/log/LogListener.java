@@ -1,7 +1,6 @@
 package dev.webserver.external.log;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,27 +8,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
 
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
-import java.util.function.BiFunction;
 
 @Component
-@RequiredArgsConstructor
 class LogListener implements ApplicationListener<LogEvent> {
     private static final Logger log = LoggerFactory.getLogger(LogListener.class);
-
-    private static final HttpClient client = HttpClient.newHttpClient();
-    private static final BiFunction<URI, String, HttpRequest> request = (uri, payload) -> HttpRequest
-            .newBuilder(uri)
-            .timeout(Duration.ofSeconds(10))
-            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .POST(HttpRequest.BodyPublishers.ofString(payload))
-            .build();
 
     @Value("${application.log.webhook.discord}")
     private String discord;
@@ -37,7 +24,14 @@ class LogListener implements ApplicationListener<LogEvent> {
     private String profile;
 
     private final ObjectMapper mapper;
+    private final RestClient restClient;
 
+    LogListener(final ObjectMapper mapper, final RestClient.Builder client) {
+        this.mapper = mapper;
+        this.restClient = client.build();
+    }
+
+    @Async
     @SneakyThrows
     @Override
     public void onApplicationEvent(final LogEvent event) {
@@ -46,10 +40,14 @@ class LogListener implements ApplicationListener<LogEvent> {
         while (!event.queue().isEmpty()) {
             final String payload = mapper.writeValueAsString(new DiscordPayload(event.queue().poll()));
 
-            client.sendAsync(request.apply(URI.create(discord), payload), HttpResponse.BodyHandlers.ofString())
-                    .thenApply(HttpResponse::body)
-                    .thenAccept(e -> log.info("LogListener response {}", e))
-                    .join();
+            String body = restClient.post().uri(URI.create(discord))
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .body(payload)
+                    .retrieve()
+                    .toEntity(String.class)
+                    .getBody();
+
+            log.info("LogListener publisher {}", body);
         }
     }
 }

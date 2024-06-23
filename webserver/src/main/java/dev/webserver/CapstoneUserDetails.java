@@ -1,4 +1,4 @@
-package dev.webserver.auth.service;
+package dev.webserver;
 
 import dev.webserver.user.entity.SarreBrandUser;
 
@@ -9,7 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-public record UserDetailz(SarreBrandUser user) implements UserDetails {
+public record CapstoneUserDetails(SarreBrandUser user) implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

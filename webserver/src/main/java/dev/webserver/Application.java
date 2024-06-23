@@ -32,6 +32,7 @@ import static org.springframework.data.web.config.EnableSpringDataWebSupport.Pag
 @EnableScheduling
 @ImportRuntimeHints(value = {MyRuntimeHints.class})
 @RegisterReflectionForBinding(value = {Variant.class, PayloadMapper.class, PaymentCredentialObj.class, DiscordPayload.class})
+// https://docs.spring.io/spring-data/rest/reference/data-commons/repositories/core-extensions.html
 @EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)
 public class Application {
 

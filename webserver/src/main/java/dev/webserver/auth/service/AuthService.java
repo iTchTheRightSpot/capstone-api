@@ -44,13 +44,15 @@ public class AuthService {
 
     @Value(value = "${server.servlet.session.cookie.name}")
     @Setter @Getter
-    private String JSESSIONID;
+    private String jsessionid;
     @Value(value = "${server.servlet.session.cookie.secure}")
     @Setter
     private boolean secure;
     @Value(value = "${server.servlet.session.cookie.max-age}")
     @Setter
     private int maxage;
+    @Value(value = "${server.servlet.session.cookie.path}")
+    private String path;
 
     private final UserRepository userRepository;
     private final UserRoleRepository roleRepository;
@@ -147,7 +149,7 @@ public class AuthService {
             HttpServletRequest req,
             HttpServletResponse res
     ) {
-        if (_validateCookies(req, key)) {
+        if (validateCookies(req, res, key)) {
             return;
         }
 
@@ -172,12 +174,12 @@ public class AuthService {
     private void loginImpl(Authentication auth, HttpServletResponse response) {
         if (response == null) return;
 
-        String token = this.tokenService.generateToken(auth);
+        String token = tokenService.generateToken(auth);
 
-        Cookie cookie = new Cookie(JSESSIONID, token);
+        Cookie cookie = new Cookie(jsessionid, token);
         cookie.setMaxAge(maxage);
         cookie.setHttpOnly(true);
-        cookie.setPath("/");
+        cookie.setPath(path);
         cookie.setSecure(secure);
 
         // add token to response
@@ -210,14 +212,27 @@ public class AuthService {
      * Validates if requests contains a valid jwt cookie.
      * Prevents generating unnecessary jwt.
      *
-     * @param res of HttpServletRequest.
+     * @param request of HttpServletRequest.
      * @return boolean true if jwt contains a valid cookie else false.
      */
-    private boolean _validateCookies(HttpServletRequest res, RoleEnum role) {
-        Cookie[] cookies = res.getCookies();
-        return cookies != null && Arrays.stream(cookies)
-                .filter(cookie -> cookie.getName().equals(JSESSIONID))
-                .anyMatch(cookie -> this.tokenService.matchesRole(cookie, role));
+    private boolean validateCookies(HttpServletRequest request, HttpServletResponse response, RoleEnum role) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) return false;
+
+        Arrays.stream(cookies)
+                .filter(cookie -> cookie.getName().equals(jsessionid) && tokenService.matchesRole(cookie, role))
+                .findFirst()
+                .ifPresent(cookie -> {
+                    cookie.setValue(cookie.getValue());
+                    cookie.setHttpOnly(true);
+                    cookie.setMaxAge(cookie.getMaxAge());
+                    cookie.setPath(path);
+
+                    // add cookie to response
+                    response.addCookie(cookie);
+                });
+
+        return true;
     }
 
 }

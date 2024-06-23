@@ -389,9 +389,6 @@ class OrderReservationRepoTest extends AbstractRepositoryTest {
         assertEquals(3, list.size());
 
         for (var pojo : list) {
-            System.out.println("Res Id " + pojo.getReservationId());
-            System.out.println("Res Qty Id " + pojo.getReservationQty());
-            System.out.println("ProductSku Id " + pojo.getProductSkuId());
             assertTrue(pojo.getReservationId() > 0);
             assertTrue(pojo.getReservationQty() > 0);
             assertTrue(pojo.getProductSkuId() > 0);

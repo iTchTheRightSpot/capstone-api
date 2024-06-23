@@ -28,7 +28,7 @@ import java.util.Arrays;
 @Configuration
 public class JwtConfig {
 
-    private static final RSAKey rsaKey = RSAConfig.GENERATERSAKEY();
+    private static final RSAKey rsaKey = JwtUtil.GENERATERSAKEY();
 
     @Value(value = "${server.servlet.session.cookie.name}")
     private String JSESSIONID;

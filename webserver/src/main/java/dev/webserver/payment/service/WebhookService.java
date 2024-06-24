@@ -39,9 +39,9 @@ public class WebhookService {
     public void webhook(HttpServletRequest req) {
         try {
             log.info("webhook received");
-            String body = WebHookUtil.httpServletRequestToString(req);
+            final String body = WebHookUtil.httpServletRequestToString(req);
 
-            WebhookConstruct pair = WebHookUtil
+            final WebhookConstruct pair = WebHookUtil
                     .validateRequestFromPayStack(thirdPartyService.payStackCredentials().secretKey(), body);
 
             if (!pair.validate().toLowerCase().equals(req.getHeader("x-paystack-signature"))) {
@@ -49,14 +49,19 @@ public class WebhookService {
                 throw new CustomServerError("invalid webhook from paystack");
             }
 
-            JsonNode data = pair.node().get("data");
-            if (pair.node().get("event").textValue().equals("charge.success")
-                    && data.get("status").textValue().equals("success")
-            ) {
-                onSuccessWebHook(data);
-                JsonNode metadata = data.get("metadata");
-                publisher.publishPurchase(metadata.get("name").asText(), metadata.get("email").asText());
-                log.info("successfully performed business logic on successful webhook request.");
+            final JsonNode data = pair.node().get("data");
+            if (pair.node().get("event").textValue().equals("charge.success") && data.get("status").textValue().equals("success")) {
+                final String reference = data.get("reference").textValue();
+                final JsonNode metadata = data.get("metadata");
+                final String email = metadata.get("email").asText();
+
+                if (!paymentDetailService.paymentDetailExists(email, reference)) {
+                    onSuccessWebHook(data);
+                    publisher.publishPurchase(metadata.get("name").asText(), email);
+                    log.info("successfully performed business logic on successful webhook request.");
+                } else {
+                    log.info("successful payment webhook request exists");
+                }
             } else {
                 log.info("failed payment");
             }

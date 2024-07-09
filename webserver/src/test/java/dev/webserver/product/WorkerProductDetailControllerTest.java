@@ -2,8 +2,8 @@ package dev.webserver.product;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
-import dev.webserver.category.ProductCategory;
 import dev.webserver.category.CategoryRepository;
+import dev.webserver.category.ProductCategory;
 import dev.webserver.data.TestData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 
 import java.util.HashSet;
@@ -21,7 +20,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class WorkerProductDetailControllerTest extends AbstractIntegration {
@@ -75,16 +73,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
         assertFalse(list.isEmpty());
 
         // based on setUp
-        MvcResult result = super.mockMvc
-                .perform(get(path)
-                        .param("id", list.getFirst().getUuid())
-                )
-                .andExpect(request().asyncStarted())
-                .andExpect(status().isOk())
-                .andReturn();
-
-        super.mockMvc.perform(asyncDispatch(result))
-                .andExpect(status().isOk());
+        super.mockMvc.perform(get(path).param("id", list.getFirst().getUuid())).andExpect(status().isOk());
     }
 
     @Test
@@ -103,7 +92,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
                 "dto",
                 null,
                 "application/json",
-                this.objectMapper.writeValueAsString(dto).getBytes()
+                this.mapper.writeValueAsString(dto).getBytes()
         );
 
         // request
@@ -137,7 +126,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
         this.mockMvc
                 .perform(put(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(dto))
+                        .content(this.mapper.writeValueAsString(dto))
                         .with(csrf())
                 )
                 .andExpect(status().isNoContent());

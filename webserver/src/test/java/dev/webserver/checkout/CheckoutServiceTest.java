@@ -48,8 +48,8 @@ class CheckoutServiceTest extends AbstractUnitTest {
                 sessionRepo,
                 cartItemRepository
         );
-        checkoutService.setCARTCOOKIE("cartcookie");
-        checkoutService.setSPLIT("%");
+        checkoutService.setCartcookie("cartcookie");
+        checkoutService.setSplit("%");
     }
 
     @Test

@@ -1,7 +1,7 @@
 package dev.webserver.checkout;
 
 import dev.webserver.AbstractIntegration;
-import dev.webserver.cart.CartDTO;
+import dev.webserver.cart.CartDto;
 import dev.webserver.category.ProductCategory;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.TestData;
@@ -84,8 +84,8 @@ class CheckoutControllerTest extends AbstractIntegration {
         this.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(super.objectMapper
-                                .writeValueAsString(new CartDTO(sku.getSku(), sku.getInventory()))
+                        .content(super.mapper
+                                .writeValueAsString(new CartDto(sku.getSku(), sku.getInventory()))
                         )
                         .with(csrf())
                         .cookie(cookie)

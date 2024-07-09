@@ -39,8 +39,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import static dev.webserver.enumeration.RoleEnum.NATIVE;
-import static dev.webserver.enumeration.RoleEnum.WORKER;
+import static dev.webserver.enumeration.RoleEnum.*;
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.HttpMethod.*;
@@ -174,8 +173,8 @@ class SecurityConfig {
                             .requestMatchers(baseurl + "tax/**").hasRole(WORKER.name())
                             .requestMatchers(baseurl + "worker/**").hasRole(WORKER.name())
                             .requestMatchers(baseurl + "auth/worker").hasRole(WORKER.name())
-                            .requestMatchers("/actuator/**").denyAll()
-                            .anyRequest().authenticated());
+                            .requestMatchers(baseurl + "order/**").hasAnyRole(WORKER.name(), CLIENT.name())
+                            .anyRequest().denyAll());
         }
 
         return http

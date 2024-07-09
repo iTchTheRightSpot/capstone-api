@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 import java.io.Serializable;
 
-public record CreateProductDTO(
+public record CreateProductDto(
         @JsonProperty(value = "category_id")
         @NotNull(message = "Please select categoryId as product has to below to a categoryId")
         Long categoryId,
@@ -33,7 +33,7 @@ public record CreateProductDTO(
 
         @JsonProperty(value = "sizeInventory")
         @NotNull(message = "Size or Inventory cannot be empty")
-        SizeInventoryDTO[] sizeInventory,
+        SizeInventoryDto[] sizeInventory,
 
         @NotNull(message = "Please enter or choose product colour")
         @NotEmpty(message = "Please enter or choose product colour")

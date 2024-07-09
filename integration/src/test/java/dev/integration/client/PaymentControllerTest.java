@@ -2,8 +2,8 @@ package dev.integration.client;
 
 import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
-import dev.webserver.cart.CartDTO;
-import dev.webserver.payment.response.PaymentResponse;
+import dev.webserver.cart.CartDto;
+import dev.webserver.payment.PaymentResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -33,7 +33,7 @@ class PaymentControllerTest extends AbstractNative {
         // add to shopping cart
         var cart = testTemplate.postForEntity(
                 route + "cart",
-                new HttpEntity<>(new CartDTO("product-sku-1", 4), headers),
+                new HttpEntity<>(new CartDto("product-sku-1", 4), headers),
                 Void.class
         );
 

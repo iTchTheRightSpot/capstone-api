@@ -28,7 +28,7 @@ class ShippingControllerTest extends AbstractIntegration {
         this.mockMvc
                 .perform(post("/" + path)
                         .with(csrf())
-                        .content(this.objectMapper.writeValueAsString(
+                        .content(this.mapper.writeValueAsString(
                                 new ShippingDto(
                                         "Canada",
                                         new BigDecimal("10100"),
@@ -49,7 +49,7 @@ class ShippingControllerTest extends AbstractIntegration {
         this.mockMvc
                 .perform(put("/" + path)
                         .with(csrf())
-                        .content(this.objectMapper.writeValueAsString(
+                        .content(this.mapper.writeValueAsString(
                                 new ShippingMapper(
                                         shipping.shipId(),
                                         shipping.country(),

@@ -15,7 +15,7 @@ import dev.webserver.payment.OrderDetail;
 import dev.webserver.payment.OrderReservation;
 import dev.webserver.payment.PaymentDetail;
 import dev.webserver.payment.OrderDetailRepository;
-import dev.webserver.payment.OrderReservationRepo;
+import dev.webserver.payment.OrderReservationRepository;
 import dev.webserver.payment.PaymentDetailRepo;
 import dev.webserver.util.CustomUtil;
 import org.junit.jupiter.api.Assertions;
@@ -52,7 +52,7 @@ class ProductSkuRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private PaymentDetailRepo paymentDetailRepo;
     @Autowired
-    private OrderReservationRepo reservationRepo;
+    private OrderReservationRepository reservationRepo;
     @Autowired
     private ShoppingSessionRepository sessionRepo;
     @Autowired

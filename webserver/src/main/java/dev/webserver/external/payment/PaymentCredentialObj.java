@@ -1,4 +1,4 @@
-package dev.webserver.external;
+package dev.webserver.external.payment;
 
 import java.io.Serializable;
 

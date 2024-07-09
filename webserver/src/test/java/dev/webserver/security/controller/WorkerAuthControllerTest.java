@@ -82,7 +82,7 @@ class WorkerAuthControllerTest extends AbstractIntegration {
                 .perform(post(route + "register")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(dto))
+                        .content(this.mapper.writeValueAsString(dto))
                         .cookie(new Cookie(JSESSIONID, jwt))
                 )
                 .andExpect(status().isCreated());
@@ -103,7 +103,7 @@ class WorkerAuthControllerTest extends AbstractIntegration {
                 .perform(post(route + "register")
                         .contentType(APPLICATION_JSON)
                         .with(csrf())
-                        .content(this.objectMapper.writeValueAsString(dto))
+                        .content(this.mapper.writeValueAsString(dto))
                         .cookie(new Cookie(JSESSIONID, jwt))
                 )
                 .andExpect(result -> assertInstanceOf(DuplicateException.class, result.getResolvedException()));
@@ -111,7 +111,7 @@ class WorkerAuthControllerTest extends AbstractIntegration {
 
     @Test
     void login_wrong_password() throws Exception {
-        String payload = this.objectMapper
+        String payload = this.mapper
                 .writeValueAsString(new LoginDto(user.getPassword(), "fFeubfrom@#$%^124234"));
         this.mockMvc
                 .perform(post(route + "login")

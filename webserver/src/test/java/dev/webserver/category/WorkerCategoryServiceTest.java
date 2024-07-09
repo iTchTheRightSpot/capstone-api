@@ -31,7 +31,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
     @Test
     void create() {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().department(), true, null);
+        var dto = new CategoryDto(new Faker().commerce().department(), true, null);
 
         var category = ProductCategory.builder()
                 .name(dto.name().trim())
@@ -52,7 +52,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
     @Test
     void createParent() {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().department(), true, 1L);
+        var dto = new CategoryDto(new Faker().commerce().department(), true, 1L);
 
         var category = ProductCategory.builder()
                 .name(new Faker().commerce().department())
@@ -72,7 +72,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
     @Test
     void category_duplicate_name() {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().department(), true, null);
+        var dto = new CategoryDto(new Faker().commerce().department(), true, null);
 
         // When
         when(this.categoryRepository.findByName(anyString()))
@@ -90,7 +90,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
     @Test
     void duplicate() {
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().department(), true, null);
+        var dto = new CategoryDto(new Faker().commerce().department(), true, null);
 
         var category = ProductCategory.builder()
                 .name(new Faker().commerce().department())
@@ -108,7 +108,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
     @Test
     void update() {
         // Given
-        var dto = new UpdateCategoryDTO(1L, 0L, "update categoryId name", true);
+        var dto = new UpdateCategoryDto(1L, 0L, "update categoryId name", true);
 
         // When
         doReturn(0).when(this.categoryRepository)
@@ -123,7 +123,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
     @Test
     void update_category_name_to_existing_name() {
         // Given
-        var dto = new UpdateCategoryDTO(1L, 0L,"update categoryId name", true);
+        var dto = new UpdateCategoryDto(1L, 0L,"update categoryId name", true);
 
         // When
         when(this.categoryRepository.onDuplicateCategoryName(anyLong(), anyString()))

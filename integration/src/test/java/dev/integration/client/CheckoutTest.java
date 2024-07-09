@@ -2,7 +2,7 @@ package dev.integration.client;
 
 import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
-import dev.webserver.cart.CartDTO;
+import dev.webserver.cart.CartDto;
 import dev.webserver.checkout.Checkout;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,7 +32,7 @@ class CheckoutTest extends AbstractNative {
         // add to shopping cart
         var post = testTemplate.postForEntity(
                 route + "cart",
-                new HttpEntity<>(new CartDTO("product-sku-1", 3), headers),
+                new HttpEntity<>(new CartDto("product-sku-1", 3), headers),
                 Void.class
         );
 

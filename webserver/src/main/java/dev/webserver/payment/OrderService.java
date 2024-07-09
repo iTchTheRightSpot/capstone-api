@@ -2,8 +2,8 @@ package dev.webserver.payment;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.webserver.external.aws.S3Service;
 import dev.webserver.exception.CustomServerError;
+import dev.webserver.external.aws.S3Service;
 import dev.webserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 @Service
@@ -26,7 +25,7 @@ public class OrderService {
 
     @Setter
     @Value(value = "${aws.bucket}")
-    private String BUCKET;
+    private String bucket;
 
     private final OrderDetailRepository repository;
     private final S3Service s3Service;
@@ -36,50 +35,42 @@ public class OrderService {
      * <p>
      * This method first retrieves a list of transformed {@link OrderDetail}
      * to {@link OrderProjection} from the database based on the authenticated
-     * user's principal, then processes each order to create a list of {@link CompletableFuture} tasks.
-     * Each {@link CompletableFuture} task reads the {@link OrderProjection}
-     * property getDetail, parses it into a {@link PayloadMapper} array, and asynchronously fetches pre-signed
-     * URLs for associated keys from the S3 service. The resulting {@link PayloadMapper} array is then combined
-     * with other order details to form an {@link OrderHistoryDTO} object. Finally, all {@link CompletableFuture}
-     * tasks are executed concurrently to retrieve the order history efficiently.
+     * user's principal, then processes each order to create a list of deferred tasks.
+     * Each task reads the {@link OrderProjection} property getDetail, parses it into a {@link PayloadMapper}
+     * array, and asynchronously fetches pre-signed URLs for associated keys from the S3 service. The resulting
+     * {@link PayloadMapper} array is then combined  with other order details to form an {@link OrderHistoryDto} object.
+     * Finally, all deferred tasks are executed concurrently to retrieve the order history efficiently.
      *
-     * @return A {@link CompletableFuture} containing a list of {@link OrderHistoryDTO} objects, representing
+     * @return A list of {@link OrderHistoryDto} objects, representing
      * the order history for the currently authenticated user.
      * @throws CustomServerError if an error occurs transforming
      * {@link OrderProjection} property to a {@link PayloadMapper} array.
      */
-    public CompletableFuture<List<OrderHistoryDTO>> orderHistory() {
+    public List<OrderHistoryDto> orderHistory() {
         String principal = SecurityContextHolder.getContext().getAuthentication().getName();
 
         var jobs = repository
                 .orderHistoryByPrincipal(principal)
                 .stream()
-                .map(db -> CompletableFuture.supplyAsync(() -> {
+                .map(db -> (Supplier<OrderHistoryDto>) () -> {
                     try {
-                        var array = new ObjectMapper()
-                                .readValue(db.getDetail(), PayloadMapper[].class);
+                        var array = new ObjectMapper().readValue(db.getDetail(), PayloadMapper[].class);
 
-                        var supplierList = Arrays.stream(array)
-                                .map(a -> (Supplier<PayloadMapper>) () ->
-                                        new PayloadMapper(a.name(), s3Service.preSignedUrl(BUCKET, a.key()), a.colour())
-                                )
+                        var async = Arrays.stream(array)
+                                .map(a -> (Supplier<PayloadMapper>) () -> new PayloadMapper(a.name(), s3Service.preSignedUrl(bucket, a.imageKey()), a.colour()))
                                 .toList();
 
-                        PayloadMapper[] asyncResponse = CustomUtil
-                                .asynchronousTasks(supplierList, OrderService.class)
-                                .thenApply(v -> v.stream().map(Supplier::get).toArray(PayloadMapper[]::new)) //
-                                .join();
+                        PayloadMapper[] arr = CustomUtil.asynchronousTasks(async).join().toArray(PayloadMapper[]::new);
 
-                        return new OrderHistoryDTO(
+                        return new OrderHistoryDto(
                                 db.getTime().getTime(),
                                 db.getCurrency(),
                                 db.getTotal(),
                                 db.getPaymentId(),
-                                asyncResponse
+                                arr
                         );
                     } catch (JsonProcessingException e) {
-                        log.error("error retrieving customer %s order history \n %s"
-                                .formatted(principal, e.getMessage()));
+                        log.error("error retrieving customer %s order history \n %s".formatted(principal, e.getMessage()));
                         throw new CustomServerError(
                                 """
                                 An error occurred retrieving your order history.
@@ -87,11 +78,10 @@ public class OrderService {
                                 """
                         );
                     }
-                }))
+                })
                 .toList();
 
-        return CustomUtil.asynchronousTasks(jobs, OrderService.class)
-                .thenApply(v -> jobs.stream().map(CompletableFuture::join).toList());
+        return CustomUtil.asynchronousTasks(jobs).join();
     }
 
 }

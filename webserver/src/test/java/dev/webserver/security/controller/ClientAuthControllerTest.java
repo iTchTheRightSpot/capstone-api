@@ -85,7 +85,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
         super.mockMvc
                 .perform(post(this.path + "register")
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(dto))
+                        .content(this.mapper.writeValueAsString(dto))
                         .with(csrf())
                 )
                 .andExpect(status().isCreated())
@@ -97,7 +97,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
 
     @Test
     void shouldSuccessfullyLogin() throws Exception {
-        String dto = super.objectMapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
+        String dto = super.mapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
 
         MvcResult login = super.mockMvc
                 .perform(post(path + "login")
@@ -116,7 +116,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
 
     @Test
     void shouldPreventLoginRequestIfRequestContainsValidJwt() throws Exception {
-        String dto = super.objectMapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
+        String dto = super.mapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
 
         MvcResult login = super.mockMvc
                 .perform(post(path + "login")
@@ -161,7 +161,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
     void shouldValidateRefreshTokenIsAddedToJwtThatIsWithinExpirationBound() throws Exception {
         String jwt = generateShortLivedJwt();
 
-        String dto = super.objectMapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
+        String dto = super.mapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
 
         super.mockMvc
                 .perform(post(path + "login")
@@ -176,7 +176,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
 
     @Test
     void simulate_logging_in_with_none_existent_user() throws Exception {
-        String dto = super.objectMapper
+        String dto = super.mapper
                 .writeValueAsString(new LoginDto("admin@admin.com", "password123"));
         super.mockMvc
                 .perform(post(this.path + "login")
@@ -189,7 +189,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
 
     @Test
     void client_trying_to_access_worker_route() throws Exception {
-        String dto = this.objectMapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
+        String dto = this.mapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
 
         MvcResult login = this.mockMvc
                 .perform(post(this.path + "login")

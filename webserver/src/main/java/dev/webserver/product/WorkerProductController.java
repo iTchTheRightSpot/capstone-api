@@ -1,15 +1,12 @@
 package dev.webserver.product;
 
 import dev.webserver.enumeration.SarreCurrency;
-import dev.webserver.product.response.ProductResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.concurrent.CompletableFuture;
 
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -22,18 +19,15 @@ public class WorkerProductController {
 
     private final WorkerProductService service;
 
-    /**
-     * Returns a {@link CompletableFuture} of {@link Page} {@link ProductResponse}.
-     */
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public CompletableFuture<Page<ProductResponse>> allProducts(
+    public Page<ProductResponse> allProducts(
             @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
     ) {
         SarreCurrency c = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.service.allProducts(c, page, Math.min(size, 20));
+        return service.allProducts(c, page, Math.min(size, 20));
     }
 
     /**
@@ -42,7 +36,7 @@ public class WorkerProductController {
     @ResponseStatus(CREATED)
     @PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
     public void create(
-            @Valid @RequestPart CreateProductDTO dto,
+            @Valid @RequestPart CreateProductDto dto,
             @NotNull @RequestPart MultipartFile[] files
     ) {
         this.service.create(dto, files);
@@ -51,11 +45,11 @@ public class WorkerProductController {
     /**
      * Update a Product
      *
-     * @param dto of type {@link UpdateProductDTO}
+     * @param dto of type {@link UpdateProductDto}
      */
     @ResponseStatus(NO_CONTENT)
     @PutMapping(consumes = APPLICATION_JSON_VALUE)
-    public void update(@Valid @RequestBody UpdateProductDTO dto) {
+    public void update(@Valid @RequestBody UpdateProductDto dto) {
         this.service.update(dto);
     }
 

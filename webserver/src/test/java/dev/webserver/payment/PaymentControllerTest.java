@@ -2,7 +2,7 @@ package dev.webserver.payment;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
-import dev.webserver.cart.CartDTO;
+import dev.webserver.cart.CartDto;
 import dev.webserver.category.ProductCategory;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.TestData;
@@ -119,8 +119,8 @@ class PaymentControllerTest extends AbstractIntegration {
         super.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper
-                                .writeValueAsString(new CartDTO(sku.getSku(), sku.getInventory()))
+                        .content(this.mapper
+                                .writeValueAsString(new CartDto(sku.getSku(), sku.getInventory()))
                         )
                         .with(csrf())
                         .cookie(cookie)
@@ -168,8 +168,8 @@ class PaymentControllerTest extends AbstractIntegration {
         super.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(super.objectMapper
-                                .writeValueAsString(new CartDTO(sku.getSku(), sku.getInventory() - 1))
+                        .content(super.mapper
+                                .writeValueAsString(new CartDto(sku.getSku(), sku.getInventory() - 1))
                         )
                         .with(csrf())
                         .cookie(cookie)
@@ -190,8 +190,8 @@ class PaymentControllerTest extends AbstractIntegration {
         super.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(super.objectMapper
-                                .writeValueAsString(new CartDTO(sku.getSku(), 1))
+                        .content(super.mapper
+                                .writeValueAsString(new CartDto(sku.getSku(), 1))
                         )
                         .with(csrf())
                         .cookie(cookie)
@@ -204,8 +204,8 @@ class PaymentControllerTest extends AbstractIntegration {
             super.mockMvc
                     .perform(post(cartPath)
                             .contentType(APPLICATION_JSON)
-                            .content(super.objectMapper
-                                    .writeValueAsString(new CartDTO(s.getSku(), s.getInventory()))
+                            .content(super.mapper
+                                    .writeValueAsString(new CartDto(s.getSku(), s.getInventory()))
                             )
                             .with(csrf())
                             .cookie(cookie)
@@ -247,8 +247,8 @@ class PaymentControllerTest extends AbstractIntegration {
             super.mockMvc
                     .perform(post(cartPath)
                             .contentType(APPLICATION_JSON)
-                            .content(super.objectMapper
-                                    .writeValueAsString(new CartDTO(sku.getSku(), 1))
+                            .content(super.mapper
+                                    .writeValueAsString(new CartDto(sku.getSku(), 1))
                             )
                             .with(csrf())
                             .cookie(cookie)
@@ -305,11 +305,8 @@ class PaymentControllerTest extends AbstractIntegration {
         // numOfUsers add last item to their cart
         Cookie[] cookies = impl(numOfUsers);
 
-        List<Integer> results = CustomUtil
-                .asynchronousTasks(getSuppliers(cookies), PaymentControllerTest.class)
-                .join()
+        List<Integer> results = CustomUtil.asynchronousTasks(getSuppliers(cookies)).join()
                 .stream()
-                .map(Supplier::get)
                 .map(result -> result.getResponse().getStatus())
                 .toList();
 
@@ -359,8 +356,8 @@ class PaymentControllerTest extends AbstractIntegration {
         super.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper
-                                .writeValueAsString(new CartDTO(sku.getSku(), sku.getInventory()))
+                        .content(this.mapper
+                                .writeValueAsString(new CartDto(sku.getSku(), sku.getInventory()))
                         )
                         .with(csrf())
                         .cookie(cookie)

@@ -1,8 +1,8 @@
 package dev.webserver.checkout;
 
 import dev.webserver.cart.CartItem;
-import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.CartItemRepository;
+import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.ShoppingSessionRepository;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomNotFoundException;
@@ -29,10 +29,10 @@ public class CheckoutService {
 
     @Setter
     @Value("${cart.cookie.name}")
-    private String CARTCOOKIE;
+    private String cartcookie;
     @Setter
     @Value(value = "${cart.split}")
-    private String SPLIT;
+    private String split;
 
     private final ShippingService shippingService;
     private final TaxService taxService;
@@ -113,14 +113,14 @@ public class CheckoutService {
      *                                 invalid, or {@link CartItem} is empty.
      */
     public CustomObject validateCurrentShoppingSession(final HttpServletRequest req, final String country) {
-        final Cookie cookie = CustomUtil.cookie(req, CARTCOOKIE);
+        final Cookie cookie = CustomUtil.cookie(req, cartcookie);
 
         if (cookie == null) {
             throw new CustomNotFoundException("no cookie found. kindly refresh window");
         }
 
         final var optional = shoppingSessionRepository
-                .shoppingSessionByCookie(cookie.getValue().split(SPLIT)[0]);
+                .shoppingSessionByCookie(cookie.getValue().split(split)[0]);
 
         if (optional.isEmpty()) {
             throw new CustomNotFoundException("invalid shopping session");

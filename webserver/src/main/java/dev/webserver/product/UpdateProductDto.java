@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-public record UpdateProductDTO(
+public record UpdateProductDto(
         @JsonProperty(value = "product_id")
         @NotNull(message = "cannot be empty")
         String uuid,

@@ -1,10 +1,10 @@
 package dev.webserver.cart;
 
-import dev.webserver.external.aws.S3Service;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomInvalidFormatException;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.OutOfStockException;
+import dev.webserver.external.aws.S3Service;
 import dev.webserver.product.Product;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuService;
@@ -25,19 +25,18 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(rollbackFor = Exception.class)
 public class CartService {
 
     private static final Logger log = LoggerFactory.getLogger(CartService.class);
 
-    private final int expire = 2; // cart expiration
+    // cart expiration
+    private static final Instant expiration = Instant.now().plus(2, DAYS);
 
     @Setter @Getter
     @Value(value = "${cart.split}")
@@ -86,7 +85,6 @@ public class CartService {
 
             if (hours <= bound) {
                 // update cookie expiry
-                Instant expiration = Instant.now().plus(expire, DAYS);
                 long maxAgeInSeconds = Instant.now().until(expiration, ChronoUnit.SECONDS);
 
                 String value = arr[0] + CustomUtil
@@ -119,11 +117,10 @@ public class CartService {
      * @param currency the currency for which cart items should be retrieved.
      * @param req the HttpServletRequest object to retrieve the cart cookie.
      * @param res the HttpServletResponse object to add the new cart cookie if needed.
-     * @return a {@link CompletableFuture} containing a list of {@link CartResponse} objects
-     * representing the {@link CartItem}.
+     * @return a list of {@link CartResponse} objects representing the {@link CartItem}.
      * @throws CustomInvalidFormatException if the cart cookie value is invalid or cannot be parsed.
      */
-    public CompletableFuture<List<CartResponse>> cartItems(
+    public List<CartResponse> cartItems(
             SarreCurrency currency,
             HttpServletRequest req,
             HttpServletResponse res
@@ -132,7 +129,6 @@ public class CartService {
 
         if (cookie == null) {
             // cookie value
-            Instant expiration = Instant.now().plus(expire, DAYS);
             long maxAgeInSeconds = Instant.now().until(expiration, ChronoUnit.SECONDS);
             String value = UUID.randomUUID() + split + expiration.getEpochSecond();
 
@@ -145,7 +141,7 @@ public class CartService {
 
             res.addCookie(c);
 
-            return CompletableFuture.completedFuture(List.of());
+            return List.of();
         }
 
         validateCookieExpiration(res, cookie);
@@ -170,8 +166,7 @@ public class CartService {
                 ))
                 .toList();
 
-        return CustomUtil.asynchronousTasks(futures, CartService.class)
-                .thenApply(v -> v.stream().map(Supplier::get).toList());
+        return CustomUtil.asynchronousTasks(futures).join();
     }
 
     /**
@@ -186,7 +181,7 @@ public class CartService {
      * or the requested quantity exceeds available inventory, an {@link OutOfStockException}
      * is thrown.
      *
-     * @param dto the {@link CartDTO} containing information about the {@link ProductSku}
+     * @param dto the {@link CartDto} containing information about the {@link ProductSku}
      *            and quantity.
      * @param req the {@link HttpServletRequest} containing the unique cookie associated with
      *            the user's device.
@@ -195,11 +190,12 @@ public class CartService {
      * requested quantity exceeds available inventory.
      * @throws CustomInvalidFormatException if the cookie is invalid.
      */
-    public void create(CartDTO dto, HttpServletRequest req) {
+    @Transactional(rollbackFor = Exception.class)
+    public void create(CartDto dto, HttpServletRequest req) {
         Cookie cookie = CustomUtil.cookie(req, CARTCOOKIE);
 
         if (cookie == null) {
-            throw new CustomNotFoundException("No cookie found. Kindly refresh window");
+            throw new CustomNotFoundException("no cookie found. Kindly refresh window");
         }
 
         var productSku = this.productSKUService.productSkuBySku(dto.sku());
@@ -207,7 +203,7 @@ public class CartService {
         int qty = productSku.getInventory();
 
         if (qty <= 0 || dto.qty() > qty) {
-            throw new OutOfStockException("Product or selected quantity is out of stock.");
+            throw new OutOfStockException("product or selected quantity is out of stock.");
         }
 
         String[] arr = cookie.getValue().split(split);
@@ -273,6 +269,7 @@ public class CartService {
      *            every device that visit out application.
      * @param sku unique {@link ProductSku}.
      * */
+    @Transactional(rollbackFor = Exception.class)
     public void deleteFromCart(HttpServletRequest req, String sku) {
         Cookie cookie = CustomUtil.cookie(req, CARTCOOKIE);
 

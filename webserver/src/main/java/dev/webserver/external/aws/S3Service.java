@@ -33,7 +33,7 @@ public class S3Service {
 
         String active = env.getProperty("spring.profiles.active", "default");
 
-        this.profile = active.endsWith("test");
+        profile = active.endsWith("test");
     }
 
     public void uploadToS3(File file, Map<String, String> metadata, String bucket, String key) {
@@ -58,7 +58,7 @@ public class S3Service {
             log.info("successfully uploaded file to s3 {}", file.getName());
         } catch (Exception e) {
             log.error("Error uploading image to s3 {}", e.getMessage());
-            throw new CustomServerError("error uploading image. Please try again or call developer");
+            throw new CustomServerError("an error occurred uploading image. Please try again or contact developer");
         }
     }
 
@@ -79,11 +79,11 @@ public class S3Service {
                 .delete(Delete.builder().objects(keys).build())
                 .build();
         try {
-            this.s3Client.deleteObjects(build);
+            s3Client.deleteObjects(build);
             log.info("successfully deleted files from s3");
         } catch (S3Exception e) {
             log.error("error deleting image from s3 {}", e.getMessage());
-            throw new CustomServerError("error deleting image. Please try again later or call developer");
+            throw new CustomServerError("an error occurred deleting image(s). Please try again later or contact developer");
         }
     }
 

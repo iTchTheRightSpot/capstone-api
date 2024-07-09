@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 import java.io.Serializable;
 
-public record UpdateCategoryDTO(
+public record UpdateCategoryDto(
         @NotNull(message = "cannot be empty")
         @JsonProperty(value = "category_id")
         Long id,

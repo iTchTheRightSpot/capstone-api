@@ -31,8 +31,8 @@ public record PaymentDTO(
         String paymentProvider,
 
         @NotNull
-        SkuQtyDTO[] dto,
+        SkuQtyDto[] dto,
 
         @NotNull
-        AddressDTO address
+        AddressDto address
 ) implements Serializable {}

@@ -1,7 +1,6 @@
 package dev.webserver.payment;
 
 import dev.webserver.enumeration.SarreCurrency;
-import dev.webserver.payment.response.PaymentResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -25,8 +24,14 @@ public class PaymentController {
     @ResponseStatus(OK)
     @PostMapping
     public PaymentResponse raceCondition(
-            @NotNull @NotEmpty @RequestParam(name = "currency") String currency,
-            @NotNull @NotEmpty @RequestParam(name = "country") String country,
+            @NotNull(message = "currency cannot be null")
+            @NotEmpty(message = "currency cannot be empty")
+            @RequestParam(name = "currency")
+            String currency,
+            @NotNull(message = "country cannot be null")
+            @NotEmpty(message = "country cannot be empty")
+            @RequestParam(name = "country")
+            String country,
             HttpServletRequest req
     ) {
         var sc = SarreCurrency.valueOf(currency.toUpperCase());

@@ -1,21 +1,19 @@
 package dev.webserver.product;
 
 import dev.webserver.AbstractIntegration;
-import dev.webserver.category.ProductCategory;
 import dev.webserver.category.CategoryRepository;
+import dev.webserver.category.ProductCategory;
 import dev.webserver.data.TestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.HashSet;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class ClientProductControllerTest extends AbstractIntegration {
 
@@ -63,49 +61,27 @@ class ClientProductControllerTest extends AbstractIntegration {
 
         char c = (char) ('a' + new Random().nextInt(26));
 
-        MvcResult result = super.mockMvc
+        super.mockMvc
                 .perform(get(path + "/find")
                         .param("search", String.valueOf(c))
                         .param("currency", "usd")
                         .param("size", "10")
                 )
-                .andExpect(request().asyncStarted())
-                .andExpect(status().isOk())
-                .andReturn();
-
-        super.mockMvc
-                .perform(asyncDispatch(result))
-                .andExpect(content().contentType("application/json"));
+                .andExpect(status().isOk());
     }
 
     @Test
     void listProductsNgnCurrency() throws Exception {
         dummy();
 
-        MvcResult result = super.mockMvc
-                .perform(get(path))
-                .andExpect(request().asyncStarted())
-                .andExpect(status().isOk())
-                .andReturn();
-
-        super.mockMvc.perform(asyncDispatch(result))
-                .andExpect(status().isOk());
+        super.mockMvc.perform(get(path)).andExpect(status().isOk());
     }
 
     @Test
     void listProductsUsdCurrency() throws Exception {
         dummy();
 
-        MvcResult result = super.mockMvc
-                .perform(get(path)
-                        .param("currency", "usd")
-                )
-                .andExpect(request().asyncStarted())
-                .andExpect(status().isOk())
-                .andReturn();
-
-        super.mockMvc.perform(asyncDispatch(result))
-                .andExpect(status().isOk());
+        super.mockMvc.perform(get(path).param("currency", "usd")).andExpect(status().isOk());
     }
 
     @Test
@@ -116,16 +92,7 @@ class ClientProductControllerTest extends AbstractIntegration {
         assertFalse(list.isEmpty());
         String id = list.getFirst().getUuid();
 
-        MvcResult result = super.mockMvc
-                .perform(get(path + "/detail")
-                        .param("product_id", id)
-                )
-                .andExpect(request().asyncStarted())
-                .andExpect(status().isOk())
-                .andReturn();
-
-        super.mockMvc.perform(asyncDispatch(result))
-                .andExpect(status().isOk());
+        super.mockMvc.perform(get(path + "/detail").param("product_id", id)).andExpect(status().isOk());
     }
 
 }

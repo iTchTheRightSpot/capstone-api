@@ -35,7 +35,7 @@ class CronJobTest extends AbstractIntegration {
     @Autowired
     private ShoppingSessionRepository sessionRepo;
     @Autowired
-    private OrderReservationRepo reservationRepo;
+    private OrderReservationRepository reservationRepo;
     @Autowired
     private PaymentDetailRepo paymentDetailRepo;
     @Autowired
@@ -43,7 +43,7 @@ class CronJobTest extends AbstractIntegration {
     @Autowired
     private AddressRepo addressRepo;
     @Autowired
-    private PaymentAuthorizationRepo authorizationRepo;
+    private PaymentAuthorizationRepository authorizationRepo;
 
     @Test
     void shouldSuccessfullyValidateFromPayStack() {

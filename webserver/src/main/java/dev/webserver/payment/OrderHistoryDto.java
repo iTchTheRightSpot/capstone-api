@@ -2,7 +2,7 @@ package dev.webserver.payment;
 
 import java.io.Serializable;
 
-public record OrderHistoryDTO(
+public record OrderHistoryDto(
         long date,
         String currency,
         int total,

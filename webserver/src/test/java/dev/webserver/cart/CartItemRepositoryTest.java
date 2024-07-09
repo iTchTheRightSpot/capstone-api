@@ -7,7 +7,7 @@ import dev.webserver.data.RepositoryTestData;
 import dev.webserver.enumeration.ReservationStatus;
 import dev.webserver.payment.OrderReservation;
 import dev.webserver.payment.TotalProjection;
-import dev.webserver.payment.OrderReservationRepo;
+import dev.webserver.payment.OrderReservationRepository;
 import dev.webserver.product.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ class CartItemRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private ProductImageRepository imageRepo;
     @Autowired
-    private OrderReservationRepo orderReservationRepo;
+    private OrderReservationRepository orderReservationRepository;
 
     @Test
     void updateCartQtyByCartId() {
@@ -406,7 +406,7 @@ class CartItemRepositoryTest extends AbstractRepositoryTest {
         ));
 
         var sku = skus.getFirst();
-        orderReservationRepo.save(new OrderReservation(
+        orderReservationRepository.save(new OrderReservation(
                 "reference-1",
                 sku.getInventory() - 1,
                 ReservationStatus.PENDING,

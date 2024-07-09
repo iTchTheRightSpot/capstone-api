@@ -1,11 +1,12 @@
 package dev.webserver.category;
 
-import dev.webserver.external.aws.S3Service;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.DuplicateException;
 import dev.webserver.exception.ResourceAttachedException;
-import dev.webserver.product.response.ProductResponse;
+import dev.webserver.external.aws.S3Service;
+import dev.webserver.product.ProductProjection;
+import dev.webserver.product.ProductResponse;
 import dev.webserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -19,12 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(rollbackFor = Exception.class)
 public class WorkerCategoryService {
 
     private static final Logger log = LoggerFactory.getLogger(WorkerCategoryService.class);
@@ -32,14 +31,14 @@ public class WorkerCategoryService {
     @Value(value = "${aws.bucket}")
     private String BUCKET;
 
-    private final CategoryRepository repository;
+    private final CategoryRepository categoryRepository;
     private final S3Service service;
 
     /**
      * Returns a list {@link WorkerCategoryResponse}
      * */
     public WorkerCategoryResponse allCategories() {
-        var category = this.repository.allCategories();
+        var category = this.categoryRepository.allCategories();
 
         // table
         var table = category
@@ -57,43 +56,38 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Asynchronously retrieves a {@link Page} of
-     * {@link ProductResponse} objects associated with a
-     * specific category.
+     * Retrieves a {@link Page} of {@link ProductProjection} objects from the
+     * database and then asynchronously calls to return S3 to get all images for each product.
      *
      * @param currency    The currency in which prices are displayed.
      * @param categoryId  The primary key of a {@link ProductCategory}.
      * @param page        The page number for pagination.
      * @param size        The page size for pagination.
-     * @return A {@link CompletableFuture} representing a {@link Page}
-     * of {@link ProductResponse}.
+     * @return A {@link Page} of {@link ProductResponse}.
      */
-    public CompletableFuture<Page<ProductResponse>> allProductsByCategoryId(
-            SarreCurrency currency,
-            long categoryId,
-            int page,
-            int size
+    public Page<ProductResponse> allProductsByCategoryId(
+            final SarreCurrency currency,
+            final long categoryId,
+            final int page,
+            final int size
     ) {
-        var pageOfProducts = this.repository
+        final var pageOfProducts = this.categoryRepository
                 .allProductsByCategoryIdAdminFront(categoryId, currency, PageRequest.of(page, size));
 
-        var futures = pageOfProducts.stream()
-                .map(p -> (Supplier<ProductResponse>) () -> new ProductResponse(
-                        p.getUuid(),
-                        p.getName(),
-                        p.getPrice(),
-                        p.getCurrency(),
-                        service.preSignedUrl(BUCKET, p.getImage())
-                ))
+        final var futures = pageOfProducts
+                .stream()
+                .map(p -> (Supplier<ProductResponse>) () -> ProductResponse.builder()
+                        .id(p.getUuid())
+                        .name(p.getName())
+                        .price(p.getPrice())
+                        .currency(p.getCurrency())
+                        .imageUrl(service.preSignedUrl(BUCKET, p.getImage()))
+                        .build()
+                )
                 .toList();
 
-
-        return CustomUtil.asynchronousTasks(futures, WorkerCategoryService.class)
-                .thenApply(v -> new PageImpl<>(
-                        v.stream().map(Supplier::get).toList(),
-                        pageOfProducts.getPageable(),
-                        pageOfProducts.getTotalElements()
-                ));
+        final var products = CustomUtil.asynchronousTasks(futures).join();
+        return new PageImpl<>(products, pageOfProducts.getPageable(), pageOfProducts.getTotalElements());
     }
 
     /**
@@ -102,23 +96,24 @@ public class WorkerCategoryService {
      * to an existing dto.parentId (parentId {@link ProductCategory}) or
      * create new {@link ProductCategory} who has no parentId.
      *
-     * @param dto of type {@link CategoryDTO}.
+     * @param dto of type {@link CategoryDto}.
      * @throws DuplicateException when dto.name exists.
      * @throws CustomNotFoundException when dto.parentId does not exist.
      * */
-    public void create(CategoryDTO dto) {
-        if (this.repository.findByName(dto.name().trim()).isPresent()) {
+    @Transactional(rollbackFor = Exception.class)
+    public void create(final CategoryDto dto) {
+        if (categoryRepository.findByName(dto.name().trim()).isPresent()) {
             throw new DuplicateException(dto.name() + " exists");
         }
 
-        var category = dto.parentId() == null
+        final ProductCategory category = dto.parentId() == null
                 ? parentCategoryIsNull(dto)
                 : parentCategoryNotNull(dto);
 
-        this.repository.save(category);
+        categoryRepository.save(category);
     }
 
-    private ProductCategory parentCategoryIsNull(CategoryDTO dto) {
+    private ProductCategory parentCategoryIsNull(CategoryDto dto) {
         return ProductCategory.builder()
                 .name(dto.name().trim())
                 .isVisible(dto.visible())
@@ -127,7 +122,7 @@ public class WorkerCategoryService {
                 .build();
     }
 
-    private ProductCategory parentCategoryNotNull(CategoryDTO dto) {
+    private ProductCategory parentCategoryNotNull(CategoryDto dto) {
         var parent = findById(dto.parentId());
         return ProductCategory.builder()
                 .name(dto.name().trim())
@@ -141,49 +136,48 @@ public class WorkerCategoryService {
     /**
      * Updates a {@link ProductCategory} based on categoryId.
      *
-     * @param dto {@link  UpdateCategoryDTO}.
+     * @param dto {@link  UpdateCategoryDto}.
      * @throws DuplicateException is thrown if name exists, and it is not associated to
      * categoryId.
      * */
-    public void update(UpdateCategoryDTO dto) {
-        boolean bool = this.repository
-                .onDuplicateCategoryName(dto.id(), dto.name().trim()) > 0;
+    @Transactional(rollbackFor = Exception.class)
+    public void update(final UpdateCategoryDto dto) {
+        final boolean bool = categoryRepository.onDuplicateCategoryName(dto.id(), dto.name().trim()) > 0;
 
         if (bool) {
             throw new DuplicateException(dto.name() + " is a duplicate");
         }
 
         if (!dto.visible()) {
-            repository.updateAllChildrenVisibilityToFalse(dto.id());
+            categoryRepository.updateAllChildrenVisibilityToFalse(dto.id());
         }
 
         if (dto.parentId() != null) {
-            repository
-                    .updateCategoryParentIdBasedOnCategoryId(dto.id(), dto.parentId());
+            categoryRepository.updateCategoryParentIdBasedOnCategoryId(dto.id(), dto.parentId());
         }
 
-        this.repository
-                .update(dto.name().trim(), dto.visible(), dto.id());
+        categoryRepository.update(dto.name().trim(), dto.visible(), dto.id());
     }
 
     /**
      * Permanently deletes a {@link ProductCategory}.
      *
-     * @param id is {@code ProductCategory} categoryId
-     * @throws org.springframework.dao.DataIntegrityViolationException if {@code ProductCategory}
+     * @param categoryId is primary key of a {@link ProductCategory}.
+     * @throws org.springframework.dao.DataIntegrityViolationException if {@link ProductCategory}
      * has children entities attached to it.
      * */
-    public void delete(final long id) {
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(final long categoryId) {
         try {
-            this.repository.deleteProductCategoryById(id);
+            categoryRepository.deleteProductCategoryById(categoryId);
         } catch (DataIntegrityViolationException e) {
             log.error("tried deleting a category with children attached {}", e.getMessage());
             throw new ResourceAttachedException("resource attached to category");
         }
     }
 
-    public ProductCategory findById(final long id) {
-        return this.repository.findById(id)
+    public ProductCategory findById(final long categoryId) {
+        return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CustomNotFoundException("does not exist"));
     }
 

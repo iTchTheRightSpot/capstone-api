@@ -7,9 +7,6 @@ import dev.webserver.cart.CartItemRepository;
 import dev.webserver.enumeration.PaymentStatus;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomServerError;
-import dev.webserver.payment.util.WebHookUtil;
-import dev.webserver.payment.util.WebhookAuthorization;
-import dev.webserver.payment.util.WebhookMetaData;
 import dev.webserver.user.SarreBrandUserService;
 import dev.webserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +29,8 @@ public class PaymentDetailService {
     private final PaymentDetailRepo paymentDetailRepo;
     private final SarreBrandUserService userService;
     private final AddressRepo addressRepo;
-    private final OrderReservationRepo orderReservationRepo;
-    private final PaymentAuthorizationRepo paymentAuthorizationRepo;
+    private final OrderReservationRepository orderReservationRepository;
+    private final PaymentAuthorizationRepository paymentAuthorizationRepository;
     private final CartItemRepository cartItemRepository;
     private final OrderDetailRepository orderDetailRepository;
 
@@ -148,7 +145,7 @@ public class PaymentDetailService {
      * @param detail an associated property of an {@link PaymentAuthorization}.
      */
     private void paymentAuthorization(final WebhookAuthorization auth, final PaymentDetail detail) {
-        paymentAuthorizationRepo.save(
+        paymentAuthorizationRepository.save(
                 PaymentAuthorization.builder()
                         .authorizationCode(auth.authorization_code())
                         .bin(auth.bin())
@@ -175,7 +172,7 @@ public class PaymentDetailService {
      * @param reference The reference id associated to an {@link OrderReservation}.
      */
     private void orderDetail(final PaymentDetail detail, final String reference) {
-        final var reservations = orderReservationRepo.allReservationsByReference(reference);
+        final var reservations = orderReservationRepository.allReservationsByReference(reference);
 
         // save OrderDetails
         reservations.forEach(obj -> orderDetailRepository
@@ -187,7 +184,7 @@ public class PaymentDetailService {
 
         // delete OrderReservations
         reservations
-                .forEach(o -> orderReservationRepo.deleteById(o.getReservationId()));
+                .forEach(o -> orderReservationRepository.deleteById(o.getReservationId()));
     }
 
 }

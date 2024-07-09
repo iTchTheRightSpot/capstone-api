@@ -6,13 +6,11 @@ import dev.webserver.product.WorkerProductService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.HashSet;
 
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -76,17 +74,9 @@ class ClientCategoryControllerTest extends AbstractIntegration {
 
         TestData.dummyProducts(category, 10, service);
 
-        MvcResult result = super.mockMvc
-                .perform(get(path + "/products")
-                        .param("category_id", String.valueOf(category.getCategoryId()))
-                )
-                .andExpect(request().asyncStarted())
-                .andExpect(status().isOk())
-                .andReturn();
-
         super.mockMvc
-                .perform(asyncDispatch(result))
-                .andExpect(content().contentType("application/json"))
+                .perform(get(path + "/products").param("category_id", String.valueOf(category.getCategoryId())))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content").isNotEmpty())
                 .andExpect(jsonPath("$.content.size()").value(10));

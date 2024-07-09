@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.HashSet;
@@ -20,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class WorkerCategoryControllerTest extends AbstractIntegration {
@@ -96,19 +94,13 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
         TestData.dummyProducts(category, 15, service);
 
         // Then
-        MvcResult result = super.mockMvc
+        super.mockMvc
                 .perform(get(path + "/products")
                         .param("category_id", String.valueOf(category.getCategoryId()))
                         .param("page", "0")
                         .param("size", "20")
                 )
-                .andExpect(request().asyncStarted())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        super.mockMvc
-                .perform(asyncDispatch(result))
-                .andExpect(content().contentType("application/json"))
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content").isNotEmpty())
                 .andExpect(jsonPath("$.content.size()").value(15));
@@ -120,14 +112,14 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
         dummy();
 
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().productName(), true, null);
+        var dto = new CategoryDto(new Faker().commerce().productName(), true, null);
 
         // Then
         this.mockMvc
                 .perform(post(path)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(dto))
+                        .content(super.mapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isCreated());
     }
@@ -138,14 +130,14 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
         dummy();
 
         // Given
-        var dto = new CategoryDTO(new Faker().commerce().productName(), true, category().getCategoryId());
+        var dto = new CategoryDto(new Faker().commerce().productName(), true, category().getCategoryId());
 
         // Then
         this.mockMvc
                 .perform(post(path)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(dto))
+                        .content(this.mapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isCreated());
     }
@@ -157,14 +149,14 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
 
         // Given
         var category = this.repository.findAll().getFirst();
-        var dto = new UpdateCategoryDTO(category.getCategoryId(), null, "Updated", category.isVisible());
+        var dto = new UpdateCategoryDto(category.getCategoryId(), null, "Updated", category.isVisible());
 
         // Then
         this.mockMvc
                 .perform(put(path)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(dto))
+                        .content(this.mapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isNoContent());
     }
@@ -178,14 +170,14 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
         var category = this.repository.findAll();
         var first = category.getFirst();
         var second = category.get(1);
-        var dto = new UpdateCategoryDTO(first.getCategoryId(), null, second.getName(), first.isVisible());
+        var dto = new UpdateCategoryDto(first.getCategoryId(), null, second.getName(), first.isVisible());
 
         // then
-        this.mockMvc
+        super.mockMvc
                 .perform(put(path)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(dto))
+                        .content(this.mapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isConflict())
                 .andExpect(result -> assertInstanceOf(DuplicateException.class, result.getResolvedException()));
@@ -205,7 +197,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
                 .orElse(null);
         assertNotNull(category);
 
-        this.mockMvc
+        super.mockMvc
                 .perform(MockMvcRequestBuilders.delete(path + "/{id}", category.getCategoryId())
                         .with(csrf())
                 )

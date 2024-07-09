@@ -55,10 +55,10 @@ public class TestData {
     }
 
     @NotNull
-    public static SizeInventoryDTO[] sizeInventoryDTOArray(int size) {
-        SizeInventoryDTO[] dto = new SizeInventoryDTO[size];
+    public static SizeInventoryDto[] sizeInventoryDTOArray(int size) {
+        SizeInventoryDto[] dto = new SizeInventoryDto[size];
         for (int i = 0; i < size; i++) {
-            dto[i] = new SizeInventoryDTO(new Faker().number().randomDigitNotZero() + 1, "tall " + i);
+            dto[i] = new SizeInventoryDto(new Faker().number().randomDigitNotZero() + 1, "tall " + i);
         }
         return dto;
     }
@@ -94,7 +94,7 @@ public class TestData {
     }
 
     @NotNull
-    public static CreateProductDTO createProductDTO(long categoryId, SizeInventoryDTO[] dtos) {
+    public static CreateProductDto createProductDTO(long categoryId, SizeInventoryDto[] dtos) {
         return productDTO(
                 categoryId,
                 new Faker().commerce().productName(),
@@ -104,24 +104,24 @@ public class TestData {
     }
 
     @NotNull
-    public static CreateProductDTO createProductDTO(
+    public static CreateProductDto createProductDTO(
             String productName,
             long categoryId,
-            SizeInventoryDTO[] dtos
+            SizeInventoryDto[] dtos
     ) {
         return productDTO(categoryId, productName, dtos, new Faker().commerce().color());
     }
 
     @NotNull
-    public static CreateProductDTO productDTOWeight(
+    public static CreateProductDto productDTOWeight(
             long categoryId,
             String productName,
-            SizeInventoryDTO[] dtos,
+            SizeInventoryDto[] dtos,
             PriceCurrencyDto[] pcDto,
             String colour,
             double weight
     ) {
-        return new CreateProductDTO(
+        return new CreateProductDto(
                 categoryId,
                 productName,
                 new Faker().lorem().fixedString(1000),
@@ -134,10 +134,10 @@ public class TestData {
     }
 
     @NotNull
-    public static CreateProductDTO productDTO(
+    public static CreateProductDto productDTO(
             long categoryId,
             String productName,
-            SizeInventoryDTO[] dtos,
+            SizeInventoryDto[] dtos,
             String colour
     ) {
         PriceCurrencyDto[] arr = {
@@ -145,7 +145,7 @@ public class TestData {
                 new PriceCurrencyDto(new BigDecimal(new Faker().number().numberBetween(10000, 700000)), "NGN"),
         };
 
-        return new CreateProductDTO(
+        return new CreateProductDto(
                 categoryId,
                 productName,
                 new Faker().lorem().fixedString(1000),
@@ -158,17 +158,17 @@ public class TestData {
     }
 
     @NotNull
-    public static ProductDetailDto productDetailDTO(String productID, String colour, SizeInventoryDTO[] dtos) {
+    public static ProductDetailDto productDetailDTO(String productID, String colour, SizeInventoryDto[] dtos) {
         return new ProductDetailDto(productID, false, colour, dtos);
     }
 
     @NotNull
-    public static UpdateProductDTO updateProductDTO(
+    public static UpdateProductDto updateProductDTO(
             String productId,
             String productName,
             long categoryId
     ) {
-        return new UpdateProductDTO(
+        return new UpdateProductDto(
                 productId,
                 productName,
                 new Faker().lorem().fixedString(1000),
@@ -188,10 +188,10 @@ public class TestData {
                     .productDTO(
                             cat.getCategoryId(),
                             new Faker().commerce().productName() + " " + i,
-                            new SizeInventoryDTO[]{
-                                    new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "medium"),
-                                    new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "small"),
-                                    new SizeInventoryDTO(new Faker().number().numberBetween(1, 40), "large")
+                            new SizeInventoryDto[]{
+                                    new SizeInventoryDto(new Faker().number().numberBetween(1, 40), "medium"),
+                                    new SizeInventoryDto(new Faker().number().numberBetween(1, 40), "small"),
+                                    new SizeInventoryDto(new Faker().number().numberBetween(1, 40), "large")
                             },
                             new Faker().commerce().color() + " " + i
                     );
@@ -216,7 +216,7 @@ public class TestData {
                     .productDTOWeight(
                             cat.getCategoryId(),
                             new Faker().commerce().productName() + " " + i,
-                            new SizeInventoryDTO[]{ new SizeInventoryDTO(variantQty, "medium") },
+                            new SizeInventoryDto[]{ new SizeInventoryDto(variantQty, "medium") },
                             arr,
                             new Faker().commerce().color() + " " + i,
                             weight

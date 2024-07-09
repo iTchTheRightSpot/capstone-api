@@ -1,8 +1,8 @@
 package dev.webserver.cart;
 
 import dev.webserver.AbstractIntegration;
-import dev.webserver.category.ProductCategory;
 import dev.webserver.category.CategoryRepository;
+import dev.webserver.category.ProductCategory;
 import dev.webserver.data.TestData;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
@@ -20,9 +20,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class CartControllerTest extends AbstractIntegration {
 
@@ -77,17 +78,10 @@ class CartControllerTest extends AbstractIntegration {
 
     @Test
     void listCartItemsAnonymousUser() throws Exception {
-        MvcResult result = super.mockMvc
-                .perform(get(path)
-                        .param("currency", "usd")
-                )
-                .andExpect(request().asyncStarted())
-                .andExpect(status().isOk())
-                .andReturn();
-
         super.mockMvc
-                .perform(asyncDispatch(result))
-                .andExpect(content().contentType("application/json"));
+                .perform(get(path).param("currency", "usd"))
+                .andExpect(content().contentType("application/json"))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -101,12 +95,12 @@ class CartControllerTest extends AbstractIntegration {
 
         var sku = productSku();
 
-        var dto = new CartDTO(sku.getSku(), sku.getInventory());
+        var dto = new CartDto(sku.getSku(), sku.getInventory());
 
         super.mockMvc
                 .perform(post(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(dto))
+                        .content(this.mapper.writeValueAsString(dto))
                         .with(csrf())
                         .cookie(cookie)
                 )
@@ -127,12 +121,12 @@ class CartControllerTest extends AbstractIntegration {
         assertNotNull(cookie1);
 
         var sku = productSku();
-        var dto = new CartDTO(sku.getSku(), sku.getInventory());
+        var dto = new CartDto(sku.getSku(), sku.getInventory());
 
         super.mockMvc
                 .perform(post(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(dto))
+                        .content(this.mapper.writeValueAsString(dto))
                         .with(csrf())
                         .cookie(cookie1)
                 )
@@ -142,7 +136,7 @@ class CartControllerTest extends AbstractIntegration {
         super.mockMvc
                 .perform(post(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(dto))
+                        .content(this.mapper.writeValueAsString(dto))
                         .with(csrf())
                         .cookie(cookie1)
                 )

@@ -7,10 +7,10 @@ import dev.webserver.checkout.CheckoutPair;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.payment.TotalProjection;
-import dev.webserver.product.PriceCurrencyDto;
 import dev.webserver.product.DetailProjection;
-import dev.webserver.product.response.CustomMultiPart;
-import dev.webserver.product.response.Variant;
+import dev.webserver.product.PriceCurrencyDto;
+import dev.webserver.product.util.CustomMultiPart;
+import dev.webserver.product.util.Variant;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -27,13 +27,13 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import static dev.webserver.enumeration.SarreCurrency.NGN;
 import static dev.webserver.enumeration.SarreCurrency.USD;
 import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.FLOOR;
 import static java.math.RoundingMode.UP;
-import static org.hibernate.validator.internal.util.Contracts.assertTrue;
 
 public class CustomUtil {
 
@@ -259,29 +259,21 @@ public class CustomUtil {
      * concurrently, leveraging the new Virtual Thread.
      *
      * @param schedules The list of tasks to execute asynchronously.
-     * @param clazz The class that called this method.
      * @return A {@link CompletableFuture} holding a list of results from all completed
      * tasks.
      * @throws CustomServerError if an error occurs when performing an asynchronous
      * task.
      */
-    public static <T, C> CompletableFuture<List<T>> asynchronousTasks(
-            final List<T> schedules, final Class<C> clazz
-    ) {
-        final List<CompletableFuture<T>> futures = new ArrayList<>();
+    public static <T> CompletableFuture<List<T>> asynchronousTasks(final List<Supplier<T>> schedules) {
+        final List<CompletableFuture<Supplier<T>>> futures = new ArrayList<>();
+
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            for (final T s : schedules) {
-                futures.add(CompletableFuture
-                        .supplyAsync(() -> s, executor)
-                        .exceptionally(e -> {
-                            log.error("%s thrown %s".formatted(clazz.getName(), e.getMessage()));
-                            throw new CustomServerError(e.getMessage());
-                        })
-                );
+            for (final Supplier<T> s : schedules) {
+                futures.add(CompletableFuture.supplyAsync(() -> s, executor));
             }
         }
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
+                .thenApply(v -> futures.stream().map(CompletableFuture::join).map(Supplier::get).toList());
     }
 
     /**

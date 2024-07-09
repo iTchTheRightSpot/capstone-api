@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 import java.io.Serializable;
 
-public record CategoryDTO(
+public record CategoryDto(
         @NotNull(message = "name cannot be null")
         @NotEmpty(message = "name cannot be empty")
         @Size(max = 50, message = "categoryId name cannot exceed length of 50")

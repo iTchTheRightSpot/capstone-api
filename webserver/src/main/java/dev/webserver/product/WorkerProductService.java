@@ -3,7 +3,6 @@ package dev.webserver.product;
 import dev.webserver.category.WorkerCategoryService;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.*;
-import dev.webserver.product.response.ProductResponse;
 import dev.webserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -22,7 +21,6 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -51,7 +49,7 @@ public class WorkerProductService {
     /**
      * Sample issue
      * <p>
-     * We have a {@link org.springframework.data.domain.Page} of {@link ProductProjection}
+     * We have a {@link Page} of {@link ProductProjection}
      * we need to map to a {@link ProductResponse}. The caveat is whilst mapping
      * to a {@link ProductResponse}, we need to make a call to S3 to
      * retrieve a pre-signed url for each {@link ProductResponse} object.
@@ -71,44 +69,19 @@ public class WorkerProductService {
      * 4. Do not block each thread by manually calling join instead we wait
      * for all completion before calling join.
      * <p>
-     * 5. We wait for all executions to complete by using
-     * {@link CompletableFuture} property allOf.
-     * <p>
      * 6. Return the response to the UI.
      *
      * @param currency The users choice of currency to return for each {@link Product}.
      * @param page     the page used of construct a {@link PageRequest}.
      * @param size     the size used of construct a {@link PageRequest}.
-     * @return a {@link CompletableFuture} of {@link Page} of {@link ProductResponse}.
+     * @return a {@link Page} of {@link ProductResponse}.
      */
-    public CompletableFuture<Page<ProductResponse>> allProducts(
+    public Page<ProductResponse> allProducts(
             final SarreCurrency currency, final int page, final int size
     ) {
-        var pageOfProducts = this.productRepository
-                .allProductsForAdminFront(currency, PageRequest.of(page, size));
+        var pageOfProducts = this.productRepository.allProductsForAdminFront(currency, PageRequest.of(page, size));
 
-        var futures = createTasks(pageOfProducts);
-
-        return CustomUtil.asynchronousTasks(futures, WorkerProductService.class)
-                .thenApply(v -> new PageImpl<>(
-                        v.stream().map(Supplier::get).toList(),
-                        pageOfProducts.getPageable(),
-                        pageOfProducts.getTotalElements()
-                ));
-    }
-
-    /**
-     * Creates a list of Suppliers representing tasks to asynchronously generate
-     * {@link ProductResponse} objects. Each Supplier encapsulates the creation
-     * logic for a single {@link ProductResponse} object.
-     *
-     * @param page The page of {@link ProductProjection} objects from which to generate
-     *              {@link ProductResponse} objects.
-     * @return A list of {@link Supplier}, each representing a task to create a
-     * {@link ProductResponse} object.
-     */
-    private List<Supplier<ProductResponse>> createTasks(final Page<ProductProjection> page) {
-        return page.stream()
+        var futures = pageOfProducts.stream()
                 .map(p -> (Supplier<ProductResponse>) () -> new ProductResponse(
                         p.getUuid(),
                         p.getName(),
@@ -121,19 +94,22 @@ public class WorkerProductService {
                         p.getWeightType()
                 ))
                 .toList();
+
+        final var products = CustomUtil.asynchronousTasks(futures).join();
+        return new PageImpl<>(products, pageOfProducts.getPageable(), pageOfProducts.getTotalElements());
     }
 
     /**
      * Create a new {@link Product}.
      *
      * @param multipartFiles of type {@link MultipartFile}.
-     * @param dto   of type {@link CreateProductDTO}.
+     * @param dto   of type {@link CreateProductDto}.
      * @throws CustomNotFoundException is thrown if categoryId name does not exist in database.
      * or currency passed in truncateAmount does not contain in dto property priceCurrency.
      * @throws CustomServerError      is thrown if File is not an image.
      * @throws DuplicateException      is thrown if dto image exists in for Product.
      */
-    public void create(final CreateProductDTO dto, final MultipartFile[] multipartFiles) {
+    public void create(final CreateProductDto dto, final MultipartFile[] multipartFiles) {
         if (!CustomUtil.validateContainsCurrencies(dto.priceCurrency())) {
             throw new CustomInvalidFormatException("please check currencies and prices");
         }
@@ -184,12 +160,12 @@ public class WorkerProductService {
     /**
      * Method updates a {@link Product} obj based on its UUID.
      *
-     * @param dto of type {@link UpdateProductDTO}.
+     * @param dto of type {@link UpdateProductDto}.
      * @throws CustomNotFoundException when dto category_id or collection_id does not exist.
      * @throws DuplicateException      when new product name exist but not associated to product uuid.
      * @throws CustomInvalidFormatException if price is less than zero.
      */
-    public void update(final UpdateProductDTO dto) {
+    public void update(final UpdateProductDto dto) {
         if (dto.price().compareTo(BigDecimal.ZERO) < 0) {
             throw new CustomInvalidFormatException("price cannot be zero");
         }

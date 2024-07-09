@@ -18,7 +18,7 @@ import java.util.List;
  * Contains native query
  * */
 @Repository
-public interface OrderReservationRepo extends JpaRepository<OrderReservation, Long> {
+public interface OrderReservationRepository extends JpaRepository<OrderReservation, Long> {
 
     /**
      * Updates a {@link ProductSku} by adding to its existing inventory and replaces
@@ -107,7 +107,7 @@ public interface OrderReservationRepo extends JpaRepository<OrderReservation, Lo
 
     /**
      * Using Spring Data Projection, method returns a {@link List} of {@link OrderReservation}
-     * as {@link OrderReservationRepo}. The reason main reason for returning a {@link OrderReservationRepo}
+     * as {@link OrderReservationRepository}. The reason main reason for returning a {@link OrderReservationRepository}
      * is due to {@link LazyInitializationException} error when compiled to a native image.
      * */
     @Query("""

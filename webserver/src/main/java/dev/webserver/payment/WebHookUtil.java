@@ -1,4 +1,4 @@
-package dev.webserver.payment.util;
+package dev.webserver.payment;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,7 +19,7 @@ import java.security.NoSuchAlgorithmException;
 import static java.math.RoundingMode.FLOOR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class WebHookUtil {
+public final class WebHookUtil {
 
     private static final Logger log = LoggerFactory.getLogger(WebHookUtil.class);
 

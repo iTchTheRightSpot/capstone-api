@@ -1,4 +1,4 @@
-package dev.webserver.payment.response;
+package dev.webserver.payment;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.webserver.enumeration.SarreCurrency;

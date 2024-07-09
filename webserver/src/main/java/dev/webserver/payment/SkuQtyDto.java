@@ -5,11 +5,10 @@ import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
-public record SkuQtyDTO(
+public record SkuQtyDto(
         @NotNull
         @NotEmpty
         String sku,
-
         @NotNull
         Integer qty
 ) implements Serializable {}

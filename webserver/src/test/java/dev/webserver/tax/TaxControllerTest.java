@@ -37,7 +37,7 @@ class TaxControllerTest extends AbstractIntegration {
         this.mockMvc
                 .perform(put( "/" + path)
                         .with(csrf())
-                        .content(this.objectMapper.writeValueAsString(dto))
+                        .content(this.mapper.writeValueAsString(dto))
                         .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isNoContent());

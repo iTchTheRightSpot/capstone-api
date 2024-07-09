@@ -5,7 +5,7 @@ import dev.webserver.AbstractRepositoryTest;
 import dev.webserver.category.ProductCategory;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
-import dev.webserver.product.response.Variant;
+import dev.webserver.product.util.Variant;
 import dev.webserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

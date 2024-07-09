@@ -22,10 +22,10 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.junit.jupiter.api.Assertions.*;
 
-class OrderReservationRepoTest extends AbstractRepositoryTest {
+class OrderReservationRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
-    private OrderReservationRepo reservationRepo;
+    private OrderReservationRepository reservationRepo;
     @Autowired
     private ShoppingSessionRepository sessionRepo;
     @Autowired

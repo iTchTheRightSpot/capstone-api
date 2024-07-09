@@ -1,9 +1,7 @@
 package dev.webserver.product;
 
 import dev.webserver.exception.CustomNotFoundException;
-import dev.webserver.exception.CustomServerError;
 import dev.webserver.exception.DuplicateException;
-import dev.webserver.product.response.DetailResponse;
 import dev.webserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -15,7 +13,6 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 @Service
@@ -39,12 +36,10 @@ public class WorkerProductDetailService {
      * URLs, and variants.
      *
      * @param uuid The uuid of the {@link Product} for which details are to be retrieved.
-     * @return A {@link CompletableFuture} containing a list of {@link DetailResponse} objects,
-     * representing the {@link ProductDetail}. Each {@link DetailResponse} object encapsulates
-     * information such as visibility, color, URLs, and variants.
-     * @throws CustomServerError if an error occurs during the asynchronous processing.
+     * @return A list of {@link DetailResponse} objects, representing the {@link ProductDetail}.
+     * Each {@link DetailResponse} object encapsulates information such as visibility, color, URLs, and variants.
      */
-    public CompletableFuture<List<DetailResponse>> productDetailsByProductUuid(String uuid) {
+    public List<DetailResponse> productDetailsByProductUuid(String uuid) {
         var futures = detailRepo
                 .productDetailsByProductUuidAdminFront(uuid)
                 .stream()
@@ -54,20 +49,20 @@ public class WorkerProductDetailService {
                             .map(key -> (Supplier<String>) () -> productImageService.preSignedUrl(BUCKET, key))
                             .toList();
 
-                    var urls = CustomUtil
-                            .asynchronousTasks(req, WorkerProductDetailService.class)
-                            .thenApply(v -> v.stream().map(Supplier::get).toList())
-                            .join();
+                    var urls = CustomUtil.asynchronousTasks(req).join();
 
-                    var variants = CustomUtil
-                            .toVariantArray(pojo.getVariants(), WorkerProductDetailService.class);
+                    var variants = CustomUtil.toVariantArray(pojo.getVariants(), WorkerProductDetailService.class);
 
-                    return new DetailResponse(pojo.getVisible(), pojo.getColour(), urls, variants);
+                    return DetailResponse.builder()
+                            .isVisible(pojo.getVisible())
+                            .colour(pojo.getColour())
+                            .urls(urls)
+                            .variants(variants)
+                            .build();
                 })
                 .toList();
 
-        return CustomUtil.asynchronousTasks(futures, WorkerProductDetailService.class)
-                .thenApply(v -> v.stream().map(Supplier::get).toList());
+        return CustomUtil.asynchronousTasks(futures).join();
     }
 
     /**
@@ -170,7 +165,7 @@ public class WorkerProductDetailService {
                 .skus(new HashSet<>())
                 .build();
 
-        // Save ProductDetail
+        // save ProductDetail
         return this.detailRepo.save(detail);
     }
 
@@ -183,7 +178,7 @@ public class WorkerProductDetailService {
      * @throws CustomNotFoundException if no {@link ProductDetail} is found.
      */
     public ProductDetail productDetailByProductSku(final String sku) {
-        return this.detailRepo
+        return detailRepo
                 .productDetailByProductSku(sku)
                 .orElseThrow(() -> new CustomNotFoundException("SKU does not exist"));
     }

@@ -2,10 +2,10 @@ package dev.integration;
 
 import com.github.javafaker.Faker;
 import dev.webserver.exception.CustomServerError;
-import dev.webserver.product.CreateProductDTO;
+import dev.webserver.product.CreateProductDto;
 import dev.webserver.product.PriceCurrencyDto;
-import dev.webserver.product.SizeInventoryDTO;
-import dev.webserver.product.UpdateProductDTO;
+import dev.webserver.product.SizeInventoryDto;
+import dev.webserver.product.UpdateProductDto;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -33,10 +33,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TestData {
 
     @NotNull
-    public static SizeInventoryDTO[] sizeInventoryDTOArray(int size) {
+    public static SizeInventoryDto[] sizeInventoryDTOArray(int size) {
         return IntStream.range(0, size)
-                .mapToObj(i -> new SizeInventoryDTO(new Faker().number().randomDigitNotZero() + 1, "tall " + i))
-                .toArray(SizeInventoryDTO[]::new);
+                .mapToObj(i -> new SizeInventoryDto(new Faker().number().randomDigitNotZero() + 1, "tall " + i))
+                .toArray(SizeInventoryDto[]::new);
     }
 
     /**
@@ -92,19 +92,19 @@ public class TestData {
     }
 
     @NotNull
-    public static CreateProductDTO createProductDTO(
+    public static CreateProductDto createProductDTO(
             String productName,
             long categoryId,
-            SizeInventoryDTO[] dtos
+            SizeInventoryDto[] dtos
     ) {
         return productDTO(categoryId, productName, dtos, new Faker().commerce().color());
     }
 
     @NotNull
-    public static CreateProductDTO productDTO(
+    public static CreateProductDto productDTO(
             long categoryId,
             String productName,
-            SizeInventoryDTO[] dtos,
+            SizeInventoryDto[] dtos,
             String colour
     ) {
         PriceCurrencyDto[] arr = {
@@ -112,7 +112,7 @@ public class TestData {
                 new PriceCurrencyDto(new BigDecimal(new Faker().number().numberBetween(10000, 700000)), "NGN"),
         };
 
-        return new CreateProductDTO(
+        return new CreateProductDto(
                 categoryId,
                 productName,
                 new Faker().lorem().fixedString(1000),
@@ -125,12 +125,12 @@ public class TestData {
     }
 
     @NotNull
-    public static UpdateProductDTO updateProductDTO(
+    public static UpdateProductDto updateProductDTO(
             String productID,
             String productName,
             long categoryId
     ) {
-        return new UpdateProductDTO(
+        return new UpdateProductDto(
                 productID,
                 productName,
                 new Faker().lorem().fixedString(1000),

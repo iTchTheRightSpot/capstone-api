@@ -1,9 +1,8 @@
 package dev.webserver.category;
 
-import dev.webserver.external.aws.S3Service;
 import dev.webserver.enumeration.SarreCurrency;
-import dev.webserver.product.ProductProjection;
-import dev.webserver.product.response.ProductResponse;
+import dev.webserver.external.aws.S3Service;
+import dev.webserver.product.ProductResponse;
 import dev.webserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,24 +12,23 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
-public class ClientCategoryService {
+class ClientCategoryService {
 
     @Value(value = "${aws.bucket}")
-    private String BUCKET;
+    private String bucket;
 
-    private final CategoryRepository repository;
-    private final S3Service service;
+    private final CategoryRepository categoryRepository;
+    private final S3Service s3Service;
 
     /**
      * Returns a {@link List} of {@link CategoryResponse}.
      * */
     public List<CategoryResponse> allCategories() {
-        var list = this.repository
+        var list = this.categoryRepository
                 .allCategories()
                 .stream()
                 .filter(CategoryProjection::statusImpl)
@@ -48,39 +46,30 @@ public class ClientCategoryService {
      * @param categoryId  The primary key of a {@link ProductCategory}.
      * @param page        The page number for pagination.
      * @param size        The page size for pagination.
-     * @return A {@link CompletableFuture} representing a {@link Page}
-     * of {@link ProductResponse}.
+     * @return A {@link Page} of {@link ProductResponse}.
      */
-    public CompletableFuture<Page<ProductResponse>> allProductsByCategoryId(
-            SarreCurrency currency,
-            long categoryId,
-            int page,
-            int size
+    public Page<ProductResponse> allProductsByCategoryId(
+            final SarreCurrency currency,
+            final long categoryId,
+            final int page,
+            final int size
     ) {
-        var pageOfProducts = this.repository
+        var pageOfProducts = categoryRepository
                 .allProductsByCategoryIdWhereInStockAndIsVisible(categoryId, currency, PageRequest.of(page, size));
 
-        var futures = createTasks(pageOfProducts);
-
-        return CustomUtil.asynchronousTasks(futures, ClientCategoryService.class)
-                .thenApply(v -> new PageImpl<>(
-                        v.stream().map(Supplier::get).toList(),
-                        pageOfProducts.getPageable(),
-                        pageOfProducts.getTotalElements()
-                ));
-    }
-
-    private List<Supplier<ProductResponse>> createTasks(Page<ProductProjection> page) {
-        return page.stream()
-                .map(p -> (Supplier<ProductResponse>) () -> new ProductResponse(
-                        p.getUuid(),
-                        p.getName(),
-                        p.getDescription(),
-                        p.getPrice(),
-                        p.getCurrency(),
-                        service.preSignedUrl(BUCKET, p.getImage())
-                ))
+        var futures = pageOfProducts.stream()
+                .map(p -> (Supplier<ProductResponse>) () -> ProductResponse.builder()
+                        .id(p.getUuid())
+                        .name(p.getName())
+                        .desc(p.getDescription())
+                        .price(p.getPrice())
+                        .currency(p.getCurrency())
+                        .imageUrl(p.getImage())
+                        .build())
                 .toList();
+
+        final var products = CustomUtil.asynchronousTasks(futures).join();
+        return new PageImpl<>(products, pageOfProducts.getPageable(), pageOfProducts.getTotalElements());
     }
 
 }

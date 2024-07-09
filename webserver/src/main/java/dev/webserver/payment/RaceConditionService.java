@@ -8,11 +8,10 @@ import dev.webserver.checkout.CustomObject;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.OutOfStockException;
-import dev.webserver.payment.response.PaymentResponse;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
 import dev.webserver.shipping.ShipSetting;
-import dev.webserver.external.ThirdPartyPaymentService;
+import dev.webserver.external.payment.ThirdPartyPaymentService;
 import dev.webserver.util.CustomUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +53,7 @@ public class RaceConditionService {
 
     private final ProductSkuRepository productSkuRepository;
     private final CartItemRepository cartItemRepository;
-    private final OrderReservationRepo reservationRepo;
+    private final OrderReservationRepository reservationRepo;
     private final ThirdPartyPaymentService thirdPartyService;
     private final CheckoutService checkoutService;
 

@@ -30,7 +30,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> 
         GROUP_CONCAT(DISTINCT
             JSON_OBJECT(
                 'name', prod.name,
-                'key', prod.default_image_key,
+                'image_key', prod.default_image_key,
                 'colour', d.colour
             )
         ),

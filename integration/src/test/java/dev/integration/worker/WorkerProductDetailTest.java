@@ -4,7 +4,7 @@ import dev.integration.AbstractNative;
 import dev.integration.TestData;
 import dev.webserver.product.ProductDetailDto;
 import dev.webserver.product.UpdateProductDetailDto;
-import dev.webserver.product.response.DetailResponse;
+import dev.webserver.product.DetailResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.core.ParameterizedTypeReference;

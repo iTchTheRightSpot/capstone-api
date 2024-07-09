@@ -1,8 +1,8 @@
 package dev.webserver.product;
 
-import dev.webserver.external.aws.S3Service;
 import dev.webserver.exception.CustomServerError;
-import dev.webserver.product.response.CustomMultiPart;
+import dev.webserver.external.aws.S3Service;
+import dev.webserver.product.util.CustomMultiPart;
 import dev.webserver.util.CustomUtil;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -52,12 +52,8 @@ class ProductImageService {
                 .toList();
 
         // save all images as long as we have successfully saved to s3
-        CustomUtil.asynchronousTasks(future, ProductImageService.class)
-                .join()
-                .forEach(e -> {
-                    CustomMultiPart obj = e.get();
-                    this.repository.save(new ProductImage(obj.key(), obj.file().getAbsolutePath(), detail));
-                });
+        CustomUtil.asynchronousTasks(future).join()
+                .forEach(e -> repository.save(new ProductImage(e.key(), e.file().getAbsolutePath(), detail)));
     }
 
 }

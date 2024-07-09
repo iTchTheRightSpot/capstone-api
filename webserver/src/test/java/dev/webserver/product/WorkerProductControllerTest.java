@@ -2,8 +2,8 @@ package dev.webserver.product;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
-import dev.webserver.category.ProductCategory;
 import dev.webserver.category.CategoryRepository;
+import dev.webserver.category.ProductCategory;
 import dev.webserver.data.TestData;
 import dev.webserver.exception.DuplicateException;
 import dev.webserver.exception.ResourceAttachedException;
@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 
 import java.util.HashSet;
@@ -22,8 +21,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class WorkerProductControllerTest extends AbstractIntegration {
 
@@ -104,18 +103,13 @@ class WorkerProductControllerTest extends AbstractIntegration {
 
         // https://stackoverflow.com/questions/42069226/mockmvc-perform-post-test-to-async-service
         // perform the asynchronous call
-        MvcResult result = this.mockMvc
+        super.mockMvc
                 .perform(get(path)
                         .param("page", "0")
                         .param("size", "30")
+                        .contentType("application/json")
                 )
-                .andExpect(request().asyncStarted())
                 .andExpect(status().isOk())
-                .andReturn();
-
-        this.mockMvc
-                .perform(asyncDispatch(result))
-                .andExpect(content().contentType("application/json"))
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content").isNotEmpty())
                 .andExpect(jsonPath("$.content.size()").value(20));
@@ -127,10 +121,10 @@ class WorkerProductControllerTest extends AbstractIntegration {
         dummy();
 
         // payload
-        SizeInventoryDTO[] dtos = {
-                new SizeInventoryDTO(10, "small"),
-                new SizeInventoryDTO(3, "medium"),
-                new SizeInventoryDTO(15, "large"),
+        SizeInventoryDto[] dtos = {
+                new SizeInventoryDto(10, "small"),
+                new SizeInventoryDto(3, "medium"),
+                new SizeInventoryDto(15, "large"),
         };
 
         var dto = TestData
@@ -144,7 +138,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
                 "dto",
                 null,
                 "application/json",
-                this.objectMapper.writeValueAsString(dto).getBytes()
+                this.mapper.writeValueAsString(dto).getBytes()
         );
 
         // request
@@ -169,14 +163,14 @@ class WorkerProductControllerTest extends AbstractIntegration {
                 .createProductDTO(
                         new Faker().commerce().productName(),
                         categoryId(),
-                        new SizeInventoryDTO[]{ new SizeInventoryDTO(10, "small") }
+                        new SizeInventoryDto[]{ new SizeInventoryDto(10, "small") }
                 );
 
         var payload = new MockMultipartFile(
                 "dto",
                 null,
                 "application/json",
-                this.objectMapper.writeValueAsString(dto).getBytes()
+                this.mapper.writeValueAsString(dto).getBytes()
         );
 
         // request
@@ -200,10 +194,10 @@ class WorkerProductControllerTest extends AbstractIntegration {
         dummy();
 
         // Given
-        SizeInventoryDTO[] dtos = {
-                new SizeInventoryDTO(10, "small"),
-                new SizeInventoryDTO(3, "medium"),
-                new SizeInventoryDTO(15, "large"),
+        SizeInventoryDto[] dtos = {
+                new SizeInventoryDto(10, "small"),
+                new SizeInventoryDto(3, "medium"),
+                new SizeInventoryDto(15, "large"),
         };
 
         var dto = TestData
@@ -218,7 +212,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
                 "dto",
                 null,
                 "application/json",
-                this.objectMapper.writeValueAsString(dto).getBytes()
+                this.mapper.writeValueAsString(dto).getBytes()
         );
 
         // Then
@@ -253,7 +247,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
                 "dto",
                 null,
                 "application/json",
-                this.objectMapper.writeValueAsString(dto).getBytes()
+                this.mapper.writeValueAsString(dto).getBytes()
         );
 
         // Then
@@ -296,7 +290,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
         this.mockMvc
                 .perform(put(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(dto))
+                        .content(this.mapper.writeValueAsString(dto))
                         .with(csrf())
                 )
                 .andExpect(status().isConflict())
@@ -327,7 +321,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
         this.mockMvc
                 .perform(put(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(dto))
+                        .content(this.mapper.writeValueAsString(dto))
                         .with(csrf())
                 )
                 .andExpect(status().isNoContent());

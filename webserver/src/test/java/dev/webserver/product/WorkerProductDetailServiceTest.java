@@ -75,7 +75,7 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
         // Then
         detailService.create(dto, files);
         verify(this.skuService, times(1))
-                .save(any(SizeInventoryDTO[].class), any(ProductDetail.class));
+                .save(any(SizeInventoryDto[].class), any(ProductDetail.class));
         verify(this.detailRepo, times(0)).save(any(ProductDetail.class));
     }
 

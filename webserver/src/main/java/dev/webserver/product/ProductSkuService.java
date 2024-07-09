@@ -22,9 +22,9 @@ public class ProductSkuService {
     private final ProductSkuRepository repository;
 
     /**
-     * Saves {@link ProductSku} based on {@link SizeInventoryDTO} array.
+     * Saves {@link ProductSku} based on {@link SizeInventoryDto} array.
      */
-    public void save(SizeInventoryDTO[] arr, ProductDetail detail) {
+    public void save(SizeInventoryDto[] arr, ProductDetail detail) {
         for (var dto : arr) {
             this.repository.save(
                     ProductSku.builder()

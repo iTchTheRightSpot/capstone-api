@@ -1,8 +1,8 @@
 package dev.integration.worker;
 
 import dev.integration.AbstractNative;
-import dev.webserver.category.CategoryDTO;
-import dev.webserver.category.UpdateCategoryDTO;
+import dev.webserver.category.CategoryDto;
+import dev.webserver.category.UpdateCategoryDto;
 import dev.webserver.category.WorkerCategoryResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -49,7 +49,7 @@ class WorkerCategoryTest extends AbstractNative {
     void shouldSuccessfullyCreateACategory() {
         var post = testTemplate.postForEntity(
                 route + "worker/category",
-                new HttpEntity<>(new CategoryDTO("worker-cat", true, null), headers),
+                new HttpEntity<>(new CategoryDto("worker-cat", true, null), headers),
                 Void.class
         );
 
@@ -61,7 +61,7 @@ class WorkerCategoryTest extends AbstractNative {
         var update = testTemplate.exchange(
                 route + "worker/category",
                 HttpMethod.PUT,
-                new HttpEntity<>(new UpdateCategoryDTO(1L, null, "frank", false), headers),
+                new HttpEntity<>(new UpdateCategoryDto(1L, null, "frank", false), headers),
                 Void.class
         );
 

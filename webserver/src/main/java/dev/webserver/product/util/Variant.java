@@ -1,4 +1,4 @@
-package dev.webserver.product.response;
+package dev.webserver.product.util;
 
 import java.io.Serializable;
 

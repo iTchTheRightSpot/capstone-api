@@ -1,4 +1,4 @@
-package dev.webserver.payment.util;
+package dev.webserver.payment;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

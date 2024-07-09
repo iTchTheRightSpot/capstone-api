@@ -2,13 +2,13 @@ package dev.webserver.cron;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.webserver.cart.CartItem;
-import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.CartItemRepository;
+import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.ShoppingSessionRepository;
-import dev.webserver.external.ThirdPartyPaymentService;
 import dev.webserver.external.log.ILogEventPublisher;
+import dev.webserver.external.payment.ThirdPartyPaymentService;
 import dev.webserver.payment.OrderReservation;
-import dev.webserver.payment.OrderReservationRepo;
+import dev.webserver.payment.OrderReservationRepository;
 import dev.webserver.payment.PaymentDetailService;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
@@ -40,7 +40,7 @@ class CronJob {
 
     private final RestClient restClient;
     private final ProductSkuRepository skuRepo;
-    private final OrderReservationRepo reservationRepo;
+    private final OrderReservationRepository reservationRepo;
     private final ShoppingSessionRepository sessionRepo;
     private final CartItemRepository cartItemRepository;
     private final PaymentDetailService paymentDetailService;
@@ -50,7 +50,7 @@ class CronJob {
     public CronJob(
             RestClient.Builder clientBuilder,
             ProductSkuRepository skuRepo,
-            OrderReservationRepo reservationRepo,
+            OrderReservationRepository reservationRepo,
             ShoppingSessionRepository sessionRepo,
             CartItemRepository cartItemRepository,
             PaymentDetailService paymentDetailService,
@@ -179,9 +179,7 @@ class CronJob {
                 })
                 .toList();
 
-        return CustomUtil.asynchronousTasks(futures, CronJob.class)
-                .thenApply(c -> c.stream().map(Supplier::get).toList())
-                .join();
+        return CustomUtil.asynchronousTasks(futures).join();
     }
 
     /**

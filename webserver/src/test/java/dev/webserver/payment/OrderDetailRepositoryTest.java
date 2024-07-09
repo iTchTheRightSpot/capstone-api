@@ -85,12 +85,10 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
         assertFalse(skus.isEmpty());
         var sku = skus.getFirst();
 
-        orderDetailRepository
-                .save(new OrderDetail(sku.getInventory(), sku, paymentDetail));
+        orderDetailRepository.save(new OrderDetail(sku.getInventory(), sku, paymentDetail));
 
         // then
-        var details = orderDetailRepository
-                .orderHistoryByPrincipal("hello@hello.com");
+        var details = orderDetailRepository.orderHistoryByPrincipal("hello@hello.com");
 
         assertFalse(details.isEmpty());
 
@@ -106,7 +104,7 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
             for (PayloadMapper mapper : arr) {
                 assertNotNull(mapper.name());
                 assertNotNull(mapper.colour());
-                assertNotNull(mapper.key());
+                assertNotNull(mapper.imageKey());
             }
         }
     }

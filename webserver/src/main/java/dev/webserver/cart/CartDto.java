@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
-public record CartDTO (
+public record CartDto(
         @NotNull(message = "cannot be not null")
         @NotEmpty(message = "cannot be empty")
         String sku,

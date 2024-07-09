@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}checkout")
 @RequiredArgsConstructor
-public class CheckoutController {
+class CheckoutController {
 
     private final CheckoutService service;
 

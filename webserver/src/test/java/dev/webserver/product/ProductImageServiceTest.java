@@ -3,7 +3,7 @@ package dev.webserver.product;
 import dev.webserver.AbstractUnitTest;
 import dev.webserver.external.aws.S3Service;
 import dev.webserver.exception.CustomServerError;
-import dev.webserver.product.response.CustomMultiPart;
+import dev.webserver.product.util.CustomMultiPart;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

@@ -21,5 +21,5 @@ public record ProductDetailDto(
 
         @JsonProperty(value = "sizeInventory")
         @NotNull(message = "Size or Inventory cannot be empty")
-        SizeInventoryDTO[] sizeInventory
+        SizeInventoryDto[] sizeInventory
 ) implements Serializable { }

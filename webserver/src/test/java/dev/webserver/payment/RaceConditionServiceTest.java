@@ -8,7 +8,7 @@ import dev.webserver.enumeration.ReservationStatus;
 import dev.webserver.exception.OutOfStockException;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
-import dev.webserver.external.ThirdPartyPaymentService;
+import dev.webserver.external.payment.ThirdPartyPaymentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -33,7 +33,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
     @Mock
     private CartItemRepository cartItemRepository;
     @Mock
-    private OrderReservationRepo reservationRepo;
+    private OrderReservationRepository reservationRepo;
     @Mock
     private ThirdPartyPaymentService thirdPartyService;
     @Mock

@@ -1,15 +1,12 @@
 package dev.webserver.product;
 
 import dev.webserver.enumeration.SarreCurrency;
-import dev.webserver.product.response.DetailResponse;
-import dev.webserver.product.response.ProductResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -23,7 +20,7 @@ public class ClientProductController {
 
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public CompletableFuture<Page<ProductResponse>> allProducts(
+    public Page<ProductResponse> allProducts(
             @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
@@ -34,7 +31,7 @@ public class ClientProductController {
 
     @ResponseStatus(OK)
     @GetMapping(path = "/find", produces = APPLICATION_JSON_VALUE)
-    public CompletableFuture<Page<ProductResponse>> search(
+    public Page<ProductResponse> search(
             @NotNull @RequestParam(name = "search") String search,
             @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
@@ -45,7 +42,7 @@ public class ClientProductController {
 
     @ResponseStatus(OK)
     @GetMapping(path = "/detail", produces = APPLICATION_JSON_VALUE)
-    public CompletableFuture<List<DetailResponse>> productDetailsByProductUuid(
+    public List<DetailResponse> productDetailsByProductUuid(
             @NotNull @RequestParam(value = "product_id") String uuid,
             @RequestParam(value = "currency", defaultValue = "ngn") String currency
     ) {

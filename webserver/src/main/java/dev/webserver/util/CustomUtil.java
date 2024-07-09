@@ -2,13 +2,13 @@ package dev.webserver.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.webserver.category.response.CategoryResponse;
+import dev.webserver.category.CategoryResponse;
 import dev.webserver.checkout.CheckoutPair;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomServerError;
-import dev.webserver.payment.projection.TotalPojo;
-import dev.webserver.product.dto.PriceCurrencyDto;
-import dev.webserver.product.projection.DetailPojo;
+import dev.webserver.payment.TotalProjection;
+import dev.webserver.product.PriceCurrencyDto;
+import dev.webserver.product.DetailProjection;
 import dev.webserver.product.response.CustomMultiPart;
 import dev.webserver.product.response.Variant;
 import jakarta.servlet.http.Cookie;
@@ -91,14 +91,14 @@ public class CustomUtil {
 
     /**
      * Converts a String obtained from the getVariants method of
-     * {@link DetailPojo}
+     * {@link DetailProjection}
      * to an array of {@link Variant} objects.
      * <p>
      * This method uses the {@link ObjectMapper} to deserialize
      * the input String into an array of {@link Variant} objects.
      *
      * @param str The String obtained from the getVariants method in
-     * {@link DetailPojo}.
+     * {@link DetailProjection}.
      * @param clazz The class that invokes this method.
      * @return An array of {@link Variant} objects if successful,
      * or null if an error occurs during deserialization.
@@ -231,18 +231,18 @@ public class CustomUtil {
      * The total cost for each item is calculated by using the
      * formula: total = weight + (price * quantity).
      * <p>
-     * This method takes a lis of {@link TotalPojo} objects,
+     * This method takes a lis of {@link TotalProjection} objects,
      * where each object represents an item in the shopping
      * cart with information about quantity, price, and weight.
      *
-     * @param list The list of {@link TotalPojo} items for which
+     * @param list The list of {@link TotalProjection} items for which
      *             to calculate the total price and weights.
      * @return A {@link CheckoutPair} object containing the total
      * of weight and the total price of the {@code list}.
      */
-    public static CheckoutPair cartItemsTotalAndTotalWeight(final List<TotalPojo> list) {
+    public static CheckoutPair cartItemsTotalAndTotalWeight(final List<TotalProjection> list) {
         final double sumOfWeight = list.stream()
-                .mapToDouble(TotalPojo::getWeight)
+                .mapToDouble(TotalProjection::getWeight)
                 .sum();
 
         final BigDecimal total = list.stream()

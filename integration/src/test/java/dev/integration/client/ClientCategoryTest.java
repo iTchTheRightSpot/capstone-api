@@ -1,7 +1,7 @@
 package dev.integration.client;
 
 import dev.integration.AbstractNative;
-import dev.webserver.category.response.CategoryResponse;
+import dev.webserver.category.CategoryResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -9,7 +9,6 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

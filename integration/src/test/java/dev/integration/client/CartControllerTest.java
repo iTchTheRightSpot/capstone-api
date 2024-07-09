@@ -2,7 +2,7 @@ package dev.integration.client;
 
 import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
-import dev.webserver.cart.dto.CartDTO;
+import dev.webserver.cart.CartDTO;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;

@@ -1,17 +1,17 @@
 package dev.webserver.cron;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import dev.webserver.cart.entity.CartItem;
-import dev.webserver.cart.entity.ShoppingSession;
-import dev.webserver.cart.repository.CartItemRepo;
-import dev.webserver.cart.repository.ShoppingSessionRepo;
+import dev.webserver.cart.CartItem;
+import dev.webserver.cart.ShoppingSession;
+import dev.webserver.cart.CartItemRepository;
+import dev.webserver.cart.ShoppingSessionRepository;
 import dev.webserver.external.ThirdPartyPaymentService;
 import dev.webserver.external.log.ILogEventPublisher;
-import dev.webserver.payment.entity.OrderReservation;
-import dev.webserver.payment.repository.OrderReservationRepo;
-import dev.webserver.payment.service.PaymentDetailService;
-import dev.webserver.product.entity.ProductSku;
-import dev.webserver.product.repository.ProductSkuRepo;
+import dev.webserver.payment.OrderReservation;
+import dev.webserver.payment.OrderReservationRepo;
+import dev.webserver.payment.PaymentDetailService;
+import dev.webserver.product.ProductSku;
+import dev.webserver.product.ProductSkuRepository;
 import dev.webserver.util.CustomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,20 +39,20 @@ class CronJob {
     private static final Logger log = LoggerFactory.getLogger(CronJob.class);
 
     private final RestClient restClient;
-    private final ProductSkuRepo skuRepo;
+    private final ProductSkuRepository skuRepo;
     private final OrderReservationRepo reservationRepo;
-    private final ShoppingSessionRepo sessionRepo;
-    private final CartItemRepo cartItemRepo;
+    private final ShoppingSessionRepository sessionRepo;
+    private final CartItemRepository cartItemRepository;
     private final PaymentDetailService paymentDetailService;
     private final String secretKey;
     private final ILogEventPublisher publisher;
 
     public CronJob(
             RestClient.Builder clientBuilder,
-            ProductSkuRepo skuRepo,
+            ProductSkuRepository skuRepo,
             OrderReservationRepo reservationRepo,
-            ShoppingSessionRepo sessionRepo,
-            CartItemRepo cartItemRepo,
+            ShoppingSessionRepository sessionRepo,
+            CartItemRepository cartItemRepository,
             PaymentDetailService paymentDetailService,
             ThirdPartyPaymentService paymentService,
             ILogEventPublisher publisher
@@ -60,7 +60,7 @@ class CronJob {
         this.skuRepo = skuRepo;
         this.reservationRepo = reservationRepo;
         this.sessionRepo = sessionRepo;
-        this.cartItemRepo = cartItemRepo;
+        this.cartItemRepository = cartItemRepository;
         this.paymentDetailService = paymentDetailService;
         this.secretKey = paymentService.payStackCredentials().secretKey();
         this.restClient = clientBuilder.build();
@@ -87,7 +87,7 @@ class CronJob {
     public void onDeleteShoppingSessions() {
         sessionRepo.allExpiredShoppingSession(CustomUtil.toUTC(new Date()))
                 .forEach(session -> {
-                    this.cartItemRepo.deleteCartItemsByShoppingSessionId(
+                    this.cartItemRepository.deleteCartItemsByShoppingSessionId(
                             session.shoppingSessionId());
                     this.sessionRepo.deleteById(session.shoppingSessionId());
                 });

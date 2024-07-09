@@ -1,16 +1,16 @@
 package dev.webserver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.webserver.auth.dto.RegisterDto;
-import dev.webserver.auth.service.AuthService;
-import dev.webserver.category.dto.CategoryDTO;
-import dev.webserver.category.entity.ProductCategory;
-import dev.webserver.category.repository.CategoryRepository;
-import dev.webserver.category.service.WorkerCategoryService;
+import dev.webserver.security.controller.RegisterDto;
+import dev.webserver.security.controller.AuthenticationService;
+import dev.webserver.category.CategoryDTO;
+import dev.webserver.category.ProductCategory;
+import dev.webserver.category.CategoryRepository;
+import dev.webserver.category.WorkerCategoryService;
 import dev.webserver.data.TestData;
 import dev.webserver.enumeration.RoleEnum;
-import dev.webserver.product.service.WorkerProductService;
-import dev.webserver.user.repository.UserRepository;
+import dev.webserver.product.WorkerProductService;
+import dev.webserver.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -60,7 +60,7 @@ class ApplicationTest {
 
         @Bean
         public CommandLineRunner runner(
-                AuthService authService,
+                AuthenticationService authenticationService,
                 UserRepository repository,
                 WorkerCategoryService catService,
                 WorkerProductService workerProductService,
@@ -81,7 +81,7 @@ class ApplicationTest {
                             "0000000000",
                             "password123"
                     );
-                    authService.register(null, dto, RoleEnum.WORKER);
+                    authenticationService.register(null, dto, RoleEnum.WORKER);
                 }
             };
         }

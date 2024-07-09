@@ -1,10 +1,9 @@
 package dev.webserver.data;
 
 import com.github.javafaker.Faker;
-import dev.webserver.category.entity.ProductCategory;
+import dev.webserver.category.ProductCategory;
 import dev.webserver.enumeration.SarreCurrency;
-import dev.webserver.product.entity.*;
-import dev.webserver.product.repository.*;
+import dev.webserver.product.*;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -16,11 +15,11 @@ public class RepositoryTestData {
     public static void createProduct(
             int numberOfChildren,
             ProductCategory category,
-            ProductRepo repository,
-            ProductDetailRepo detailRepo,
-            PriceCurrencyRepo priceCurrencyRepo,
-            ProductImageRepo imageRepo,
-            ProductSkuRepo skuRepo
+            ProductRepository repository,
+            ProductDetailRepository detailRepo,
+            PriceCurrencyRepository priceCurrencyRepository,
+            ProductImageRepository imageRepo,
+            ProductSkuRepository skuRepo
     ) {
         Product product = repository.save(
                 Product.builder()
@@ -36,9 +35,9 @@ public class RepositoryTestData {
                         .build()
         );
 
-        priceCurrencyRepo
+        priceCurrencyRepository
                 .save(new PriceCurrency(new BigDecimal(new Faker().commerce().price()), SarreCurrency.NGN, product));
-        priceCurrencyRepo
+        priceCurrencyRepository
                 .save(new PriceCurrency(new BigDecimal(new Faker().commerce().price()), SarreCurrency.USD, product));
 
         ProductDetail detail = detailRepo.save(

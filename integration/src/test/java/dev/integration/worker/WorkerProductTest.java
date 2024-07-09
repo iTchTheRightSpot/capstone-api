@@ -3,7 +3,7 @@ package dev.integration.worker;
 import com.github.javafaker.Faker;
 import dev.integration.AbstractNative;
 import dev.integration.TestData;
-import dev.webserver.category.response.WorkerCategoryResponse;
+import dev.webserver.category.WorkerCategoryResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.http.*;

@@ -2,11 +2,11 @@ package dev.webserver.util;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.category.response.CategoryResponse;
+import dev.webserver.category.CategoryResponse;
 import dev.webserver.checkout.CheckoutPair;
 import dev.webserver.data.TestData;
-import dev.webserver.payment.projection.TotalPojo;
-import dev.webserver.product.dto.PriceCurrencyDto;
+import dev.webserver.payment.TotalProjection;
+import dev.webserver.product.PriceCurrencyDto;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.core.sync.RequestBody;
 
@@ -24,7 +24,7 @@ class CustomUtilTest extends AbstractUnitTest {
 
     private record AmountConversion(BigDecimal given, BigDecimal expected) { }
 
-    private record HelperObj(int qty, BigDecimal price, double weight) implements TotalPojo {
+    private record HelperObj(int qty, BigDecimal price, double weight) implements TotalProjection {
         @Override
         public Integer getQty() {
             return HelperObj.this.qty;
@@ -62,7 +62,7 @@ class CustomUtilTest extends AbstractUnitTest {
     @Test
     public void testCartItemsTotalAndTotalWeightNGN() {
         // given
-        final List<TotalPojo> list = List.of(
+        final List<TotalProjection> list = List.of(
                 new HelperObj(1, new BigDecimal("1800"), 2.5),
                 new HelperObj(5, new BigDecimal("20750"), 3.5),
                 new HelperObj(2, new BigDecimal("39065"), 5)
@@ -79,7 +79,7 @@ class CustomUtilTest extends AbstractUnitTest {
     @Test
     public void testCartItemsTotalAndTotalWeightUSD() {
         // given
-        final List<TotalPojo> list = List.of(
+        final List<TotalProjection> list = List.of(
                 new HelperObj(3, new BigDecimal("110.00"), 10.3),
                 new HelperObj(1, new BigDecimal("120.00"), 1.4),
                 new HelperObj(5, new BigDecimal("30.39"), 6.7)

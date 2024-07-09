@@ -1,16 +1,15 @@
 package dev.webserver.cron;
 
 import dev.webserver.AbstractIntegration;
-import dev.webserver.cart.entity.ShoppingSession;
-import dev.webserver.cart.repository.ShoppingSessionRepo;
-import dev.webserver.category.entity.ProductCategory;
-import dev.webserver.category.repository.CategoryRepository;
+import dev.webserver.cart.ShoppingSession;
+import dev.webserver.cart.ShoppingSessionRepository;
+import dev.webserver.category.ProductCategory;
+import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.TestData;
-import dev.webserver.payment.entity.OrderReservation;
-import dev.webserver.payment.repository.*;
-import dev.webserver.product.entity.ProductSku;
-import dev.webserver.product.repository.ProductSkuRepo;
-import dev.webserver.product.service.WorkerProductService;
+import dev.webserver.payment.*;
+import dev.webserver.product.ProductSku;
+import dev.webserver.product.ProductSkuRepository;
+import dev.webserver.product.WorkerProductService;
 import dev.webserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,9 +31,9 @@ class CronJobTest extends AbstractIntegration {
     @Autowired
     private CategoryRepository categoryRepository;
     @Autowired
-    private ProductSkuRepo skuRepo;
+    private ProductSkuRepository skuRepo;
     @Autowired
-    private ShoppingSessionRepo sessionRepo;
+    private ShoppingSessionRepository sessionRepo;
     @Autowired
     private OrderReservationRepo reservationRepo;
     @Autowired

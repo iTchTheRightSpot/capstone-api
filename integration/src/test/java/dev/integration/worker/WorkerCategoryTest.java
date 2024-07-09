@@ -1,9 +1,9 @@
 package dev.integration.worker;
 
 import dev.integration.AbstractNative;
-import dev.webserver.category.dto.CategoryDTO;
-import dev.webserver.category.dto.UpdateCategoryDTO;
-import dev.webserver.category.response.WorkerCategoryResponse;
+import dev.webserver.category.CategoryDTO;
+import dev.webserver.category.UpdateCategoryDTO;
+import dev.webserver.category.WorkerCategoryResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;

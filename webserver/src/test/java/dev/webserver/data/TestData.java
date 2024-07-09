@@ -1,12 +1,12 @@
 package dev.webserver.data;
 
 import com.github.javafaker.Faker;
-import dev.webserver.category.entity.ProductCategory;
+import dev.webserver.category.ProductCategory;
 import dev.webserver.exception.CustomServerError;
-import dev.webserver.product.dto.*;
-import dev.webserver.product.service.WorkerProductService;
-import dev.webserver.user.entity.ClientRole;
-import dev.webserver.user.entity.SarreBrandUser;
+import dev.webserver.product.*;
+import dev.webserver.product.WorkerProductService;
+import dev.webserver.user.ClientRole;
+import dev.webserver.user.SarreBrandUser;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.mock.web.MockMultipartFile;
 

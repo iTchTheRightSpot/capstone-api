@@ -2,10 +2,10 @@ package dev.integration;
 
 import com.github.javafaker.Faker;
 import dev.webserver.exception.CustomServerError;
-import dev.webserver.product.dto.CreateProductDTO;
-import dev.webserver.product.dto.PriceCurrencyDto;
-import dev.webserver.product.dto.SizeInventoryDTO;
-import dev.webserver.product.dto.UpdateProductDTO;
+import dev.webserver.product.CreateProductDTO;
+import dev.webserver.product.PriceCurrencyDto;
+import dev.webserver.product.SizeInventoryDTO;
+import dev.webserver.product.UpdateProductDTO;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;

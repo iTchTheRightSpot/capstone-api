@@ -1,16 +1,16 @@
 package dev.webserver;
 
-import dev.webserver.auth.dto.RegisterDto;
-import dev.webserver.auth.service.AuthService;
+import dev.webserver.security.controller.RegisterDto;
+import dev.webserver.security.controller.AuthenticationService;
 import dev.webserver.enumeration.RoleEnum;
 import dev.webserver.external.log.DiscordPayload;
-import dev.webserver.payment.dto.PayloadMapper;
+import dev.webserver.payment.PayloadMapper;
 import dev.webserver.product.response.Variant;
 import dev.webserver.external.PaymentCredentialObj;
-import dev.webserver.user.entity.ClientRole;
-import dev.webserver.user.entity.SarreBrandUser;
-import dev.webserver.user.repository.UserRepository;
-import dev.webserver.user.repository.UserRoleRepository;
+import dev.webserver.user.ClientRole;
+import dev.webserver.user.SarreBrandUser;
+import dev.webserver.user.UserRepository;
+import dev.webserver.user.UserRoleRepository;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -48,7 +48,7 @@ public class Application {
     @Bean
     @Profile(value = { "default", "aws", "native-test" })
     public CommandLineRunner commandLineRunner(
-            AuthService service,
+            AuthenticationService service,
             UserRepository repository,
             UserRoleRepository roleRepository,
             PasswordEncoder encoder,

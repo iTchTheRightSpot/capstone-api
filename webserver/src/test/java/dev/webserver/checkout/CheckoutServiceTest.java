@@ -1,12 +1,12 @@
 package dev.webserver.checkout;
 
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.cart.entity.ShoppingSession;
-import dev.webserver.cart.repository.CartItemRepo;
-import dev.webserver.cart.repository.ShoppingSessionRepo;
-import dev.webserver.payment.projection.RaceConditionCartPojo;
-import dev.webserver.shipping.entity.ShipSetting;
-import dev.webserver.shipping.service.ShippingService;
+import dev.webserver.cart.ShoppingSession;
+import dev.webserver.cart.CartItemRepository;
+import dev.webserver.cart.ShoppingSessionRepository;
+import dev.webserver.payment.RaceConditionCartProjection;
+import dev.webserver.shipping.ShipSetting;
+import dev.webserver.shipping.ShippingService;
 import dev.webserver.tax.Tax;
 import dev.webserver.tax.TaxService;
 import jakarta.servlet.http.Cookie;
@@ -36,9 +36,9 @@ class CheckoutServiceTest extends AbstractUnitTest {
     @Mock
     private TaxService taxService;
     @Mock
-    private ShoppingSessionRepo sessionRepo;
+    private ShoppingSessionRepository sessionRepo;
     @Mock
-    private CartItemRepo cartItemRepo;
+    private CartItemRepository cartItemRepository;
 
     @BeforeEach
     void setUp() {
@@ -46,7 +46,7 @@ class CheckoutServiceTest extends AbstractUnitTest {
                 shippingService,
                 taxService,
                 sessionRepo,
-                cartItemRepo
+                cartItemRepository
         );
         checkoutService.setCARTCOOKIE("cartcookie");
         checkoutService.setSPLIT("%");
@@ -67,7 +67,7 @@ class CheckoutServiceTest extends AbstractUnitTest {
         // when
         when(req.getCookies()).thenReturn(cookies);
         when(sessionRepo.shoppingSessionByCookie(anyString())).thenReturn(Optional.of(session));
-        when(cartItemRepo.cartItemsByShoppingSessionId(anyLong())).thenReturn(cartItems);
+        when(cartItemRepository.cartItemsByShoppingSessionId(anyLong())).thenReturn(cartItems);
         when(shippingService.shippingByCountryElseReturnDefault(anyString())).thenReturn(ship);
         when(taxService.taxById(anyLong())).thenReturn(tax);
 
@@ -82,14 +82,14 @@ class CheckoutServiceTest extends AbstractUnitTest {
         Assertions.assertEquals(obj.tax(), tax);
 
         verify(sessionRepo, times(1)).shoppingSessionByCookie(anyString());
-        verify(cartItemRepo, times(1)).cartItemsByShoppingSessionId(anyLong());
+        verify(cartItemRepository, times(1)).cartItemsByShoppingSessionId(anyLong());
         verify(shippingService, times(1)).shippingByCountryElseReturnDefault(anyString());
         verify(taxService, times(1)).taxById(anyLong());
     }
 
-    static final BiFunction<Integer, ShoppingSession, List<RaceConditionCartPojo>> items = (num, session) -> IntStream
+    static final BiFunction<Integer, ShoppingSession, List<RaceConditionCartProjection>> items = (num, session) -> IntStream
             .range(0, num)
-            .mapToObj(op -> new RaceConditionCartPojo() {
+            .mapToObj(op -> new RaceConditionCartProjection() {
 
                 @Override
                 public Long getProductSkuId() {

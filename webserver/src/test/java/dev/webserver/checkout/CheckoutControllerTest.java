@@ -1,13 +1,13 @@
 package dev.webserver.checkout;
 
 import dev.webserver.AbstractIntegration;
-import dev.webserver.cart.dto.CartDTO;
-import dev.webserver.category.entity.ProductCategory;
-import dev.webserver.category.repository.CategoryRepository;
+import dev.webserver.cart.CartDTO;
+import dev.webserver.category.ProductCategory;
+import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.TestData;
-import dev.webserver.product.entity.ProductSku;
-import dev.webserver.product.repository.ProductSkuRepo;
-import dev.webserver.product.service.WorkerProductService;
+import dev.webserver.product.ProductSku;
+import dev.webserver.product.ProductSkuRepository;
+import dev.webserver.product.WorkerProductService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +40,7 @@ class CheckoutControllerTest extends AbstractIntegration {
     @Autowired
     private CategoryRepository categoryRepository;
     @Autowired
-    private ProductSkuRepo productSkuRepo;
+    private ProductSkuRepository productSkuRepository;
 
     @Test
     void checkoutShouldThrowNotFoundError() throws Exception {
@@ -66,7 +66,7 @@ class CheckoutControllerTest extends AbstractIntegration {
 
         TestData.dummyProducts(category, 5, service);
 
-        var list = this.productSkuRepo.findAll();
+        var list = this.productSkuRepository.findAll();
         assertFalse(list.isEmpty());
         return list.getFirst();
     }

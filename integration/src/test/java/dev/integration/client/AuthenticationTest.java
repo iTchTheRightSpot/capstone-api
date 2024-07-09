@@ -1,9 +1,8 @@
 package dev.integration.client;
 
 import dev.integration.AbstractNative;
-import dev.integration.MockRequest;
-import dev.webserver.auth.dto.LoginDto;
-import dev.webserver.auth.dto.RegisterDto;
+import dev.webserver.security.controller.LoginDto;
+import dev.webserver.security.controller.RegisterDto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;

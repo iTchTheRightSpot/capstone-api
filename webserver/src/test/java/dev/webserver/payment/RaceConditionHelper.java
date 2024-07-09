@@ -1,11 +1,8 @@
 package dev.webserver.payment;
 
-import dev.webserver.payment.projection.OrderReservationPojo;
-import dev.webserver.payment.projection.RaceConditionCartPojo;
-
 public record RaceConditionHelper() {
 
-    public static RaceConditionCartPojo raceConditionCartPojo(
+    public static RaceConditionCartProjection raceConditionCartPojo(
             long skuId,
             String sku,
             int inventory,
@@ -14,7 +11,7 @@ public record RaceConditionHelper() {
             int qty,
             long sessionId
     ) {
-        return new RaceConditionCartPojo() {
+        return new RaceConditionCartProjection() {
             @Override
             public Long getProductSkuId() {
                 return skuId;
@@ -52,8 +49,8 @@ public record RaceConditionHelper() {
         };
     }
 
-    public static OrderReservationPojo reservationPojo (long reservationId, int qty, String sku) {
-        return new OrderReservationPojo() {
+    public static OrderReservationProjection reservationPojo (long reservationId, int qty, String sku) {
+        return new OrderReservationProjection() {
             @Override
             public Long getReservationId() {
                 return reservationId;

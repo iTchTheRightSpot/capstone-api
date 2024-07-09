@@ -1,13 +1,13 @@
 package dev.webserver.checkout;
 
-import dev.webserver.cart.entity.CartItem;
-import dev.webserver.cart.entity.ShoppingSession;
-import dev.webserver.cart.repository.CartItemRepo;
-import dev.webserver.cart.repository.ShoppingSessionRepo;
+import dev.webserver.cart.CartItem;
+import dev.webserver.cart.ShoppingSession;
+import dev.webserver.cart.CartItemRepository;
+import dev.webserver.cart.ShoppingSessionRepository;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomNotFoundException;
-import dev.webserver.shipping.entity.ShipSetting;
-import dev.webserver.shipping.service.ShippingService;
+import dev.webserver.shipping.ShipSetting;
+import dev.webserver.shipping.ShippingService;
 import dev.webserver.tax.Tax;
 import dev.webserver.tax.TaxService;
 import dev.webserver.util.CustomUtil;
@@ -36,8 +36,8 @@ public class CheckoutService {
 
     private final ShippingService shippingService;
     private final TaxService taxService;
-    private final ShoppingSessionRepo shoppingSessionRepo;
-    private final CartItemRepo cartItemRepo;
+    private final ShoppingSessionRepository shoppingSessionRepository;
+    private final CartItemRepository cartItemRepository;
 
     /**
      * Generates checkout information based on a user's country and selected currency.
@@ -57,7 +57,7 @@ public class CheckoutService {
     public Checkout checkout(final HttpServletRequest req, final String country, final SarreCurrency currency) {
         final CustomObject obj = validateCurrentShoppingSession(req, country);
 
-        final var list = this.cartItemRepo
+        final var list = this.cartItemRepository
                 .amountToPayForAllCartItemsForShoppingSession(obj.session().shoppingSessionId(), currency);
 
         final BigDecimal shipCost = currency.equals(SarreCurrency.USD)
@@ -119,7 +119,7 @@ public class CheckoutService {
             throw new CustomNotFoundException("no cookie found. kindly refresh window");
         }
 
-        final var optional = shoppingSessionRepo
+        final var optional = shoppingSessionRepository
                 .shoppingSessionByCookie(cookie.getValue().split(SPLIT)[0]);
 
         if (optional.isEmpty()) {
@@ -128,7 +128,7 @@ public class CheckoutService {
 
         final ShoppingSession session = optional.get();
 
-        final var carts = cartItemRepo
+        final var carts = cartItemRepository
                 .cartItemsByShoppingSessionId(session.shoppingSessionId());
 
         if (carts.isEmpty()) {

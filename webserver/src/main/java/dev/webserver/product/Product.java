@@ -1,55 +1,24 @@
 package dev.webserver.product;
 
-import dev.webserver.category.ProductCategory;
-import jakarta.persistence.*;
-import lombok.*;
+import lombok.Builder;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import java.io.Serializable;
-import java.util.Set;
-
-import static jakarta.persistence.CascadeType.ALL;
-import static jakarta.persistence.FetchType.LAZY;
-
-@Table(name = "product", indexes = @Index(name = "IX_product_uuid", columnList = "uuid"))
-@Entity
-@NoArgsConstructor
-@AllArgsConstructor
+@Table(name = "product")
 @Builder
-@Getter
-@Setter
-public class Product implements Serializable {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "product_id", nullable = false, unique = true)
-    private Long productId;
-
-    @Column(name = "uuid", length = 36, nullable = false, unique = true, updatable = false)
-    private String uuid;
-
-    @Column(name = "name", length = 50, unique = true, nullable = false)
-    private String name;
-
-    @Column(name = "description", length = 1000, nullable = false)
-    private String description;
-
-    @Column(name = "default_image_key", nullable = false)
-    private String defaultKey;
-
-    @Column(nullable = false)
-    private double weight;
-
-    @Column(name = "weight_type", nullable = false)
-    private String weightType; // default injected in migration script
-
-    @ManyToOne
-    @JoinColumn(name = "category_id", referencedColumnName = "category_id")
-    private ProductCategory productCategory;
-
-    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "product", orphanRemoval = true)
-    private Set<ProductDetail> productDetails;
-
-    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "product", orphanRemoval = true)
-    private Set<PriceCurrency> priceCurrency;
-
-}
+public record Product(
+        @Id
+        @Column("product_id")
+        Long productId,
+        String uuid,
+        String name,
+        String description,
+        @Column("default_image_key")
+        String defaultKey,
+        Double weight,
+        @Column("weight_type")
+        String weightType, // default injected in migration script
+        @Column("category_id")
+        Long categoryId
+) {}

@@ -1,7 +1,7 @@
 package dev.webserver.cart;
 
 import dev.webserver.AbstractRepositoryTest;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
 import dev.webserver.enumeration.ReservationStatus;
@@ -47,7 +47,7 @@ class CartItemRepositoryTest extends AbstractRepositoryTest {
     void updateCartQtyByCartId() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -89,7 +89,7 @@ class CartItemRepositoryTest extends AbstractRepositoryTest {
     void deleteCartItemByCookieAndSku() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -105,7 +105,7 @@ class CartItemRepositoryTest extends AbstractRepositoryTest {
         assertEquals(2, skus.size());
         ProductSku sku = skus.getFirst();
 
-        var session = this.sessionRepo
+        var session = sessionRepo
                 .save(
                         new ShoppingSession(
                                 "cookie",
@@ -129,7 +129,7 @@ class CartItemRepositoryTest extends AbstractRepositoryTest {
     void totalAmountInDefaultCurrency() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -182,7 +182,7 @@ class CartItemRepositoryTest extends AbstractRepositoryTest {
     void deleteCartItemsByShoppingSessionId() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -232,7 +232,7 @@ class CartItemRepositoryTest extends AbstractRepositoryTest {
     void cartItemsByShoppingSessionId() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -276,7 +276,7 @@ class CartItemRepositoryTest extends AbstractRepositoryTest {
     void cartItemByShoppingSessionIdAndProductSkuSku() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -328,7 +328,7 @@ class CartItemRepositoryTest extends AbstractRepositoryTest {
     void shouldSuccessfullyRetrieveRaceConditionCartPojo() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -380,7 +380,7 @@ class CartItemRepositoryTest extends AbstractRepositoryTest {
     void shouldReturnCartItemsByOrderReservationReference() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())

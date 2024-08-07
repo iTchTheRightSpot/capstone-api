@@ -1,7 +1,7 @@
 package dev.webserver.category;
 
 import dev.webserver.enumeration.SarreCurrency;
-import dev.webserver.external.aws.S3Service;
+import dev.webserver.external.aws.IS3Service;
 import dev.webserver.product.ProductResponse;
 import dev.webserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ class ClientCategoryService {
     private String bucket;
 
     private final CategoryRepository categoryRepository;
-    private final S3Service s3Service;
+    private final IS3Service s3Service;
 
     /**
      * Returns a {@link List} of {@link CategoryResponse}.
@@ -40,10 +40,10 @@ class ClientCategoryService {
 
     /**
      * Asynchronously retrieves a {@link Page} of {@link ProductResponse}
-     * objects by a {@link ProductCategory}.
+     * objects by a {@link Category}.
      *
      * @param currency    The currency in which prices are displayed.
-     * @param categoryId  The primary key of a {@link ProductCategory}.
+     * @param categoryId  The primary key of a {@link Category}.
      * @param page        The page number for pagination.
      * @param size        The page size for pagination.
      * @return A {@link Page} of {@link ProductResponse}.
@@ -64,7 +64,7 @@ class ClientCategoryService {
                         .desc(p.getDescription())
                         .price(p.getPrice())
                         .currency(p.getCurrency())
-                        .imageUrl(p.getImage())
+                        .imageUrl(s3Service.preSignedUrl(bucket, p.getImage()))
                         .build())
                 .toList();
 

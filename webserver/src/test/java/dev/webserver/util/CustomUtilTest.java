@@ -3,7 +3,7 @@ package dev.webserver.util;
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractUnitTest;
 import dev.webserver.category.CategoryResponse;
-import dev.webserver.checkout.CheckoutPair;
+import dev.webserver.payment.CheckoutPair;
 import dev.webserver.data.TestData;
 import dev.webserver.payment.TotalProjection;
 import dev.webserver.product.PriceCurrencyDto;

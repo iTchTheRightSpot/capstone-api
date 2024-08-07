@@ -1,7 +1,7 @@
 package dev.webserver.data;
 
 import com.github.javafaker.Faker;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.product.*;
 import dev.webserver.product.WorkerProductService;
@@ -180,7 +180,7 @@ public class TestData {
     }
 
     @NotNull
-    public static void dummyProducts(ProductCategory cat, int num, WorkerProductService service) {
+    public static void dummyProducts(Category cat, int num, WorkerProductService service) {
         var images = TestData.files();
 
         for (int i = 0; i < num; i++) {
@@ -202,7 +202,7 @@ public class TestData {
 
     @NotNull
     public static void dummyProductsTestTotalAmount(
-            ProductCategory cat,
+            Category cat,
             PriceCurrencyDto[] arr,
             int numOfProducts,
             int variantQty,

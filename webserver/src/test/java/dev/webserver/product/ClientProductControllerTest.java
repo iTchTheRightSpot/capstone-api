@@ -2,7 +2,7 @@ package dev.webserver.product;
 
 import dev.webserver.AbstractIntegration;
 import dev.webserver.category.CategoryRepository;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.data.TestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ class ClientProductControllerTest extends AbstractIntegration {
     private void dummy() {
         var category = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .parentCategory(null)
@@ -43,7 +43,7 @@ class ClientProductControllerTest extends AbstractIntegration {
 
         var clothes = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("clothes")
                                 .isVisible(true)
                                 .parentCategory(category)

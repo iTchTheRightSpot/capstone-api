@@ -3,7 +3,7 @@ package dev.webserver.cron;
 import dev.webserver.AbstractIntegration;
 import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.ShoppingSessionRepository;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.TestData;
 import dev.webserver.payment.*;
@@ -20,7 +20,6 @@ import java.util.HashSet;
 
 import static dev.webserver.enumeration.ReservationStatus.PENDING;
 import static java.time.temporal.ChronoUnit.DAYS;
-import static org.junit.jupiter.api.Assertions.*;
 
 class CronJobTest extends AbstractIntegration {
 
@@ -37,11 +36,11 @@ class CronJobTest extends AbstractIntegration {
     @Autowired
     private OrderReservationRepository reservationRepo;
     @Autowired
-    private PaymentDetailRepo paymentDetailRepo;
+    private PaymentDetailRepository paymentDetailRepository;
     @Autowired
     private OrderDetailRepository orderDetailRepository;
     @Autowired
-    private AddressRepo addressRepo;
+    private AddressRepository addressRepository;
     @Autowired
     private PaymentAuthorizationRepository authorizationRepo;
 
@@ -89,9 +88,9 @@ class CronJobTest extends AbstractIntegration {
         cronJob.onDeleteOrderReservations();
 
         // then
-        var payments = paymentDetailRepo.findAll();
+        var payments = paymentDetailRepository.findAll();
         var reservations = reservationRepo.findAll();
-        var addresses = addressRepo.findAll();
+        var addresses = addressRepository.findAll();
         var orderDetails = orderDetailRepository.findAll();
         var authorizations = authorizationRepo.findAll();
 
@@ -104,7 +103,7 @@ class CronJobTest extends AbstractIntegration {
 
     private ProductSku productSku() {
         var category = categoryRepository
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .parentCategory(null)

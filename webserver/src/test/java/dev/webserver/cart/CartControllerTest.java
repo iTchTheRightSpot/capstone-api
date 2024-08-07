@@ -2,7 +2,7 @@ package dev.webserver.cart;
 
 import dev.webserver.AbstractIntegration;
 import dev.webserver.category.CategoryRepository;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.data.TestData;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
@@ -45,7 +45,7 @@ class CartControllerTest extends AbstractIntegration {
     void before() {
         var category = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .parentCategory(null)
@@ -58,7 +58,7 @@ class CartControllerTest extends AbstractIntegration {
 
         var clothes = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("clothes")
                                 .isVisible(true)
                                 .parentCategory(category)

@@ -1,19 +1,17 @@
 package dev.webserver.shipping;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jdbc.repository.query.Modifying;
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
-@Repository
-public interface ShippingRepository extends JpaRepository<ShipSetting, Long> {
+public interface ShippingRepository extends CrudRepository<ShipSetting, Long> {
 
     @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying
     @Query("DELETE FROM ShipSetting s WHERE s.shipId = :id")
     void deleteShipSettingById(long id);
 
@@ -30,7 +28,7 @@ public interface ShippingRepository extends JpaRepository<ShipSetting, Long> {
      * @param usd The price in USD (United States Dollar) to set for the shipping settings.
      */
     @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying
     @Query("""
     UPDATE ShipSetting s
     SET

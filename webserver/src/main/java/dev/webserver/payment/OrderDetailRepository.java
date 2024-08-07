@@ -1,18 +1,13 @@
 package dev.webserver.payment;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jdbc.repository.query.Modifying;
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * Contains native query
- * */
-@Repository
-public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> {
+public interface OrderDetailRepository extends CrudRepository<OrderDetail, Long> {
 
     /**
      * Retrieves the order history for a given user principal email.
@@ -20,7 +15,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> 
      * @param principal the email associated to a {@link PaymentDetail}.
      * @return a {@link List} of {@link OrderProjection} representing the order history.
      */
-    @Query(nativeQuery = true, value = """
+    @Query(value = """
     SELECT
     p.created_at AS time,
     p.currency as currency,
@@ -46,11 +41,8 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> 
     List<OrderProjection> orderHistoryByPrincipal(String principal);
 
     @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query(nativeQuery = true, value = """
-    INSERT INTO order_detail(qty, sku_id, payment_detail_id)
-    VALUE (:qty, :skuId, :detailId);
-    """)
+    @Modifying
+    @Query(value = "INSERT INTO order_detail(qty, sku_id, payment_detail_id) VALUE (:qty, :skuId, :detailId)")
     void saveOrderDetail(int qty, long skuId, long detailId);
 
 }

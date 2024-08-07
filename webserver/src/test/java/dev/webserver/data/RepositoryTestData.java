@@ -1,7 +1,7 @@
 package dev.webserver.data;
 
 import com.github.javafaker.Faker;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.product.*;
 
@@ -14,7 +14,7 @@ public class RepositoryTestData {
 
     public static void createProduct(
             int numberOfChildren,
-            ProductCategory category,
+            Category category,
             ProductRepository repository,
             ProductDetailRepository detailRepo,
             PriceCurrencyRepository priceCurrencyRepository,
@@ -29,7 +29,7 @@ public class RepositoryTestData {
                         .defaultKey(UUID.randomUUID().toString())
                         .weight(new Faker().number().randomDouble(3, 1, 50))
                         .weightType("kg")
-                        .productCategory(category)
+                        .categoryId(category)
                         .productDetails(new HashSet<>())
                         .priceCurrency(new HashSet<>())
                         .build()
@@ -65,7 +65,7 @@ public class RepositoryTestData {
                             .sku(UUID.randomUUID().toString())
                             .size(UUID.randomUUID().toString())
                             .inventory(new Faker().number().numberBetween(10, 20))
-                            .productDetail(detail)
+                            .productDetailId(detail)
                             .orderDetails(new HashSet<>())
                             .reservations(new HashSet<>())
                             .cartItems(new HashSet<>())

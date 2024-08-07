@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.security.controller.RegisterDto;
 import dev.webserver.security.controller.AuthenticationService;
 import dev.webserver.category.CategoryDto;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.category.WorkerCategoryService;
 import dev.webserver.data.TestData;
@@ -87,37 +87,37 @@ class ApplicationTest {
         }
 
         private static void extracted(WorkerCategoryService catService, WorkerProductService service) {
-            var category = ProductCategory.builder()
+            var category = Category.builder()
                     .categoryId(1L)
                     .build();
             catService.create(new CategoryDto("category", true, null));
             TestData.dummyProducts(category, 2, service);
 
-            var clothes = ProductCategory.builder()
+            var clothes = Category.builder()
                     .categoryId(2L)
                     .build();
             catService.create(new CategoryDto("clothes", true, 1L));
             TestData.dummyProducts(clothes, 5, service);
 
-            var shirt = ProductCategory.builder()
+            var shirt = Category.builder()
                     .categoryId(3L)
                     .build();
             catService.create(new CategoryDto("t-shirt", true, 2L));
             TestData.dummyProducts(shirt, 10, service);
 
-            var furniture = ProductCategory.builder()
+            var furniture = Category.builder()
                     .categoryId(4L)
                     .build();
             catService.create(new CategoryDto("furniture", true, null));
             TestData.dummyProducts(furniture, 3, service);
 
-            var collection = ProductCategory.builder()
+            var collection = Category.builder()
                     .categoryId(5L)
                     .build();
             catService.create(new CategoryDto("collection", true, null));
             TestData.dummyProducts(collection, 1, service);
 
-            var winter = ProductCategory.builder()
+            var winter = Category.builder()
                     .categoryId(6L)
                     .build();
             catService.create(new CategoryDto("winter 2024", true, 5L));

@@ -1,4 +1,4 @@
-package dev.webserver.checkout;
+package dev.webserver.payment;
 
 import dev.webserver.cart.CartItem;
 import dev.webserver.cart.CartItemRepository;
@@ -25,7 +25,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class CheckoutService {
+class CheckoutService {
 
     @Setter
     @Value("${cart.cookie.name}")
@@ -55,7 +55,7 @@ public class CheckoutService {
      * @throws CustomNotFoundException If any required information is missing or invalid.
      */
     public Checkout checkout(final HttpServletRequest req, final String country, final SarreCurrency currency) {
-        final CustomObject obj = validateCurrentShoppingSession(req, country);
+        final CustomCheckoutObject obj = validateCurrentShoppingSession(req, country);
 
         final var list = this.cartItemRepository
                 .amountToPayForAllCartItemsForShoppingSession(obj.session().shoppingSessionId(), currency);
@@ -94,25 +94,25 @@ public class CheckoutService {
     }
 
     /**
-     * Creates a {@link CustomObject} based on the provided {@link HttpServletRequest} and
+     * Creates a {@link CustomCheckoutObject} based on the provided {@link HttpServletRequest} and
      * country.
      * <p>
      * This method retrieves custom cookie from the HttpServletRequest to find associated
      * {@link ShoppingSession} for the device. It then retrieves the associated {@link CartItem}(s)
      * and checks if the cart is empty. Next, it retrieves the shipping information based
      * on the provided country. Finally, it retrieves the tax information. Using this
-     * information, it constructs and returns a {@link CustomObject} containing the
+     * information, it constructs and returns a {@link CustomCheckoutObject} containing the
      * {@link ShoppingSession}, {@link CartItem}, {@link ShipSetting}, and {@link Tax}.
      *
      * @param req     The HttpServletRequest containing the {@link ShoppingSession} cookie.
      * @param country The country for which {@link ShipSetting} information is retrieved.
-     * @return A {@link CustomObject} containing the {@link ShoppingSession}, {@link CartItem}(s),
+     * @return A {@link CustomCheckoutObject} containing the {@link ShoppingSession}, {@link CartItem}(s),
      * {@link ShipSetting}, and {@link Tax}.
      * @throws CustomNotFoundException If custom cookie does not contain in
      *                                 {@link HttpServletRequest}, the {@link ShoppingSession} is
      *                                 invalid, or {@link CartItem} is empty.
      */
-    public CustomObject validateCurrentShoppingSession(final HttpServletRequest req, final String country) {
+    public CustomCheckoutObject validateCurrentShoppingSession(final HttpServletRequest req, final String country) {
         final Cookie cookie = CustomUtil.cookie(req, cartcookie);
 
         if (cookie == null) {
@@ -140,7 +140,7 @@ public class CheckoutService {
 
         final Tax tax = taxService.taxById(1);
 
-        return new CustomObject(session, carts, ship, tax);
+        return new CustomCheckoutObject(session, carts, ship, tax);
     }
 
 }

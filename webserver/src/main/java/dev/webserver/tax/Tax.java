@@ -1,42 +1,17 @@
 package dev.webserver.tax;
 
-import jakarta.persistence.*;
-import lombok.Setter;
+import lombok.Builder;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Table(name = "tax_setting")
-@Entity
-@Setter
-public class Tax {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "tax_id", updatable = false, unique = true, nullable = false)
-    private Long taxId;
-
-    @Column(nullable = false, unique = true, length = 5)
-    private String name;
-
-    @Column(nullable = false)
-    private double rate;
-
-    public Tax() {}
-
-    public Tax(Long taxId, String name, double rate) {
-        this.taxId = taxId;
-        this.name = name;
-        this.rate = rate;
-    }
-
-    public Long taxId() {
-        return taxId;
-    }
-
-    public String name() {
-        return name;
-    }
-
-    public double rate() {
-        return rate;
-    }
-
+@Builder
+public record Tax(
+        @Id
+        @Column("tax_id")
+        Long taxId,
+        String name,
+        Double rate
+) {
 }

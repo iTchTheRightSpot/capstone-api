@@ -34,7 +34,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
     void dummy() {
         var category = repository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .parentCategory(null)
@@ -47,7 +47,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
 
         var clothes = repository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("clothes")
                                 .isVisible(true)
                                 .parentCategory(category)
@@ -59,7 +59,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
         TestData.dummyProducts(clothes, 5, service);
     }
 
-    private ProductCategory category() {
+    private Category category() {
         var list = this.repository.findAll();
         assertFalse(list.isEmpty());
         return list.getFirst();
@@ -82,7 +82,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
     void allProductsByCategoryId() throws Exception {
         var category = repository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .parentCategory(null)

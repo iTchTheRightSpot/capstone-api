@@ -1,20 +1,15 @@
 package dev.webserver.product;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jdbc.repository.query.Modifying;
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Contains native query
- * */
-@Repository
-public interface ProductDetailRepository extends JpaRepository<ProductDetail, Long> {
+public interface ProductDetailRepository extends CrudRepository<ProductDetail, Long> {
 
     /**
      * Returns a {@link ProductDetail} by {@link ProductSku} property sku
@@ -33,8 +28,8 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, Lo
      * using native MySQL query, method updates a {@link ProductDetail} and {@link ProductSku}.
      */
     @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query(nativeQuery = true, value = """
+    @Modifying
+    @Query(value = """
     UPDATE product_sku s
     INNER JOIN product_detail d ON d.detail_id = s.detail_id
     SET d.colour = :colour, d.is_visible = :visible, s.inventory = :qty, s.size = :s
@@ -58,7 +53,7 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, Lo
      * NOTE: this method is similar to findProductDetailsByProductUuidWorker only it
      * filters by {@link ProductDetail} being visible.
      */
-    @Query(nativeQuery = true, value = """
+    @Query(value = """
     SELECT
     d.is_visible AS visible,
     d.colour AS colour,
@@ -81,7 +76,7 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, Lo
     """)
     List<DetailProjection> productDetailsByProductUuidClientFront(@Param(value = "uuid") String uuid);
 
-    @Query(nativeQuery = true, value = """
+    @Query(value = """
     SELECT
     d.is_visible AS visible,
     d.colour AS colour,

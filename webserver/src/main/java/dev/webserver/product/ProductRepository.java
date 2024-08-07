@@ -1,21 +1,19 @@
 package dev.webserver.product;
 
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.enumeration.SarreCurrency;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jdbc.repository.query.Modifying;
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends CrudRepository<Product, Long> {
 
     @Query(value = "SELECT p FROM Product p WHERE p.name = :name")
     Optional<Product> productByName(@Param(value = "name") String name);
@@ -31,7 +29,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     int nameNotAssociatedToUuid(String uuid, String name);
 
     @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying
     @Query("DELETE FROM Product p WHERE p.uuid = :uuid")
     void deleteByProductUuid(String uuid);
 
@@ -79,7 +77,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<ProductProjection> allProductsByCurrencyClient(SarreCurrency currency, Pageable pageable);
 
     @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying
     @Query(value = """
     UPDATE Product p
     SET
@@ -94,7 +92,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param(value = "name") String name,
             @Param(value = "desc") String desc,
             @Param(value = "weight") double weight,
-            @Param(value = "category") ProductCategory category
+            @Param(value = "category") Category category
     );
 
     @Query(value = """

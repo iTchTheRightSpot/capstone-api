@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractRepositoryTest;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
 import dev.webserver.enumeration.SarreCurrency;
@@ -34,17 +34,17 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private ProductSkuRepository skuRepo;
     @Autowired
-    private PaymentDetailRepo paymentDetailRepo;
+    private PaymentDetailRepository paymentDetailRepository;
     @Autowired
     private OrderDetailRepository orderDetailRepository;
     @Autowired
-    private AddressRepo addressRepo;
+    private AddressRepository addressRepository;
 
     @Test
     void orderHistoryByPrincipal() throws JsonProcessingException {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -55,7 +55,7 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
         RepositoryTestData
                 .createProduct(2, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
-        var paymentDetail = paymentDetailRepo
+        var paymentDetail = paymentDetailRepository
                 .save(PaymentDetail.builder()
                         .name(new Faker().name().fullName())
                         .email("hello@hello.com")
@@ -69,7 +69,7 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
                         .build()
                 );
 
-        addressRepo.save(new Address(
+        addressRepository.save(new Address(
                 "address boulevard",
                 "city",
                 "state",
@@ -112,7 +112,7 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
     @Test
     void shouldSuccessfullySaveOrderDetail() {
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -123,7 +123,7 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
         RepositoryTestData
                 .createProduct(2, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
-        var paymentDetail = paymentDetailRepo
+        var paymentDetail = paymentDetailRepository
                 .save(PaymentDetail.builder()
                         .name(new Faker().name().fullName())
                         .email("hello@hello.com")
@@ -137,7 +137,7 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
                         .build()
                 );
 
-        addressRepo.save(new Address(
+        addressRepository.save(new Address(
                 "address boulevard",
                 "city",
                 "state",

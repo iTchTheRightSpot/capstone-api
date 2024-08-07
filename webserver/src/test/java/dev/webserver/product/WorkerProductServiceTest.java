@@ -1,7 +1,7 @@
 package dev.webserver.product;
 
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.category.WorkerCategoryService;
 import dev.webserver.data.TestData;
 import dev.webserver.exception.DuplicateException;
@@ -51,7 +51,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         var sizeDtoArray = TestData.sizeInventoryDTOArray(3);
         var files = TestData.files();
         var dto = TestData.createProductDTO(1, sizeDtoArray);
-        var category = ProductCategory.builder()
+        var category = Category.builder()
                 .categoryId(dto.categoryId())
                 .name("category")
                 .build();
@@ -71,7 +71,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         var sizeDtoArray = TestData.sizeInventoryDTOArray(3);
         var files = TestData.files();
         var dto = TestData.createProductDTO(1, sizeDtoArray);
-        var category = ProductCategory.builder()
+        var category = Category.builder()
                 .categoryId(dto.categoryId())
                 .name("category")
                 .build();
@@ -94,7 +94,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                         "",
                         1
                 );
-        var category = ProductCategory.builder().categoryId(payload.categoryId()).build();
+        var category = Category.builder().categoryId(payload.categoryId()).build();
 
         // When
         when(this.productRepository.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
@@ -108,7 +108,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                         anyString(),
                         anyString(),
                         anyDouble(),
-                        any(ProductCategory.class)
+                        any(Category.class)
                 );
     }
 
@@ -122,7 +122,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                         "",
                         1
                 );
-        var category = ProductCategory.builder().categoryId(payload.categoryId()).build();
+        var category = Category.builder().categoryId(payload.categoryId()).build();
 
         // When
         when(this.productRepository.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
@@ -136,7 +136,7 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                         anyString(),
                         anyString(),
                         anyDouble(),
-                        any(ProductCategory.class)
+                        any(Category.class)
                 );
     }
 

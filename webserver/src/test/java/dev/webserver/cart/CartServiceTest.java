@@ -1,7 +1,7 @@
 package dev.webserver.cart;
 
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.external.aws.S3Service;
+import dev.webserver.external.aws.IS3Service;
 import dev.webserver.product.ProductSkuService;
 import dev.webserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
@@ -31,7 +31,7 @@ class CartServiceTest extends AbstractUnitTest {
     @Mock
     private ProductSkuService productSKUService;
     @Mock
-    private S3Service s3Service;
+    private IS3Service s3Service;
 
     @BeforeEach
     void setUp() {

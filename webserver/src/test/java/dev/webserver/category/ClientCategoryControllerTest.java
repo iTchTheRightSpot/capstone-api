@@ -28,7 +28,7 @@ class ClientCategoryControllerTest extends AbstractIntegration {
     void allCategories() throws Exception {
         var category = repository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .parentCategory(null)
@@ -41,7 +41,7 @@ class ClientCategoryControllerTest extends AbstractIntegration {
 
         var clothes = repository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("clothes")
                                 .isVisible(true)
                                 .parentCategory(category)
@@ -63,7 +63,7 @@ class ClientCategoryControllerTest extends AbstractIntegration {
     void allProductsByCategoryId() throws Exception {
         var category = repository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .parentCategory(null)

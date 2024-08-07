@@ -2,7 +2,7 @@ package dev.webserver.product;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractRepositoryTest;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
 import dev.webserver.enumeration.SarreCurrency;
@@ -40,7 +40,7 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
     void nameNotAssociatedToUuid() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -70,7 +70,7 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
     void allProductsAdminFront() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -107,7 +107,7 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
     void allProductsByCurrencyClient() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -144,7 +144,7 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
     void updateProductAndItsCategoryId() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -152,7 +152,7 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
                         .build());
 
         var collection = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("collection")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -192,7 +192,7 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
     void productImagesByProductUuid() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -218,7 +218,7 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
     void productsByNameAndCurrency() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -259,7 +259,7 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
     void validateOnDeleteNoActionConstraintWhenDeletingAProductByUuid() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -283,7 +283,7 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
     void validateOnDeleteCascadeWhenDeletingAProductWithNoDetailsButIsAttachedToPriceCurrency() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -298,7 +298,7 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
                         .defaultKey("default-image-key")
                         .weight(2.5)
                         .weightType("kg")
-                        .productCategory(cat)
+                        .categoryId(cat)
                         .productDetails(new HashSet<>())
                         .priceCurrency(new HashSet<>())
                         .build()

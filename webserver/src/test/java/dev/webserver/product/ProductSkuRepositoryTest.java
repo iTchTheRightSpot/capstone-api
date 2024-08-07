@@ -5,7 +5,7 @@ import dev.webserver.cart.CartItem;
 import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.CartItemRepository;
 import dev.webserver.cart.ShoppingSessionRepository;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
 import dev.webserver.enumeration.PaymentStatus;
@@ -16,7 +16,7 @@ import dev.webserver.payment.OrderReservation;
 import dev.webserver.payment.PaymentDetail;
 import dev.webserver.payment.OrderDetailRepository;
 import dev.webserver.payment.OrderReservationRepository;
-import dev.webserver.payment.PaymentDetailRepo;
+import dev.webserver.payment.PaymentDetailRepository;
 import dev.webserver.util.CustomUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ class ProductSkuRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private OrderDetailRepository orderRepository;
     @Autowired
-    private PaymentDetailRepo paymentDetailRepo;
+    private PaymentDetailRepository paymentDetailRepository;
     @Autowired
     private OrderReservationRepository reservationRepo;
     @Autowired
@@ -61,7 +61,7 @@ class ProductSkuRepositoryTest extends AbstractRepositoryTest {
     @Test
     void updateInventoryOnMakingReservation() {
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -88,7 +88,7 @@ class ProductSkuRepositoryTest extends AbstractRepositoryTest {
     @Test
     void updateInventory() {
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -114,7 +114,7 @@ class ProductSkuRepositoryTest extends AbstractRepositoryTest {
     @Test
     void validateOnDeleteNoActionConstraintForProductSku() {
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -124,7 +124,7 @@ class ProductSkuRepositoryTest extends AbstractRepositoryTest {
         RepositoryTestData
                 .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
-        var paymentDetail = paymentDetailRepo
+        var paymentDetail = paymentDetailRepository
                 .save(
                         PaymentDetail.builder()
                                 .name("James Frank")
@@ -191,7 +191,7 @@ class ProductSkuRepositoryTest extends AbstractRepositoryTest {
     void validateConstraintProductSkuInvCannotBeLessThanZero() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -217,7 +217,7 @@ class ProductSkuRepositoryTest extends AbstractRepositoryTest {
     void shouldReturnAProductByProductSku() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())

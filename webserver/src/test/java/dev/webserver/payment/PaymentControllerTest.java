@@ -3,7 +3,7 @@ package dev.webserver.payment;
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
 import dev.webserver.cart.CartDto;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.TestData;
 import dev.webserver.product.PriceCurrencyDto;
@@ -75,7 +75,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         var category = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .parentCategory(null)
@@ -88,7 +88,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         var clothes = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("clothes")
                                 .isVisible(true)
                                 .parentCategory(category)
@@ -281,7 +281,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         var category = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .parentCategory(null)
@@ -383,7 +383,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         var category = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .parentCategory(null)
@@ -447,7 +447,7 @@ class PaymentControllerTest extends AbstractIntegration {
 
         var category = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .parentCategory(null)

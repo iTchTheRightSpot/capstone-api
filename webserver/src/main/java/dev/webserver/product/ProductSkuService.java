@@ -31,7 +31,7 @@ public class ProductSkuService {
                             .sku(UUID.randomUUID().toString())
                             .size(dto.size())
                             .inventory(dto.qty())
-                            .productDetail(detail)
+                            .productDetailId(detail)
                             .orderDetails(new HashSet<>())
                             .reservations(new HashSet<>())
                             .cartItems(new HashSet<>())

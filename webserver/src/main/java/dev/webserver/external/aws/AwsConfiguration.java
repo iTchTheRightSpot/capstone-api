@@ -12,7 +12,6 @@ import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 
 @Configuration
 class AwsConfiguration {
@@ -51,22 +50,5 @@ class AwsConfiguration {
                 .credentialsProvider(PROVIDER)
                 .build();
     }
-
-    @Bean
-    public SecretsManagerClient secretsManager() {
-        return SecretsManagerClient.builder()
-                .region(REGION)
-                .credentialsProvider(PROVIDER)
-                .httpClient(UrlConnectionHttpClient.builder().build())
-                .build();
-    }
-
-//    @Bean
-//    public static SesV2Client _sesV2Client() {
-//        return SesV2Client.builder()
-//                .region(REGION)
-//                .credentialsProvider(PROVIDER)
-//                .build();
-//    }
 
 }

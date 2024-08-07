@@ -1,7 +1,5 @@
 package dev.webserver.payment;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.CrudRepository;
 
-@Repository
-public interface PaymentAuthorizationRepository extends JpaRepository<PaymentAuthorization, Long> {}
+public interface PaymentAuthorizationRepository extends CrudRepository<PaymentAuthorization, Long> {}

@@ -3,7 +3,7 @@ package dev.webserver.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.category.CategoryResponse;
-import dev.webserver.checkout.CheckoutPair;
+import dev.webserver.payment.CheckoutPair;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.payment.TotalProjection;

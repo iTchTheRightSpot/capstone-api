@@ -126,7 +126,7 @@ public class WorkerProductService {
 
         // build Product
         var p = Product.builder()
-                .productCategory(category)
+                .categoryId(category)
                 .uuid(UUID.randomUUID().toString())
                 .name(dto.name().trim())
                 .description(dto.desc().trim())

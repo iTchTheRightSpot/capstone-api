@@ -1,17 +1,15 @@
 package dev.webserver.product;
 
 import dev.webserver.enumeration.SarreCurrency;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jdbc.repository.query.Modifying;
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
-@Repository
-public interface PriceCurrencyRepository extends JpaRepository<PriceCurrency, Long> {
+interface PriceCurrencyRepository extends CrudRepository<PriceCurrency, Long> {
 
     @Query("""
     SELECT
@@ -27,7 +25,7 @@ public interface PriceCurrencyRepository extends JpaRepository<PriceCurrency, Lo
     Optional<PriceCurrencyProjection> priceCurrencyByProductUuidAndCurrency(String uuid, SarreCurrency currency);
 
     @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying
     @Query("""
     UPDATE PriceCurrency c
     SET

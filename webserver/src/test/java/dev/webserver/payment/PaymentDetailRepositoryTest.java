@@ -14,10 +14,10 @@ import java.util.HashSet;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class PaymentDetailRepoTest extends AbstractRepositoryTest {
+class PaymentDetailRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
-    private PaymentDetailRepo repository;
+    private PaymentDetailRepository repository;
 
     @Test
     void shouldSuccessfullyRetrieveAPaymentDetailByEmailAndReference() {

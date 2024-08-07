@@ -1,4 +1,4 @@
-package dev.webserver.checkout;
+package dev.webserver.payment;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

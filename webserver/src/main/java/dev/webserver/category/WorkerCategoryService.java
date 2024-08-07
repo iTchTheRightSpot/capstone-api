@@ -4,7 +4,7 @@ import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.DuplicateException;
 import dev.webserver.exception.ResourceAttachedException;
-import dev.webserver.external.aws.S3Service;
+import dev.webserver.external.aws.IS3Service;
 import dev.webserver.product.ProductProjection;
 import dev.webserver.product.ProductResponse;
 import dev.webserver.util.CustomUtil;
@@ -32,7 +32,7 @@ public class WorkerCategoryService {
     private String BUCKET;
 
     private final CategoryRepository categoryRepository;
-    private final S3Service service;
+    private final IS3Service service;
 
     /**
      * Returns a list {@link WorkerCategoryResponse}
@@ -60,7 +60,7 @@ public class WorkerCategoryService {
      * database and then asynchronously calls to return S3 to get all images for each product.
      *
      * @param currency    The currency in which prices are displayed.
-     * @param categoryId  The primary key of a {@link ProductCategory}.
+     * @param categoryId  The primary key of a {@link Category}.
      * @param page        The page number for pagination.
      * @param size        The page size for pagination.
      * @return A {@link Page} of {@link ProductResponse}.
@@ -91,10 +91,10 @@ public class WorkerCategoryService {
     }
 
     /**
-     * The logic to creating a new {@link ProductCategory} object
-     * is a worker can either add dto.name (child {@link ProductCategory})
-     * to an existing dto.parentId (parentId {@link ProductCategory}) or
-     * create new {@link ProductCategory} who has no parentId.
+     * The logic to creating a new {@link Category} object
+     * is a worker can either add dto.name (child {@link Category})
+     * to an existing dto.parentId (parentId {@link Category}) or
+     * create new {@link Category} who has no parentId.
      *
      * @param dto of type {@link CategoryDto}.
      * @throws DuplicateException when dto.name exists.
@@ -106,15 +106,15 @@ public class WorkerCategoryService {
             throw new DuplicateException(dto.name() + " exists");
         }
 
-        final ProductCategory category = dto.parentId() == null
+        final Category category = dto.parentId() == null
                 ? parentCategoryIsNull(dto)
                 : parentCategoryNotNull(dto);
 
         categoryRepository.save(category);
     }
 
-    private ProductCategory parentCategoryIsNull(CategoryDto dto) {
-        return ProductCategory.builder()
+    private Category parentCategoryIsNull(CategoryDto dto) {
+        return Category.builder()
                 .name(dto.name().trim())
                 .isVisible(dto.visible())
                 .categories(new HashSet<>())
@@ -122,9 +122,9 @@ public class WorkerCategoryService {
                 .build();
     }
 
-    private ProductCategory parentCategoryNotNull(CategoryDto dto) {
+    private Category parentCategoryNotNull(CategoryDto dto) {
         var parent = findById(dto.parentId());
-        return ProductCategory.builder()
+        return Category.builder()
                 .name(dto.name().trim())
                 .isVisible(dto.visible())
                 .parentCategory(parent)
@@ -134,7 +134,7 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Updates a {@link ProductCategory} based on categoryId.
+     * Updates a {@link Category} based on categoryId.
      *
      * @param dto {@link  UpdateCategoryDto}.
      * @throws DuplicateException is thrown if name exists, and it is not associated to
@@ -160,10 +160,10 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Permanently deletes a {@link ProductCategory}.
+     * Permanently deletes a {@link Category}.
      *
-     * @param categoryId is primary key of a {@link ProductCategory}.
-     * @throws org.springframework.dao.DataIntegrityViolationException if {@link ProductCategory}
+     * @param categoryId is primary key of a {@link Category}.
+     * @throws org.springframework.dao.DataIntegrityViolationException if {@link Category}
      * has children entities attached to it.
      * */
     @Transactional(rollbackFor = Exception.class)
@@ -176,7 +176,7 @@ public class WorkerCategoryService {
         }
     }
 
-    public ProductCategory findById(final long categoryId) {
+    public Category findById(final long categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CustomNotFoundException("does not exist"));
     }

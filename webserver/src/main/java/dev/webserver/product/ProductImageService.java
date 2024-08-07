@@ -1,7 +1,7 @@
 package dev.webserver.product;
 
 import dev.webserver.exception.CustomServerError;
-import dev.webserver.external.aws.S3Service;
+import dev.webserver.external.aws.IS3Service;
 import dev.webserver.product.util.CustomMultiPart;
 import dev.webserver.util.CustomUtil;
 import jakarta.validation.constraints.NotNull;
@@ -20,7 +20,7 @@ import java.util.function.Supplier;
 class ProductImageService {
 
     private final ProductImageRepository repository;
-    private final S3Service service;
+    private final IS3Service service;
 
     public String preSignedUrl(@NotNull String bucket, @NotNull String key) {
         return this.service.preSignedUrl(bucket, key);

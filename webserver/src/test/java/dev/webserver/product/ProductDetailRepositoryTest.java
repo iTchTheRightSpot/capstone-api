@@ -2,7 +2,7 @@ package dev.webserver.product;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractRepositoryTest;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
 import dev.webserver.product.util.Variant;
@@ -36,7 +36,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
     void productDetailByProductSku() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -59,7 +59,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
     void updateProductSkuAndProductDetailByProductSku() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -98,7 +98,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
     void productDetailByColour() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -124,7 +124,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
     void shouldReturnProductDetailsByProductUuidForClientFront() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -140,7 +140,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         .defaultKey("default-key")
                         .weight(2.5)
                         .weightType("kg")
-                        .productCategory(cat)
+                        .categoryId(cat)
                         .productDetails(new HashSet<>())
                         .priceCurrency(new HashSet<>())
                         .build()
@@ -168,7 +168,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                             .sku("sku " + i)
                             .size("medium " + i)
                             .inventory(i + 3)
-                            .productDetail(detail)
+                            .productDetailId(detail)
                             .orderDetails(new HashSet<>())
                             .reservations(new HashSet<>())
                             .cartItems(new HashSet<>())
@@ -216,7 +216,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
     void shouldReturnProductDetailsByProductUuidWhereInvIsZeroForClientFront() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -232,7 +232,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         .defaultKey("default-key")
                         .weight(2.5)
                         .weightType("kg")
-                        .productCategory(cat)
+                        .categoryId(cat)
                         .productDetails(new HashSet<>())
                         .priceCurrency(new HashSet<>())
                         .build()
@@ -257,7 +257,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         .sku("sku")
                         .size("medium")
                         .inventory(0)
-                        .productDetail(detail)
+                        .productDetailId(detail)
                         .orderDetails(new HashSet<>())
                         .reservations(new HashSet<>())
                         .cartItems(new HashSet<>())
@@ -304,7 +304,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
     void shouldReturnProductDetailsByProductUuidForAdminFront() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -320,7 +320,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         .defaultKey("default-key")
                         .weight(2.5)
                         .weightType("kg")
-                        .productCategory(cat)
+                        .categoryId(cat)
                         .productDetails(new HashSet<>())
                         .priceCurrency(new HashSet<>())
                         .build()
@@ -350,7 +350,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                             .sku("sku " + i)
                             .size("medium " + i)
                             .inventory(i + 3)
-                            .productDetail(detail)
+                            .productDetailId(detail)
                             .orderDetails(new HashSet<>())
                             .reservations(new HashSet<>())
                             .cartItems(new HashSet<>())
@@ -382,7 +382,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                             .sku(UUID.randomUUID().toString())
                             .size("medium " + i)
                             .inventory(i + 3)
-                            .productDetail(detail2)
+                            .productDetailId(detail2)
                             .orderDetails(new HashSet<>())
                             .reservations(new HashSet<>())
                             .cartItems(new HashSet<>())

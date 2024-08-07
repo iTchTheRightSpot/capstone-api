@@ -3,7 +3,7 @@ package dev.webserver.product;
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
 import dev.webserver.category.CategoryRepository;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.data.TestData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
     void before() {
         var category = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .parentCategory(null)
@@ -53,7 +53,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
 
         var clothes = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("clothes")
                                 .isVisible(true)
                                 .parentCategory(category)

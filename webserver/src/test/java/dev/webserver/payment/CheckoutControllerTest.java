@@ -1,8 +1,8 @@
-package dev.webserver.checkout;
+package dev.webserver.payment;
 
 import dev.webserver.AbstractIntegration;
 import dev.webserver.cart.CartDto;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.TestData;
 import dev.webserver.product.ProductSku;
@@ -56,7 +56,7 @@ class CheckoutControllerTest extends AbstractIntegration {
     private ProductSku productSku() {
         var category = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .categories(new HashSet<>())

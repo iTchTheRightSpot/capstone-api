@@ -1,40 +1,20 @@
 package dev.webserver.payment;
 
-import dev.webserver.product.ProductSku;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import java.io.Serializable;
+import lombok.Builder;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Table(name = "order_detail")
-@Entity
-@NoArgsConstructor
-@Getter
-@Setter
-public class OrderDetail implements Serializable {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "order_detail_id", nullable = false, unique = true)
-    private Long orderDetailId;
-
-    @Column(nullable = false)
-    private int qty;
-
-    @ManyToOne
-    @JoinColumn(name = "sku_id", referencedColumnName = "sku_id", nullable = false)
-    private ProductSku sku;
-
-    @ManyToOne
-    @JoinColumn(name = "payment_detail_id", referencedColumnName = "payment_detail_id", nullable = false)
-    private PaymentDetail paymentDetail;
-
-    public OrderDetail(int qty, ProductSku sku, PaymentDetail detail) {
-        this.qty = qty;
-        this.sku = sku;
-        this.paymentDetail = detail;
-    }
-
+@Builder
+public record OrderDetail(
+        @Id
+        @Column("order_detail_id")
+        Long orderDetailId,
+        int qty,
+        @Column("sku_id")
+        Long skuId,
+        @Column("payment_detail_id")
+        Long paymentDetailId
+) {
 }

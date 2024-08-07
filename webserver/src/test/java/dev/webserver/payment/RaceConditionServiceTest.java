@@ -3,7 +3,6 @@ package dev.webserver.payment;
 import dev.webserver.AbstractUnitTest;
 import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.CartItemRepository;
-import dev.webserver.checkout.CheckoutService;
 import dev.webserver.enumeration.ReservationStatus;
 import dev.webserver.exception.OutOfStockException;
 import dev.webserver.product.ProductSku;

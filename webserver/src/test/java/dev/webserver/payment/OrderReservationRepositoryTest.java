@@ -3,7 +3,7 @@ package dev.webserver.payment;
 import dev.webserver.AbstractRepositoryTest;
 import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.ShoppingSessionRepository;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
 import dev.webserver.product.*;
@@ -45,7 +45,7 @@ class OrderReservationRepositoryTest extends AbstractRepositoryTest {
     void testUpdateQueryForWhenAUserIncreasesTheQtyInTheirOrderReservation() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -120,7 +120,7 @@ class OrderReservationRepositoryTest extends AbstractRepositoryTest {
     void testUpdateQueryForWhenAUserDecreasesTheQtyInTheirOrderReservation() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -194,7 +194,7 @@ class OrderReservationRepositoryTest extends AbstractRepositoryTest {
     void allPendingExpiredReservations() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -249,7 +249,7 @@ class OrderReservationRepositoryTest extends AbstractRepositoryTest {
     void allPendingNoneExpiredReservationsAssociatedToShoppingSession() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -316,7 +316,7 @@ class OrderReservationRepositoryTest extends AbstractRepositoryTest {
     void allReservationsByReference() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -397,7 +397,7 @@ class OrderReservationRepositoryTest extends AbstractRepositoryTest {
     void shouldSaveOrderReservation() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())

@@ -1,7 +1,7 @@
 package dev.webserver.product;
 
 import dev.webserver.AbstractRepositoryTest;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
 import dev.webserver.enumeration.SarreCurrency;
@@ -36,7 +36,7 @@ class PriceCurrencyRepositoryTest extends AbstractRepositoryTest {
     void priceCurrencyByProductUUIDAndCurrency() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())
@@ -66,7 +66,7 @@ class PriceCurrencyRepositoryTest extends AbstractRepositoryTest {
     void updateProductPriceByProductUuidAndCurrency() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())

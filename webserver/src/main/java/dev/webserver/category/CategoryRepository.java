@@ -5,32 +5,27 @@ import dev.webserver.product.Product;
 import dev.webserver.product.ProductProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jdbc.repository.query.Modifying;
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
-/**
- * contains native query
- * */
-@Repository
-public interface CategoryRepository extends JpaRepository<ProductCategory, Long> {
+public interface CategoryRepository extends CrudRepository<Category, Long> {
 
     @Query("SELECT c FROM ProductCategory c WHERE c.name = :name")
-    Optional<ProductCategory> findByName(@Param(value = "name") String name);
+    Optional<Category> findByName(@Param(value = "name") String name);
 
     /**
-     * Validates if 1 or more rows depends on {@link ProductCategory} by
+     * Validates if 1 or more rows depends on {@link Category} by
      * {@param categoryId} as its parentId.
      *
-     * @param id is {@link ProductCategory} property categoryId.
+     * @param id is {@link Category} property categoryId.
      * @return {@code 0 or greater than 0} where 0 means it doesn't have a
-     * child {@link ProductCategory} and greater than 0 means 1 or more rows
+     * child {@link Category} and greater than 0 means 1 or more rows
      * depends on it as a parentId.
      * */
     @Query(value = """
@@ -49,9 +44,9 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     int onDuplicateCategoryName(long id, String name);
 
     /**
-     * Updates name and isVisible properties of a {@link ProductCategory}.
+     * Updates name and isVisible properties of a {@link Category}.
      * */
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying
     @Transactional
     @Query("""
     UPDATE ProductCategory pc
@@ -64,15 +59,15 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
             @Param(value = "id") long id
     );
 
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying
     @Transactional
     @Query("DELETE FROM ProductCategory c WHERE c.categoryId = :id")
     void deleteProductCategoryById(long id);
 
     /**
-     * Updates a {@link ProductCategory} parentId to a new categoryId.
+     * Updates a {@link Category} parentId to a new categoryId.
      * */
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying
     @Transactional
     @Query("""
     UPDATE ProductCategory p
@@ -83,13 +78,13 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
 
     /**
      * Using Common Table Expression (CTE) in native sql query, we recursively update the is_visible
-     * property of {@link ProductCategory} to false.
+     * property of {@link Category} to false.
      *
-     * @param categoryId is all {@link ProductCategory} who have their parent_category_id equalling.
+     * @param categoryId is all {@link Category} who have their parent_category_id equalling.
      * */
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying
     @Transactional
-    @Query(nativeQuery = true, value = """
+    @Query(value = """
     WITH RECURSIVE category (id) AS
     (
         SELECT c.category_id FROM product_category AS c WHERE c.parent_category_id = :categoryId
@@ -123,18 +118,18 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
 
     /**
      * Using native sql query, we retrieve a paginated list of {@link Product}s based on the specified
-     * {@link ProductCategory} and its children, filtered by currency, inventory availability, and visibility.
+     * {@link Category} and its children, filtered by currency, inventory availability, and visibility.
      * <p/>
-     * We use Common Table Expression (CTE) to recursively fetch the specified {@link ProductCategory} and
+     * We use Common Table Expression (CTE) to recursively fetch the specified {@link Category} and
      * all its subcategories. With the obtained categories, we retrieve all products associated with them.
      *
-     * @param categoryId The primary key of {@link ProductCategory}.
+     * @param categoryId The primary key of {@link Category}.
      * @param currency The currency in which prices are displayed, represented by a {@link SarreCurrency} enum
      *                 value.
      * @param page The pagination information, represented by a {@link Pageable} object.
      * @return Leveraging Spring Data Projection, a paginated {@link Page} containing {@link ProductProjection} objects.
      * */
-    @Query(nativeQuery = true, value = """
+    @Query(value = """
     WITH RECURSIVE category (id) AS
     (
         SELECT c.category_id FROM product_category AS c WHERE c.category_id = :categoryId
@@ -163,7 +158,7 @@ public interface CategoryRepository extends JpaRepository<ProductCategory, Long>
     );
 
     /**
-     * Retrieves all {@link ProductCategory} objects. Then maps the
+     * Retrieves all {@link Category} objects. Then maps the
      * objects to a {@link CategoryProjection} using Spring Data Projection.
      * */
     @Query(value = """

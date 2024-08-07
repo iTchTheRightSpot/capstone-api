@@ -3,7 +3,7 @@ package dev.webserver.product;
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
 import dev.webserver.category.CategoryRepository;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.data.TestData;
 import dev.webserver.exception.DuplicateException;
 import dev.webserver.exception.ResourceAttachedException;
@@ -41,7 +41,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
     void dummy() {
         var category = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .parentCategory(null)
@@ -54,7 +54,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
 
         var clothes = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("clothes")
                                 .isVisible(true)
                                 .parentCategory(category)
@@ -90,7 +90,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
         // given
         var category = categoryRepository
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .parentCategory(null)

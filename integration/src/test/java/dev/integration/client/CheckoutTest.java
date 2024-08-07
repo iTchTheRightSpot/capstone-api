@@ -3,7 +3,7 @@ package dev.integration.client;
 import dev.integration.AbstractNative;
 import dev.integration.MockRequest;
 import dev.webserver.cart.CartDto;
-import dev.webserver.checkout.Checkout;
+import dev.webserver.payment.Checkout;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;

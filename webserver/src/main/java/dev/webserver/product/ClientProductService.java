@@ -1,7 +1,7 @@
 package dev.webserver.product;
 
 import dev.webserver.enumeration.SarreCurrency;
-import dev.webserver.external.aws.S3Service;
+import dev.webserver.external.aws.IS3Service;
 import dev.webserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +26,7 @@ public class ClientProductService {
     private final ProductRepository productRepository;
     private final ProductDetailRepository productDetailRepository;
     private final PriceCurrencyRepository priceCurrencyRepository;
-    private final S3Service s3Service;
+    private final IS3Service s3Service;
 
     /**
      * Returns a {@link Page} of {@link ProductResponse}

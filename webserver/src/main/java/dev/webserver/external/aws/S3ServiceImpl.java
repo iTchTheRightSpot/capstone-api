@@ -19,15 +19,15 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class S3Service {
+class S3ServiceImpl implements IS3Service {
 
-    private static final Logger log = LoggerFactory.getLogger(S3Service.class);
+    private static final Logger log = LoggerFactory.getLogger(S3ServiceImpl.class);
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
     private final boolean profile;
 
-    public S3Service (S3Client s3Client, S3Presigner s3Presigner, Environment env) {
+    public S3ServiceImpl(S3Client s3Client, S3Presigner s3Presigner, Environment env) {
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
 
@@ -36,6 +36,7 @@ public class S3Service {
         profile = active.endsWith("test");
     }
 
+    @Override
     public void uploadToS3(File file, Map<String, String> metadata, String bucket, String key) {
         if (profile) {
             return;
@@ -87,13 +88,7 @@ public class S3Service {
         }
     }
 
-    /**
-     * Returns a pre-signed url from s3.
-     *
-     * @param bucket is the bucket name.
-     * @param key is the object key.
-     * @return An aws pre-signed url.
-     * */
+    @Override
     public String preSignedUrl(@NotNull String bucket, @NotNull String key) {
         if (profile) {
             return "";

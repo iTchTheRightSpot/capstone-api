@@ -3,7 +3,7 @@ package dev.webserver.payment;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.exception.CustomServerError;
-import dev.webserver.external.aws.S3Service;
+import dev.webserver.external.aws.IS3Service;
 import dev.webserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -28,7 +28,7 @@ public class OrderService {
     private String bucket;
 
     private final OrderDetailRepository repository;
-    private final S3Service s3Service;
+    private final IS3Service s3Service;
 
     /**
      * Retrieves the order history asynchronously for the currently authenticated user.

@@ -26,9 +26,9 @@ public class PaymentDetailService {
 
     static final Logger log = LoggerFactory.getLogger(PaymentDetailService.class);
 
-    private final PaymentDetailRepo paymentDetailRepo;
+    private final PaymentDetailRepository paymentDetailRepository;
     private final SarreBrandUserService userService;
-    private final AddressRepo addressRepo;
+    private final AddressRepository addressRepository;
     private final OrderReservationRepository orderReservationRepository;
     private final PaymentAuthorizationRepository paymentAuthorizationRepository;
     private final CartItemRepository cartItemRepository;
@@ -44,7 +44,7 @@ public class PaymentDetailService {
      * @return true is {@link PaymentDetail} exists else false.
      */
     public boolean paymentDetailExists(final String email, final String reference) {
-        return paymentDetailRepo.paymentDetailByEmailAndReference(email, reference).isPresent();
+        return paymentDetailRepository.paymentDetailByEmailAndReference(email, reference).isPresent();
     }
 
     /**
@@ -101,7 +101,7 @@ public class PaymentDetailService {
         var currency = SarreCurrency.valueOf(data.get("currency").textValue().toUpperCase());
 
         // save PaymentDetail
-        return paymentDetailRepo.save(
+        return paymentDetailRepository.save(
                 PaymentDetail.builder()
                         .name(metadata.name())
                         .email(metadata.email())
@@ -126,7 +126,7 @@ public class PaymentDetailService {
      * @param detail   an associated property of an {@link Address}.
      */
     private void address(final WebhookMetaData metadata, final PaymentDetail detail) {
-        addressRepo.save(new Address(
+        addressRepository.save(new Address(
                 metadata.address(),
                 metadata.city(),
                 metadata.state(),

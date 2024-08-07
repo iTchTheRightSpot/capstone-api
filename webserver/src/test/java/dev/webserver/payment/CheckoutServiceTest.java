@@ -1,10 +1,9 @@
-package dev.webserver.checkout;
+package dev.webserver.payment;
 
 import dev.webserver.AbstractUnitTest;
 import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.CartItemRepository;
 import dev.webserver.cart.ShoppingSessionRepository;
-import dev.webserver.payment.RaceConditionCartProjection;
 import dev.webserver.shipping.ShipSetting;
 import dev.webserver.shipping.ShippingService;
 import dev.webserver.tax.Tax;
@@ -57,8 +56,7 @@ class CheckoutServiceTest extends AbstractUnitTest {
         // given
         var session = new ShoppingSession();
         session.setShoppingSessionId(1L);
-        ShipSetting ship = new ShipSetting();
-        ship.setCountry("nigeria");
+        ShipSetting ship = new ShipSetting(1L, "nigeria", null, null);
         Tax tax = new Tax(1L, "vat", 0.075);
         Cookie[] cookies = {new Cookie("cartcookie", "this is custom cookie")};
         HttpServletRequest req = mock(HttpServletRequest.class);
@@ -72,7 +70,7 @@ class CheckoutServiceTest extends AbstractUnitTest {
         when(taxService.taxById(anyLong())).thenReturn(tax);
 
         // method to test
-        CustomObject obj = checkoutService
+        CustomCheckoutObject obj = checkoutService
                 .validateCurrentShoppingSession(req, "nigeria");
 
         // then

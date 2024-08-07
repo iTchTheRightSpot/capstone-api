@@ -33,7 +33,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         // given
         var category = categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
@@ -43,7 +43,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("clothes")
                                 .isVisible(true)
                                 .parentCategory(category)
@@ -54,7 +54,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         var furniture = categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("furniture")
                                 .isVisible(true)
                                 .parentCategory(category)
@@ -65,7 +65,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("chair")
                                 .isVisible(true)
                                 .parentCategory(furniture)
@@ -76,7 +76,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         var collection = categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("collection")
                                 .isVisible(true)
                                 .parentCategory(null)
@@ -87,7 +87,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         var fall = categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("fall 2024")
                                 .isVisible(true)
                                 .parentCategory(collection)
@@ -98,7 +98,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("trouser fall 2024")
                                 .isVisible(true)
                                 .parentCategory(fall)
@@ -120,7 +120,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         // given
         var category = categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
@@ -130,7 +130,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("clothes")
                                 .isVisible(true)
                                 .parentCategory(category)
@@ -153,7 +153,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         // given
         var category = categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
@@ -163,7 +163,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         var clothes = categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("clothes")
                                 .isVisible(true)
                                 .parentCategory(category)
@@ -206,7 +206,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         // given
         var category = categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
@@ -216,7 +216,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         var clothes = categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("clothes")
                                 .isVisible(true)
                                 .parentCategory(category)
@@ -226,7 +226,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                 );
         var furniture = categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("furniture")
                                 .isVisible(true)
                                 .parentCategory(category)
@@ -239,17 +239,17 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         categoryRepo.updateAllChildrenVisibilityToFalse(category.getCategoryId());
 
         // then
-        ProductCategory parent = categoryRepo
+        Category parent = categoryRepo
                 .findById(category.getCategoryId())
                 .orElse(null);
         assertNotNull(parent);
 
-        ProductCategory child1 = categoryRepo
+        Category child1 = categoryRepo
                 .findById(clothes.getCategoryId())
                 .orElse(null);
         assertNotNull(child1);
 
-        ProductCategory child2 = categoryRepo
+        Category child2 = categoryRepo
                 .findById(furniture.getCategoryId())
                 .orElse(null);
         assertNotNull(child2);
@@ -264,7 +264,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         // given
         var category = categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
@@ -274,7 +274,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         var clothes = categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("clothes")
                                 .isVisible(true)
                                 .parentCategory(category)
@@ -284,7 +284,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                 );
         var collection = categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("collection")
                                 .isVisible(true)
                                 .categories(new HashSet<>())
@@ -309,7 +309,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         // given
         var category = categoryRepo
                 .save(
-                        ProductCategory.builder()
+                        Category.builder()
                                 .name("category")
                                 .isVisible(true)
                                 .categories(new HashSet<>())

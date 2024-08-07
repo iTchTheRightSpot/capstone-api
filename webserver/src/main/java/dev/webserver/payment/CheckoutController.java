@@ -1,4 +1,4 @@
-package dev.webserver.checkout;
+package dev.webserver.payment;
 
 import dev.webserver.enumeration.SarreCurrency;
 import jakarta.servlet.http.HttpServletRequest;

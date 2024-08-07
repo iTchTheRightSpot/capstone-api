@@ -1,7 +1,7 @@
 package dev.webserver.cart;
 
 import dev.webserver.AbstractRepositoryTest;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
 import dev.webserver.product.*;
@@ -84,7 +84,7 @@ class ShoppingSessionRepositoryTest extends AbstractRepositoryTest {
     void cartItemsByCookieValue() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())

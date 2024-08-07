@@ -5,12 +5,12 @@ import dev.webserver.cart.CartResponse;
 import dev.webserver.category.CategoryDto;
 import dev.webserver.category.UpdateCategoryDto;
 import dev.webserver.category.WorkerCategoryResponse;
-import dev.webserver.checkout.CheckoutPair;
-import dev.webserver.checkout.CustomObject;
+import dev.webserver.payment.CheckoutPair;
+import dev.webserver.payment.CustomCheckoutObject;
 import dev.webserver.external.payment.PaymentCredentialObj;
 import dev.webserver.external.log.DiscordPayload;
 import dev.webserver.payment.OrderHistoryDto;
-import dev.webserver.payment.PaymentDTO;
+import dev.webserver.payment.PaymentDto;
 import dev.webserver.payment.SkuQtyDto;
 import dev.webserver.payment.PaymentResponse;
 import dev.webserver.payment.WebhookAuthorization;
@@ -55,14 +55,14 @@ final class MyRuntimeHints implements RuntimeHintsRegistrar {
                 .registerType(PriceCurrencyDto.class)
                 .registerType(Variant.class)
                 .registerType(DetailResponse.class)
-                .registerType(PaymentDTO.class)
+                .registerType(PaymentDto.class)
                 .registerType(OrderHistoryDto.class)
                 .registerType(SkuQtyDto.class)
                 .registerType(ShippingDto.class)
                 .registerType(ShippingMapper.class)
                 .registerType(PaymentCredentialObj.class)
                 .registerType(CheckoutPair.class)
-                .registerType(CustomObject.class)
+                .registerType(CustomCheckoutObject.class)
                 .registerType(TaxDto.class)
                 .registerType(PaymentResponse.class)
                 .registerType(WebhookMetaData.class)

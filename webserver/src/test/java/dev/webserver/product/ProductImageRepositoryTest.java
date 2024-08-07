@@ -1,7 +1,7 @@
 package dev.webserver.product;
 
 import dev.webserver.AbstractRepositoryTest;
-import dev.webserver.category.ProductCategory;
+import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ class ProductImageRepositoryTest extends AbstractRepositoryTest {
     void imagesByProductDetailId() {
         // given
         var cat = categoryRepo
-                .save(ProductCategory.builder()
+                .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .categories(new HashSet<>())

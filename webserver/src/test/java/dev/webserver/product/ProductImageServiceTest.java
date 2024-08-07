@@ -1,8 +1,8 @@
 package dev.webserver.product;
 
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.external.aws.S3Service;
 import dev.webserver.exception.CustomServerError;
+import dev.webserver.external.aws.IS3Service;
 import dev.webserver.product.util.CustomMultiPart;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ class ProductImageServiceTest extends AbstractUnitTest {
     @Mock
     private ProductImageRepository repository;
     @Mock
-    private S3Service s3Service;
+    private IS3Service s3Service;
 
     @BeforeEach
     void createInstance() {

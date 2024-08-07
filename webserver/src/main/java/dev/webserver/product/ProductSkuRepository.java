@@ -1,15 +1,13 @@
 package dev.webserver.product;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jdbc.repository.query.Modifying;
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-@Repository
-public interface ProductSkuRepository extends JpaRepository<ProductSku, Long> {
+public interface ProductSkuRepository extends CrudRepository<ProductSku, Long> {
 
     /**
      * Retrieves a {@link ProductSku} based on the provided sku.
@@ -28,7 +26,7 @@ public interface ProductSkuRepository extends JpaRepository<ProductSku, Long> {
      * @param qty is the number to add to an existing {@link ProductSku}.
      * */
     @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying
     @Query("""
     UPDATE ProductSku s
     SET
@@ -45,7 +43,7 @@ public interface ProductSkuRepository extends JpaRepository<ProductSku, Long> {
      * @param qty the number to add to an existing {@link ProductSku} inventory.
      * */
     @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying
     @Query("""
     UPDATE ProductSku s
     SET
@@ -58,7 +56,7 @@ public interface ProductSkuRepository extends JpaRepository<ProductSku, Long> {
      * Deletes a {@link ProductSku} by its property sku.
      * */
     @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying
     @Query("DELETE FROM ProductSku s WHERE s.sku = :sku")
     void deleteProductSkuBySku(String sku);
 

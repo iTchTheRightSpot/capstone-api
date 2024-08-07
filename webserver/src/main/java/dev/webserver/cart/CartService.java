@@ -4,7 +4,7 @@ import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomInvalidFormatException;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.OutOfStockException;
-import dev.webserver.external.aws.S3Service;
+import dev.webserver.external.aws.IS3Service;
 import dev.webserver.product.Product;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuService;
@@ -57,7 +57,7 @@ public class CartService {
     private final ShoppingSessionRepository shoppingSessionRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductSkuService productSKUService;
-    private final S3Service s3Service;
+    private final IS3Service s3Service;
 
     /**
      * Updates the expiration of a cookie if it is within the expiration period.

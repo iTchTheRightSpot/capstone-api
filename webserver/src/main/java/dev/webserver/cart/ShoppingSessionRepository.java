@@ -1,24 +1,22 @@
 package dev.webserver.cart;
 
 import dev.webserver.enumeration.SarreCurrency;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jdbc.repository.query.Modifying;
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public interface ShoppingSessionRepository extends JpaRepository<ShoppingSession, Long> {
+public interface ShoppingSessionRepository extends CrudRepository<ShoppingSession, Long> {
 
     @Query("SELECT s FROM ShoppingSession s WHERE s.cookie = :cookie")
     Optional<ShoppingSession> shoppingSessionByCookie(String cookie);
 
     @Transactional
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Modifying
     @Query(value = """
     UPDATE ShoppingSession s
     SET s.expireAt = :d

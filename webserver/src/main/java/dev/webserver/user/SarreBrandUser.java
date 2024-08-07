@@ -1,53 +1,22 @@
 package dev.webserver.user;
 
-import dev.webserver.payment.PaymentDetail;
-
-import jakarta.persistence.*;
-import lombok.*;
-
-import java.io.Serializable;
-import java.util.Set;
-
-import static jakarta.persistence.CascadeType.ALL;
-import static jakarta.persistence.FetchType.EAGER;
-import static jakarta.persistence.FetchType.LAZY;
+import lombok.Builder;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Table(name = "clientz")
-@Entity
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-@Getter
-@Setter
-public class SarreBrandUser implements Serializable {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "client_id", nullable = false, unique = true)
-    private Long clientId;
-
-    @Column(name = "firstname", nullable = false)
-    private String firstname;
-
-    @Column(name = "lastname", nullable = false)
-    private String lastname;
-
-    @Column(name = "email", nullable = false, unique = true)
-    private String email;
-
-    @Column(name = "phone_number", nullable = false)
-    private String phoneNumber;
-
-    @Column(name = "password", nullable = false)
-    private String password;
-
-    @Column(name = "enabled", nullable = false)
-    private boolean enabled;
-
-    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = "sarreBrandUser", orphanRemoval = true)
-    private Set<ClientRole> clientRole;
-
-    @OneToMany(cascade = ALL, fetch = LAZY, mappedBy = "user")
-    private Set<PaymentDetail> paymentDetail;
-
+public record SarreBrandUser(
+        @Id
+        @Column("client_id")
+        Long clientId,
+        String firstname,
+        String lastname,
+        String email,
+        @Column("phone_number")
+        String phoneNumber,
+        String password,
+        boolean enabled
+) {
 }

@@ -3,8 +3,6 @@ package dev.webserver.payment;
 import dev.webserver.cart.CartItem;
 import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.CartItemRepository;
-import dev.webserver.checkout.CheckoutService;
-import dev.webserver.checkout.CustomObject;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.OutOfStockException;
@@ -83,7 +81,7 @@ public class RaceConditionService {
             final String country,
             final SarreCurrency currency
     ) {
-        final CustomObject obj = checkoutService
+        final CustomCheckoutObject obj = checkoutService
                 .validateCurrentShoppingSession(req, country.toLowerCase().trim());
 
         final var reservations = reservationRepo

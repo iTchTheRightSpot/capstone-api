@@ -1,9 +1,9 @@
 package dev.webserver.payment;
 
-import dev.webserver.cart.CartItem;
-import dev.webserver.cart.CartItemRepository;
+import dev.webserver.cart.Cart;
+import dev.webserver.cart.ICartRepository;
 import dev.webserver.cart.ShoppingSession;
-import dev.webserver.cart.ShoppingSessionRepository;
+import dev.webserver.cart.IShoppingSessionRepository;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.shipping.ShipSetting;
@@ -36,14 +36,14 @@ class CheckoutService {
 
     private final ShippingService shippingService;
     private final TaxService taxService;
-    private final ShoppingSessionRepository shoppingSessionRepository;
-    private final CartItemRepository cartItemRepository;
+    private final IShoppingSessionRepository IShoppingSessionRepository;
+    private final ICartRepository ICartRepository;
 
     /**
      * Generates checkout information based on a user's country and selected currency.
      * <p>
      * This method processes the user's checkout request by retrieving necessary information
-     * such as the {@link ShoppingSession}, {@link CartItem}, {@link ShipSetting},
+     * such as the {@link ShoppingSession}, {@link Cart}, {@link ShipSetting},
      * and {@link Tax}. It then calculates the total amount for the checkout and constructs
      * a {@link Checkout} object containing the shipping price, tax information, and total
      * amount in the users choice of currency.
@@ -57,8 +57,8 @@ class CheckoutService {
     public Checkout checkout(final HttpServletRequest req, final String country, final SarreCurrency currency) {
         final CustomCheckoutObject obj = validateCurrentShoppingSession(req, country);
 
-        final var list = this.cartItemRepository
-                .amountToPayForAllCartItemsForShoppingSession(obj.session().shoppingSessionId(), currency);
+        final var list = this.ICartRepository
+                .amountToPayForAllCartItemsForShoppingSession(obj.session().sessionId(), currency);
 
         final BigDecimal shipCost = currency.equals(SarreCurrency.USD)
                 ? obj.ship().usdPrice()
@@ -98,19 +98,19 @@ class CheckoutService {
      * country.
      * <p>
      * This method retrieves custom cookie from the HttpServletRequest to find associated
-     * {@link ShoppingSession} for the device. It then retrieves the associated {@link CartItem}(s)
+     * {@link ShoppingSession} for the device. It then retrieves the associated {@link Cart}(s)
      * and checks if the cart is empty. Next, it retrieves the shipping information based
      * on the provided country. Finally, it retrieves the tax information. Using this
      * information, it constructs and returns a {@link CustomCheckoutObject} containing the
-     * {@link ShoppingSession}, {@link CartItem}, {@link ShipSetting}, and {@link Tax}.
+     * {@link ShoppingSession}, {@link Cart}, {@link ShipSetting}, and {@link Tax}.
      *
      * @param req     The HttpServletRequest containing the {@link ShoppingSession} cookie.
      * @param country The country for which {@link ShipSetting} information is retrieved.
-     * @return A {@link CustomCheckoutObject} containing the {@link ShoppingSession}, {@link CartItem}(s),
+     * @return A {@link CustomCheckoutObject} containing the {@link ShoppingSession}, {@link Cart}(s),
      * {@link ShipSetting}, and {@link Tax}.
      * @throws CustomNotFoundException If custom cookie does not contain in
      *                                 {@link HttpServletRequest}, the {@link ShoppingSession} is
-     *                                 invalid, or {@link CartItem} is empty.
+     *                                 invalid, or {@link Cart} is empty.
      */
     public CustomCheckoutObject validateCurrentShoppingSession(final HttpServletRequest req, final String country) {
         final Cookie cookie = CustomUtil.cookie(req, cartcookie);
@@ -119,7 +119,7 @@ class CheckoutService {
             throw new CustomNotFoundException("no cookie found. kindly refresh window");
         }
 
-        final var optional = shoppingSessionRepository
+        final var optional = IShoppingSessionRepository
                 .shoppingSessionByCookie(cookie.getValue().split(split)[0]);
 
         if (optional.isEmpty()) {
@@ -128,8 +128,8 @@ class CheckoutService {
 
         final ShoppingSession session = optional.get();
 
-        final var carts = cartItemRepository
-                .cartItemsByShoppingSessionId(session.shoppingSessionId());
+        final var carts = ICartRepository
+                .cartByShoppingSessionId(session.sessionId());
 
         if (carts.isEmpty()) {
             throw new CustomNotFoundException("cart is empty");

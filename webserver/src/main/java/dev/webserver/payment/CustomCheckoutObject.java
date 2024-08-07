@@ -9,7 +9,7 @@ import java.util.List;
 
 public record CustomCheckoutObject(
         ShoppingSession session,
-        List<RaceConditionCartProjection> cartItems,
+        List<RaceConditionCartDbMapper> cartItems,
         ShipSetting ship,
         Tax tax
 ) implements Serializable { }

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public record ShoppingSession(
         @Id
         @Column("session_id")
-        Long shoppingSessionId,
+        Long sessionId,
         String cookie,
         @Column("created_at")
         LocalDateTime createAt,

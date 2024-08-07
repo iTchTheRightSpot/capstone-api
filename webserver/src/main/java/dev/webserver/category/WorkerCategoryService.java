@@ -19,7 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
+import java.util.List;
 import java.util.function.Supplier;
 
 @Service
@@ -29,30 +29,13 @@ public class WorkerCategoryService {
     private static final Logger log = LoggerFactory.getLogger(WorkerCategoryService.class);
 
     @Value(value = "${aws.bucket}")
-    private String BUCKET;
+    private String bucket;
 
     private final CategoryRepository categoryRepository;
     private final IS3Service service;
 
-    /**
-     * Returns a list {@link WorkerCategoryResponse}
-     * */
-    public WorkerCategoryResponse allCategories() {
-        var category = this.categoryRepository.allCategories();
-
-        // table
-        var table = category
-                .stream()
-                .map(CategoryResponse::workerList)
-                .toList();
-
-        // hierarchy
-        var hierarchy = category
-                .stream()
-                .map(p -> new CategoryResponse(p.getId(), p.getParent(), p.getName(), p.statusImpl()))
-                .toList();
-
-        return new WorkerCategoryResponse(table, CustomUtil.createCategoryHierarchy(hierarchy));
+    public List<Category> allCategories() {
+        return categoryRepository.allCategories();
     }
 
     /**
@@ -81,7 +64,7 @@ public class WorkerCategoryService {
                         .name(p.getName())
                         .price(p.getPrice())
                         .currency(p.getCurrency())
-                        .imageUrl(service.preSignedUrl(BUCKET, p.getImage()))
+                        .imageUrl(service.preSignedUrl(bucket, p.getImage()))
                         .build()
                 )
                 .toList();
@@ -107,30 +90,10 @@ public class WorkerCategoryService {
         }
 
         final Category category = dto.parentId() == null
-                ? parentCategoryIsNull(dto)
-                : parentCategoryNotNull(dto);
+                ? Category.builder().name(dto.name().trim()).isVisible(dto.visible()).build()
+                : Category.builder().name(dto.name().trim()).isVisible(dto.visible()).parentId(findById(dto.parentId()).categoryId()).build();
 
         categoryRepository.save(category);
-    }
-
-    private Category parentCategoryIsNull(CategoryDto dto) {
-        return Category.builder()
-                .name(dto.name().trim())
-                .isVisible(dto.visible())
-                .categories(new HashSet<>())
-                .product(new HashSet<>())
-                .build();
-    }
-
-    private Category parentCategoryNotNull(CategoryDto dto) {
-        var parent = findById(dto.parentId());
-        return Category.builder()
-                .name(dto.name().trim())
-                .isVisible(dto.visible())
-                .parentCategory(parent)
-                .categories(new HashSet<>())
-                .product(new HashSet<>())
-                .build();
     }
 
     /**
@@ -153,7 +116,7 @@ public class WorkerCategoryService {
         }
 
         if (dto.parentId() != null) {
-            categoryRepository.updateCategoryParentIdBasedOnCategoryId(dto.id(), dto.parentId());
+            categoryRepository.updateCategoryParentId(dto.id(), dto.parentId());
         }
 
         categoryRepository.update(dto.name().trim(), dto.visible(), dto.id());
@@ -178,7 +141,7 @@ public class WorkerCategoryService {
 
     public Category findById(final long categoryId) {
         return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new CustomNotFoundException("does not exist"));
+                .orElseThrow(() -> new CustomNotFoundException("category id not found"));
     }
 
 }

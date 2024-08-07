@@ -2,7 +2,7 @@ package dev.webserver.payment;
 
 public record RaceConditionHelper() {
 
-    public static RaceConditionCartProjection raceConditionCartPojo(
+    public static RaceConditionCartDbMapper raceConditionCartPojo(
             long skuId,
             String sku,
             int inventory,
@@ -11,7 +11,7 @@ public record RaceConditionHelper() {
             int qty,
             long sessionId
     ) {
-        return new RaceConditionCartProjection() {
+        return new RaceConditionCartDbMapper() {
             @Override
             public Long getProductSkuId() {
                 return skuId;

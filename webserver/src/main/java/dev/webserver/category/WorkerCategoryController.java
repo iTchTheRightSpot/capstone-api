@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 import static org.springframework.http.HttpStatus.*;
 
 @RestController
@@ -19,8 +21,8 @@ class WorkerCategoryController {
 
     @ResponseStatus(OK)
     @GetMapping(produces = "application/json")
-    public WorkerCategoryResponse allCategories() {
-        return this.service.allCategories();
+    public List<Category> allCategories() {
+        return service.allCategories();
     }
 
     @ResponseStatus(OK)

@@ -30,9 +30,4 @@ public record CategoryResponse(
     public void addToChildren(CategoryResponse child) {
         children.add(child);
     }
-
-    public static CategoryResponse workerList(CategoryProjection p) {
-        return new CategoryResponse(p.getId(), p.getParent(), p.getName(), p.statusImpl(), null);
-    }
-
 }

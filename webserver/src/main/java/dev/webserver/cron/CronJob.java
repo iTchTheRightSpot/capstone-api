@@ -1,10 +1,10 @@
 package dev.webserver.cron;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import dev.webserver.cart.CartItem;
-import dev.webserver.cart.CartItemRepository;
+import dev.webserver.cart.Cart;
+import dev.webserver.cart.ICartRepository;
 import dev.webserver.cart.ShoppingSession;
-import dev.webserver.cart.ShoppingSessionRepository;
+import dev.webserver.cart.IShoppingSessionRepository;
 import dev.webserver.external.log.ILogEventPublisher;
 import dev.webserver.external.payment.ThirdPartyPaymentService;
 import dev.webserver.payment.OrderReservation;
@@ -41,8 +41,8 @@ class CronJob {
     private final RestClient restClient;
     private final ProductSkuRepository skuRepo;
     private final OrderReservationRepository reservationRepo;
-    private final ShoppingSessionRepository sessionRepo;
-    private final CartItemRepository cartItemRepository;
+    private final IShoppingSessionRepository sessionRepo;
+    private final ICartRepository ICartRepository;
     private final PaymentDetailService paymentDetailService;
     private final String secretKey;
     private final ILogEventPublisher publisher;
@@ -51,8 +51,8 @@ class CronJob {
             RestClient.Builder clientBuilder,
             ProductSkuRepository skuRepo,
             OrderReservationRepository reservationRepo,
-            ShoppingSessionRepository sessionRepo,
-            CartItemRepository cartItemRepository,
+            IShoppingSessionRepository sessionRepo,
+            ICartRepository ICartRepository,
             PaymentDetailService paymentDetailService,
             ThirdPartyPaymentService paymentService,
             ILogEventPublisher publisher
@@ -60,7 +60,7 @@ class CronJob {
         this.skuRepo = skuRepo;
         this.reservationRepo = reservationRepo;
         this.sessionRepo = sessionRepo;
-        this.cartItemRepository = cartItemRepository;
+        this.ICartRepository = ICartRepository;
         this.paymentDetailService = paymentDetailService;
         this.secretKey = paymentService.payStackCredentials().secretKey();
         this.restClient = clientBuilder.build();
@@ -78,18 +78,18 @@ class CronJob {
     }
 
     /**
-     * Deletes all expired {@link ShoppingSession} instances and their associated {@link CartItem}.
+     * Deletes all expired {@link ShoppingSession} instances and their associated {@link Cart}.
      * This method retrieves all expired {@link ShoppingSession} instances from the repository
      * using the current date as a reference point. For each expired session, it deletes all
-     * {@link CartItem} associated with that session and then deletes the session itself.
+     * {@link Cart} associated with that session and then deletes the session itself.
      */
     @Transactional(rollbackFor = Exception.class)
     public void onDeleteShoppingSessions() {
         sessionRepo.allExpiredShoppingSession(CustomUtil.toUTC(new Date()))
                 .forEach(session -> {
-                    this.cartItemRepository.deleteCartItemsByShoppingSessionId(
-                            session.shoppingSessionId());
-                    this.sessionRepo.deleteById(session.shoppingSessionId());
+                    this.ICartRepository.deleteCartByShoppingSessionId(
+                            session.sessionId());
+                    this.sessionRepo.deleteById(session.sessionId());
                 });
     }
 
@@ -126,7 +126,7 @@ class CronJob {
                     }
 
                     skuRepo.updateProductSkuInventoryByAddingToExistingInventory(
-                            obj.reservation().getProductSku().getSku(),
+                            obj.reservation().getSkuId().getSku(),
                             obj.reservation().getQty()
                     );
 

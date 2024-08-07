@@ -4,6 +4,7 @@ import dev.webserver.enumeration.SarreCurrency;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +25,13 @@ class CartController {
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
     public List<CartResponse> cartItems(
-            @RequestParam(name = "currency", defaultValue = "ngn") String currency,
+            @RequestParam(name = "currency", defaultValue = "ngn")
+            String currency,
             HttpServletRequest req,
             HttpServletResponse res
     ) {
         SarreCurrency s = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.cartService.cartItems(s, req, res);
+        return cartService.cartItems(s, req, res);
     }
 
     @ResponseStatus(CREATED)
@@ -40,8 +42,14 @@ class CartController {
 
     @ResponseStatus(OK)
     @DeleteMapping
-    public void delete(@NotNull @RequestParam(name = "sku") String sku, HttpServletRequest req) {
-        this.cartService.deleteFromCart(req, sku);
+    public void delete(
+            @NotNull(message = "sku cannot be null")
+            @NotEmpty(message = "sku cannot be empty")
+            @RequestParam(name = "sku")
+            String sku,
+            HttpServletRequest req
+    ) {
+        cartService.deleteFromCart(req, sku.trim());
     }
 
 }

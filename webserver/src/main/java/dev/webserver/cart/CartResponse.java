@@ -1,11 +1,13 @@
 package dev.webserver.cart;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.webserver.enumeration.SarreCurrency;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record CartResponse(
         String product_id,
         String url,

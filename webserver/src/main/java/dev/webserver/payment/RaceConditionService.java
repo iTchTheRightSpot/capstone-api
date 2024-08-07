@@ -1,8 +1,8 @@
 package dev.webserver.payment;
 
-import dev.webserver.cart.CartItem;
+import dev.webserver.cart.Cart;
 import dev.webserver.cart.ShoppingSession;
-import dev.webserver.cart.CartItemRepository;
+import dev.webserver.cart.ICartRepository;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.OutOfStockException;
@@ -50,7 +50,7 @@ public class RaceConditionService {
     private long bound;
 
     private final ProductSkuRepository productSkuRepository;
-    private final CartItemRepository cartItemRepository;
+    private final ICartRepository ICartRepository;
     private final OrderReservationRepository reservationRepo;
     private final ThirdPartyPaymentService thirdPartyService;
     private final CheckoutService checkoutService;
@@ -61,7 +61,7 @@ public class RaceConditionService {
      * <p>
      * This method is used to prevent race conditions or overselling scenarios by
      * temporarily deducting the quantity in a users cart (represented as
-     * {@link CartItem}) from the inventory of corresponding {@link ProductSku} items.
+     * {@link Cart}) from the inventory of corresponding {@link ProductSku} items.
      * It creates reservations for the items in the cart to ensure that they are not
      * oversold. The method also generates payment information based on the user's
      * country and selected currency, preparing the response for payment.
@@ -72,8 +72,8 @@ public class RaceConditionService {
      * @param currency The currency selected for the payment, of type SarreCurrency.
      * @return A PaymentResponse containing payment details for the user.
      * @throws CustomNotFoundException If custom cookie does not contain in {@link HttpServletRequest},
-     * the {@link ShoppingSession} is invalid, or {@link CartItem} is empty.
-     * @throws OutOfStockException If {@link CartItem} quantity is greater {@link ProductSku} inventory.
+     * the {@link ShoppingSession} is invalid, or {@link Cart} is empty.
+     * @throws OutOfStockException If {@link Cart} quantity is greater {@link ProductSku} inventory.
      * @throws JpaSystemException if {@link ProductSku} property 'inventory' is negative.
      */
     public PaymentResponse raceCondition(
@@ -86,7 +86,7 @@ public class RaceConditionService {
 
         final var reservations = reservationRepo
                 .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
-                        obj.session().shoppingSessionId(),
+                        obj.session().sessionId(),
                         CustomUtil.toUTC(new Date()),
                         PENDING
                 );
@@ -100,8 +100,8 @@ public class RaceConditionService {
 
         raceConditionImpl(reference, reservations, obj.cartItems(), toExpire, obj.session());
 
-        final var list = this.cartItemRepository
-                .amountToPayForAllCartItemsForShoppingSession(obj.session().shoppingSessionId(), currency);
+        final var list = this.ICartRepository
+                .amountToPayForAllCartItemsForShoppingSession(obj.session().sessionId(), currency);
 
         final BigDecimal total = CustomUtil
                 .calculateTotal(
@@ -139,7 +139,7 @@ public class RaceConditionService {
      *
      * @param reservations A list of existing {@code OrderReservations} associated with
      *                     the {@link ShoppingSession}.
-     * @param carts        A list of {@link CartItem} representing items in the user's cart.
+     * @param carts        A list of {@link Cart} representing items in the user's cart.
      * @param toExpire     The expiration date for the reservations.
      * @param session      The {@link ShoppingSession} associated with the user's device.
      * @throws OutOfStockException If inventory becomes negative due to reservations.
@@ -147,7 +147,7 @@ public class RaceConditionService {
     void raceConditionImpl(
             final String reference,
             final List<OrderReservationProjection> reservations,
-            final List<RaceConditionCartProjection> carts,
+            final List<RaceConditionCartDbMapper> carts,
             final Date toExpire,
             final ShoppingSession session
     ) {
@@ -189,7 +189,7 @@ public class RaceConditionService {
         }
     }
 
-    private void onCartItemQtyGreaterThanProductSkuInventory(final RaceConditionCartProjection cart) {
+    private void onCartItemQtyGreaterThanProductSkuInventory(final RaceConditionCartDbMapper cart) {
         if (cart.getCartItemQty() > cart.getProductSkuInventory()) {
             final var optional = productSkuRepository
                     .productByProductSku(cart.getProductSkuSku());
@@ -216,9 +216,9 @@ public class RaceConditionService {
      * @param toExpire The expiration date for the reservations.
      * @param reservations A map of existing {@link OrderReservation} indexed by
      *            {@link ProductSku} property sku.
-     * @param cartItems A list of {@link CartItem} representing items in the
+     * @param cartItems A list of {@link Cart} representing items in the
      *                  user's cart.
-     * @throws OutOfStockException if {@link CartItem} property qty is greater
+     * @throws OutOfStockException if {@link Cart} property qty is greater
      * than {@code ProductSku} property inventory.
      * @throws JpaSystemException if {@link ProductSku} property 'inventory' is negative.
      * */
@@ -227,7 +227,7 @@ public class RaceConditionService {
             final ShoppingSession session,
             final Date toExpire,
             final Map<String, OrderReservationProjection> reservations,
-            final List<RaceConditionCartProjection> cartItems
+            final List<RaceConditionCartDbMapper> cartItems
     ) {
         for (var cart : cartItems) {
             onCartItemQtyGreaterThanProductSkuInventory(cart);

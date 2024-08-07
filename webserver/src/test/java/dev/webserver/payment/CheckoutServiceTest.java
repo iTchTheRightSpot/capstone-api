@@ -2,8 +2,8 @@ package dev.webserver.payment;
 
 import dev.webserver.AbstractUnitTest;
 import dev.webserver.cart.ShoppingSession;
-import dev.webserver.cart.CartItemRepository;
-import dev.webserver.cart.ShoppingSessionRepository;
+import dev.webserver.cart.ICartRepository;
+import dev.webserver.cart.IShoppingSessionRepository;
 import dev.webserver.shipping.ShipSetting;
 import dev.webserver.shipping.ShippingService;
 import dev.webserver.tax.Tax;
@@ -35,9 +35,9 @@ class CheckoutServiceTest extends AbstractUnitTest {
     @Mock
     private TaxService taxService;
     @Mock
-    private ShoppingSessionRepository sessionRepo;
+    private IShoppingSessionRepository sessionRepo;
     @Mock
-    private CartItemRepository cartItemRepository;
+    private ICartRepository ICartRepository;
 
     @BeforeEach
     void setUp() {
@@ -45,7 +45,7 @@ class CheckoutServiceTest extends AbstractUnitTest {
                 shippingService,
                 taxService,
                 sessionRepo,
-                cartItemRepository
+                ICartRepository
         );
         checkoutService.setCartcookie("cartcookie");
         checkoutService.setSplit("%");
@@ -65,7 +65,7 @@ class CheckoutServiceTest extends AbstractUnitTest {
         // when
         when(req.getCookies()).thenReturn(cookies);
         when(sessionRepo.shoppingSessionByCookie(anyString())).thenReturn(Optional.of(session));
-        when(cartItemRepository.cartItemsByShoppingSessionId(anyLong())).thenReturn(cartItems);
+        when(ICartRepository.cartByShoppingSessionId(anyLong())).thenReturn(cartItems);
         when(shippingService.shippingByCountryElseReturnDefault(anyString())).thenReturn(ship);
         when(taxService.taxById(anyLong())).thenReturn(tax);
 
@@ -80,14 +80,14 @@ class CheckoutServiceTest extends AbstractUnitTest {
         Assertions.assertEquals(obj.tax(), tax);
 
         verify(sessionRepo, times(1)).shoppingSessionByCookie(anyString());
-        verify(cartItemRepository, times(1)).cartItemsByShoppingSessionId(anyLong());
+        verify(ICartRepository, times(1)).cartByShoppingSessionId(anyLong());
         verify(shippingService, times(1)).shippingByCountryElseReturnDefault(anyString());
         verify(taxService, times(1)).taxById(anyLong());
     }
 
-    static final BiFunction<Integer, ShoppingSession, List<RaceConditionCartProjection>> items = (num, session) -> IntStream
+    static final BiFunction<Integer, ShoppingSession, List<RaceConditionCartDbMapper>> items = (num, session) -> IntStream
             .range(0, num)
-            .mapToObj(op -> new RaceConditionCartProjection() {
+            .mapToObj(op -> new RaceConditionCartDbMapper() {
 
                 @Override
                 public Long getProductSkuId() {
@@ -121,7 +121,7 @@ class CheckoutServiceTest extends AbstractUnitTest {
 
                 @Override
                 public Long getShoppingSessionId() {
-                    return session.shoppingSessionId();
+                    return session.sessionId();
                 }
             })
             .collect(Collectors.toUnmodifiableList());

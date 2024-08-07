@@ -16,65 +16,39 @@ import java.util.Optional;
 
 public interface CategoryRepository extends CrudRepository<Category, Long> {
 
-    @Query("SELECT c FROM ProductCategory c WHERE c.name = :name")
+    @Query("SELECT * FROM category c WHERE c.name = :name")
     Optional<Category> findByName(@Param(value = "name") String name);
 
-    /**
-     * Validates if 1 or more rows depends on {@link Category} by
-     * {@param categoryId} as its parentId.
-     *
-     * @param id is {@link Category} property categoryId.
-     * @return {@code 0 or greater than 0} where 0 means it doesn't have a
-     * child {@link Category} and greater than 0 means 1 or more rows
-     * depends on it as a parentId.
-     * */
-    @Query(value = """
-    SELECT COUNT (c.categoryId)
-    FROM ProductCategory c
-    WHERE c.parentCategory.categoryId = :id
-    """)
-    int validateCategoryIsAParent(long id);
+    @Query("SELECT COUNT (c.category_id) FROM category c WHERE c.parent_id = :parentId")
+    int validateCategoryIsAParent(long parentId);
 
-    @Query(value = """
-    SELECT
-    COUNT(pc.categoryId)
-    FROM ProductCategory pc
-    WHERE pc.name = :name AND pc.categoryId != :id
-    """)
-    int onDuplicateCategoryName(long id, String name);
+    @Query("SELECT COUNT(pc.category_id) FROM category pc WHERE pc.name = :name AND pc.category_id != :categoryId")
+    int onDuplicateCategoryName(long categoryId, String name);
 
     /**
      * Updates name and isVisible properties of a {@link Category}.
      * */
     @Modifying
     @Transactional
-    @Query("""
-    UPDATE ProductCategory pc
-    SET  pc.name = :name, pc.isVisible = :visible
-    WHERE pc.categoryId = :id
-    """)
+    @Query("UPDATE category pc SET  pc.name = :name, pc.is_visible = :visible WHERE pc.category_id = :id")
     void update(
             @Param(value = "name") String name,
             @Param(value = "visible") boolean visible,
-            @Param(value = "id") long id
+            @Param(value = "id") long categoryId
     );
 
     @Modifying
     @Transactional
-    @Query("DELETE FROM ProductCategory c WHERE c.categoryId = :id")
-    void deleteProductCategoryById(long id);
+    @Query("DELETE FROM category c WHERE c.category_id = :categoryId")
+    void deleteProductCategoryById(long categoryId);
 
     /**
-     * Updates a {@link Category} parentId to a new categoryId.
+     * Updates a {@link Category} parentId to an existing categoryId.
      * */
     @Modifying
     @Transactional
-    @Query("""
-    UPDATE ProductCategory p
-    SET p.parentCategory.categoryId = :parentId
-    WHERE p.categoryId = :categoryId
-    """)
-    void updateCategoryParentIdBasedOnCategoryId(long categoryId, long parentId);
+    @Query("UPDATE category p SET p.parent_id = :parentId WHERE p.category_id = :categoryId")
+    void updateCategoryParentId(long categoryId, long parentId);
 
     /**
      * Using Common Table Expression (CTE) in native sql query, we recursively update the is_visible
@@ -85,30 +59,30 @@ public interface CategoryRepository extends CrudRepository<Category, Long> {
     @Modifying
     @Transactional
     @Query(value = """
-    WITH RECURSIVE category (id) AS
+    WITH RECURSIVE rec_category (id) AS
     (
-        SELECT c.category_id FROM product_category AS c WHERE c.parent_category_id = :categoryId
+        SELECT c.category_id FROM category AS c WHERE c.parent_id = :categoryId
         UNION ALL
-        SELECT pc.category_id FROM category cat INNER JOIN product_category pc ON cat.id = pc.parent_category_id
+        SELECT pc.category_id FROM rec_category rec INNER JOIN category pc ON rec.id = pc.parent_id
     )
-    UPDATE product_category c, (SELECT rec.id FROM category rec) AS rec
-    SET c.is_visible = 0
+    UPDATE category c, (SELECT rec.id FROM category rec) AS rec
+    SET c.is_visible = FALSE
     WHERE c.category_id = rec.id
     """)
     void updateAllChildrenVisibilityToFalse(long categoryId);
 
     @Query(value = """
     SELECT
-    p.uuid as uuid,
-    p.name as name,
-    p.defaultKey as image,
-    curr.currency AS currency,
-    curr.price AS price
-    FROM Product p
-    INNER JOIN ProductCategory c ON p.productCategory.categoryId = c.categoryId
-    INNER JOIN PriceCurrency curr ON p.productId = curr.product.productId
-    WHERE c.categoryId = :categoryId AND curr.currency = :currency
-    GROUP BY p.uuid, p.name, p.description, p.defaultKey, curr.currency, curr.price
+        p.uuid as uuid,
+        p.name as name,
+        p.default_image_key as image,
+        curr.currency AS currency,
+        curr.price AS price
+    FROM product p
+    INNER JOIN category c ON c.categoryId = p.category_id
+    INNER JOIN price_currency curr ON curr.product_id = p.product_id
+    WHERE c.category_id = :categoryId AND curr.currency = :currency
+    GROUP BY p.uuid, p.name, p.description, p.default_image_key, curr.currency, curr.price
     """)
     Page<ProductProjection> allProductsByCategoryIdAdminFront(
             long categoryId,
@@ -130,19 +104,19 @@ public interface CategoryRepository extends CrudRepository<Category, Long> {
      * @return Leveraging Spring Data Projection, a paginated {@link Page} containing {@link ProductProjection} objects.
      * */
     @Query(value = """
-    WITH RECURSIVE category (id) AS
+    WITH RECURSIVE rec_category (id) AS
     (
-        SELECT c.category_id FROM product_category AS c WHERE c.category_id = :categoryId
+        SELECT c.category_id FROM category AS c WHERE c.category_id = :categoryId
         UNION ALL
-        SELECT pc.category_id FROM category cat INNER JOIN product_category pc ON cat.id = pc.parent_category_id
+        SELECT pc.category_id FROM rec_category rec INNER JOIN category pc ON rec.id = pc.parent_id
     )
     SELECT
-    p.uuid AS uuid,
-    p.name AS name,
-    p.description AS description,
-    p.default_image_key AS image,
-    pr.currency AS currency,
-    pr.price AS price
+        p.uuid AS uuid,
+        p.name AS name,
+        p.description AS description,
+        p.default_image_key AS image,
+        pr.currency AS currency,
+        pr.price AS price
     FROM category c1
     INNER JOIN product p ON c1.id = p.category_id
     INNER JOIN price_currency pr ON p.product_id = pr.product_id
@@ -157,18 +131,25 @@ public interface CategoryRepository extends CrudRepository<Category, Long> {
             Pageable page
     );
 
-    /**
-     * Retrieves all {@link Category} objects. Then maps the
-     * objects to a {@link CategoryProjection} using Spring Data Projection.
-     * */
-    @Query(value = """
+    @Query(value = "SELECT * FROM category")
+    List<Category> allCategories();
+
+    // TODO repository test
+    @Query("""
+    WITH RECURSIVE rec_category (id) AS
+    (
+        SELECT category_id FROM category WHERE is_visible = TRUE 
+        UNION ALL
+        SELECT
+            cat.category_id
+        FROM rec_category rec
+        INNER JOIN category cat ON rec.id = cat.parent_id
+    )
     SELECT
-    c.categoryId AS id,
-    c.name AS name,
-    c.isVisible AS status,
-    c.parentCategory.categoryId AS parent
-    FROM ProductCategory c
+        c.*
+    FROM rec_category rec
+    INNER JOIN category c ON rec.id = c.category_id
     """)
-    List<CategoryProjection> allCategories();
+    List<Category> allCategoriesStoreFront();
 
 }

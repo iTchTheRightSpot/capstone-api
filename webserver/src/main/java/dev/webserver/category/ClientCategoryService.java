@@ -24,18 +24,8 @@ class ClientCategoryService {
     private final CategoryRepository categoryRepository;
     private final IS3Service s3Service;
 
-    /**
-     * Returns a {@link List} of {@link CategoryResponse}.
-     * */
-    public List<CategoryResponse> allCategories() {
-        var list = this.categoryRepository
-                .allCategories()
-                .stream()
-                .filter(CategoryProjection::statusImpl)
-                .map(p -> new CategoryResponse(p.getId(), p.getParent(), p.getName(), p.statusImpl()))
-                .toList();
-
-        return CustomUtil.createCategoryHierarchy(list);
+    public List<Category> allCategories() {
+        return categoryRepository.allCategoriesStoreFront();
     }
 
     /**

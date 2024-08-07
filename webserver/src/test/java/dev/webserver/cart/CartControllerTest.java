@@ -33,7 +33,7 @@ class CartControllerTest extends AbstractIntegration {
     private String CARTCOOKIE;
 
     @Autowired
-    private ShoppingSessionRepository shoppingSessionRepository;
+    private IShoppingSessionRepository IShoppingSessionRepository;
     @Autowired
     private WorkerProductService workerProductService;
     @Autowired
@@ -106,7 +106,7 @@ class CartControllerTest extends AbstractIntegration {
                 )
                 .andExpect(status().isCreated());
 
-        var all = this.shoppingSessionRepository.findAll();
+        var all = this.IShoppingSessionRepository.findAll();
 
         assertFalse(all.isEmpty());
     }

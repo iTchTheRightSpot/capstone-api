@@ -1,10 +1,10 @@
 package dev.webserver.product;
 
 import dev.webserver.AbstractRepositoryTest;
-import dev.webserver.cart.CartItem;
+import dev.webserver.cart.Cart;
 import dev.webserver.cart.ShoppingSession;
-import dev.webserver.cart.CartItemRepository;
-import dev.webserver.cart.ShoppingSessionRepository;
+import dev.webserver.cart.ICartRepository;
+import dev.webserver.cart.IShoppingSessionRepository;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
@@ -54,9 +54,9 @@ class ProductSkuRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private OrderReservationRepository reservationRepo;
     @Autowired
-    private ShoppingSessionRepository sessionRepo;
+    private IShoppingSessionRepository sessionRepo;
     @Autowired
-    private CartItemRepository cartItemRepository;
+    private ICartRepository ICartRepository;
 
     @Test
     void updateInventoryOnMakingReservation() {
@@ -181,7 +181,7 @@ class ProductSkuRepositoryTest extends AbstractRepositoryTest {
                 );
 
         // save CartItem
-        cartItemRepository.save(new CartItem(Integer.MAX_VALUE, session, sku));
+        ICartRepository.save(new Cart(Integer.MAX_VALUE, session, sku));
 
         assertThrows(DataIntegrityViolationException.class,
                 () -> skuRepo.deleteProductSkuBySku(sku.getSku()));

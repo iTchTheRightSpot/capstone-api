@@ -20,7 +20,7 @@ class ClientCategoryController {
 
     @ResponseStatus(OK)
     @GetMapping(produces = "application/json")
-    public List<CategoryResponse> allCategories() {
+    public List<Category> allCategories() {
         return service.allCategories();
     }
 

@@ -2,7 +2,7 @@ package dev.webserver.payment;
 
 import dev.webserver.AbstractRepositoryTest;
 import dev.webserver.cart.ShoppingSession;
-import dev.webserver.cart.ShoppingSessionRepository;
+import dev.webserver.cart.IShoppingSessionRepository;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
@@ -27,7 +27,7 @@ class OrderReservationRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private OrderReservationRepository reservationRepo;
     @Autowired
-    private ShoppingSessionRepository sessionRepo;
+    private IShoppingSessionRepository sessionRepo;
     @Autowired
     private CategoryRepository categoryRepo;
     @Autowired
@@ -297,7 +297,7 @@ class OrderReservationRepositoryTest extends AbstractRepositoryTest {
         // when
         var list = reservationRepo
                 .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
-                        session.shoppingSessionId(),
+                        session.sessionId(),
                         CustomUtil.toUTC(current),
                         PENDING
                 );
@@ -429,7 +429,7 @@ class OrderReservationRepositoryTest extends AbstractRepositoryTest {
                 PENDING,
                 new Date(),
                 skus.getFirst().getSkuId(),
-                session.shoppingSessionId()
+                session.sessionId()
         );
 
         reservationRepo.saveOrderReservation(
@@ -438,7 +438,7 @@ class OrderReservationRepositoryTest extends AbstractRepositoryTest {
                 PENDING,
                 new Date(),
                 skus.getFirst().getSkuId(),
-                session.shoppingSessionId()
+                session.sessionId()
         );
 
         assertEquals(2, reservationRepo.findAll().size());

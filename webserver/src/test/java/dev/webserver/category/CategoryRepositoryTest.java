@@ -31,88 +31,28 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     @Test
     void allCategories() {
         // given
-        var category = categoryRepo
-                .save(
-                        Category.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        final var category = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
-        categoryRepo
-                .save(
-                        Category.builder()
-                                .name("clothes")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        categoryRepo.save(Category.builder().name("clothes").isVisible(true).parentId(category.categoryId()).build());
 
-        var furniture = categoryRepo
-                .save(
-                        Category.builder()
-                                .name("furniture")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        final var furniture = categoryRepo
+                .save(Category.builder().name("furniture").isVisible(true).parentId(category.categoryId()).build());
 
-        categoryRepo
-                .save(
-                        Category.builder()
-                                .name("chair")
-                                .isVisible(true)
-                                .parentCategory(furniture)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        categoryRepo.save(Category.builder().name("chair").isVisible(true).parentId(furniture.categoryId()).build());
 
-        var collection = categoryRepo
-                .save(
-                        Category.builder()
-                                .name("collection")
-                                .isVisible(true)
-                                .parentCategory(null)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        final var collection = categoryRepo.save(Category.builder().name("collection").isVisible(true).build());
 
-        var fall = categoryRepo
-                .save(
-                        Category.builder()
-                                .name("fall 2024")
-                                .isVisible(true)
-                                .parentCategory(collection)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        final var fall = categoryRepo
+                .save(Category.builder().name("fall 2024").isVisible(true).parentId(collection.categoryId()).build());
 
-        categoryRepo
-                .save(
-                        Category.builder()
-                                .name("trouser fall 2024")
-                                .isVisible(true)
-                                .parentCategory(fall)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        categoryRepo.save(Category.builder().name("trouser fall 2024").isVisible(true).parentId(fall.categoryId()).build());
 
         // then
-        var list = this.categoryRepo.allCategories();
+        final var list = this.categoryRepo.allCategories();
 
         assertEquals(7, list.size());
-        assertEquals(2, list.stream().filter(p -> p.getParent() == null).toList().size());
-        assertEquals(5, list.stream().filter(p -> p.getParent() != null).toList().size());
+        assertEquals(2, list.stream().filter(p -> p.parentId() == null).toList().size());
+        assertEquals(5, list.stream().filter(p -> p.parentId() != null).toList().size());
     }
 
     @Test
@@ -293,7 +233,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                 );
 
         // method to test
-        categoryRepo.updateCategoryParentIdBasedOnCategoryId(
+        categoryRepo.updateCategoryParentId(
                 clothes.getCategoryId(),
                 collection.getCategoryId()
         );

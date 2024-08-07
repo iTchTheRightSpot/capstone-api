@@ -2,7 +2,7 @@ package dev.webserver.cron;
 
 import dev.webserver.AbstractIntegration;
 import dev.webserver.cart.ShoppingSession;
-import dev.webserver.cart.ShoppingSessionRepository;
+import dev.webserver.cart.IShoppingSessionRepository;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.TestData;
@@ -32,7 +32,7 @@ class CronJobTest extends AbstractIntegration {
     @Autowired
     private ProductSkuRepository skuRepo;
     @Autowired
-    private ShoppingSessionRepository sessionRepo;
+    private IShoppingSessionRepository sessionRepo;
     @Autowired
     private OrderReservationRepository reservationRepo;
     @Autowired

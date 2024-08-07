@@ -2,7 +2,7 @@ package dev.webserver.payment;
 
 import dev.webserver.AbstractUnitTest;
 import dev.webserver.cart.ShoppingSession;
-import dev.webserver.cart.CartItemRepository;
+import dev.webserver.cart.ICartRepository;
 import dev.webserver.enumeration.ReservationStatus;
 import dev.webserver.exception.OutOfStockException;
 import dev.webserver.product.ProductSku;
@@ -30,7 +30,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
     @Mock
     private ProductSkuRepository skuRepo;
     @Mock
-    private CartItemRepository cartItemRepository;
+    private ICartRepository ICartRepository;
     @Mock
     private OrderReservationRepository reservationRepo;
     @Mock
@@ -42,7 +42,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
     void setUp() {
         raceConditionService = new RaceConditionService(
                 skuRepo,
-                cartItemRepository,
+                ICartRepository,
                 reservationRepo,
                 thirdPartyService,
                 checkoutService
@@ -86,7 +86,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
         );
 
         Map<String, OrderReservationProjection> map = list.stream()
-                .collect(Collectors.toMap(RaceConditionCartProjection::getProductSkuSku,
+                .collect(Collectors.toMap(RaceConditionCartDbMapper::getProductSkuSku,
                         pojo -> RaceConditionHelper.reservationPojo(
                                 1L, pojo.getCartItemQty(), pojo.getProductSkuSku())));
         // then
@@ -157,7 +157,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
         );
 
         var reservations = cartItems.stream()
-                .collect(Collectors.toMap(RaceConditionCartProjection::getProductSkuSku,
+                .collect(Collectors.toMap(RaceConditionCartDbMapper::getProductSkuSku,
                         pojo -> RaceConditionHelper.reservationPojo(
                                 1L, pojo.getCartItemQty(), pojo.getProductSkuSku())));
 

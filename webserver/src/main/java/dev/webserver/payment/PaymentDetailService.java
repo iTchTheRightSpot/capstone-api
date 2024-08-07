@@ -3,7 +3,7 @@ package dev.webserver.payment;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.webserver.cart.CartItemRepository;
+import dev.webserver.cart.ICartRepository;
 import dev.webserver.enumeration.PaymentStatus;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomServerError;
@@ -31,7 +31,7 @@ public class PaymentDetailService {
     private final AddressRepository addressRepository;
     private final OrderReservationRepository orderReservationRepository;
     private final PaymentAuthorizationRepository paymentAuthorizationRepository;
-    private final CartItemRepository cartItemRepository;
+    private final ICartRepository ICartRepository;
     private final OrderDetailRepository orderDetailRepository;
 
     /**
@@ -179,8 +179,8 @@ public class PaymentDetailService {
                 .saveOrderDetail(obj.getReservationQty(), obj.getProductSkuId(), detail.getPaymentDetailId()));
 
         // delete CartItems
-        cartItemRepository.cartItemsByOrderReservationReference(reference)
-                .forEach(cartItem -> cartItemRepository.deleteById(cartItem.getCartItemId()));
+        ICartRepository.cartIdsByOrderReservationReference(reference)
+                .forEach(cartItem -> ICartRepository.deleteById(cartItem.getCartItemId()));
 
         // delete OrderReservations
         reservations

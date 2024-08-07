@@ -3,10 +3,10 @@ package dev.webserver.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.category.CategoryResponse;
-import dev.webserver.payment.CheckoutPair;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomServerError;
-import dev.webserver.payment.TotalProjection;
+import dev.webserver.payment.CartTotalDbMapper;
+import dev.webserver.payment.CheckoutPair;
 import dev.webserver.product.DetailProjection;
 import dev.webserver.product.PriceCurrencyDto;
 import dev.webserver.product.util.CustomMultiPart;
@@ -23,10 +23,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static dev.webserver.enumeration.SarreCurrency.NGN;
@@ -40,17 +45,27 @@ public class CustomUtil {
     private static final Logger log = LoggerFactory.getLogger(CustomUtil.class);
 
     /**
-     * Converts date to UTC {@link Date}.
+     * Converts {@link LocalDateTime} to UTC greenwich.
      *
      * @param date of type java.util.date
-     * @return {@link Date} in utc
+     * @return {@link LocalDateTime} in utc
      */
-    public static Date toUTC(final Date date) {
+    public static LocalDateTime toUTC(final LocalDateTime date) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
         return calendar.getTime();
     }
+
+    /**
+     * Converts the current date and time of the specified timezone to Greenwich Mean Time (GMT).
+     * <p>
+     * If the input timezone is null, "America/Toronto" will be used as the default timezone.
+     */
+    public static final Function<String, LocalDateTime> TO_GREENWICH = (timezone) -> ZonedDateTime
+            .now(ZoneId.of(timezone == null ? "America/Toronto" : timezone))
+            .withZoneSameInstant(ZoneOffset.UTC)
+            .toLocalDateTime();
 
     /**
      * Validates that the provided array of {@link PriceCurrencyDto} objects is
@@ -231,18 +246,18 @@ public class CustomUtil {
      * The total cost for each item is calculated by using the
      * formula: total = weight + (price * quantity).
      * <p>
-     * This method takes a lis of {@link TotalProjection} objects,
+     * This method takes a lis of {@link CartTotalDbMapper} objects,
      * where each object represents an item in the shopping
      * cart with information about quantity, price, and weight.
      *
-     * @param list The list of {@link TotalProjection} items for which
+     * @param list The list of {@link CartTotalDbMapper} items for which
      *             to calculate the total price and weights.
      * @return A {@link CheckoutPair} object containing the total
      * of weight and the total price of the {@code list}.
      */
-    public static CheckoutPair cartItemsTotalAndTotalWeight(final List<TotalProjection> list) {
+    public static CheckoutPair cartItemsTotalAndTotalWeight(final List<CartTotalDbMapper> list) {
         final double sumOfWeight = list.stream()
-                .mapToDouble(TotalProjection::getWeight)
+                .mapToDouble(CartTotalDbMapper::getWeight)
                 .sum();
 
         final BigDecimal total = list.stream()

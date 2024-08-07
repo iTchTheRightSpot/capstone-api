@@ -1,69 +1,27 @@
 package dev.webserver.payment;
 
-import dev.webserver.cart.ShoppingSession;
 import dev.webserver.enumeration.ReservationStatus;
-import dev.webserver.product.ProductSku;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Builder;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Table(name = "order_reservation")
-@Entity
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
-public class OrderReservation {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "reservation_id", nullable = false, unique = true)
-    private Long reservationId;
-
-    @Column(nullable = false, length = 36)
-    private String reference;
-
-    @Column(nullable = false)
-    private int qty;
-
-    @Column(nullable = false, length = 10)
-    @Enumerated(EnumType.STRING)
-    private ReservationStatus status;
-
-    @Column(name = "expire_at", nullable = false)
-    private Date expireAt;
-
-    @ManyToOne
-    @JoinColumn(name = "sku_id", referencedColumnName = "sku_id", nullable = false)
-    private ProductSku productSku;
-
-    @ManyToOne
-    @JoinColumn(name = "session_id", referencedColumnName = "session_id")
-    private ShoppingSession shoppingSession;
-
-    public OrderReservation(String reference, ProductSku sku) {
-        this.reference = reference;
-        this.productSku = sku;
-    }
-
-    public OrderReservation(
-            String reference,
-            int qty,
-            ReservationStatus status,
-            Date expireAt,
-            ProductSku sku,
-            ShoppingSession session
-    ) {
-        this.reference = reference;
-        this.qty = qty;
-        this.status = status;
-        this.expireAt = expireAt;
-        this.productSku = sku;
-        this.shoppingSession = session;
-    }
-
+@Builder
+public record OrderReservation(
+        @Id
+        @Column("reservation_id")
+        Long reservationId,
+        String reference,
+        int qty,
+        ReservationStatus status,
+        @Column("expire_at")
+        LocalDateTime expireAt,
+        @Column("sku_id")
+        Long skuId,
+        @Column("session_id")
+        Long sessionId
+) {
 }

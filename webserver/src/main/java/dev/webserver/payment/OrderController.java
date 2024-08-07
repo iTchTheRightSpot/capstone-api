@@ -14,7 +14,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}order")
 @RequiredArgsConstructor
-public class OrderController {
+class OrderController {
 
     private final OrderService orderService;
 

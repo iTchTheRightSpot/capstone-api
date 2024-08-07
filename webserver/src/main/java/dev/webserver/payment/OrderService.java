@@ -13,13 +13,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
-public class OrderService {
+class OrderService {
 
     private static final Logger log = LoggerFactory.getLogger(OrderService.class.getName());
 
@@ -34,40 +35,38 @@ public class OrderService {
      * Retrieves the order history asynchronously for the currently authenticated user.
      * <p>
      * This method first retrieves a list of transformed {@link OrderDetail}
-     * to {@link OrderProjection} from the database based on the authenticated
+     * to {@link OrderDetailDbMapper} from the database based on the authenticated
      * user's principal, then processes each order to create a list of deferred tasks.
-     * Each task reads the {@link OrderProjection} property getDetail, parses it into a {@link PayloadMapper}
+     * Each task reads the {@link OrderDetailDbMapper} property getDetail, parses it into a {@link OrderHistoryDbMapper}
      * array, and asynchronously fetches pre-signed URLs for associated keys from the S3 service. The resulting
-     * {@link PayloadMapper} array is then combined  with other order details to form an {@link OrderHistoryDto} object.
+     * {@link OrderHistoryDbMapper} array is then combined  with other order details to form an {@link OrderHistoryDto} object.
      * Finally, all deferred tasks are executed concurrently to retrieve the order history efficiently.
      *
      * @return A list of {@link OrderHistoryDto} objects, representing
      * the order history for the currently authenticated user.
      * @throws CustomServerError if an error occurs transforming
-     * {@link OrderProjection} property to a {@link PayloadMapper} array.
+     * {@link OrderDetailDbMapper} property to a {@link OrderHistoryDbMapper} array.
      */
     public List<OrderHistoryDto> orderHistory() {
-        String principal = SecurityContextHolder.getContext().getAuthentication().getName();
+        final String principal = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        var jobs = repository
+        final var jobs = repository
                 .orderHistoryByPrincipal(principal)
                 .stream()
                 .map(db -> (Supplier<OrderHistoryDto>) () -> {
                     try {
-                        var array = new ObjectMapper().readValue(db.getDetail(), PayloadMapper[].class);
+                        final var array = new ObjectMapper().readValue(db.detail(), OrderHistoryDbMapper[].class);
 
-                        var async = Arrays.stream(array)
-                                .map(a -> (Supplier<PayloadMapper>) () -> new PayloadMapper(a.name(), s3Service.preSignedUrl(bucket, a.imageKey()), a.colour()))
+                        final var async = Arrays.stream(array)
+                                .map(a -> (Supplier<OrderHistoryDbMapper>) () -> new OrderHistoryDbMapper(a.name(), s3Service.preSignedUrl(bucket, a.imageKey()), a.colour()))
                                 .toList();
 
-                        PayloadMapper[] arr = CustomUtil.asynchronousTasks(async).join().toArray(PayloadMapper[]::new);
-
                         return new OrderHistoryDto(
-                                db.getTime().getTime(),
-                                db.getCurrency(),
-                                db.getTotal(),
-                                db.getPaymentId(),
-                                arr
+                                db.createdAt().toInstant(ZoneOffset.UTC).toEpochMilli(),
+                                db.currency(),
+                                db.amount(),
+                                db.referenceId(),
+                                CustomUtil.asynchronousTasks(async).join().toArray(OrderHistoryDbMapper[]::new)
                         );
                     } catch (JsonProcessingException e) {
                         log.error("error retrieving customer %s order history \n %s".formatted(principal, e.getMessage()));

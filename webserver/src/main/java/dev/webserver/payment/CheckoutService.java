@@ -2,8 +2,8 @@ package dev.webserver.payment;
 
 import dev.webserver.cart.Cart;
 import dev.webserver.cart.ICartRepository;
-import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.IShoppingSessionRepository;
+import dev.webserver.cart.ShoppingSession;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.shipping.ShipSetting;
@@ -36,8 +36,8 @@ class CheckoutService {
 
     private final ShippingService shippingService;
     private final TaxService taxService;
-    private final IShoppingSessionRepository IShoppingSessionRepository;
-    private final ICartRepository ICartRepository;
+    private final IShoppingSessionRepository sessionRepository;
+    private final ICartRepository cartRepository;
 
     /**
      * Generates checkout information based on a user's country and selected currency.
@@ -57,7 +57,7 @@ class CheckoutService {
     public Checkout checkout(final HttpServletRequest req, final String country, final SarreCurrency currency) {
         final CustomCheckoutObject obj = validateCurrentShoppingSession(req, country);
 
-        final var list = this.ICartRepository
+        final var list = this.cartRepository
                 .amountToPayForAllCartItemsForShoppingSession(obj.session().sessionId(), currency);
 
         final BigDecimal shipCost = currency.equals(SarreCurrency.USD)
@@ -76,10 +76,10 @@ class CheckoutService {
         final var optional = Optional
                 .ofNullable(SecurityContextHolder.getContext().getAuthentication());
 
-        final String principal = optional.isEmpty() ? "" : switch (optional.get()) {
-            case AnonymousAuthenticationToken ignored -> "";
-            default -> optional.get().getName();
-        };
+        final String principal;
+        if (optional.isEmpty()) principal = "";
+        else if (optional.get() instanceof AnonymousAuthenticationToken) principal = "";
+        else principal = optional.get().getName();
 
         return new Checkout(
                 principal,
@@ -119,8 +119,7 @@ class CheckoutService {
             throw new CustomNotFoundException("no cookie found. kindly refresh window");
         }
 
-        final var optional = IShoppingSessionRepository
-                .shoppingSessionByCookie(cookie.getValue().split(split)[0]);
+        final var optional = sessionRepository.shoppingSessionByCookie(cookie.getValue().split(split)[0]);
 
         if (optional.isEmpty()) {
             throw new CustomNotFoundException("invalid shopping session");
@@ -128,15 +127,13 @@ class CheckoutService {
 
         final ShoppingSession session = optional.get();
 
-        final var carts = ICartRepository
-                .cartByShoppingSessionId(session.sessionId());
+        final var carts = cartRepository.cartByShoppingSessionId(session.sessionId());
 
         if (carts.isEmpty()) {
             throw new CustomNotFoundException("cart is empty");
         }
 
-        final ShipSetting ship = shippingService
-                .shippingByCountryElseReturnDefault(country);
+        final ShipSetting ship = shippingService.shippingByCountryElseReturnDefault(country);
 
         final Tax tax = taxService.taxById(1);
 

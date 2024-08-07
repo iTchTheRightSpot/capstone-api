@@ -9,7 +9,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface OrderReservationRepository extends CrudRepository<OrderReservation, Long> {
@@ -37,17 +37,17 @@ public interface OrderReservationRepository extends CrudRepository<OrderReservat
     INNER JOIN order_reservation o ON s.sku_id = o.sku_id
     INNER JOIN shopping_session sh ON o.session_id = sh.session_id
     SET
-    s.inventory = (s.inventory - :productSkuQty),
-    o.qty = :reservationQty,
-    o.reference = :reference,
-    o.expire_at = :expire
+        s.inventory = (s.inventory - :productSkuQty),
+        o.qty = :reservationQty,
+        o.reference = :reference,
+        o.expire_at = :expire
     WHERE s.sku = :sku AND sh.cookie = :cookie AND o.status = :#{#status.name()}
     """)
     void deductFromProductSkuInventoryAndReplaceReservationQty(
             int productSkuQty,
             int reservationQty,
             String reference,
-            Date expire,
+            LocalDateTime expire,
             String cookie,
             String sku,
             @Param(value = "status") ReservationStatus status
@@ -76,59 +76,58 @@ public interface OrderReservationRepository extends CrudRepository<OrderReservat
     INNER JOIN order_reservation o ON s.sku_id = o.sku_id
     INNER JOIN shopping_session sh ON o.session_id = sh.session_id
     SET
-    s.inventory = (s.inventory + :productSkuQty),
-    o.qty = :reservationQty,
-    o.reference = :reference,
-    o.expire_at = :expire
+        s.inventory = (s.inventory + :productSkuQty),
+        o.qty = :reservationQty,
+        o.reference = :reference,
+        o.expire_at = :expire
     WHERE sh.cookie = :cookie AND s.sku = :sku AND o.status = :#{#status.name()}
     """)
     void addToProductSkuInventoryAndReplaceReservationQty(
             int productSkuQty,
             int reservationQty,
             String reference,
-            Date expire,
+            LocalDateTime expire,
             String cookie,
             String sku,
             @Param(value = "status") ReservationStatus status
     );
 
-    @Query("SELECT * FROM order_reservation o INNER JOIN FETCH o.productSku WHERE o.expireAt <= :date AND o.status = :status")
-    List<OrderReservation> allPendingExpiredReservations(Date date, ReservationStatus status);
+    // TODO maybe index expire_at AND status?
+    @Query("SELECT * FROM order_reservation o WHERE o.expire_at <= :date AND o.status = :status")
+    List<OrderReservation> allPendingExpiredReservations(LocalDateTime date, ReservationStatus status);
 
     @Query("""
     SELECT
-    o.reservationId AS reservationId,
-    o.qty AS reservationQty,
-    p.sku AS sku
+        o.reservation_id AS reservationId,
+        o.qty AS qty,
+        p.sku AS sku
     FROM order_reservation o
-    INNER JOIN product_sku p ON o.skuId = p.skuId
-    INNER JOIN shopping_session s ON o.shoppingSessionId = s.shoppingSessionId
-    WHERE s.shoppingSessionId = :id AND o.expireAt > :date AND o.status = :status
+    INNER JOIN product_sku p ON o.sku_id = p.sku_id
+    WHERE o.session_id = :id AND o.expire_at > :date AND o.status = :status
     """)
-    List<OrderReservationProjection> allPendingNoneExpiredReservationsAssociatedToShoppingSession(
-            @Param("id") long shoppingSessionId,
-            Date date,
+    List<OrderReservationDbMapper> allPendingNoneExpiredReservationsAssociatedToShoppingSession(
+            @Param("id") long sessionId,
+            LocalDateTime date,
             ReservationStatus status
     );
 
     /**
-     * Returns a {@link PaymentDetailProjection} consisting of {@link OrderReservation} and
+     * Returns a {@link PaymentDetailDbMapper} consisting of {@link OrderReservation} and
      * {@link ProductSku}.
      *
      * @param reference a unique string for every {@link OrderReservation} object.
-     * @return a {@link List} of {@link PaymentDetailProjection}.
+     * @return a {@link List} of {@link PaymentDetailDbMapper}.
      * */
     @Query("""
     SELECT
-    o.reservationId AS reservationId,
-    o.qty AS reservationQty,
-    p.skuId AS skuId
+        o.reservation_id AS reservationId,
+        o.qty AS qty,
+        p.sku_id AS skuId
     FROM order_reservation o
-    INNER JOIN product_sku p ON o.skuId = p.skuId
-    INNER JOIN shopping_session s ON o.shoppingSessionId = s.shoppingSessionId
+    INNER JOIN product_sku p ON o.sku_id = p.sku_id
     WHERE o.reference = :reference
     """)
-    List<PaymentDetailProjection> allReservationsByReference(String reference);
+    List<PaymentDetailDbMapper> allReservationsByReference(String reference);
 
     @Transactional
     @Modifying
@@ -140,7 +139,7 @@ public interface OrderReservationRepository extends CrudRepository<OrderReservat
             String reference,
             int qty,
             ReservationStatus status,
-            Date date,
+            LocalDateTime date,
             long skuId,
             long sessionId
     );

@@ -1,8 +1,9 @@
 package dev.webserver.payment;
 
 import dev.webserver.AbstractRepositoryTest;
-import dev.webserver.cart.ShoppingSession;
+import dev.webserver.TestUtility;
 import dev.webserver.cart.IShoppingSessionRepository;
+import dev.webserver.cart.ShoppingSession;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
@@ -11,15 +12,11 @@ import dev.webserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.time.Instant;
-import java.util.Date;
-import java.util.HashSet;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
 import static dev.webserver.enumeration.ReservationStatus.PENDING;
-import static java.time.temporal.ChronoUnit.HOURS;
-import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.junit.jupiter.api.Assertions.*;
 
 class OrderReservationRepositoryTest extends AbstractRepositoryTest {
@@ -44,76 +41,50 @@ class OrderReservationRepositoryTest extends AbstractRepositoryTest {
     @Test
     void testUpdateQueryForWhenAUserIncreasesTheQtyInTheirOrderReservation() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
+        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
                 .createProduct(2, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
-        var skus = skuRepo.findAll();
+        var skus = TestUtility.toList(skuRepo.findAll());
         assertEquals(2, skus.size());
 
-        var session = this.sessionRepo
-                .save(
-                        new ShoppingSession(
-                                "cookie",
-                                new Date(),
-                                CustomUtil.toUTC(Date.from(Instant.now().plus(1, HOURS))),
-                                new HashSet<>(),
-                                new HashSet<>()
-                        )
-                );
+        final LocalDateTime ldt = CustomUtil.TO_GREENWICH.apply(null);
+        var session = sessionRepo.save(new ShoppingSession(null, "cookie", ldt, ldt.plusHours(1)));
 
-        Date current = new Date();
         ProductSku first = skus.getFirst();
         var reservation = reservationRepo
                 .save(
                         new OrderReservation(
+                                null,
                                 UUID.randomUUID().toString(),
-                                first.getInventory() - 1,
+                                first.inventory() - 1,
                                 PENDING,
-                                CustomUtil.toUTC(
-                                        Date.from(current
-                                                .toInstant()
-                                                .plus(15, MINUTES)
-                                        )
-                                ),
-                                first,
-                                session
+                                ldt.plusMinutes(15),
+                                first.skuId(),
+                                session.sessionId()
                         )
                 );
 
-        // when
-        reservationRepo
-                .deductFromProductSkuInventoryAndReplaceReservationQty(
-                        reservation.getQty(),
-                        2,
-                        "update",
-                        CustomUtil.toUTC(
-                                Date.from(current
-                                        .toInstant()
-                                        .plus(20, MINUTES)
-                                )
-                        ),
-                        "cookie",
-                        first.getSku(),
-                        PENDING
-                );
+        // method to test
+        reservationRepo.deductFromProductSkuInventoryAndReplaceReservationQty(
+                reservation.qty(),
+                2,
+                "update",
+                ldt.plusMinutes(20),
+                "cookie",
+                first.sku(),
+                PENDING
+        );
 
         // when
-        Optional<ProductSku> sku = skuRepo.findById(first.getSkuId());
+        Optional<ProductSku> sku = skuRepo.findById(first.skuId());
         assertFalse(sku.isEmpty());
-        assertEquals(1, sku.get().getInventory());
+        assertEquals(1, sku.get().inventory());
 
-        Optional<OrderReservation> res = reservationRepo.findById(reservation.getReservationId());
+        Optional<OrderReservation> res = reservationRepo.findById(reservation.reservationId());
         assertFalse(res.isEmpty());
-        assertEquals(2, res.get().getQty());
+        assertEquals(2, res.get().qty());
     }
 
     @Test
@@ -123,8 +94,6 @@ class OrderReservationRepositoryTest extends AbstractRepositoryTest {
                 .save(Category.builder()
                         .name("category")
                         .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
                         .build()
                 );
 
@@ -132,233 +101,158 @@ class OrderReservationRepositoryTest extends AbstractRepositoryTest {
         RepositoryTestData
                 .createProduct(2, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
-        var skus = skuRepo.findAll();
+        var skus = TestUtility.toList(skuRepo.findAll());
         assertEquals(2, skus.size());
 
-        var session = this.sessionRepo
-                .save(new ShoppingSession(
-                        "cookie",
-                        new Date(),
-                        CustomUtil.toUTC(Date.from(Instant.now().plus(1, HOURS))),
-                        new HashSet<>(),
-                        new HashSet<>()
-                ));
+        final LocalDateTime ldt = CustomUtil.TO_GREENWICH.apply(null);
+        var session = sessionRepo.save(new ShoppingSession(null, "cookie", ldt, ldt.plusHours(1)));
 
-        Date current = new Date();
         ProductSku first = skus.getFirst();
         var reservation = reservationRepo
                 .save(
                         new OrderReservation(
+                                null,
                                 UUID.randomUUID().toString(),
-                                first.getInventory() - 1,
+                                first.inventory() - 1,
                                 PENDING,
-                                CustomUtil.toUTC(
-                                        Date.from(current
-                                                .toInstant()
-                                                .plus(15, MINUTES)
-                                        )
-                                ),
-                                first,
-                                session
+                                ldt.plusMinutes(15),
+                                first.skuId(),
+                                session.sessionId()
                         )
                 );
 
         // when
         reservationRepo
                 .addToProductSkuInventoryAndReplaceReservationQty(
-                        reservation.getQty(),
+                        reservation.qty(),
                         5,
                         "new-reference",
-                        CustomUtil.toUTC(
-                                Date.from(current
-                                        .toInstant()
-                                        .plus(20, MINUTES)
-                                )
-                        ),
+                        ldt.plusMinutes(20),
                         "cookie",
-                        first.getSku(),
+                        first.sku(),
                         PENDING
                 );
 
         // when
-        Optional<ProductSku> sku = skuRepo.findById(first.getSkuId());
+        Optional<ProductSku> sku = skuRepo.findById(first.skuId());
         assertFalse(sku.isEmpty());
-        assertTrue(sku.get().getInventory() > first.getInventory());
+        assertTrue(sku.get().inventory() > first.inventory());
 
-        Optional<OrderReservation> res = reservationRepo.findById(reservation.getReservationId());
+        Optional<OrderReservation> res = reservationRepo.findById(reservation.reservationId());
         assertFalse(res.isEmpty());
-        assertEquals(5, res.get().getQty());
+        assertEquals(5, res.get().qty());
     }
 
     @Test
     void allPendingExpiredReservations() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
+        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         // create 3 ProductSku objects
         RepositoryTestData
                 .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
-        var skus = skuRepo.findAll();
+        var skus = TestUtility.toList(skuRepo.findAll());
         assertEquals(3, skus.size());
 
-        var session = this.sessionRepo
-                .save(
-                        new ShoppingSession(
-                                "cookie",
-                                new Date(),
-                                CustomUtil.toUTC(Date.from(Instant.now().plus(1, HOURS))),
-                                new HashSet<>(),
-                                new HashSet<>()
-                        )
-                );
+        final LocalDateTime ldt = CustomUtil.TO_GREENWICH.apply(null);
+        var session = sessionRepo.save(new ShoppingSession(null, "cookie", ldt, ldt.plusHours(1)));
 
-        Date current = new Date();
         for (ProductSku sku : skus) {
             reservationRepo
                     .save(
                             new OrderReservation(
+                                    null,
                                     UUID.randomUUID().toString(),
-                                    sku.getInventory() - 1,
+                                    sku.inventory() - 1,
                                     PENDING,
-                                    CustomUtil.toUTC(
-                                            Date.from(current
-                                                    .toInstant()
-                                                    .minus(5, HOURS)
-                                            )
-                                    ),
-                                    sku,
-                                    session
+                                    ldt.minusHours(5),
+                                    sku.skuId(),
+                                    session.sessionId()
                             )
                     );
         }
 
         // when
-        var list = reservationRepo.allPendingExpiredReservations(CustomUtil.toUTC(current), PENDING);
+        var list = reservationRepo.allPendingExpiredReservations(ldt, PENDING);
         assertEquals(3, list.size());
     }
 
     @Test
     void allPendingNoneExpiredReservationsAssociatedToShoppingSession() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
+        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         // create 3 ProductSku objects
         RepositoryTestData
                 .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
-        var skus = skuRepo.findAll();
+        var skus = TestUtility.toList(skuRepo.findAll());
         assertEquals(3, skus.size());
 
-        var session = this.sessionRepo
-                .save(
-                        new ShoppingSession(
-                                "cookie",
-                                new Date(),
-                                CustomUtil.toUTC(Date.from(Instant.now().plus(1, HOURS))),
-                                new HashSet<>(),
-                                new HashSet<>()
-                        )
-                );
+        final LocalDateTime ldt = CustomUtil.TO_GREENWICH.apply(null);
+        var session = sessionRepo.save(new ShoppingSession(null, "cookie", ldt, ldt.plusHours(1)));
 
-        Date current = new Date();
         for (int i = 0; i < skus.size(); i++) {
             ProductSku curr = skus.get(i);
 
-            Date temp = i % 2 == 0
-                    ? new Date(current.toInstant().minus(5, HOURS).toEpochMilli())
-                    : new Date(current.toInstant().plus(5, HOURS).toEpochMilli());
+            LocalDateTime temp = i % 2 == 0 ? ldt.minusHours(5) : ldt.plusHours(5);
 
             reservationRepo
                     .save(new OrderReservation(
+                            null,
                             UUID.randomUUID().toString(),
-                            curr.getInventory() - 1,
+                            curr.inventory() - 1,
                             PENDING,
-                            CustomUtil.toUTC(temp),
-                            curr,
-                            session
+                            temp,
+                            curr.skuId(),
+                            session.sessionId()
                     ));
         }
 
         // when
-        var list = reservationRepo
-                .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
-                        session.sessionId(),
-                        CustomUtil.toUTC(current),
-                        PENDING
-                );
+        var list = reservationRepo.allPendingNoneExpiredReservationsAssociatedToShoppingSession(
+                session.sessionId(),
+                ldt,
+                PENDING
+        );
 
         // then
         assertEquals(1, list.size());
 
-        for (var pojo : list) {
-            assertTrue(pojo.getReservationId() > 0);
-            assertTrue(pojo.getReservationQty() > 0);
-            assertFalse(pojo.getProductSkuSku().isEmpty());
+        for (final var pojo : list) {
+            assertTrue(pojo.reservationId() > 0);
+            assertTrue(pojo.qty() > 0);
+            assertFalse(pojo.sku().isEmpty());
         }
     }
 
     @Test
     void allReservationsByReference() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
+        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         // create 3 ProductSku objects
         RepositoryTestData
                 .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
-        var skus = skuRepo.findAll();
+        var skus = TestUtility.toList(skuRepo.findAll());
         assertEquals(3, skus.size());
 
-        var session = this.sessionRepo
-                .save(
-                        new ShoppingSession(
-                                "cookie",
-                                new Date(),
-                                CustomUtil.toUTC(new Date(Instant.now().plus(1, HOURS).toEpochMilli())),
-                                new HashSet<>(),
-                                new HashSet<>()
-                        )
-                );
+        final LocalDateTime ldt = CustomUtil.TO_GREENWICH.apply(null);
+        var session = sessionRepo.save(new ShoppingSession(null, "cookie", ldt, ldt.plusHours(1)));
 
-        Date current = new Date();
         ProductSku first = skus.getFirst();
         reservationRepo
                 .save(
                         new OrderReservation(
+                                null,
                                 UUID.randomUUID().toString(),
-                                first.getInventory() - 1,
+                                first.inventory() - 1,
                                 PENDING,
-                                CustomUtil.toUTC(
-                                        new Date(current
-                                                .toInstant()
-                                                .minus(5, HOURS)
-                                                .toEpochMilli()
-                                        )
-                                ),
-                                first,
-                                session
+                                ldt.minusHours(5),
+                                first.skuId(),
+                                session.sessionId()
                         )
                 );
 
@@ -367,81 +261,63 @@ class OrderReservationRepositoryTest extends AbstractRepositoryTest {
         for (int i = 0; i < 3; i++) {
             reservationRepo
                     .save(new OrderReservation(
+                            null,
                             reference,
-                            first.getInventory() - 1,
+                            first.inventory() - 1,
                             PENDING,
-                            CustomUtil.toUTC(
-                                    new Date(current
-                                            .toInstant()
-                                            .minus(5, HOURS)
-                                            .toEpochMilli()
-                                    )
-                            ),
-                            first,
-                            session)
+                            ldt.minusHours(5),
+                            first.skuId(),
+                            session.sessionId())
                     );
         }
 
-        assertEquals(4, reservationRepo.findAll().size());
+        assertEquals(4, TestUtility.toList(reservationRepo.findAll()).size());
         var list = reservationRepo.allReservationsByReference(reference);
         assertEquals(3, list.size());
 
         for (var pojo : list) {
-            assertTrue(pojo.getReservationId() > 0);
-            assertTrue(pojo.getReservationQty() > 0);
-            assertTrue(pojo.getProductSkuId() > 0);
+            assertTrue(pojo.reservationId() > 0);
+            assertTrue(pojo.qty() > 0);
+            assertTrue(pojo.skuId() > 0);
         }
     }
 
     @Test
     void shouldSaveOrderReservation() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
+        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         // create 3 ProductSku objects
         RepositoryTestData
                 .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
-        var skus = skuRepo.findAll();
+        var skus = TestUtility.toList(skuRepo.findAll());
         assertEquals(3, skus.size());
 
-        var session = this.sessionRepo
-                .save(new ShoppingSession(
-                        "cookie",
-                        new Date(),
-                        CustomUtil.toUTC(new Date(Instant.now().plus(1, HOURS).toEpochMilli())),
-                        new HashSet<>(),
-                        new HashSet<>()
-                ));
+        final LocalDateTime ldt = CustomUtil.TO_GREENWICH.apply(null);
+        var session = sessionRepo.save(new ShoppingSession(null, "cookie", ldt, ldt.plusHours(1)));
 
         String reference = UUID.randomUUID().toString();
 
         reservationRepo.saveOrderReservation(
                 reference,
-                skus.getFirst().getInventory() - 1,
+                skus.getFirst().inventory() - 1,
                 PENDING,
-                new Date(),
-                skus.getFirst().getSkuId(),
+                ldt,
+                skus.getFirst().skuId(),
                 session.sessionId()
         );
 
         reservationRepo.saveOrderReservation(
                 reference,
-                skus.getFirst().getInventory() - 1,
+                skus.getFirst().inventory() - 1,
                 PENDING,
-                new Date(),
-                skus.getFirst().getSkuId(),
+                ldt,
+                skus.getFirst().skuId(),
                 session.sessionId()
         );
 
-        assertEquals(2, reservationRepo.findAll().size());
+        assertEquals(2, TestUtility.toList(reservationRepo.findAll()).size());
     }
 
 }

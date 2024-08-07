@@ -42,7 +42,7 @@ class CronJob {
     private final ProductSkuRepository skuRepo;
     private final OrderReservationRepository reservationRepo;
     private final IShoppingSessionRepository sessionRepo;
-    private final ICartRepository ICartRepository;
+    private final ICartRepository cartRepository;
     private final PaymentDetailService paymentDetailService;
     private final String secretKey;
     private final ILogEventPublisher publisher;
@@ -52,7 +52,7 @@ class CronJob {
             ProductSkuRepository skuRepo,
             OrderReservationRepository reservationRepo,
             IShoppingSessionRepository sessionRepo,
-            ICartRepository ICartRepository,
+            ICartRepository cartRepository,
             PaymentDetailService paymentDetailService,
             ThirdPartyPaymentService paymentService,
             ILogEventPublisher publisher
@@ -60,10 +60,10 @@ class CronJob {
         this.skuRepo = skuRepo;
         this.reservationRepo = reservationRepo;
         this.sessionRepo = sessionRepo;
-        this.ICartRepository = ICartRepository;
+        this.cartRepository = cartRepository;
         this.paymentDetailService = paymentDetailService;
-        this.secretKey = paymentService.payStackCredentials().secretKey();
-        this.restClient = clientBuilder.build();
+        secretKey = paymentService.payStackCredentials().secretKey();
+        restClient = clientBuilder.build();
         this.publisher = publisher;
     }
 
@@ -85,11 +85,10 @@ class CronJob {
      */
     @Transactional(rollbackFor = Exception.class)
     public void onDeleteShoppingSessions() {
-        sessionRepo.allExpiredShoppingSession(CustomUtil.toUTC(new Date()))
+        sessionRepo.allExpiredShoppingSession(CustomUtil.TO_GREENWICH.apply(null))
                 .forEach(session -> {
-                    this.ICartRepository.deleteCartByShoppingSessionId(
-                            session.sessionId());
-                    this.sessionRepo.deleteById(session.sessionId());
+                    cartRepository.deleteCartByShoppingSessionId(session.sessionId());
+                    sessionRepo.deleteById(session.sessionId());
                 });
     }
 
@@ -104,8 +103,7 @@ class CronJob {
      * <a href="https://paystack.com/docs/api/integration/#update-timeout">updating the timeout</a>.
      */
     public void onDeleteOrderReservations() {
-        var date = CustomUtil
-                .toUTC(Date.from(Instant.now().plus(5, ChronoUnit.MINUTES)));
+        var date = CustomUtil.TO_GREENWICH.apply(null);
 
         var reservations = reservationRepo.allPendingExpiredReservations(date, PENDING);
 
@@ -126,11 +124,11 @@ class CronJob {
                     }
 
                     skuRepo.updateProductSkuInventoryByAddingToExistingInventory(
-                            obj.reservation().getSkuId().getSku(),
-                            obj.reservation().getQty()
+                            obj.reservation().skuId(),
+                            obj.reservation().qty()
                     );
 
-                    reservationRepo.deleteById(obj.reservation().getReservationId());
+                    reservationRepo.deleteById(obj.reservation().reservationId());
                 });
     }
 
@@ -150,7 +148,7 @@ class CronJob {
                 .map(reservation -> (Supplier<CustomCronJobObject>) () -> {
                     var uri = UriComponentsBuilder
                             .fromUriString("https://api.paystack.co/transaction/verify")
-                            .pathSegment(reservation.getReference())
+                            .pathSegment(reservation.reference())
                             .build()
                             .toUri();
 

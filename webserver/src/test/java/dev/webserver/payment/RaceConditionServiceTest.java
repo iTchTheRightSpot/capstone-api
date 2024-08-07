@@ -1,23 +1,23 @@
 package dev.webserver.payment;
 
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.ICartRepository;
+import dev.webserver.cart.ShoppingSession;
 import dev.webserver.enumeration.ReservationStatus;
 import dev.webserver.exception.OutOfStockException;
+import dev.webserver.external.payment.ThirdPartyPaymentService;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
-import dev.webserver.external.payment.ThirdPartyPaymentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
-import java.time.Instant;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.time.temporal.ChronoUnit.HOURS;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.times;
@@ -57,45 +57,38 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .sku("sku-0")
                 .size("medium")
                 .inventory(10)
-                .orderDetails(new HashSet<>())
-                .reservations(new HashSet<>())
-                .cartItems(new HashSet<>())
                 .build();
 
-        var date = new Date();
-        Instant now = Instant.now();
+        final var ldt = LocalDateTime.now();
         var session = new ShoppingSession(
                 1L,
                 "cookie",
-                date,
-                new Date(now.plus(1, HOURS).toEpochMilli()),
-                new HashSet<>(),
-                new HashSet<>()
+                ldt,
+                ldt.plusHours(1)
         );
 
         var list = List.of(
-                RaceConditionHelper.raceConditionCartPojo(
+                new RaceConditionCartDbMapper(
                         1L,
-                        sku.getSku(),
-                        sku.getInventory(),
-                        sku.getSize(),
+                        sku.sku(),
+                        sku.inventory(),
+                        sku.size(),
                         1L,
                         15,
                         1L
                 )
         );
 
-        Map<String, OrderReservationProjection> map = list.stream()
-                .collect(Collectors.toMap(RaceConditionCartDbMapper::getProductSkuSku,
-                        pojo -> RaceConditionHelper.reservationPojo(
-                                1L, pojo.getCartItemQty(), pojo.getProductSkuSku())));
+        Map<String, OrderReservationDbMapper> map = list.stream()
+                .collect(Collectors.toMap(RaceConditionCartDbMapper::sku,
+                        pojo -> new OrderReservationDbMapper(1L, pojo.qty(), pojo.sku())));
         // then
         assertThrows(OutOfStockException.class,
                 () -> raceConditionService
                         .onPendingReservationsNotEmpty(
                                 "",
                                 session,
-                                date,
+                                ldt,
                                 map,
                                 list
                         )
@@ -110,8 +103,6 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .sku("sku-0")
                 .size("medium")
                 .inventory(10)
-                .orderDetails(new HashSet<>())
-                .cartItems(new HashSet<>())
                 .build();
 
         var sku1 = ProductSku.builder()
@@ -119,37 +110,31 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .sku("sku-1")
                 .size("large")
                 .inventory(5)
-                .orderDetails(new HashSet<>())
-                .reservations(new HashSet<>())
-                .cartItems(new HashSet<>())
                 .build();
 
-        var date = new Date();
-        Instant now = Instant.now();
+        final var ldt = LocalDateTime.now();
         var session = new ShoppingSession(
                 1L,
                 "cookie",
-                date,
-                new Date(now.plus(1, HOURS).toEpochMilli()),
-                new HashSet<>(),
-                new HashSet<>()
+                ldt,
+                ldt.plusHours(1)
         );
 
         var cartItems = List.of(
-                RaceConditionHelper.raceConditionCartPojo(
+                new RaceConditionCartDbMapper(
                         1L,
-                        sku.getSku(),
-                        sku.getInventory(),
-                        sku.getSize(),
+                        sku.sku(),
+                        sku.inventory(),
+                        sku.size(),
                         1L,
                         5,
                         1L
                 ),
-                RaceConditionHelper.raceConditionCartPojo(
+                new RaceConditionCartDbMapper(
                         1L,
-                        sku1.getSku(),
-                        sku1.getInventory(),
-                        sku1.getSize(),
+                        sku1.sku(),
+                        sku1.inventory(),
+                        sku1.size(),
                         1L,
                         2,
                         1L
@@ -157,16 +142,15 @@ class RaceConditionServiceTest extends AbstractUnitTest {
         );
 
         var reservations = cartItems.stream()
-                .collect(Collectors.toMap(RaceConditionCartDbMapper::getProductSkuSku,
-                        pojo -> RaceConditionHelper.reservationPojo(
-                                1L, pojo.getCartItemQty(), pojo.getProductSkuSku())));
+                .collect(Collectors.toMap(RaceConditionCartDbMapper::sku,
+                        pojo -> new OrderReservationDbMapper(1L, pojo.qty(), pojo.sku())));
 
         // method to test
         raceConditionService
                 .onPendingReservationsNotEmpty(
                         "",
                         session,
-                        date,
+                        ldt,
                         reservations,
                         cartItems
                 );
@@ -177,7 +161,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                         anyInt(),
                         anyInt(),
                         anyString(),
-                        any(Date.class),
+                        any(LocalDateTime.class),
                         anyString(),
                         anyString(),
                         any(ReservationStatus.class)
@@ -187,7 +171,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                         anyInt(),
                         anyInt(),
                         anyString(),
-                        any(Date.class),
+                        any(LocalDateTime.class),
                         anyString(),
                         anyString(),
                         any(ReservationStatus.class)
@@ -196,7 +180,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
         verify(skuRepo, times(0))
                 .updateProductSkuInventoryBySubtractingFromExistingInventory(anyString(), anyInt());
         verify(reservationRepo, times(0))
-                .saveOrderReservation(anyString(), anyInt(), any(ReservationStatus.class), any(Date.class), anyLong(), anyLong());
+                .saveOrderReservation(anyString(), anyInt(), any(ReservationStatus.class), any(LocalDateTime.class), anyLong(), anyLong());
 
         verify(skuRepo, times(0))
                 .updateProductSkuInventoryByAddingToExistingInventory(anyString(), anyInt());
@@ -212,9 +196,6 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .sku("sku-0")
                 .size("medium")
                 .inventory(10)
-                .orderDetails(new HashSet<>())
-                .reservations(new HashSet<>())
-                .cartItems(new HashSet<>())
                 .build();
 
         var sku1 = ProductSku.builder()
@@ -222,37 +203,31 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .sku("sku-1")
                 .size("large")
                 .inventory(5)
-                .orderDetails(new HashSet<>())
-                .reservations(new HashSet<>())
-                .cartItems(new HashSet<>())
                 .build();
 
-        var date = new Date();
-        Instant now = Instant.now();
+        final var ldt = LocalDateTime.now();
         var session = new ShoppingSession(
                 1L,
                 "cookie",
-                date,
-                new Date(now.plus(1, HOURS).toEpochMilli()),
-                new HashSet<>(),
-                new HashSet<>()
+                ldt,
+                ldt.plusHours(1)
         );
 
         var cartItems = List.of(
-                RaceConditionHelper.raceConditionCartPojo(
-                        sku.getSkuId(),
-                        sku.getSku(),
-                        sku.getInventory(),
-                        sku.getSize(),
+                new RaceConditionCartDbMapper(
+                        sku.skuId(),
+                        sku.sku(),
+                        sku.inventory(),
+                        sku.size(),
                         1L,
                         3,
                         1L
                 ),
-                RaceConditionHelper.raceConditionCartPojo(
-                        sku1.getSkuId(),
-                        sku1.getSku(),
-                        sku1.getInventory(),
-                        sku1.getSize(),
+                new RaceConditionCartDbMapper(
+                        sku1.skuId(),
+                        sku1.sku(),
+                        sku1.inventory(),
+                        sku1.size(),
                         2L,
                         4,
                         1L
@@ -260,15 +235,14 @@ class RaceConditionServiceTest extends AbstractUnitTest {
         );
 
         var reservation = Stream.of(sku)
-                .collect(Collectors.toMap(ProductSku::getSku,
-                        s -> RaceConditionHelper.reservationPojo(1L, 7, s.getSku())));
+                .collect(Collectors.toMap(ProductSku::sku, s -> new OrderReservationDbMapper(1L, 7, s.sku())));
 
         // method to test
         raceConditionService
                 .onPendingReservationsNotEmpty(
                         "",
                         session,
-                        date,
+                        ldt,
                         reservation,
                         cartItems
                 );
@@ -279,7 +253,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                         anyInt(),
                         anyInt(),
                         anyString(),
-                        any(Date.class),
+                        any(LocalDateTime.class),
                         anyString(),
                         anyString(),
                         any(ReservationStatus.class)
@@ -289,7 +263,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                         anyInt(),
                         anyInt(),
                         anyString(),
-                        any(Date.class),
+                        any(LocalDateTime.class),
                         anyString(),
                         anyString(),
                         any(ReservationStatus.class)
@@ -298,13 +272,14 @@ class RaceConditionServiceTest extends AbstractUnitTest {
         verify(skuRepo, times(1))
                 .updateProductSkuInventoryBySubtractingFromExistingInventory(anyString(), anyInt());
         verify(reservationRepo, times(1))
-                .saveOrderReservation(anyString(), anyInt(), any(ReservationStatus.class), any(Date.class), anyLong(), anyLong());
+                .saveOrderReservation(anyString(), anyInt(), any(ReservationStatus.class), any(LocalDateTime.class), anyLong(), anyLong());
 
         verify(skuRepo, times(0))
                 .updateProductSkuInventoryByAddingToExistingInventory(anyString(), anyInt());
         verify(reservationRepo, times(0)).deleteById(anyLong());
     }
 
+    // TODO why is sku1 not used?
     @Test
     void userAddedAnExtraItemToTheirCartAndIncreasedTheQtyOfAnExistingItem() {
         // given
@@ -313,9 +288,6 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .sku("sku-0")
                 .size("medium")
                 .inventory(10)
-                .orderDetails(new HashSet<>())
-                .reservations(new HashSet<>())
-                .cartItems(new HashSet<>())
                 .build();
 
         var sku1 = ProductSku.builder()
@@ -323,54 +295,46 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .sku("sku-1")
                 .size("large")
                 .inventory(5)
-                .orderDetails(new HashSet<>())
-                .reservations(new HashSet<>())
-                .cartItems(new HashSet<>())
                 .build();
 
-        var date = new Date();
-        Instant now = Instant.now();
+        final var ldt = LocalDateTime.now();
         var session = new ShoppingSession(
                 1L,
                 "cookie",
-                date,
-                new Date(now.plus(1, HOURS).toEpochMilli()),
-                new HashSet<>(),
-                new HashSet<>()
+                ldt,
+                ldt.plusHours(1)
         );
 
         var cartItems = List.of(
-                RaceConditionHelper.raceConditionCartPojo(
-                        sku.getSkuId(),
-                        sku.getSku(),
-                        sku.getInventory(),
-                        sku.getSize(),
+                new RaceConditionCartDbMapper(
+                        sku.skuId(),
+                        sku.sku(),
+                        sku.inventory(),
+                        sku.size(),
                         1L,
                         7,
                         1L
                 ),
-                RaceConditionHelper.raceConditionCartPojo(
-                        sku1.getSkuId(),
-                        sku1.getSku(),
-                        sku1.getInventory(),
-                        sku1.getSize(),
+                new RaceConditionCartDbMapper(
+                        sku.skuId(),
+                        sku.sku(),
+                        sku.inventory(),
+                        sku.size(),
                         1L,
                         4,
                         1L
                 )
-
         );
 
         var reservation = Stream.of(sku)
-                .collect(Collectors.toMap(ProductSku::getSku,
-                        s -> RaceConditionHelper.reservationPojo(1L, 3, s.getSku())));
+                .collect(Collectors.toMap(ProductSku::sku, s -> new OrderReservationDbMapper(1L, 3, s.sku())));
 
         // then
         raceConditionService
                 .onPendingReservationsNotEmpty(
                         "",
                         session,
-                        date,
+                        ldt,
                         reservation,
                         cartItems
                 );
@@ -380,7 +344,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                         anyInt(),
                         anyInt(),
                         anyString(),
-                        any(Date.class),
+                        any(LocalDateTime.class),
                         anyString(),
                         anyString(),
                         any(ReservationStatus.class)
@@ -390,7 +354,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                         anyInt(),
                         anyInt(),
                         anyString(),
-                        any(Date.class),
+                        any(LocalDateTime.class),
                         anyString(),
                         anyString(),
                         any(ReservationStatus.class)
@@ -399,7 +363,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
         verify(skuRepo, times(1))
                 .updateProductSkuInventoryBySubtractingFromExistingInventory(anyString(), anyInt());
         verify(reservationRepo, times(1))
-                .saveOrderReservation(anyString(), anyInt(), any(ReservationStatus.class), any(Date.class), anyLong(), anyLong());
+                .saveOrderReservation(anyString(), anyInt(), any(ReservationStatus.class), any(LocalDateTime.class), anyLong(), anyLong());
 
         verify(skuRepo, times(0))
                 .updateProductSkuInventoryByAddingToExistingInventory(anyString(), anyInt());
@@ -414,9 +378,6 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .sku("sku-0")
                 .size("medium")
                 .inventory(10)
-                .orderDetails(new HashSet<>())
-                .reservations(new HashSet<>())
-                .cartItems(new HashSet<>())
                 .build();
 
         var sku1 = ProductSku.builder()
@@ -424,32 +385,26 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .sku("sku-1")
                 .size("large")
                 .inventory(5)
-                .orderDetails(new HashSet<>())
-                .reservations(new HashSet<>())
-                .cartItems(new HashSet<>())
                 .build();
 
-        var date = new Date();
-        Instant now = Instant.now();
+        final var ldt = LocalDateTime.now();
         var session = new ShoppingSession(
                 1L,
                 "cookie",
-                date,
-                new Date(now.plus(1, HOURS).toEpochMilli()),
-                new HashSet<>(),
-                new HashSet<>()
+                ldt,
+                ldt.plusHours(1)
         );
 
         var reservations = Stream.of(sku, sku1)
-                .collect(Collectors.toMap(ProductSku::getSku,
-                        s -> RaceConditionHelper.reservationPojo(1L, s.getInventory(), s.getSku())));
+                .collect(Collectors.toMap(ProductSku::sku,
+                        s -> new OrderReservationDbMapper(1L, s.inventory(), s.sku())));
 
         // method to test
         raceConditionService
                 .onPendingReservationsNotEmpty(
                         "",
                         session,
-                        date,
+                        ldt,
                         reservations,
                         List.of()
                 );
@@ -460,7 +415,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                         anyInt(),
                         anyInt(),
                         anyString(),
-                        any(Date.class),
+                        any(LocalDateTime.class),
                         anyString(),
                         anyString(),
                         any(ReservationStatus.class)
@@ -470,7 +425,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                         anyInt(),
                         anyInt(),
                         anyString(),
-                        any(Date.class),
+                        any(LocalDateTime.class),
                         anyString(),
                         anyString(),
                         any(ReservationStatus.class)
@@ -479,7 +434,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
         verify(skuRepo, times(0))
                 .updateProductSkuInventoryBySubtractingFromExistingInventory(anyString(), anyInt());
         verify(reservationRepo, times(0))
-                .saveOrderReservation(anyString(), anyInt(), any(ReservationStatus.class), any(Date.class), anyLong(), anyLong());
+                .saveOrderReservation(anyString(), anyInt(), any(ReservationStatus.class), any(LocalDateTime.class), anyLong(), anyLong());
 
         verify(skuRepo, times(2))
                 .updateProductSkuInventoryByAddingToExistingInventory(anyString(), anyInt());

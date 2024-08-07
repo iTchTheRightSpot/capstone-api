@@ -1,15 +1,15 @@
 package dev.webserver.payment;
 
 import dev.webserver.cart.Cart;
-import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.ICartRepository;
+import dev.webserver.cart.ShoppingSession;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.OutOfStockException;
+import dev.webserver.external.payment.ThirdPartyPaymentService;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
 import dev.webserver.shipping.ShipSetting;
-import dev.webserver.external.payment.ThirdPartyPaymentService;
 import dev.webserver.util.CustomUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +17,12 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -50,8 +50,8 @@ public class RaceConditionService {
     private long bound;
 
     private final ProductSkuRepository productSkuRepository;
-    private final ICartRepository ICartRepository;
-    private final OrderReservationRepository reservationRepo;
+    private final ICartRepository cartRepository;
+    private final OrderReservationRepository reservationRepository;
     private final ThirdPartyPaymentService thirdPartyService;
     private final CheckoutService checkoutService;
 
@@ -74,7 +74,7 @@ public class RaceConditionService {
      * @throws CustomNotFoundException If custom cookie does not contain in {@link HttpServletRequest},
      * the {@link ShoppingSession} is invalid, or {@link Cart} is empty.
      * @throws OutOfStockException If {@link Cart} quantity is greater {@link ProductSku} inventory.
-     * @throws JpaSystemException if {@link ProductSku} property 'inventory' is negative.
+     * @throws RuntimeException if {@link ProductSku} property 'inventory' is negative.
      */
     public PaymentResponse raceCondition(
             final HttpServletRequest req,
@@ -84,23 +84,19 @@ public class RaceConditionService {
         final CustomCheckoutObject obj = checkoutService
                 .validateCurrentShoppingSession(req, country.toLowerCase().trim());
 
-        final var reservations = reservationRepo
+        final LocalDateTime ldt = CustomUtil.TO_GREENWICH.apply(null);
+        final var reservations = reservationRepository
                 .allPendingNoneExpiredReservationsAssociatedToShoppingSession(
                         obj.session().sessionId(),
-                        CustomUtil.toUTC(new Date()),
+                        ldt,
                         PENDING
                 );
 
         final String reference = UUID.randomUUID().toString();
 
-        final long instant = Instant.now()
-                .plus(bound, ChronoUnit.MINUTES)
-                .toEpochMilli();
-        final Date toExpire = CustomUtil.toUTC(new Date(instant));
+        raceConditionImpl(reference, reservations, obj.cartItems(), ldt.plusMinutes(bound), obj.session());
 
-        raceConditionImpl(reference, reservations, obj.cartItems(), toExpire, obj.session());
-
-        final var list = this.ICartRepository
+        final var list = cartRepository
                 .amountToPayForAllCartItemsForShoppingSession(obj.session().sessionId(), currency);
 
         final BigDecimal total = CustomUtil
@@ -113,7 +109,7 @@ public class RaceConditionService {
                 );
 
         // if ngn remove leading zeros
-        final var secret = this.thirdPartyService.payStackCredentials();
+        final var secret = thirdPartyService.payStackCredentials();
         return new PaymentResponse(
                 reference,
                 secret.pubKey(),
@@ -146,9 +142,9 @@ public class RaceConditionService {
      */
     void raceConditionImpl(
             final String reference,
-            final List<OrderReservationProjection> reservations,
+            final List<OrderReservationDbMapper> reservations,
             final List<RaceConditionCartDbMapper> carts,
-            final Date toExpire,
+            final LocalDateTime toExpire,
             final ShoppingSession session
     ) {
         try {
@@ -156,22 +152,20 @@ public class RaceConditionService {
                 for (var cart : carts) {
                     onCartItemQtyGreaterThanProductSkuInventory(cart);
 
-                    this.productSkuRepository.updateProductSkuInventoryBySubtractingFromExistingInventory(
-                            cart.getProductSkuSku(),
-                            cart.getCartItemQty()
-                    );
-                    reservationRepo.saveOrderReservation(
+                    productSkuRepository
+                            .updateProductSkuInventoryBySubtractingFromExistingInventory(cart.sku(), cart.qty());
+                    reservationRepository.saveOrderReservation(
                             reference,
-                            cart.getCartItemQty(),
+                            cart.qty(),
                             PENDING,
                             toExpire,
-                            cart.getProductSkuId(),
-                            cart.getShoppingSessionId()
+                            cart.skuId(),
+                            cart.sessionId()
                     );
                 }
             } else {
-                final Map<String, OrderReservationProjection> map = reservations.stream()
-                        .collect(Collectors.toMap(OrderReservationProjection::getProductSkuSku, pojo -> pojo));
+                final Map<String, OrderReservationDbMapper> map = reservations.stream()
+                        .collect(Collectors.toMap(OrderReservationDbMapper::sku, pojo -> pojo));
                 onPendingReservationsNotEmpty(
                         reference,
                         session,
@@ -183,21 +177,19 @@ public class RaceConditionService {
         } catch (OutOfStockException e) {
             log.error(e.getMessage());
             throw new OutOfStockException(e.getMessage());
-        } catch (JpaSystemException e) {
+        } catch (RuntimeException e) {
             log.error(e.getMessage());
             throw new OutOfStockException("an item in your cart is out of stock");
         }
     }
 
     private void onCartItemQtyGreaterThanProductSkuInventory(final RaceConditionCartDbMapper cart) {
-        if (cart.getCartItemQty() > cart.getProductSkuInventory()) {
-            final var optional = productSkuRepository
-                    .productByProductSku(cart.getProductSkuSku());
+        if (cart.qty() > cart.inventory()) {
+            final var optional = productSkuRepository.productByProductSku(cart.sku());
 
-            final String name = optional.isPresent() ? optional.get().getName() : "";
+            final String name = optional.isPresent() ? optional.get().name() : "";
 
-            throw new OutOfStockException("%s %s is out of stock"
-                    .formatted(name, cart.getProductSkuSize()));
+            throw new OutOfStockException("%s %s is out of stock".formatted(name, cart.size()));
         }
     }
 
@@ -220,69 +212,64 @@ public class RaceConditionService {
      *                  user's cart.
      * @throws OutOfStockException if {@link Cart} property qty is greater
      * than {@code ProductSku} property inventory.
-     * @throws JpaSystemException if {@link ProductSku} property 'inventory' is negative.
      * */
     void onPendingReservationsNotEmpty(
             final String reference,
             final ShoppingSession session,
-            final Date toExpire,
-            final Map<String, OrderReservationProjection> reservations,
+            final LocalDateTime toExpire,
+            final Map<String, OrderReservationDbMapper> reservations,
             final List<RaceConditionCartDbMapper> cartItems
     ) {
-        for (var cart : cartItems) {
+        for (final var cart : cartItems) {
             onCartItemQtyGreaterThanProductSkuInventory(cart);
 
-            if (reservations.containsKey(cart.getProductSkuSku())) {
-                final OrderReservationProjection reservation = reservations.get(cart.getProductSkuSku());
+            if (reservations.containsKey(cart.sku())) {
+                final OrderReservationDbMapper reservation = reservations.get(cart.sku());
 
-                if (cart.getCartItemQty() > reservation.getReservationQty()) {
-                    this.reservationRepo
+                if (cart.qty() > reservation.qty()) {
+                    reservationRepository
                             .deductFromProductSkuInventoryAndReplaceReservationQty(
-                                    cart.getCartItemQty() - reservation.getReservationQty(),
-                                    cart.getCartItemQty(),
+                                    cart.qty() - reservation.qty(),
+                                    cart.qty(),
                                     reference,
                                     toExpire,
                                     session.cookie(),
-                                    cart.getProductSkuSku(),
+                                    cart.sku(),
                                     PENDING
                             );
-                } else if (cart.getCartItemQty() < reservation.getReservationQty()) {
-                    this.reservationRepo
+                } else if (cart.qty() < reservation.qty()) {
+                    reservationRepository
                             .addToProductSkuInventoryAndReplaceReservationQty(
-                                    reservation.getReservationQty() - cart.getCartItemQty(),
-                                    cart.getCartItemQty(),
+                                    reservation.qty() - cart.qty(),
+                                    cart.qty(),
                                     reference,
                                     toExpire,
                                     session.cookie(),
-                                    cart.getProductSkuSku(),
+                                    cart.sku(),
                                     PENDING
                             );
                 }
 
-                reservations.remove(cart.getProductSkuSku());
+                reservations.remove(cart.sku());
             } else {
-                this.productSkuRepository.updateProductSkuInventoryBySubtractingFromExistingInventory(
-                        cart.getProductSkuSku(),
-                        cart.getCartItemQty()
-                );
-                reservationRepo.saveOrderReservation(
+                productSkuRepository
+                        .updateProductSkuInventoryBySubtractingFromExistingInventory(cart.sku(), cart.qty());
+                reservationRepository.saveOrderReservation(
                         reference,
-                        cart.getCartItemQty(),
+                        cart.qty(),
                         PENDING,
                         toExpire,
-                        cart.getProductSkuId(),
-                        cart.getShoppingSessionId()
+                        cart.skuId(),
+                        cart.sessionId()
                 );
             }
         }
 
-        for (final Map.Entry<String, OrderReservationProjection> entry : reservations.entrySet()) {
-            final OrderReservationProjection reservation = entry.getValue();
-            this.productSkuRepository.updateProductSkuInventoryByAddingToExistingInventory(
-                    reservation.getProductSkuSku(),
-                    reservation.getReservationQty()
-            );
-            this.reservationRepo.deleteById(reservation.getReservationId());
+        for (final Map.Entry<String, OrderReservationDbMapper> entry : reservations.entrySet()) {
+            final OrderReservationDbMapper reservation = entry.getValue();
+            productSkuRepository
+                    .updateProductSkuInventoryByAddingToExistingInventory(reservation.sku(), reservation.qty());
+            reservationRepository.deleteById(reservation.reservationId());
         }
     }
 

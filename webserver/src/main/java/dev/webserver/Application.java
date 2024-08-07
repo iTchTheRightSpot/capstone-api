@@ -4,7 +4,7 @@ import dev.webserver.security.controller.RegisterDto;
 import dev.webserver.security.controller.AuthenticationService;
 import dev.webserver.enumeration.RoleEnum;
 import dev.webserver.external.log.DiscordPayload;
-import dev.webserver.payment.PayloadMapper;
+import dev.webserver.payment.OrderHistoryDbMapper;
 import dev.webserver.product.util.Variant;
 import dev.webserver.external.payment.PaymentCredentialObj;
 import dev.webserver.user.ClientRole;
@@ -31,7 +31,7 @@ import static org.springframework.data.web.config.EnableSpringDataWebSupport.Pag
 @SpringBootApplication
 @EnableScheduling
 @ImportRuntimeHints(value = {MyRuntimeHints.class})
-@RegisterReflectionForBinding(value = {Variant.class, PayloadMapper.class, PaymentCredentialObj.class, DiscordPayload.class})
+@RegisterReflectionForBinding(value = {Variant.class, OrderHistoryDbMapper.class, PaymentCredentialObj.class, DiscordPayload.class})
 // https://docs.spring.io/spring-data/rest/reference/data-commons/repositories/core-extensions.html
 @EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)
 public class Application {

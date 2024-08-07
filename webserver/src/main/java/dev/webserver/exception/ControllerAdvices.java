@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.regex.PatternSyntaxException;
 
 import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
 import static org.springframework.http.HttpStatus.*;
@@ -85,6 +86,12 @@ class ControllerAdvices {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ExceptionResponse> currencyException() {
         var res = new ExceptionResponse("invalid currency type", BAD_REQUEST);
+        return new ResponseEntity<>(res, BAD_REQUEST);
+    }
+
+    @ExceptionHandler({PatternSyntaxException.class})
+    public ResponseEntity<ExceptionResponse> formatException() {
+       final var res = new ExceptionResponse("invalid cookie", BAD_REQUEST);
         return new ResponseEntity<>(res, BAD_REQUEST);
     }
 

@@ -31,7 +31,7 @@ public class PaymentDetailService {
     private final AddressRepository addressRepository;
     private final OrderReservationRepository orderReservationRepository;
     private final PaymentAuthorizationRepository paymentAuthorizationRepository;
-    private final ICartRepository ICartRepository;
+    private final ICartRepository cartRepository;
     private final OrderDetailRepository orderDetailRepository;
 
     /**
@@ -179,12 +179,11 @@ public class PaymentDetailService {
                 .saveOrderDetail(obj.getReservationQty(), obj.getProductSkuId(), detail.getPaymentDetailId()));
 
         // delete CartItems
-        ICartRepository.cartIdsByOrderReservationReference(reference)
-                .forEach(cartItem -> ICartRepository.deleteById(cartItem.getCartItemId()));
+        cartRepository.cartIdsByOrderReservationReference(reference)
+                .forEach(cartItem -> cartRepository.deleteById(cartItem.getCartItemId()));
 
         // delete OrderReservations
-        reservations
-                .forEach(o -> orderReservationRepository.deleteById(o.getReservationId()));
+        reservations.forEach(o -> orderReservationRepository.deleteById(o.getReservationId()));
     }
 
 }

@@ -13,17 +13,17 @@ public interface OrderDetailRepository extends CrudRepository<OrderDetail, Long>
      * Retrieves the order history for a given user principal email.
      *
      * @param principal the email associated to a {@link PaymentDetail}.
-     * @return a {@link List} of {@link OrderProjection} representing the order history.
+     * @return a {@link List} of {@link OrderDetailDbMapper} representing the order history.
      */
     @Query(value = """
     SELECT
-    p.created_at AS time,
+    p.created_at AS createdAt,
     p.currency as currency,
-    p.amount as total,
-    p.reference_id AS paymentId,
+    p.amount as amount,
+    p.reference_id AS referenceId,
     CONCAT('[',
-        GROUP_CONCAT(DISTINCT
-            JSON_OBJECT(
+        GROUP_CONCAT(
+            DISTINCT JSON_OBJECT(
                 'name', prod.name,
                 'image_key', prod.default_image_key,
                 'colour', d.colour
@@ -38,7 +38,7 @@ public interface OrderDetailRepository extends CrudRepository<OrderDetail, Long>
     WHERE p.email = :principal
     GROUP BY p.reference_id
     """)
-    List<OrderProjection> orderHistoryByPrincipal(String principal);
+    List<OrderDetailDbMapper> orderHistoryByPrincipal(String principal);
 
     @Transactional
     @Modifying

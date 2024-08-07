@@ -9,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 
-import java.util.HashSet;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class CategoryRepositoryTest extends AbstractRepositoryTest {
@@ -48,7 +46,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
         categoryRepo.save(Category.builder().name("trouser fall 2024").isVisible(true).parentId(fall.categoryId()).build());
 
         // then
-        final var list = this.categoryRepo.allCategories();
+        final var list = categoryRepo.allCategories();
 
         assertEquals(7, list.size());
         assertEquals(2, list.stream().filter(p -> p.parentId() == null).toList().size());
@@ -58,59 +56,24 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     @Test
     void validateOnDeleteNoActionWhenDeletingACategory() {
         // given
-        var category = categoryRepo
-                .save(
-                        Category.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        final var category = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
-        categoryRepo
-                .save(
-                        Category.builder()
-                                .name("clothes")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        categoryRepo.save(Category.builder().name("clothes").isVisible(true).parentId(category.categoryId()).build());
 
         RepositoryTestData
                 .createProduct(3, category, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
-
-        // then
-        assertThrows(DataIntegrityViolationException.class,
-                () -> categoryRepo.deleteProductCategoryById(category.getCategoryId()));
+        // method to test and assert
+        assertThrows(DataIntegrityViolationException.class, () -> categoryRepo.deleteProductCategoryById(category.categoryId()));
     }
 
     @Test
     void allProductsByCategoryIdWhereInStockAndIsVisible() {
         // given
-        var category = categoryRepo
-                .save(
-                        Category.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        final var category = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
-        var clothes = categoryRepo
-                .save(
-                        Category.builder()
-                                .name("clothes")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        final var clothes = categoryRepo
+                .save(Category.builder().name("clothes").isVisible(true).parentId(category.categoryId()).build());
 
         for (int i = 0; i < 5; i++) {
             RepositoryTestData
@@ -124,7 +87,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         var page = categoryRepo
                 .allProductsByCategoryIdWhereInStockAndIsVisible(
-                        category.getCategoryId(),
+                        category.categoryId(),
                         SarreCurrency.USD,
                         PageRequest.of(0, 20)
                 );
@@ -133,7 +96,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         var page1 = categoryRepo
                 .allProductsByCategoryIdWhereInStockAndIsVisible(
-                        clothes.getCategoryId(),
+                        clothes.categoryId(),
                         SarreCurrency.USD,
                         PageRequest.of(0, 20)
                 );
@@ -144,54 +107,25 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     @Test
     void updateAllChildrenVisibilityToFalse() {
         // given
-        var category = categoryRepo
-                .save(
-                        Category.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        final var category = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
-        var clothes = categoryRepo
-                .save(
-                        Category.builder()
-                                .name("clothes")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-        var furniture = categoryRepo
-                .save(
-                        Category.builder()
-                                .name("furniture")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        final var clothes = categoryRepo
+                .save(Category.builder().name("clothes").isVisible(true).parentId(category.categoryId()).build());
 
-        // when
-        categoryRepo.updateAllChildrenVisibilityToFalse(category.getCategoryId());
+        final var furniture = categoryRepo
+                .save(Category.builder().name("furniture").isVisible(true).parentId(category.categoryId()).build());
+
+        // method to test
+        categoryRepo.updateAllChildrenVisibilityToFalse(category.categoryId());
 
         // then
-        Category parent = categoryRepo
-                .findById(category.getCategoryId())
-                .orElse(null);
+        final Category parent = categoryRepo.findById(category.categoryId()).orElse(null);
         assertNotNull(parent);
 
-        Category child1 = categoryRepo
-                .findById(clothes.getCategoryId())
-                .orElse(null);
+        final Category child1 = categoryRepo.findById(clothes.categoryId()).orElse(null);
         assertNotNull(child1);
 
-        Category child2 = categoryRepo
-                .findById(furniture.getCategoryId())
-                .orElse(null);
+        final Category child2 = categoryRepo.findById(furniture.categoryId()).orElse(null);
         assertNotNull(child2);
 
         assertTrue(parent.isVisible());
@@ -202,60 +136,26 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
     @Test
     void shouldUpdateCategoryParentId () {
         // given
-        var category = categoryRepo
-                .save(
-                        Category.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        final var category = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
-        var clothes = categoryRepo
-                .save(
-                        Category.builder()
-                                .name("clothes")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
-        var collection = categoryRepo
-                .save(
-                        Category.builder()
-                                .name("collection")
-                                .isVisible(true)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        final var clothes = categoryRepo
+                .save(Category.builder().name("clothes").isVisible(true).parentId(category.categoryId()).build());
+
+        final var collection = categoryRepo.save(Category.builder().name("collection").isVisible(true).build());
 
         // method to test
-        categoryRepo.updateCategoryParentId(
-                clothes.getCategoryId(),
-                collection.getCategoryId()
-        );
+        categoryRepo.updateCategoryParentId(clothes.categoryId(), collection.categoryId());
 
         // then
-        assertEquals(0, categoryRepo.validateCategoryIsAParent(category.getCategoryId()));
-        assertEquals(0, categoryRepo.validateCategoryIsAParent(clothes.getCategoryId()));
-        assertEquals(1, categoryRepo.validateCategoryIsAParent(collection.getCategoryId()));
+        assertEquals(0, categoryRepo.validateCategoryIsAParent(category.categoryId()));
+        assertEquals(0, categoryRepo.validateCategoryIsAParent(clothes.categoryId()));
+        assertEquals(1, categoryRepo.validateCategoryIsAParent(collection.categoryId()));
     }
 
     @Test
     void allProductsByCategoryIdAdminFront() {
         // given
-        var category = categoryRepo
-                .save(
-                        Category.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        final var category = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         for (int i = 0; i < 5; i++) {
             RepositoryTestData
@@ -264,7 +164,7 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
 
         var page = categoryRepo
                 .allProductsByCategoryIdAdminFront(
-                        category.getCategoryId(),
+                        category.categoryId(),
                         SarreCurrency.USD,
                         PageRequest.of(0, 20)
                 );

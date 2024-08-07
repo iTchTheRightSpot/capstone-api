@@ -45,7 +45,7 @@ public interface ProductSkuRepository extends CrudRepository<ProductSku, Long> {
     @Transactional
     @Modifying
     @Query("""
-    UPDATE ProductSku s
+    UPDATE product_sku s
     SET
     s.inventory = (s.inventory + :qty)
     WHERE s.sku = :sku
@@ -57,7 +57,7 @@ public interface ProductSkuRepository extends CrudRepository<ProductSku, Long> {
      * */
     @Transactional
     @Modifying
-    @Query("DELETE FROM ProductSku s WHERE s.sku = :sku")
+    @Query("DELETE FROM product_sku s WHERE s.sku = :sku")
     void deleteProductSkuBySku(String sku);
 
     /**

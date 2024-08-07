@@ -92,16 +92,16 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
 
         assertFalse(details.isEmpty());
 
-        for (OrderProjection pojo : details) {
+        for (OrderDetailDbMapper pojo : details) {
             assertNotNull(pojo.getTime());
             assertNotNull(pojo.getCurrency());
             assertNotNull(pojo.getTotal());
             assertNotNull(pojo.getPaymentId());
 
-            PayloadMapper[] arr = new ObjectMapper().readValue(pojo.getDetail(), PayloadMapper[].class);
+            OrderHistoryDbMapper[] arr = new ObjectMapper().readValue(pojo.getDetail(), OrderHistoryDbMapper[].class);
             assertNotNull(arr);
 
-            for (PayloadMapper mapper : arr) {
+            for (OrderHistoryDbMapper mapper : arr) {
                 assertNotNull(mapper.name());
                 assertNotNull(mapper.colour());
                 assertNotNull(mapper.imageKey());

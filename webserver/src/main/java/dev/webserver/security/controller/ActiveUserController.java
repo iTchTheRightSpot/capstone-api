@@ -11,7 +11,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}auth")
-public class ActiveUserController {
+class ActiveUserController {
 
     public record ActiveUser(String principal) { }
 

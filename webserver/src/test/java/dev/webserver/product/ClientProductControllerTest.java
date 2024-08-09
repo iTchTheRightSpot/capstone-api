@@ -1,14 +1,14 @@
 package dev.webserver.product;
 
 import dev.webserver.AbstractIntegration;
-import dev.webserver.category.CategoryRepository;
+import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
+import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.TestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.util.HashSet;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -28,29 +28,11 @@ class ClientProductControllerTest extends AbstractIntegration {
     private CategoryRepository categoryRepository;
 
     private void dummy() {
-        var category = categoryRepository
-                .save(
-                        Category.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .parentCategory(null)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        var category = categoryRepository.save(Category.builder().name("category").isVisible(true).build());
 
         TestData.dummyProducts(category, 2, workerProductService);
 
-        var clothes = categoryRepository
-                .save(
-                        Category.builder()
-                                .name("clothes")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        var clothes = categoryRepository.save(Category.builder().name("clothes").isVisible(true).build());
 
         TestData.dummyProducts(clothes, 5, workerProductService);
     }
@@ -88,9 +70,9 @@ class ClientProductControllerTest extends AbstractIntegration {
     void shouldReturnProductDetails() throws Exception {
         dummy();
 
-        var list = this.productRepository.findAll();
+        var list = TestUtility.toList(productRepository.findAll());
         assertFalse(list.isEmpty());
-        String id = list.getFirst().getUuid();
+        String id = list.getFirst().uuid();
 
         super.mockMvc.perform(get(path + "/detail").param("product_id", id)).andExpect(status().isOk());
     }

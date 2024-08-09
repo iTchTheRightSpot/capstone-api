@@ -2,10 +2,9 @@ package dev.webserver.security.controller;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
-import dev.webserver.security.CapstoneUserDetails;
 import dev.webserver.exception.DuplicateException;
+import dev.webserver.security.CapstoneUserDetails;
 import dev.webserver.security.JwtService;
-import dev.webserver.user.ClientRole;
 import dev.webserver.user.SarreBrandUser;
 import dev.webserver.user.UserRepository;
 import jakarta.servlet.http.Cookie;
@@ -16,11 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import static dev.webserver.enumeration.RoleEnum.CLIENT;
-import static dev.webserver.enumeration.RoleEnum.WORKER;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.authentication.UsernamePasswordAuthenticationToken.authenticated;
@@ -58,12 +52,10 @@ class WorkerAuthControllerTest extends AbstractIntegration {
                             .phoneNumber("000000000")
                             .password(encoder.encode("password123"))
                             .enabled(true)
-                            .clientRole(Set.of(new ClientRole(CLIENT), new ClientRole(WORKER, user)))
-                            .paymentDetail(new HashSet<>())
                             .build());
 
             jwt = jwtService.generateToken(
-                    authenticated(user.getEmail(), null, new CapstoneUserDetails(user).getAuthorities()));
+                    authenticated(user.email(), null, new CapstoneUserDetails(user).getAuthorities()));
         }
     }
 
@@ -82,7 +74,7 @@ class WorkerAuthControllerTest extends AbstractIntegration {
                 .perform(post(route + "register")
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.mapper.writeValueAsString(dto))
+                        .content(super.mapper.writeValueAsString(dto))
                         .cookie(new Cookie(JSESSIONID, jwt))
                 )
                 .andExpect(status().isCreated());
@@ -93,7 +85,7 @@ class WorkerAuthControllerTest extends AbstractIntegration {
         var dto = new RegisterDto(
                 "SEJU",
                 "Development",
-                user.getEmail(),
+                user.email(),
                 "",
                 "00-000-0000",
                 "password123"
@@ -103,7 +95,7 @@ class WorkerAuthControllerTest extends AbstractIntegration {
                 .perform(post(route + "register")
                         .contentType(APPLICATION_JSON)
                         .with(csrf())
-                        .content(this.mapper.writeValueAsString(dto))
+                        .content(super.mapper.writeValueAsString(dto))
                         .cookie(new Cookie(JSESSIONID, jwt))
                 )
                 .andExpect(result -> assertInstanceOf(DuplicateException.class, result.getResolvedException()));
@@ -112,7 +104,7 @@ class WorkerAuthControllerTest extends AbstractIntegration {
     @Test
     void login_wrong_password() throws Exception {
         String payload = this.mapper
-                .writeValueAsString(new LoginDto(user.getPassword(), "fFeubfrom@#$%^124234"));
+                .writeValueAsString(new LoginDto(user.password(), "fFeubfrom@#$%^124234"));
         this.mockMvc
                 .perform(post(route + "login")
                         .with(csrf())

@@ -3,6 +3,7 @@ package dev.webserver.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.exception.ExceptionResponse;
 import dev.webserver.user.UserRepository;
+import dev.webserver.user.UserRoleRepository;
 import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -86,7 +87,7 @@ class SecurityConfig {
     private String profile;
 
     @Bean
-    public UserDetailsService userDetailsService(UserRepository repository) {
+    public UserDetailsService userDetailsService(UserRepository repository, final UserRoleRepository roleRepository) {
         return username -> repository
                 .userByPrincipal(username)
                 .map(CapstoneUserDetails::new)

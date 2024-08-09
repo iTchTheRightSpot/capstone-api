@@ -1,6 +1,7 @@
 package dev.webserver.tax;
 
 import dev.webserver.AbstractRepositoryTest;
+import dev.webserver.TestUtility;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -15,7 +16,7 @@ class TaxRepositoryTest extends AbstractRepositoryTest {
     @Test
     void shouldContainDefaultTaxAsPerMigrationScriptV15() {
         // when
-        var all = repository.findAll();
+        var all = TestUtility.toList(repository.findAll());
 
         // then
         assertEquals(1, all.size());
@@ -39,19 +40,16 @@ class TaxRepositoryTest extends AbstractRepositoryTest {
     void shouldThrowErrorAsTaxRateIsNotInTheRightFormat() {
         // when
         assertThrows(DataIntegrityViolationException.class,
-                () -> repository
-                        .updateTaxByTaxId(1, "name", 225.32));
+                () -> repository.updateTaxByTaxId(1, "name", 225.32));
 
         assertThrows(DataIntegrityViolationException.class,
-                () -> repository
-                        .updateTaxByTaxId(1, "frank", 225.32666));
+                () -> repository.updateTaxByTaxId(1, "frank", 225.32666));
     }
 
     @Test
     void shouldThrowErrorWhenUpdatingTaxBecauseOfLengthOfName() {
         assertThrows(DataIntegrityViolationException.class,
-                () -> repository.updateTaxByTaxId(1,"hungary-tax", 10.2345)
-        );
+                () -> repository.updateTaxByTaxId(1,"hungary-tax", 10.2345));
     }
 
 }

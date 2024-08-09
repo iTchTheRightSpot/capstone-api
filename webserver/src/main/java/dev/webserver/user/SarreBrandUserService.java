@@ -2,7 +2,6 @@ package dev.webserver.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -27,8 +26,8 @@ public class SarreBrandUserService {
      * */
     public Page<UserResponse> allUsers(int page, int size) {
         return userRepository
-                .allUsers(PageRequest.of(page, size))
-                .map(s -> new UserResponse(s.getFirstname(), s.getLastname(), s.getEmail(), s.getPhoneNumber()));
+                .allUsers()
+                .map(s -> new UserResponse(s.firstname(), s.lastname(), s.email(), s.phoneNumber()));
     }
 
 }

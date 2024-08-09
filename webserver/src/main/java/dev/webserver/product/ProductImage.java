@@ -10,12 +10,12 @@ import org.springframework.data.relational.core.mapping.Table;
 public record ProductImage(
         @Id
         @Column("image_id")
-        Long productImageId,
+        Long imageId,
         @Column("image_key")
         String imageKey, // represents key in AWS or DigitalOcean bucket
         @Column("image_path")
         String imagePath,
         @Column("detail_id")
-        Long productDetailId
+        Long detailId
 ) {
 }

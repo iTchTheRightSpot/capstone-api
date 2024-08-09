@@ -4,10 +4,9 @@ import com.github.javafaker.Faker;
 import dev.webserver.category.Category;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.product.*;
+import dev.webserver.util.CustomUtil;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.UUID;
 
 public class RepositoryTestData {
@@ -29,34 +28,30 @@ public class RepositoryTestData {
                         .defaultKey(UUID.randomUUID().toString())
                         .weight(new Faker().number().randomDouble(3, 1, 50))
                         .weightType("kg")
-                        .categoryId(category)
-                        .productDetails(new HashSet<>())
-                        .priceCurrency(new HashSet<>())
+                        .categoryId(category.categoryId())
                         .build()
         );
 
         priceCurrencyRepository
-                .save(new PriceCurrency(new BigDecimal(new Faker().commerce().price()), SarreCurrency.NGN, product));
+                .save(new PriceCurrency(null, new BigDecimal(new Faker().commerce().price()), SarreCurrency.NGN, product.productId()));
         priceCurrencyRepository
-                .save(new PriceCurrency(new BigDecimal(new Faker().commerce().price()), SarreCurrency.USD, product));
+                .save(new PriceCurrency(null, new BigDecimal(new Faker().commerce().price()), SarreCurrency.USD, product.productId()));
 
         ProductDetail detail = detailRepo.save(
                 ProductDetail.builder()
                         .colour(UUID.randomUUID().toString())
                         .isVisible(true)
-                        .createAt(new Date())
-                        .product(product)
-                        .productImages(new HashSet<>())
-                        .skus(new HashSet<>())
-                        .build()
-        );
+                        .createAt(CustomUtil.TO_GREENWICH.apply(null))
+                        .productId(product.productId())
+                        .build());
 
         for (int i = 0; i < numberOfChildren; i++) {
             imageRepo.save(
                     new ProductImage(
+                            null,
                             UUID.randomUUID().toString(),
                             "path " + new Faker().number().numberBetween(1, 100),
-                            detail
+                            detail.detailId()
                     )
             );
 
@@ -65,12 +60,8 @@ public class RepositoryTestData {
                             .sku(UUID.randomUUID().toString())
                             .size(UUID.randomUUID().toString())
                             .inventory(new Faker().number().numberBetween(10, 20))
-                            .productDetailId(detail)
-                            .orderDetails(new HashSet<>())
-                            .reservations(new HashSet<>())
-                            .cartItems(new HashSet<>())
-                            .build()
-            );
+                            .detailId(detail.detailId())
+                            .build());
         }
     }
 

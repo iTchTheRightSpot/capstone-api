@@ -16,7 +16,7 @@ import java.io.IOException;
  * and
  * <a href="https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html">documentation</a>
  */
-public class CookieCsrfFilter extends OncePerRequestFilter {
+final class CookieCsrfFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(

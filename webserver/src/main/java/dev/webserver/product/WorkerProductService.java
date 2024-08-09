@@ -30,14 +30,13 @@ import static java.math.RoundingMode.FLOOR;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(rollbackFor = Exception.class)
 public class WorkerProductService {
 
     private static final Logger log = LoggerFactory.getLogger(WorkerProductService.class);
 
     @Value(value = "${aws.bucket}")
     @Setter
-    private String BUCKET;
+    private String bucket;
 
     private final PriceCurrencyRepository currencyRepo;
     private final ProductRepository productRepository;
@@ -49,7 +48,7 @@ public class WorkerProductService {
     /**
      * Sample issue
      * <p>
-     * We have a {@link Page} of {@link ProductProjection}
+     * We have a {@link Page} of {@link ProductDbMapper}
      * we need to map to a {@link ProductResponse}. The caveat is whilst mapping
      * to a {@link ProductResponse}, we need to make a call to S3 to
      * retrieve a pre-signed url for each {@link ProductResponse} object.
@@ -59,7 +58,7 @@ public class WorkerProductService {
      * through put and to rely on the jvm to manage thread creation instead of
      * us creating Platform threads.
      * <p>
-     * 1. Retrieve the {@link Page} of {@link ProductProjection} from db.
+     * 1. Retrieve the {@link Page} of {@link ProductDbMapper} from db.
      * <p>
      * 2. Instantiate a VirtualThread executor.
      * <p>
@@ -79,19 +78,19 @@ public class WorkerProductService {
     public Page<ProductResponse> allProducts(
             final SarreCurrency currency, final int page, final int size
     ) {
-        var pageOfProducts = this.productRepository.allProductsForAdminFront(currency, PageRequest.of(page, size));
+        var pageOfProducts = productRepository.allProductsForAdminFront(currency);
 
         var futures = pageOfProducts.stream()
                 .map(p -> (Supplier<ProductResponse>) () -> new ProductResponse(
-                        p.getUuid(),
-                        p.getName(),
-                        p.getDescription(),
-                        p.getPrice(),
-                        p.getCurrency(),
-                        productImageService.preSignedUrl(BUCKET, p.getImage()),
-                        p.getCategory(),
-                        p.getWeight(),
-                        p.getWeightType()
+                        p.uuid(),
+                        p.name(),
+                        p.description(),
+                        p.price(),
+                        p.currency().name(),
+                        productImageService.preSignedUrl(bucket, p.imageKey()),
+                        p.categoryName(),
+                        p.weight(),
+                        p.weightType()
                 ))
                 .toList();
 
@@ -109,15 +108,16 @@ public class WorkerProductService {
      * @throws CustomServerError      is thrown if File is not an image.
      * @throws DuplicateException      is thrown if dto image exists in for Product.
      */
+    @Transactional(rollbackFor = Exception.class)
     public void create(final CreateProductDto dto, final MultipartFile[] multipartFiles) {
         if (!CustomUtil.validateContainsCurrencies(dto.priceCurrency())) {
             throw new CustomInvalidFormatException("please check currencies and prices");
         }
 
-        var category = this.categoryService.findById(dto.categoryId());
+        var category = categoryService.findById(dto.categoryId());
 
         // throw error if product exits
-        if (this.productRepository.productByName(dto.name().trim()).isPresent()) {
+        if (productRepository.productByName(dto.name().trim()).isPresent()) {
             throw new DuplicateException(dto.name() + " exists");
         }
 
@@ -126,35 +126,33 @@ public class WorkerProductService {
 
         // build Product
         var p = Product.builder()
-                .categoryId(category)
+                .categoryId(category.categoryId())
                 .uuid(UUID.randomUUID().toString())
                 .name(dto.name().trim())
                 .description(dto.desc().trim())
                 .defaultKey(defaultImageKey.toString())
                 .weight(dto.weight())
                 .weightType("kg")
-                .productDetails(new HashSet<>())
                 .build();
 
         // save Product
-        var product = this.productRepository.save(p);
+        var product = productRepository.save(p);
 
         // save ngn & usd price
         BigDecimal ngn = truncateAmount.apply(dto.priceCurrency(), NGN);
         BigDecimal usd = truncateAmount.apply(dto.priceCurrency(), USD);
-        this.currencyRepo.save(new PriceCurrency(ngn, NGN, product));
-        this.currencyRepo.save(new PriceCurrency(usd, USD, product));
+        currencyRepo.save(new PriceCurrency(null, ngn, NGN, product.productId()));
+        currencyRepo.save(new PriceCurrency(null, usd, USD, product.productId()));
 
         // save ProductDetails
-        var date = CustomUtil.toUTC(new Date());
-        var detail = this.detailService.
-                productDetail(product, dto.colour(), dto.visible(), date);
+        var date = CustomUtil.TO_GREENWICH.apply(null);
+        var detail = detailService.productDetail(product, dto.colour(), dto.visible(), date);
 
         // save ProductSKUs
-        this.skuService.save(dto.sizeInventory(), detail);
+        skuService.save(dto.sizeInventory(), detail);
 
         // build and save ProductImages (save to s3)
-        this.productImageService.saveProductImages(detail, files, BUCKET);
+        productImageService.saveProductImages(detail, files, bucket);
     }
 
     /**
@@ -165,6 +163,7 @@ public class WorkerProductService {
      * @throws DuplicateException      when new product name exist but not associated to product uuid.
      * @throws CustomInvalidFormatException if price is less than zero.
      */
+    @Transactional(rollbackFor = Exception.class)
     public void update(final UpdateProductDto dto) {
         if (dto.price().compareTo(BigDecimal.ZERO) < 0) {
             throw new CustomInvalidFormatException("price cannot be zero");
@@ -172,27 +171,26 @@ public class WorkerProductService {
 
         var price = dto.price().setScale(2, RoundingMode.FLOOR);
 
-        boolean bool = this.productRepository
+        boolean bool = productRepository
                 .nameNotAssociatedToUuid(dto.uuid(), dto.name()) > 0;
 
         if (bool) {
             throw new DuplicateException(dto.name() + " exists");
         }
 
-        var category = this.categoryService.findById(dto.categoryId());
+        var category = categoryService.findById(dto.categoryId());
 
-        this.productRepository
-                .updateProduct(
-                        dto.uuid().trim(),
-                        dto.name().trim(),
-                        dto.desc().trim(),
-                        dto.weight(),
-                        category
-                );
+        productRepository.updateProduct(
+                dto.uuid().trim(),
+                dto.name().trim(),
+                dto.desc().trim(),
+                dto.weight(),
+                category.categoryId()
+        );
 
         // update price
         var currency = SarreCurrency.valueOf(dto.currency().toUpperCase());
-        this.currencyRepo
+        currencyRepo
                 .updateProductPriceByProductUuidAndCurrency(dto.uuid(), price, currency);
     }
 
@@ -204,21 +202,22 @@ public class WorkerProductService {
      * @throws CustomServerError               is thrown when an error occurs when deleting from s3.
      * @see <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/DeleteMultiObjects.java">documentation</a>
      */
+    @Transactional(rollbackFor = Exception.class)
     public void delete(final String uuid) {
-        final List<ObjectIdentifier> keys = this.productRepository.productImagesByProductUuid(uuid)
+        final List<ObjectIdentifier> keys = productRepository.productImagesByProductUuid(uuid)
                 .stream() //
-                .map(img -> ObjectIdentifier.builder().key(img.getImage()).build()) //
+                .map(img -> ObjectIdentifier.builder().key(img.imageKey()).build()) //
                 .toList();
 
         try {
-            this.productRepository.deleteByProductUuid(uuid);
+            productRepository.deleteByProductUuid(uuid);
         } catch (DataIntegrityViolationException e) {
             log.error("resources attached to Product {}", e.getMessage());
             throw new ResourceAttachedException("resource(s) attached to product");
         }
 
         if (!keys.isEmpty()) {
-            this.productImageService.deleteFromS3(keys, BUCKET);
+            productImageService.deleteFromS3(keys, bucket);
         }
     }
 

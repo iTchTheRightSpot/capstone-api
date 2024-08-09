@@ -8,8 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashSet;
+import java.time.format.DateTimeFormatter;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -22,6 +21,7 @@ class PaymentDetailRepositoryTest extends AbstractRepositoryTest {
     @Test
     void shouldSuccessfullyRetrieveAPaymentDetailByEmailAndReference() {
         // given
+        final var ldt = CustomUtil.TO_GREENWICH.apply(null);
         repository.save(
                 PaymentDetail.builder()
                         .name("Bane Anderson")
@@ -32,9 +32,8 @@ class PaymentDetailRepositoryTest extends AbstractRepositoryTest {
                         .amount(new BigDecimal("15750"))
                         .paymentProvider("Paystack")
                         .paymentStatus(PaymentStatus.CONFIRMED)
-                        .paidAt(new Date().toString())
-                        .createAt(CustomUtil.toUTC(new Date()))
-                        .orderDetails(new HashSet<>())
+                        .paidAt(ldt.format(DateTimeFormatter.ISO_DATE_TIME))
+                        .createAt(ldt)
                         .build()
         );
 

@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 class WorkerProductServiceTest extends AbstractUnitTest {
 
     @Value(value = "${aws.bucket}")
-    private String BUCKET;
+    private String bucket;
 
     private WorkerProductService productService;
 
@@ -34,15 +34,15 @@ class WorkerProductServiceTest extends AbstractUnitTest {
 
     @BeforeEach
     void setUp() {
-        this.productService = new WorkerProductService(
-                this.currencyRepo,
-                this.productRepository,
-                this.detailService,
-                this.skuService,
-                this.categoryService,
-                this.productImageService
+        productService = new WorkerProductService(
+                currencyRepo,
+                productRepository,
+                detailService,
+                skuService,
+                categoryService,
+                productImageService
         );
-        this.productService.setBUCKET(BUCKET);
+        productService.setBucket(bucket);
     }
 
     @Test
@@ -57,12 +57,12 @@ class WorkerProductServiceTest extends AbstractUnitTest {
                 .build();
 
         // When
-        when(this.categoryService.findById(anyLong())).thenReturn(category);
-        when(this.productRepository.productByName(anyString())).thenReturn(Optional.empty());
+        when(categoryService.findById(anyLong())).thenReturn(category);
+        when(productRepository.productByName(anyString())).thenReturn(Optional.empty());
 
         // Then
-        this.productService.create(dto, files);
-        verify(this.productRepository, times(1)).save(any(Product.class));
+        productService.create(dto, files);
+        verify(productRepository, times(1)).save(any(Product.class));
     }
 
     @Test
@@ -78,11 +78,11 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         var product = Product.builder().name(dto.name()).uuid("uuid").build();
 
         // When
-        when(this.categoryService.findById(anyLong())).thenReturn(category);
-        when(this.productRepository.productByName(anyString())).thenReturn(Optional.of(product));
+        when(categoryService.findById(anyLong())).thenReturn(category);
+        when(productRepository.productByName(anyString())).thenReturn(Optional.of(product));
 
         // Then
-        assertThrows(DuplicateException.class, () -> this.productService.create(dto, files));
+        assertThrows(DuplicateException.class, () -> productService.create(dto, files));
     }
 
     @Test
@@ -97,18 +97,18 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         var category = Category.builder().categoryId(payload.categoryId()).build();
 
         // When
-        when(this.productRepository.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
-        when(this.categoryService.findById(anyLong())).thenReturn(category);
+        when(productRepository.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
+        when(categoryService.findById(anyLong())).thenReturn(category);
 
         // Then
-        this.productService.update(payload);
-        verify(this.productRepository, times(1))
+        productService.update(payload);
+        verify(productRepository, times(1))
                 .updateProduct(
                         anyString(),
                         anyString(),
                         anyString(),
                         anyDouble(),
-                        any(Category.class)
+                        anyLong()
                 );
     }
 
@@ -125,18 +125,18 @@ class WorkerProductServiceTest extends AbstractUnitTest {
         var category = Category.builder().categoryId(payload.categoryId()).build();
 
         // When
-        when(this.productRepository.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
-        when(this.categoryService.findById(anyLong())).thenReturn(category);
+        when(productRepository.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
+        when(categoryService.findById(anyLong())).thenReturn(category);
 
         // Then
-        this.productService.update(payload);
-        verify(this.productRepository, times(1))
+        productService.update(payload);
+        verify(productRepository, times(1))
                 .updateProduct(
                         anyString(),
                         anyString(),
                         anyString(),
                         anyDouble(),
-                        any(Category.class)
+                        anyLong()
                 );
     }
 

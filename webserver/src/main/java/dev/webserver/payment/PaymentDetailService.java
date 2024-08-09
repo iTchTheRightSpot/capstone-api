@@ -16,12 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(rollbackFor = Exception.class)
 public class PaymentDetailService {
 
     static final Logger log = LoggerFactory.getLogger(PaymentDetailService.class);
@@ -52,6 +49,7 @@ public class PaymentDetailService {
      *
      * @param data contains details of a successful payment.
      */
+    @Transactional(rollbackFor = Exception.class)
     public void onSuccessfulPayment(final JsonNode data) {
         // TODO only process in production
         final String domain = data.get("domain").textValue();
@@ -112,9 +110,8 @@ public class PaymentDetailService {
                         .paymentProvider("Paystack")
                         .paymentStatus(PaymentStatus.CONFIRMED)
                         .paidAt(data.get("paid_at").textValue())
-                        .createAt(CustomUtil.toUTC(new Date()))
-                        .user(user)
-                        .orderDetails(new HashSet<>())
+                        .createAt(CustomUtil.TO_GREENWICH.apply(null))
+                        .clientId(user != null ? user.clientId() : null)
                         .build()
         );
     }
@@ -127,13 +124,13 @@ public class PaymentDetailService {
      */
     private void address(final WebhookMetaData metadata, final PaymentDetail detail) {
         addressRepository.save(new Address(
+                detail.paymentDetailId(),
                 metadata.address(),
                 metadata.city(),
                 metadata.state(),
                 metadata.postcode(),
                 metadata.country(),
-                metadata.deliveryInfo(),
-                detail)
+                metadata.deliveryInfo())
         );
     }
 
@@ -159,7 +156,7 @@ public class PaymentDetailService {
                         .brand(auth.brand())
                         .isReusable(auth.reusable())
                         .signature(auth.signature())
-                        .paymentDetail(detail)
+                        .authorizationId(detail.paymentDetailId())
                         .build()
         );
     }
@@ -176,14 +173,14 @@ public class PaymentDetailService {
 
         // save OrderDetails
         reservations.forEach(obj -> orderDetailRepository
-                .saveOrderDetail(obj.getReservationQty(), obj.getProductSkuId(), detail.getPaymentDetailId()));
+                .saveOrderDetail(obj.qty(), obj.skuId(), detail.paymentDetailId()));
 
         // delete CartItems
         cartRepository.cartIdsByOrderReservationReference(reference)
-                .forEach(cartItem -> cartRepository.deleteById(cartItem.getCartItemId()));
+                .forEach(cartRepository::deleteById);
 
         // delete OrderReservations
-        reservations.forEach(o -> orderReservationRepository.deleteById(o.getReservationId()));
+        reservations.forEach(o -> orderReservationRepository.deleteById(o.reservationId()));
     }
 
 }

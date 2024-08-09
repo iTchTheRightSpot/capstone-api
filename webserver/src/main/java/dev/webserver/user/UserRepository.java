@@ -1,7 +1,6 @@
 package dev.webserver.user;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -18,13 +17,13 @@ public interface UserRepository extends CrudRepository<SarreBrandUser, Long> {
      *                  object.
      * @return An {@link Optional} of a {@link SarreBrandUser} or null.
      */
-    @Query(value = "SELECT c FROM SarreBrandUser c WHERE c.email = :principal")
+    @Query(value = "SELECT * FROM clientz c WHERE c.email = :principal")
     Optional<SarreBrandUser> userByPrincipal(@Param(value = "principal") String principal);
 
     /**
      * Returns a {@link Page} of {@link SarreBrandUser}.
      */
-    @Query(value = "SELECT u FROM SarreBrandUser u")
-    Page<SarreBrandUser> allUsers(Pageable page);
+    @Query(value = "SELECT * FROM clientz u")
+    Page<SarreBrandUser> allUsers();
 
 }

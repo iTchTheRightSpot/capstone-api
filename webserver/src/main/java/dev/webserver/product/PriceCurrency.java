@@ -17,6 +17,6 @@ public record PriceCurrency(
         BigDecimal price,
         SarreCurrency currency,
         @Column("product_id")
-        Product productId
+        Long productId
 ) {
 }

@@ -1,8 +1,9 @@
 package dev.webserver.cart;
 
 import dev.webserver.AbstractIntegration;
-import dev.webserver.category.CategoryRepository;
+import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
+import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.TestData;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
@@ -13,8 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.web.servlet.MvcResult;
-
-import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -30,10 +29,10 @@ class CartControllerTest extends AbstractIntegration {
     @Value(value = "/${api.endpoint.baseurl}cart")
     private String path;
     @Value("${cart.cookie.name}")
-    private String CARTCOOKIE;
+    private String cartcookie;
 
     @Autowired
-    private IShoppingSessionRepository IShoppingSessionRepository;
+    private IShoppingSessionRepository sessionRepository;
     @Autowired
     private WorkerProductService workerProductService;
     @Autowired
@@ -43,35 +42,17 @@ class CartControllerTest extends AbstractIntegration {
 
     @BeforeEach
     void before() {
-        var category = categoryRepository
-                .save(
-                        Category.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .parentCategory(null)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        var category = categoryRepository.save(Category.builder().name("category").isVisible(true).build());
 
         TestData.dummyProducts(category, 2, workerProductService);
 
-        var clothes = categoryRepository
-                .save(
-                        Category.builder()
-                                .name("clothes")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        var clothes = categoryRepository.save(Category.builder().name("clothes").isVisible(true).build());
 
         TestData.dummyProducts(clothes, 5, workerProductService);
     }
 
     private ProductSku productSku() {
-        var list = this.productSkuRepository.findAll();
+        var list = TestUtility.toList(productSkuRepository.findAll());
         assertFalse(list.isEmpty());
         return list.getFirst();
     }
@@ -90,43 +71,41 @@ class CartControllerTest extends AbstractIntegration {
                 .perform(get(path).with(csrf()))
                 .andReturn();
 
-        Cookie cookie = result.getResponse().getCookie(CARTCOOKIE);
+        Cookie cookie = result.getResponse().getCookie(cartcookie);
         assertNotNull(cookie);
 
         var sku = productSku();
 
-        var dto = new CartDto(sku.getSku(), sku.getInventory());
+        var dto = new CartDto(sku.sku(), sku.inventory());
 
         super.mockMvc
                 .perform(post(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.mapper.writeValueAsString(dto))
+                        .content(super.mapper.writeValueAsString(dto))
                         .with(csrf())
                         .cookie(cookie)
                 )
                 .andExpect(status().isCreated());
 
-        var all = this.IShoppingSessionRepository.findAll();
+        var all = TestUtility.toList(sessionRepository.findAll());
 
         assertFalse(all.isEmpty());
     }
 
     @Test
     void addToExistingShoppingSession() throws Exception {
-        MvcResult result1 = this.mockMvc
-                .perform(get(path).with(csrf()))
-                .andReturn();
+        MvcResult result1 = super.mockMvc.perform(get(path).with(csrf())).andReturn();
 
-        Cookie cookie1 = result1.getResponse().getCookie(CARTCOOKIE);
+        Cookie cookie1 = result1.getResponse().getCookie(cartcookie);
         assertNotNull(cookie1);
 
         var sku = productSku();
-        var dto = new CartDto(sku.getSku(), sku.getInventory());
+        var dto = new CartDto(sku.sku(), sku.inventory());
 
         super.mockMvc
                 .perform(post(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.mapper.writeValueAsString(dto))
+                        .content(super.mapper.writeValueAsString(dto))
                         .with(csrf())
                         .cookie(cookie1)
                 )
@@ -136,7 +115,7 @@ class CartControllerTest extends AbstractIntegration {
         super.mockMvc
                 .perform(post(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.mapper.writeValueAsString(dto))
+                        .content(super.mapper.writeValueAsString(dto))
                         .with(csrf())
                         .cookie(cookie1)
                 )

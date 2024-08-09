@@ -23,11 +23,11 @@ class ProductImageService {
     private final IS3Service service;
 
     public String preSignedUrl(@NotNull String bucket, @NotNull String key) {
-        return this.service.preSignedUrl(bucket, key);
+        return service.preSignedUrl(bucket, key);
     }
 
     public void deleteFromS3(@NotNull List<ObjectIdentifier> keys, @NotNull String bucket) {
-        this.service.deleteFromS3(keys, bucket);
+        service.deleteFromS3(keys, bucket);
     }
 
     /**
@@ -53,7 +53,7 @@ class ProductImageService {
 
         // save all images as long as we have successfully saved to s3
         CustomUtil.asynchronousTasks(future).join()
-                .forEach(e -> repository.save(new ProductImage(e.key(), e.file().getAbsolutePath(), detail)));
+                .forEach(e -> repository.save(new ProductImage(null, e.key(), e.file().getAbsolutePath(), detail.detailId())));
     }
 
 }

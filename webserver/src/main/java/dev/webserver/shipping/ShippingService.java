@@ -17,7 +17,6 @@ import java.util.List;
  * */
 @Service
 @RequiredArgsConstructor
-@Transactional(rollbackFor = Exception.class)
 public class ShippingService {
 
     private static final Logger log = LoggerFactory.getLogger(ShippingService.class);
@@ -42,10 +41,11 @@ public class ShippingService {
      *            necessary info to save a {@link ShipSetting} object.
      * @throws DuplicateException if dto.country() exists.
      * */
+    @Transactional(rollbackFor = Exception.class)
     public void create(final ShippingDto dto) {
         try {
             repository
-                .save(new ShipSetting(dto.country().toLowerCase().trim(), dto.ngn(), dto.usd()));
+                .save(new ShipSetting(null, dto.country().toLowerCase().trim(), dto.ngn(), dto.usd()));
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateException("%s exists".formatted(dto.country()));
         }
@@ -58,6 +58,7 @@ public class ShippingService {
      *            necessary info to update a {@link ShipSetting} object.
      * @throws DuplicateException if dto.country() exists.
      * */
+    @Transactional(rollbackFor = Exception.class)
     public void update(final ShippingMapper dto) {
         try {
             repository
@@ -78,6 +79,7 @@ public class ShippingService {
      * @param id is a primary key for a {@link ShipSetting} object.
      * @throws ResourceAttachedException if categoryId is equal to 1.
      * */
+    @Transactional(rollbackFor = Exception.class)
     public void delete(final long id) {
         if (id == 1)
             throw new ResourceAttachedException("cannot delete default country.");

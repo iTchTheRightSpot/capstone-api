@@ -13,7 +13,7 @@ import static org.springframework.http.HttpStatus.OK;
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}worker/auth")
 @RequiredArgsConstructor
-public class WorkerAuthController {
+class WorkerAuthController {
 
     private final AuthenticationService service;
 

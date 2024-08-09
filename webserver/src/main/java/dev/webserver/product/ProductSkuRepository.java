@@ -16,7 +16,7 @@ public interface ProductSkuRepository extends CrudRepository<ProductSku, Long> {
      * @return An {@link Optional} containing the matching {@link ProductSku},
      *         or empty if no {@link ProductSku} is found with the provided sku.
      */
-    @Query(value = "SELECT p FROM ProductSku p WHERE p.sku = :sku")
+    @Query(value = "SELECT * FROM product_sku p WHERE p.sku = :sku")
     Optional<ProductSku> productSkuBySku(String sku);
 
     /**
@@ -27,12 +27,7 @@ public interface ProductSkuRepository extends CrudRepository<ProductSku, Long> {
      * */
     @Transactional
     @Modifying
-    @Query("""
-    UPDATE ProductSku s
-    SET
-    s.inventory = (s.inventory - :qty)
-    WHERE s.sku = :sku
-    """)
+    @Query("UPDATE product_sku s SET s.inventory = (s.inventory - :qty) WHERE s.sku = :sku")
     void updateProductSkuInventoryBySubtractingFromExistingInventory(String sku, int qty);
 
     /**
@@ -44,12 +39,7 @@ public interface ProductSkuRepository extends CrudRepository<ProductSku, Long> {
      * */
     @Transactional
     @Modifying
-    @Query("""
-    UPDATE product_sku s
-    SET
-    s.inventory = (s.inventory + :qty)
-    WHERE s.sku = :sku
-    """)
+    @Query("UPDATE product_sku s SET s.inventory = (s.inventory + :qty) WHERE s.sku = :sku")
     void updateProductSkuInventoryByAddingToExistingInventory(String sku, int qty);
 
     /**
@@ -72,9 +62,11 @@ public interface ProductSkuRepository extends CrudRepository<ProductSku, Long> {
      *         or empty if no {@link Product} is found with the provided sku.
      */
     @Query("""
-    SELECT p FROM Product p
-    INNER JOIN ProductDetail d ON p.productId = d.product.productId
-    INNER JOIN ProductSku s ON d.productDetailId = s.productDetail.productDetailId
+    SELECT
+        *
+    FROM product p
+    INNER JOIN product_detail d ON p.product_id = d.product_id
+    INNER JOIN product_sku s ON d.detail_id = s.detail_id
     WHERE s.sku = :sku
     """)
     Optional<Product> productByProductSku(String sku);

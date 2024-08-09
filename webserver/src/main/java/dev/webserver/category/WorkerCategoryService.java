@@ -5,7 +5,7 @@ import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.DuplicateException;
 import dev.webserver.exception.ResourceAttachedException;
 import dev.webserver.external.aws.IS3Service;
-import dev.webserver.product.ProductProjection;
+import dev.webserver.product.ProductDbMapper;
 import dev.webserver.product.ProductResponse;
 import dev.webserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +39,7 @@ public class WorkerCategoryService {
     }
 
     /**
-     * Retrieves a {@link Page} of {@link ProductProjection} objects from the
+     * Retrieves a {@link Page} of {@link ProductDbMapper} objects from the
      * database and then asynchronously calls to return S3 to get all images for each product.
      *
      * @param currency    The currency in which prices are displayed.
@@ -60,11 +60,11 @@ public class WorkerCategoryService {
         final var futures = pageOfProducts
                 .stream()
                 .map(p -> (Supplier<ProductResponse>) () -> ProductResponse.builder()
-                        .id(p.getUuid())
-                        .name(p.getName())
-                        .price(p.getPrice())
-                        .currency(p.getCurrency())
-                        .imageUrl(service.preSignedUrl(bucket, p.getImage()))
+                        .id(p.uuid())
+                        .name(p.name())
+                        .price(p.price())
+                        .currency(p.currency().name())
+                        .imageKey(service.preSignedUrl(bucket, p.imageKey()))
                         .build()
                 )
                 .toList();

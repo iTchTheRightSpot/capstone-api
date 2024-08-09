@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Table(name = "payment_detail")
 @Builder
-record PaymentDetail(
+public record PaymentDetail(
         @Id
         @Column("payment_detail_id")
         Long paymentDetailId,
@@ -33,6 +33,6 @@ record PaymentDetail(
         @Column("created_at")
         LocalDateTime createAt,
         @Column("client_id")
-        Long user
+        Long clientId
 ) {
 }

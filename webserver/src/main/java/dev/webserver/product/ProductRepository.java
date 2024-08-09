@@ -1,9 +1,7 @@
 package dev.webserver.product;
 
-import dev.webserver.category.Category;
 import dev.webserver.enumeration.SarreCurrency;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -15,75 +13,71 @@ import java.util.Optional;
 
 public interface ProductRepository extends CrudRepository<Product, Long> {
 
-    @Query(value = "SELECT p FROM Product p WHERE p.name = :name")
+    @Query(value = "SELECT * FROM product p WHERE p.name = :name")
     Optional<Product> productByName(@Param(value = "name") String name);
 
-    @Query(value = "SELECT p FROM Product p WHERE p.uuid = :uuid")
+    @Query(value = "SELECT * FROM product p WHERE p.uuid = :uuid")
     Optional<Product> productByUuid(@Param(value = "uuid") String uuid);
 
-    @Query(value = """
-    SELECT COUNT (p.productId)
-    FROM Product p
-    WHERE p.name = :name AND p.uuid != :uuid
-    """)
+    @Query(value = "SELECT COUNT (p.productId) FROM product p WHERE p.name = :name AND p.uuid != :uuid")
     int nameNotAssociatedToUuid(String uuid, String name);
 
     @Transactional
     @Modifying
-    @Query("DELETE FROM Product p WHERE p.uuid = :uuid")
+    @Query("DELETE FROM product p WHERE p.uuid = :uuid")
     void deleteByProductUuid(String uuid);
 
     @Query(value = """
     SELECT
-    p.uuid AS uuid,
-    p.name AS name,
-    p.description AS description,
-    p.defaultKey AS image,
-    p.weight AS weight,
-    p.weightType AS weightType,
-    c.currency AS currency,
-    c.price AS price,
-    cat.name AS category
-    FROM Product p
-    INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId
-    INNER JOIN PriceCurrency c ON p.productId = c.product.productId
-    WHERE c.currency = :currency
-    GROUP BY p.uuid, p.name, p.description, p.defaultKey, p.weight, p.weightType, c.currency, c.price, cat.name
+        p.uuid AS uuid,
+        p.name AS name,
+        p.description AS description,
+        p.default_image_key AS imageKey,
+        p.weight AS weight,
+        p.weightType AS weight_type,
+        c.currency AS currency,
+        c.price AS price,
+        cat.name AS categoryName
+    FROM product p
+    INNER JOIN product_category cat ON p.category_id = cat.category_id
+    INNER JOIN price_currency c ON p.product_id = c.product_id
+    WHERE c.currency = :#{#currency.name()}
+    GROUP BY p.uuid, p.name, p.description, p.default_image_Key, p.weight, p.weight_type, c.currency, c.price, cat.name
     """)
-    Page<ProductProjection> allProductsForAdminFront(SarreCurrency currency, Pageable pageable);
+    Page<ProductDbMapper> allProductsForAdminFront(SarreCurrency currency);
 
     /**
      * Returns a Product based non default currency
      * */
     @Query(value = """
     SELECT
-    p.uuid AS uuid,
-    p.name AS name,
-    p.description AS description,
-    c.currency AS currency,
-    c.price AS price,
-    p.defaultKey AS image,
-    p.weight AS weight,
-    p.weightType AS weightType,
-    cat.name AS category
-    FROM Product p
-    INNER JOIN ProductCategory cat ON cat.categoryId = p.productCategory.categoryId
-    INNER JOIN ProductDetail pd ON pd.product.productId = p.productId
-    INNER JOIN PriceCurrency c ON p.productId = c.product.productId
-    INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
-    WHERE cat.isVisible = TRUE AND pd.isVisible = TRUE AND sku.inventory > 0 AND c.currency = :currency
-    GROUP BY p.uuid, p.name, p.description, p.defaultKey, c.currency, c.price, cat.name
+        p.uuid AS uuid,
+        p.name AS name,
+        p.description AS description,
+        c.currency AS currency,
+        c.price AS price,
+        p.default_image_key AS imageKey,
+        p.weight AS weight,
+        p.weight_type AS weight_type,
+        cat.name AS categoryName
+    FROM product p
+    INNER JOIN product_category cat ON cat.category_id = p.category_id
+    INNER JOIN product_detail pd ON pd.product.product_id = p.product_id
+    INNER JOIN price_currency c ON p.product_id = c.product.product_id
+    INNER JOIN product_sku sku ON pd.detail_id = sku.detail_id
+    WHERE cat.is_visible = TRUE AND pd.is_visible = TRUE AND sku.inventory > 0 AND c.currency = :#{#currency.name()}
+    GROUP BY p.uuid, p.name, p.description, p.default_image_key, c.currency, c.price, cat.name
     """)
-    Page<ProductProjection> allProductsByCurrencyClient(SarreCurrency currency, Pageable pageable);
+    Page<ProductDbMapper> allProductsByCurrencyClient(SarreCurrency currency);
 
     @Transactional
     @Modifying
     @Query(value = """
-    UPDATE Product p
+    UPDATE product p
     SET
     p.name = :name,
     p.description = :desc,
-    p.productCategory = :category,
+    p.category_id = :categoryId,
     p.weight = :weight
     WHERE p.uuid = :uuid
     """)
@@ -92,37 +86,38 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
             @Param(value = "name") String name,
             @Param(value = "desc") String desc,
             @Param(value = "weight") double weight,
-            @Param(value = "category") Category category
+            Long categoryId
     );
 
     @Query(value = """
-    SELECT img.imageKey as image
-    FROM ProductImage img
-    INNER JOIN ProductDetail pd ON img.productDetails.productDetailId = pd.productDetailId
-    INNER JOIN Product p ON p.productId = pd.product.productId
+    SELECT
+        img.image_key as imageKey
+    FROM product_image img
+    INNER JOIN product_image pd ON img.detail_id = pd.detail_id
+    INNER JOIN product p ON p.product_id = pd.product_id
     WHERE p.uuid = :uuid
     """)
-    List<ImageProjection> productImagesByProductUuid(@Param(value = "uuid") String uuid);
+    List<ProductImageDbMapper> productImagesByProductUuid(@Param(value = "uuid") String uuid);
 
     // https://www.w3schools.com/sql/sql_like.asp
     @Query("""
     SELECT
-    p.uuid AS uuid,
-    p.name AS name,
-    p.defaultKey AS image,
-    p.weight AS weight,
-    p.weightType AS weightType,
-    c.price AS price,
-    c.currency AS currency,
-    cat.name AS category
-    FROM Product p
-    INNER JOIN ProductCategory cat ON p.productCategory.categoryId = cat.categoryId
-    INNER JOIN PriceCurrency c ON p.productId = c.product.productId
-    INNER JOIN ProductDetail pd ON p.productId = pd.product.productId
-    INNER JOIN ProductSku sku ON pd.productDetailId = sku.productDetail.productDetailId
-    WHERE p.name LIKE :name AND sku.inventory > 0 AND c.currency = :currency
-    GROUP BY p.uuid, p.name, p.defaultKey, p.weight, p.weightType, c.currency, c.price, cat.name
+        p.uuid AS uuid,
+        p.name AS name,
+        p.default_image_key AS imageKey,
+        p.weight AS weight,
+        p.weight_type AS weightType,
+        c.price AS price,
+        c.currency AS currency,
+        cat.name AS categoryName
+    FROM product p
+    INNER JOIN product_category cat ON p.category_id = cat.category_id
+    INNER JOIN price_currency c ON p.product_id = c.product_id
+    INNER JOIN product_detail pd ON p.product_id = pd.product_id
+    INNER JOIN product_sku sku ON pd.productDetail_id = sku.productDetail_id
+    WHERE p.name LIKE :name AND sku.inventory > 0 AND c.currency = :#{#currency.name()}
+    GROUP BY p.uuid, p.name, p.default_image_key, p.weight, p.weight_type, c.currency, c.price, cat.name
     """)
-    Page<ProductProjection> productsByNameAndCurrency(String name, SarreCurrency currency, Pageable page);
+    Page<ProductDbMapper> productsByNameAndCurrency(String name, SarreCurrency currency);
 
 }

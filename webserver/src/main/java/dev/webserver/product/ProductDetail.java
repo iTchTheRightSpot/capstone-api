@@ -12,13 +12,13 @@ import java.time.LocalDateTime;
 public record ProductDetail(
         @Id
         @Column("detail_id")
-        Long productDetailId,
+        Long detailId,
         String colour,
         @Column("is_visible")
         boolean isVisible,
         @Column("created_at")
         LocalDateTime createAt,
         @Column("product_id")
-        Long product
+        Long productId
 ) {
 }

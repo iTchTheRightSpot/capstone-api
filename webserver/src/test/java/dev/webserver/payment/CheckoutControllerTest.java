@@ -1,6 +1,7 @@
 package dev.webserver.payment;
 
 import dev.webserver.AbstractIntegration;
+import dev.webserver.TestUtility;
 import dev.webserver.cart.CartDto;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
@@ -14,8 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MvcResult;
-
-import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -55,18 +54,11 @@ class CheckoutControllerTest extends AbstractIntegration {
 
     private ProductSku productSku() {
         var category = categoryRepository
-                .save(
-                        Category.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+                .save(Category.builder().name("category").isVisible(true).build());
 
         TestData.dummyProducts(category, 5, service);
 
-        var list = this.productSkuRepository.findAll();
+        var list = TestUtility.toList(productSkuRepository.findAll());
         assertFalse(list.isEmpty());
         return list.getFirst();
     }
@@ -84,9 +76,7 @@ class CheckoutControllerTest extends AbstractIntegration {
         this.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(super.mapper
-                                .writeValueAsString(new CartDto(sku.getSku(), sku.getInventory()))
-                        )
+                        .content(super.mapper.writeValueAsString(new CartDto(sku.sku(), sku.inventory())))
                         .with(csrf())
                         .cookie(cookie)
                 )

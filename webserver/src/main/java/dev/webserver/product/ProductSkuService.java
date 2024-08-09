@@ -9,7 +9,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.UUID;
 
 @Service
@@ -26,17 +25,13 @@ public class ProductSkuService {
      */
     public void save(SizeInventoryDto[] arr, ProductDetail detail) {
         for (var dto : arr) {
-            this.repository.save(
+            repository.save(
                     ProductSku.builder()
                             .sku(UUID.randomUUID().toString())
                             .size(dto.size())
                             .inventory(dto.qty())
-                            .productDetailId(detail)
-                            .orderDetails(new HashSet<>())
-                            .reservations(new HashSet<>())
-                            .cartItems(new HashSet<>())
-                            .build()
-            );
+                            .detailId(detail.detailId())
+                            .build());
         }
     }
 
@@ -48,7 +43,7 @@ public class ProductSkuService {
      * */
     public void delete(final String sku) {
         try {
-            this.repository.deleteProductSkuBySku(sku);
+            repository.deleteProductSkuBySku(sku);
         } catch (DataIntegrityViolationException e) {
             log.error("resources attached to ProductSku {}", e.getMessage());
             throw new ResourceAttachedException("resource(s) attached to product");
@@ -56,7 +51,7 @@ public class ProductSkuService {
     }
 
     public ProductSku productSkuBySku(final String sku) {
-        return this.repository
+        return repository
                 .productSkuBySku(sku)
                 .orElseThrow(() -> new CustomNotFoundException("sku %s does not exist".formatted(sku)));
     }

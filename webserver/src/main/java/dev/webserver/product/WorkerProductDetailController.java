@@ -15,7 +15,7 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 @RestController
 @RequestMapping("${api.endpoint.baseurl}worker/product/detail")
 @RequiredArgsConstructor
-public class WorkerProductDetailController {
+class WorkerProductDetailController {
 
     private final WorkerProductDetailService detailService;
     private final ProductSkuService skuService;

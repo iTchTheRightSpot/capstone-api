@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -18,10 +17,10 @@ import static java.math.RoundingMode.FLOOR;
 
 @Service
 @RequiredArgsConstructor
-public class ClientProductService {
+class ClientProductService {
 
     @Value(value = "${aws.bucket}")
-    private String BUCKET;
+    private String bucket;
 
     private final ProductRepository productRepository;
     private final ProductDetailRepository productDetailRepository;
@@ -38,18 +37,18 @@ public class ClientProductService {
      */
     public Page<ProductResponse> allProductsByCurrency(SarreCurrency currency, int page, int size) {
         var pageOfProducts = productRepository
-                .allProductsByCurrencyClient(currency, PageRequest.of(page, size));
+                .allProductsByCurrencyClient(currency);
 
         var futures = pageOfProducts.stream()
                 .map(p -> (Supplier<ProductResponse>) () ->
                         ProductResponse.builder()
-                                .id(p.getUuid())
-                                .name(p.getName())
-                                .desc(p.getDescription())
-                                .price(p.getPrice())
-                                .currency(p.getCurrency())
-                                .imageUrl(p.getImage())
-                                .category(p.getCategory())
+                                .id(p.uuid())
+                                .name(p.name())
+                                .desc(p.description())
+                                .price(p.price())
+                                .currency(p.currency().getCurrency())
+                                .imageKey(p.imageKey())
+                                .category(p.categoryName())
                                 .build())
                 .toList();
 
@@ -61,20 +60,20 @@ public class ClientProductService {
             String uuid,
             SarreCurrency currency
     ) {
-        var optional = this.priceCurrencyRepository.priceCurrencyByProductUuidAndCurrency(uuid, currency);
+        var optional = priceCurrencyRepository.priceCurrencyByProductUuidAndCurrency(uuid, currency);
 
         if (optional.isEmpty())
             return List.of();
 
-        PriceCurrencyProjection object = optional.get();
+        PriceCurrencyDbMapper object = optional.get();
 
         var futures = productDetailRepository
                 .productDetailsByProductUuidClientFront(uuid)
                 .stream()
                 .map(pojo -> (Supplier<DetailResponse>) () -> {
                     var suppliers = Arrays
-                            .stream(pojo.getImage().split(","))
-                            .map(key -> (Supplier<String>) () -> s3Service.preSignedUrl(BUCKET, key))
+                            .stream(pojo.imageKey().split(","))
+                            .map(key -> (Supplier<String>) () -> s3Service.preSignedUrl(bucket, key))
                             .toList();
 
                     var urls = CustomUtil
@@ -82,14 +81,14 @@ public class ClientProductService {
                             .join();
 
                     var variants = CustomUtil
-                            .toVariantArray(pojo.getVariants(), ClientProductService.class);
+                            .toVariantArray(pojo.variants(), ClientProductService.class);
 
                     return DetailResponse.builder()
-                            .name(object.getName())
-                            .currency(object.getCurrency().name())
-                            .price(object.getPrice().setScale(2, FLOOR))
-                            .desc(object.getDescription())
-                            .colour(pojo.getColour())
+                            .name(object.name())
+                            .currency(object.currency().name())
+                            .price(object.price().setScale(2, FLOOR))
+                            .desc(object.description())
+                            .colour(pojo.colour())
                             .urls(urls)
                             .variants(variants)
                             .build();
@@ -109,18 +108,17 @@ public class ClientProductService {
     public Page<ProductResponse> search(String param, SarreCurrency currency, int size) {
         // SQL LIKE Operator
         // https://www.w3schools.com/sql/sql_like.asp
-        var pageOfProducts = productRepository
-                .productsByNameAndCurrency(param + "%", currency, PageRequest.of(0, size));
+        var pageOfProducts = productRepository.productsByNameAndCurrency(param + "%", currency);
 
         var futures = pageOfProducts.stream()
                 .map(p -> (Supplier<ProductResponse>) () ->
                         ProductResponse.builder()
-                                .id(p.getUuid())
-                                .name(p.getName())
-                                .price(p.getPrice())
-                                .currency(p.getCurrency())
-                                .imageUrl(p.getImage())
-                                .category(p.getCategory())
+                                .id(p.uuid())
+                                .name(p.name())
+                                .price(p.price())
+                                .currency(p.currency().name())
+                                .imageKey(p.imageKey())
+                                .category(p.categoryName())
                                 .build())
                 .toList();
 

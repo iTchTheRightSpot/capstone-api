@@ -15,6 +15,6 @@ public record ProductSku(
         String size,
         int inventory,
         @Column("detail_id")
-        Long productDetailId
+        Long detailId
 ) {
 }

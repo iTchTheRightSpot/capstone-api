@@ -15,13 +15,15 @@ public interface ProductDetailRepository extends CrudRepository<ProductDetail, L
      * Returns a {@link ProductDetail} by {@link ProductSku} property sku
      * */
     @Query(value = """
-    SELECT d FROM ProductDetail d
-    INNER JOIN ProductSku s ON d.productDetailId = s.productDetail.productDetailId
+    SELECT
+        d.*
+    FROM product_detail d
+    INNER JOIN product_sku s ON d.detail_id = s.detail_id
     WHERE s.sku = :sku
     """)
     Optional<ProductDetail> productDetailByProductSku(@Param(value = "sku") String sku);
 
-    @Query("SELECT d FROM ProductDetail d WHERE d.colour = :colour")
+    @Query("SELECT * FROM product_detail WHERE colour = :colour")
     Optional<ProductDetail> productDetailByColour(String colour);
 
     /**
@@ -55,9 +57,9 @@ public interface ProductDetailRepository extends CrudRepository<ProductDetail, L
      */
     @Query(value = """
     SELECT
-    d.is_visible AS visible,
+    d.is_visible AS isVisible,
     d.colour AS colour,
-    GROUP_CONCAT(DISTINCT i.image_key) AS image,
+    GROUP_CONCAT(DISTINCT i.image_key) AS imageKey,
     CONCAT('[',
         GROUP_CONCAT(
             DISTINCT JSON_OBJECT(
@@ -74,13 +76,13 @@ public interface ProductDetailRepository extends CrudRepository<ProductDetail, L
     WHERE p.uuid = :uuid AND d.is_visible = true
     GROUP BY d.is_visible, d.colour
     """)
-    List<DetailProjection> productDetailsByProductUuidClientFront(@Param(value = "uuid") String uuid);
+    List<ProductDetailDbMapper> productDetailsByProductUuidClientFront(@Param(value = "uuid") String uuid);
 
     @Query(value = """
     SELECT
-    d.is_visible AS visible,
+    d.is_visible AS isVisible,
     d.colour AS colour,
-    GROUP_CONCAT(DISTINCT i.image_key) AS image,
+    GROUP_CONCAT(DISTINCT i.image_key) AS imageKey,
     CONCAT('[',
         GROUP_CONCAT(
             DISTINCT JSON_OBJECT(
@@ -97,6 +99,6 @@ public interface ProductDetailRepository extends CrudRepository<ProductDetail, L
     WHERE p.uuid = :uuid
     GROUP BY d.is_visible, d.colour
     """)
-    List<DetailProjection> productDetailsByProductUuidAdminFront(@Param(value = "uuid") String uuid);
+    List<ProductDetailDbMapper> productDetailsByProductUuidAdminFront(@Param(value = "uuid") String uuid);
 
 }

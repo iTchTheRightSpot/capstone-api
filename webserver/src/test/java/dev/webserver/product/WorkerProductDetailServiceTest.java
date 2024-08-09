@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 class WorkerProductDetailServiceTest extends AbstractUnitTest {
 
     @Value(value = "${aws.bucket}")
-    private String BUCKET;
+    private String bucket;
 
     private WorkerProductDetailService detailService;
 
@@ -30,14 +30,14 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
 
     @BeforeEach
     void setUp() {
-        this.detailService = new WorkerProductDetailService(
-                this.detailRepo,
-                this.skuService,
-                this.imageRepo,
-                this.productRepository,
-                this.productImageService
+        detailService = new WorkerProductDetailService(
+                detailRepo,
+                skuService,
+                imageRepo,
+                productRepository,
+                productImageService
         );
-        this.detailService.setBUCKET(BUCKET);
+        detailService.setBucket(bucket);
     }
 
     @Test
@@ -47,7 +47,7 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
         var dtos = TestData.sizeInventoryDTOArray(4);
         var files = TestData.files();
         var product = Product.builder().uuid("product uuid").build();
-        var dto = TestData.productDetailDTO(product.getUuid(), "mat-black", dtos);
+        var dto = TestData.productDetailDTO(product.uuid(), "mat-black", dtos);
 
         // When
         when(productRepository.productByUuid(anyString())).thenReturn(Optional.of(product));
@@ -55,7 +55,7 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
 
         // Then
         detailService.create(dto, files);
-        verify(this.detailRepo, times(1)).save(any(ProductDetail.class));
+        verify(detailRepo, times(1)).save(any(ProductDetail.class));
     }
 
     @Test
@@ -66,7 +66,7 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
         var files = TestData.files();
         var product = Product.builder().uuid("product uuid").build();
         var detail = ProductDetail.builder().colour(new Faker().commerce().color()).build();
-        var dto = TestData.productDetailDTO(product.getUuid(), detail.getColour(), dtos);
+        var dto = TestData.productDetailDTO(product.uuid(), detail.colour(), dtos);
 
         // When
         when(productRepository.productByUuid(anyString())).thenReturn(Optional.of(product));
@@ -74,9 +74,9 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
 
         // Then
         detailService.create(dto, files);
-        verify(this.skuService, times(1))
+        verify(skuService, times(1))
                 .save(any(SizeInventoryDto[].class), any(ProductDetail.class));
-        verify(this.detailRepo, times(0)).save(any(ProductDetail.class));
+        verify(detailRepo, times(0)).save(any(ProductDetail.class));
     }
 
 }

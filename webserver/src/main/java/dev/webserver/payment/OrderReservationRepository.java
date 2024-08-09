@@ -50,7 +50,7 @@ public interface OrderReservationRepository extends CrudRepository<OrderReservat
             LocalDateTime expire,
             String cookie,
             String sku,
-            @Param(value = "status") ReservationStatus status
+            ReservationStatus status
     );
 
     /**

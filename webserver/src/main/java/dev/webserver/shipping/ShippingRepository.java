@@ -12,7 +12,7 @@ public interface ShippingRepository extends CrudRepository<ShipSetting, Long> {
 
     @Transactional
     @Modifying
-    @Query("DELETE FROM ShipSetting s WHERE s.shipId = :id")
+    @Query("DELETE FROM ship_setting s WHERE s.ship_id = :id")
     void deleteShipSettingById(long id);
 
     /**
@@ -30,7 +30,7 @@ public interface ShippingRepository extends CrudRepository<ShipSetting, Long> {
     @Transactional
     @Modifying
     @Query("""
-    UPDATE ShipSetting s
+    UPDATE ship_setting s
     SET
     s.country = (
         CASE WHEN
@@ -39,9 +39,9 @@ public interface ShippingRepository extends CrudRepository<ShipSetting, Long> {
             ELSE :country
             END
     ),
-    s.ngnPrice = :ngn,
-    s.usdPrice = :usd
-    WHERE s.shipId = :id
+    s.ngn_price = :ngn,
+    s.usd_price = :usd
+    WHERE s.ship_id = :id
     """)
     void updateShipSettingById(long id, String country, BigDecimal ngn, BigDecimal usd);
 
@@ -63,12 +63,12 @@ public interface ShippingRepository extends CrudRepository<ShipSetting, Long> {
      * entity, or an empty {@link Optional} if default entity is not found.
      */
     @Query("""
-    SELECT s FROM ShipSetting s
+    SELECT * FROM ship_setting s
     WHERE s.country = (
         CASE WHEN (
                 SELECT
                 COUNT(s)
-                FROM ShipSetting s
+                FROM ship_setting s
                 WHERE s.country = :country
             ) > 0
             THEN :country

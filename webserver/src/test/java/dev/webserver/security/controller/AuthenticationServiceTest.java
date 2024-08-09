@@ -21,7 +21,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.HashSet;
 import java.util.Optional;
 
 import static dev.webserver.enumeration.RoleEnum.CLIENT;
@@ -44,41 +43,39 @@ class AuthenticationServiceTest extends AbstractUnitTest {
 
     @BeforeEach
     void setUp() {
-        this.authenticationService = new AuthenticationService(
-                this.userRepository,
-                this.roleRepository,
-                this.passwordEncoder,
-                this.manager,
-                this.tokenService,
+        authenticationService = new AuthenticationService(
+                userRepository,
+                roleRepository,
+                passwordEncoder,
+                manager,
+                tokenService,
                 publisher
         );
 
-        this.authenticationService.setJsessionid("JSESSIONID");
+        authenticationService.setJsessionid("JSESSIONID");
     }
 
     @Test
     void registerWorkerThatDoesntExist() {
         // Given
         var dto = new RegisterDto(
-                TestData.worker().getFirstname(),
-                TestData.worker().getLastname(),
-                TestData.worker().getEmail(),
+                TestData.worker().firstname(),
+                TestData.worker().lastname(),
+                TestData.worker().email(),
                 "",
-                TestData.worker().getPhoneNumber(),
-                TestData.worker().getPassword()
+                TestData.worker().phoneNumber(),
+                TestData.worker().password()
         );
 
         // When
-        when(this.userRepository.userByPrincipal(anyString()))
+        when(userRepository.userByPrincipal(anyString()))
                 .thenReturn(Optional.empty());
 
         // Then
-        this.authenticationService.workerRegister(dto);
+        authenticationService.workerRegister(dto);
 
-        verify(this.userRepository, times(1))
-                .save(any(SarreBrandUser.class));
-        verify(this.roleRepository, times(2))
-                .save(any(ClientRole.class));
+        verify(userRepository, times(1)).save(any(SarreBrandUser.class));
+        verify(roleRepository, times(2)).save(any(ClientRole.class));
     }
 
     @Test
@@ -86,20 +83,20 @@ class AuthenticationServiceTest extends AbstractUnitTest {
         // Given
         var worker = TestData.worker();
         var dto = new RegisterDto(
-                worker.getFirstname(),
-                worker.getLastname(),
-                worker.getEmail(),
+                worker.firstname(),
+                worker.lastname(),
+                worker.email(),
                 "",
-                worker.getPhoneNumber(),
-                worker.getPassword()
+                worker.phoneNumber(),
+                worker.password()
         );
 
         // When
-        when(this.userRepository.userByPrincipal(anyString()))
+        when(userRepository.userByPrincipal(anyString()))
                 .thenReturn(Optional.of(worker));
 
         // Then
-        assertThrows(DuplicateException.class, () -> this.authenticationService.workerRegister(dto));
+        assertThrows(DuplicateException.class, () -> authenticationService.workerRegister(dto));
     }
 
     /**
@@ -111,105 +108,96 @@ class AuthenticationServiceTest extends AbstractUnitTest {
         // Given
         var client = TestData.client();
         var dto = new RegisterDto(
-                client.getFirstname(),
-                client.getLastname(),
-                client.getEmail(),
+                client.firstname(),
+                client.lastname(),
+                client.email(),
                 "",
-                client.getPhoneNumber(),
-                client.getPassword()
+                client.phoneNumber(),
+                client.password()
         );
 
         // When
-        when(this.userRepository.userByPrincipal(anyString()))
-                .thenReturn(Optional.of(client));
+        when(userRepository.userByPrincipal(anyString())).thenReturn(Optional.of(client));
 
         // Then
-        this.authenticationService.workerRegister(dto);
-        verify(this.userRepository, times(0)).save(any(SarreBrandUser.class));
-        verify(this.roleRepository, times(1)).save(any(ClientRole.class));
+        authenticationService.workerRegister(dto);
+        verify(userRepository, times(0)).save(any(SarreBrandUser.class));
+        verify(roleRepository, times(1)).save(any(ClientRole.class));
     }
 
     @Test
     void workerLogin() {
         // Given
-        var dto = new LoginDto(TestData.worker().getEmail(), TestData.worker().getPassword());
+        var dto = new LoginDto(TestData.worker().email(), TestData.worker().password());
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         Authentication authentication = mock(Authentication.class);
 
         // When
-        when(this.manager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenReturn(authentication);
+        when(manager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authentication);
 
         // Then
-        this.authenticationService.login(WORKER, dto, request, response);
-        verify(this.manager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
+        authenticationService.login(WORKER, dto, request, response);
+        verify(manager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
     }
 
     @Test
     void workerLoginNonExistingCredentials() {
         // Given
-        var dto = new LoginDto("client@client.com", TestData.worker().getPassword());
+        var dto = new LoginDto("client@client.com", TestData.worker().password());
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
 
         // When
-        when(this.manager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(BadCredentialsException.class);
+        when(manager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenThrow(BadCredentialsException.class);
 
         // Then
-        assertThrows(BadCredentialsException.class, () -> this.authenticationService.login(WORKER, dto, request, response));
+        assertThrows(BadCredentialsException.class, () -> authenticationService.login(WORKER, dto, request, response));
     }
 
     @Test
     void clientRegister() {
         // Given
         var dto = new RegisterDto(
-                TestData.client().getFirstname(),
-                TestData.client().getLastname(),
-                TestData.client().getEmail(),
+                TestData.client().firstname(),
+                TestData.client().lastname(),
+                TestData.client().email(),
                 "",
-                TestData.client().getPhoneNumber(),
-                TestData.client().getPassword()
+                TestData.client().phoneNumber(),
+                TestData.client().password()
         );
 
-        var user = SarreBrandUser.builder()
-                .clientId(1L)
-                .email(dto.email())
-                .clientRole(new HashSet<>())
-                .build();
+        var user = SarreBrandUser.builder().clientId(1L).email(dto.email()).build();
 
         HttpServletResponse res = mock(HttpServletResponse.class);
 
         // When
-        when(this.userRepository.userByPrincipal(anyString())).thenReturn(Optional.empty());
-        when(this.passwordEncoder.encode(anyString())).thenReturn(dto.password());
-        when(this.userRepository.save(any(SarreBrandUser.class))).thenReturn(user);
+        when(userRepository.userByPrincipal(anyString())).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(anyString())).thenReturn(dto.password());
+        when(userRepository.save(any(SarreBrandUser.class))).thenReturn(user);
 
         // Then
-        this.authenticationService.clientRegister(dto, res);
-        verify(this.userRepository, times(1))
-                .save(any(SarreBrandUser.class));
-        verify(this.roleRepository, times(1))
-                .save(any(ClientRole.class));
+        authenticationService.clientRegister(dto, res);
+        verify(userRepository, times(1)).save(any(SarreBrandUser.class));
+        verify(roleRepository, times(1)).save(any(ClientRole.class));
     }
 
     @Test
     void registerClientExistingPrincipal() {
         // Given
         var dto = new RegisterDto(
-                TestData.client().getFirstname(),
-                TestData.client().getLastname(),
-                TestData.client().getEmail(),
+                TestData.client().firstname(),
+                TestData.client().lastname(),
+                TestData.client().email(),
                 "",
-                TestData.client().getPhoneNumber(),
-                TestData.client().getPassword()
+                TestData.client().phoneNumber(),
+                TestData.client().password()
         );
 
         HttpServletResponse res = mock(HttpServletResponse.class);
 
         // When
-        when(this.userRepository.userByPrincipal(anyString()))
+        when(userRepository.userByPrincipal(anyString()))
                 .thenReturn(Optional
                         .of(SarreBrandUser.builder()
                                 .firstname(dto.firstname())
@@ -222,39 +210,37 @@ class AuthenticationServiceTest extends AbstractUnitTest {
                 );
 
         // Then
-        assertThrows(DuplicateException.class, () -> this.authenticationService.clientRegister(dto, res));
+        assertThrows(DuplicateException.class, () -> authenticationService.clientRegister(dto, res));
     }
 
     @Test
     void clientLogin() {
         // Given
-        var dto = new LoginDto(TestData.client().getEmail(), TestData.client().getPassword());
+        var dto = new LoginDto(TestData.client().email(), TestData.client().password());
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         Authentication authentication = mock(Authentication.class);
 
         // When
-        when(this.manager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenReturn(authentication);
+        when(manager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authentication);
 
         // Then
-        this.authenticationService.login(CLIENT, dto, request, response);
-        verify(this.manager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
+        authenticationService.login(CLIENT, dto, request, response);
+        verify(manager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
     }
 
     @Test
     void clientLoginWrongCredentials() {
         // Given
-        var dto = new LoginDto("worker@worker.com", TestData.client().getPassword());
+        var dto = new LoginDto("worker@worker.com", TestData.client().password());
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
 
         // When
-        when(this.manager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(BadCredentialsException.class);
+        when(manager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenThrow(BadCredentialsException.class);
 
         // Then
-        assertThrows(BadCredentialsException.class, () -> this.authenticationService.login(CLIENT, dto, request, response));
+        assertThrows(BadCredentialsException.class, () -> authenticationService.login(CLIENT, dto, request, response));
     }
 
 }

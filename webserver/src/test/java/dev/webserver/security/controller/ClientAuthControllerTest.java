@@ -3,9 +3,7 @@ package dev.webserver.security.controller;
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
 import dev.webserver.security.CapstoneUserDetails;
-import dev.webserver.enumeration.RoleEnum;
 import dev.webserver.security.JwtUtil;
-import dev.webserver.user.ClientRole;
 import dev.webserver.user.SarreBrandUser;
 import dev.webserver.user.UserRepository;
 import jakarta.servlet.http.Cookie;
@@ -20,9 +18,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.Instant;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,8 +61,6 @@ class ClientAuthControllerTest extends AbstractIntegration {
                             .phoneNumber("000000000")
                             .password(encoder.encode("password123"))
                             .enabled(true)
-                            .clientRole(Set.of(new ClientRole(RoleEnum.CLIENT)))
-                            .paymentDetail(new HashSet<>())
                             .build());
         }
     }
@@ -97,7 +91,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
 
     @Test
     void shouldSuccessfullyLogin() throws Exception {
-        String dto = super.mapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
+        String dto = super.mapper.writeValueAsString(new LoginDto(user.email(), "password123"));
 
         MvcResult login = super.mockMvc
                 .perform(post(path + "login")
@@ -116,7 +110,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
 
     @Test
     void shouldPreventLoginRequestIfRequestContainsValidJwt() throws Exception {
-        String dto = super.mapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
+        String dto = super.mapper.writeValueAsString(new LoginDto(user.email(), "password123"));
 
         MvcResult login = super.mockMvc
                 .perform(post(path + "login")
@@ -135,7 +129,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
                         .content(dto))
                 .andExpect(status().isOk())
                 .andExpect(cookie().exists(jsessionid))
-                .andExpect(cookie().value(jsessionid, login.getResponse().getCookie(jsessionid).getValue()));
+                .andExpect(cookie().value(jsessionid, Objects.requireNonNull(login.getResponse().getCookie(jsessionid)).getValue()));
     }
 
     private String generateShortLivedJwt() {
@@ -150,7 +144,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
                 .issuer(application)
                 .issuedAt(now)
                 .expiresAt(now.plus(2, MINUTES))
-                .subject(user.getEmail())
+                .subject(user.email())
                 .claim(claim, role)
                 .build();
 
@@ -161,7 +155,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
     void shouldValidateRefreshTokenIsAddedToJwtThatIsWithinExpirationBound() throws Exception {
         String jwt = generateShortLivedJwt();
 
-        String dto = super.mapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
+        String dto = super.mapper.writeValueAsString(new LoginDto(user.email(), "password123"));
 
         super.mockMvc
                 .perform(post(path + "login")
@@ -189,7 +183,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
 
     @Test
     void client_trying_to_access_worker_route() throws Exception {
-        String dto = this.mapper.writeValueAsString(new LoginDto(user.getEmail(), "password123"));
+        String dto = this.mapper.writeValueAsString(new LoginDto(user.email(), "password123"));
 
         MvcResult login = this.mockMvc
                 .perform(post(this.path + "login")
@@ -204,9 +198,7 @@ class ClientAuthControllerTest extends AbstractIntegration {
 
         assertNotNull(cookie);
 
-        this.mockMvc
-                .perform(get("/test/worker").cookie(cookie))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/test/worker").cookie(cookie)).andExpect(status().isForbidden());
     }
 
 }

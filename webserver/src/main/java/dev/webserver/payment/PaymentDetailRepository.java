@@ -6,6 +6,6 @@ import org.springframework.data.repository.CrudRepository;
 import java.util.Optional;
 
 public interface PaymentDetailRepository extends CrudRepository<PaymentDetail, Long> {
-    @Query("SELECT p FROM payment_detail p WHERE p.email = :email AND p.referenceId = :reference")
+    @Query("SELECT * FROM payment_detail  WHERE email = :email AND reference_id = :reference")
     Optional<PaymentDetail> paymentDetailByEmailAndReference(String email, String reference);
 }

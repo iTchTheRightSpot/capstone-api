@@ -2,6 +2,7 @@ package dev.webserver.product;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractRepositoryTest;
+import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
@@ -10,6 +11,7 @@ import dev.webserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -35,102 +37,75 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
     @Test
     void productDetailByProductSku() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
+        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
                 .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var skus = skuRepo.findAll();
+        var skus = TestUtility.toList(skuRepo.findAll());
         assertFalse(skus.isEmpty());
 
         // then
-        assertFalse(detailRepo.productDetailByProductSku(skus.getFirst().getSku()).isEmpty());
+        assertFalse(detailRepo.productDetailByProductSku(skus.getFirst().sku()).isEmpty());
     }
 
     @Test
     void updateProductSkuAndProductDetailByProductSku() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build());
+        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
         RepositoryTestData
                 .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var details = detailRepo.findAll();
+        var details = TestUtility.toList(detailRepo.findAll());
         assertFalse(details.isEmpty());
 
-        var skus = skuRepo.findAll();
+        var skus = TestUtility.toList(skuRepo.findAll());
         assertFalse(skus.isEmpty());
         ProductSku sku = skus.getFirst();
 
-        // then
+        // method to test
         detailRepo
                 .updateProductSkuAndProductDetailByProductSku(
-                        sku.getSku(),
+                        sku.sku(),
                         "greenish",
                         false,
                         2100,
                         "medium size"
                 );
 
-        var optional = skuRepo.productSkuBySku(sku.getSku());
+        var optional = skuRepo.productSkuBySku(sku.sku());
         assertFalse(optional.isEmpty());
         ProductSku temp = optional.get();
 
-        assertEquals("medium size", temp.getSize());
-        assertEquals(2100, temp.getInventory());
+        assertEquals("medium size", temp.size());
+        assertEquals(2100, temp.inventory());
     }
 
     @Test
     void productDetailByColour() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
+        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
                 .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var details = detailRepo.findAll();
+        var details = TestUtility.toList(detailRepo.findAll());
         assertFalse(details.isEmpty());
         ProductDetail first = details.getFirst();
 
         // then
-        var optional = detailRepo.productDetailByColour(first.getColour());
+        var optional = detailRepo.productDetailByColour(first.colour());
         assertFalse(optional.isEmpty());
-        assertEquals(first.getProductDetailId(), optional.get().getProductDetailId());
+        assertEquals(first.detailId(), optional.get().detailId());
     }
 
     @Test
     void shouldReturnProductDetailsByProductUuidForClientFront() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
+        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         var product = productRepository.save(
                 Product.builder()
@@ -140,26 +115,20 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         .defaultKey("default-key")
                         .weight(2.5)
                         .weightType("kg")
-                        .categoryId(cat)
-                        .productDetails(new HashSet<>())
-                        .priceCurrency(new HashSet<>())
-                        .build()
-        );
+                        .categoryId(cat.categoryId())
+                        .build());
 
         // check 1
         var detail = detailRepo.save(
                 ProductDetail.builder()
                         .colour("green")
                         .isVisible(true)
-                        .createAt(new Date())
-                        .product(product)
-                        .productImages(new HashSet<>())
-                        .skus(new HashSet<>())
-                        .build()
-        );
+                        .createAt(LocalDateTime.now())
+                        .productId(product.productId())
+                        .build());
 
         for (int i = 0; i < 3; i++) {
-            imageRepo.save(new ProductImage(UUID.randomUUID().toString(), "path", detail));
+            imageRepo.save(new ProductImage(null, UUID.randomUUID().toString(), "path", detail.detailId()));
         }
 
         for (int i = 0; i < 7; i++) {
@@ -168,37 +137,32 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                             .sku("sku " + i)
                             .size("medium " + i)
                             .inventory(i + 3)
-                            .productDetailId(detail)
-                            .orderDetails(new HashSet<>())
-                            .reservations(new HashSet<>())
-                            .cartItems(new HashSet<>())
-                            .build()
-            );
+                            .detailId(detail.detailId())
+                            .build());
         }
 
         // then
-        var details = detailRepo
-                .productDetailsByProductUuidClientFront(product.getUuid());
+        var details = detailRepo.productDetailsByProductUuidClientFront(product.uuid());
         assertFalse(details.isEmpty());
 
-        for (DetailProjection pojo : details) {
-            assertNotNull(pojo.getVisible());
-            assertNotNull(pojo.getColour());
-            assertNotNull(pojo.getImage());
+        for (ProductDetailDbMapper pojo : details) {
+            assertNotNull(pojo.isVisible());
+            assertNotNull(pojo.colour());
+            assertNotNull(pojo.imageKey());
 
-            int size = Arrays.stream(pojo.getImage().split(",")).toList().size();
-            if (pojo.getColour().equals("green")) {
+            int size = Arrays.stream(pojo.imageKey().split(",")).toList().size();
+            if (pojo.colour().equals("green")) {
                 assertEquals(3, size);
             }
 
-            assertNotNull(pojo.getVariants());
-            assertFalse(pojo.getVariants().isEmpty());
+            assertNotNull(pojo.variants());
+            assertFalse(pojo.variants().isEmpty());
 
             Variant[] array = CustomUtil
-                    .toVariantArray(pojo.getVariants(), ProductDetailRepositoryTest.class);
+                    .toVariantArray(pojo.variants(), ProductDetailRepositoryTest.class);
             assertNotNull(array);
 
-            if (pojo.getColour().equals("red")) {
+            if (pojo.colour().equals("red")) {
                 assertEquals(7, array.length);
             }
 
@@ -215,14 +179,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
     @Test
     void shouldReturnProductDetailsByProductUuidWhereInvIsZeroForClientFront() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
+        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         var product = productRepository.save(
                 Product.builder()
@@ -232,61 +189,51 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         .defaultKey("default-key")
                         .weight(2.5)
                         .weightType("kg")
-                        .categoryId(cat)
-                        .productDetails(new HashSet<>())
-                        .priceCurrency(new HashSet<>())
-                        .build()
-        );
+                        .categoryId(cat.categoryId())
+                        .build());
 
         // check 1
         var detail = detailRepo.save(
                 ProductDetail.builder()
                         .colour("black")
                         .isVisible(true)
-                        .createAt(new Date())
-                        .product(product)
-                        .productImages(new HashSet<>())
-                        .skus(new HashSet<>())
-                        .build()
-        );
+                        .createAt(LocalDateTime.now())
+                        .productId(product.productId())
+                        .build());
 
-        imageRepo.save(new ProductImage(UUID.randomUUID().toString(), "path", detail));
+        imageRepo.save(new ProductImage(null, UUID.randomUUID().toString(), "path", detail.detailId()));
 
         skuRepo.save(
                 ProductSku.builder()
                         .sku("sku")
                         .size("medium")
                         .inventory(0)
-                        .productDetailId(detail)
-                        .orderDetails(new HashSet<>())
-                        .reservations(new HashSet<>())
-                        .cartItems(new HashSet<>())
-                        .build()
-        );
+                        .detailId(detail.detailId())
+                        .build());
 
         // then
         var details = detailRepo
-                .productDetailsByProductUuidClientFront(product.getUuid());
+                .productDetailsByProductUuidClientFront(product.uuid());
         assertFalse(details.isEmpty());
 
-        for (DetailProjection pojo : details) {
-            assertNotNull(pojo.getVisible());
-            assertNotNull(pojo.getColour());
-            assertNotNull(pojo.getImage());
+        for (ProductDetailDbMapper pojo : details) {
+            assertNotNull(pojo.variants());
+            assertNotNull(pojo.colour());
+            assertNotNull(pojo.imageKey());
 
-            int size = Arrays.stream(pojo.getImage().split(",")).toList().size();
-            if (pojo.getColour().equals("black")) {
+            int size = Arrays.stream(pojo.imageKey().split(",")).toList().size();
+            if (pojo.colour().equals("black")) {
                 assertEquals(1, size);
             }
 
-            assertNotNull(pojo.getVariants());
-            assertFalse(pojo.getVariants().isEmpty());
+            assertNotNull(pojo.variants());
+            assertFalse(pojo.variants().isEmpty());
 
             Variant[] array = CustomUtil
-                    .toVariantArray(pojo.getVariants(), ProductDetailRepositoryTest.class);
+                    .toVariantArray(pojo.variants(), ProductDetailRepositoryTest.class);
             assertNotNull(array);
 
-            if (pojo.getColour().equals("red")) {
+            if (pojo.colour().equals("red")) {
                 assertEquals(1, array.length);
             }
 
@@ -303,14 +250,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
     @Test
     void shouldReturnProductDetailsByProductUuidForAdminFront() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
+        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         var product = productRepository.save(
                 Product.builder()
@@ -320,29 +260,20 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         .defaultKey("default-key")
                         .weight(2.5)
                         .weightType("kg")
-                        .categoryId(cat)
-                        .productDetails(new HashSet<>())
-                        .priceCurrency(new HashSet<>())
-                        .build()
-        );
+                        .categoryId(cat.categoryId())
+                        .build());
 
         // check 1
         var detail = detailRepo.save(
                 ProductDetail.builder()
                         .colour("red")
                         .isVisible(true)
-                        .createAt(new Date())
-                        .product(product)
-                        .productImages(new HashSet<>())
-                        .skus(new HashSet<>())
-                        .build()
-        );
+                        .createAt(LocalDateTime.now())
+                        .productId(product.productId())
+                        .build());
 
-        for (int i = 0; i < 5; i++) {
-            imageRepo.save(
-                    new ProductImage(UUID.randomUUID().toString(), "path", detail)
-            );
-        }
+        for (int i = 0; i < 5; i++)
+            imageRepo.save(new ProductImage(null, UUID.randomUUID().toString(), "path", detail.detailId()));
 
         for (int i = 0; i < 3; i++) {
             skuRepo.save(
@@ -350,12 +281,8 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                             .sku("sku " + i)
                             .size("medium " + i)
                             .inventory(i + 3)
-                            .productDetailId(detail)
-                            .orderDetails(new HashSet<>())
-                            .reservations(new HashSet<>())
-                            .cartItems(new HashSet<>())
-                            .build()
-            );
+                            .detailId(detail.detailId())
+                            .build());
         }
 
         // check 2
@@ -363,16 +290,13 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                 ProductDetail.builder()
                         .colour("brown")
                         .isVisible(true)
-                        .createAt(new Date())
-                        .product(product)
-                        .productImages(new HashSet<>())
-                        .skus(new HashSet<>())
-                        .build()
-        );
+                        .createAt(LocalDateTime.now())
+                        .productId(product.productId())
+                        .build());
 
         for (int i = 0; i < 2; i++) {
             imageRepo.save(
-                    new ProductImage(UUID.randomUUID().toString(), "path " + (i + 10), detail2)
+                    new ProductImage(null, UUID.randomUUID().toString(), "path " + (i + 10), detail2.detailId())
             );
         }
 
@@ -382,38 +306,36 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                             .sku(UUID.randomUUID().toString())
                             .size("medium " + i)
                             .inventory(i + 3)
-                            .productDetailId(detail2)
-                            .orderDetails(new HashSet<>())
-                            .reservations(new HashSet<>())
-                            .cartItems(new HashSet<>())
-                            .build()
-            );
+                            .detailId(detail2.detailId())
+                            .build());
         }
 
         var res2 = detailRepo
-                .productDetailsByProductUuidAdminFront(product.getUuid());
+                .productDetailsByProductUuidAdminFront(product.uuid());
         assertEquals(2, res2.size());
 
-        for (DetailProjection pojo : res2) {
-            assertNotNull(pojo.getVisible());
-            assertNotNull(pojo.getColour());
-            assertNotNull(pojo.getImage());
-            int size = Arrays.stream(pojo.getImage().split(",")).toList().size();
-            if (pojo.getColour().equals("red")) {
+        for (ProductDetailDbMapper pojo : res2) {
+            assertNotNull(pojo.variants());
+            assertNotNull(pojo.colour());
+            assertNotNull(pojo.imageKey());
+
+            int size = Arrays.stream(pojo.imageKey().split(",")).toList().size();
+
+            if (pojo.colour().equals("red")) {
                 assertEquals(5, size);
             } else {
                 assertEquals(2, size);
             }
 
-            assertNotNull(pojo.getVariants());
-            assertFalse(pojo.getVariants().isEmpty());
+            assertNotNull(pojo.variants());
+            assertFalse(pojo.variants().isEmpty());
 
             Variant[] array = CustomUtil
-                    .toVariantArray(pojo.getVariants(), ProductDetailRepositoryTest.class);
+                    .toVariantArray(pojo.variants(), ProductDetailRepositoryTest.class);
 
             assertNotNull(array);
 
-            if (pojo.getColour().equals("red")) {
+            if (pojo.colour().equals("red")) {
                 assertEquals(3, array.length);
             } else {
                 assertEquals(7, array.length);

@@ -1,13 +1,12 @@
 package dev.webserver.product;
 
 import dev.webserver.AbstractRepositoryTest;
+import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -33,19 +32,17 @@ class ProductImageRepositoryTest extends AbstractRepositoryTest {
                 .save(Category.builder()
                         .name("category")
                         .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
                         .build());
         RepositoryTestData
                 .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var details = detailRepo.findAll();
+        var details = TestUtility.toList(detailRepo.findAll());
         assertFalse(details.isEmpty());
 
         // then
         var images = imageRepo
-                .imagesByProductDetailId(details.getFirst().getProductDetailId());
+                .imagesByProductDetailId(details.getFirst().detailId());
 
         assertFalse(images.isEmpty());
     }

@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}shipping")
 @RequiredArgsConstructor
-public class ShippingController {
+class ShippingController {
 
     private final ShippingService service;
 

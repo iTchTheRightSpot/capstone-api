@@ -4,8 +4,6 @@ import com.github.javafaker.Faker;
 import dev.webserver.category.Category;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.product.*;
-import dev.webserver.product.WorkerProductService;
-import dev.webserver.user.ClientRole;
 import dev.webserver.user.SarreBrandUser;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.mock.web.MockMultipartFile;
@@ -17,17 +15,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Set;
 
-import static dev.webserver.enumeration.RoleEnum.CLIENT;
-import static dev.webserver.enumeration.RoleEnum.WORKER;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestData {
 
     public static SarreBrandUser client() {
-        var client = SarreBrandUser.builder()
+        return SarreBrandUser.builder()
                 .firstname(new Faker().name().firstName())
                 .lastname(new Faker().name().lastName())
                 .email(new Faker().name().fullName())
@@ -35,12 +30,10 @@ public class TestData {
                 .password(new Faker().phoneNumber().phoneNumber())
                 .enabled(true)
                 .build();
-        client.setClientRole(Set.of(new ClientRole(CLIENT, client)));
-        return client;
     }
 
     public static SarreBrandUser worker() {
-        var client = SarreBrandUser.builder()
+        return SarreBrandUser.builder()
                 .firstname(new Faker().name().firstName())
                 .lastname(new Faker().name().lastName())
                 .email(new Faker().name().fullName())
@@ -48,10 +41,6 @@ public class TestData {
                 .password(new Faker().phoneNumber().phoneNumber())
                 .enabled(true)
                 .build();
-        client.setClientRole(
-                Set.of(new ClientRole(CLIENT, client), new ClientRole(WORKER, client))
-        );
-        return client;
     }
 
     @NotNull
@@ -186,7 +175,7 @@ public class TestData {
         for (int i = 0; i < num; i++) {
             var data = TestData
                     .productDTO(
-                            cat.getCategoryId(),
+                            cat.categoryId(),
                             new Faker().commerce().productName() + " " + i,
                             new SizeInventoryDto[]{
                                     new SizeInventoryDto(new Faker().number().numberBetween(1, 40), "medium"),
@@ -214,7 +203,7 @@ public class TestData {
         for (int i = 0; i < numOfProducts; i++) {
             var data = TestData
                     .productDTOWeight(
-                            cat.getCategoryId(),
+                            cat.categoryId(),
                             new Faker().commerce().productName() + " " + i,
                             new SizeInventoryDto[]{ new SizeInventoryDto(variantQty, "medium") },
                             arr,

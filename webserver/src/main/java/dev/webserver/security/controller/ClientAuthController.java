@@ -14,7 +14,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}client/auth")
 @RequiredArgsConstructor
-public class ClientAuthController {
+class ClientAuthController {
 
     private final AuthenticationService service;
 

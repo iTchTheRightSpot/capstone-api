@@ -1,9 +1,9 @@
 package dev.webserver.payment;
 
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.ICartRepository;
 import dev.webserver.cart.IShoppingSessionRepository;
+import dev.webserver.cart.ShoppingSession;
 import dev.webserver.shipping.ShipSetting;
 import dev.webserver.shipping.ShippingService;
 import dev.webserver.tax.Tax;
@@ -18,7 +18,6 @@ import org.mockito.Mock;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -54,8 +53,7 @@ class CheckoutServiceTest extends AbstractUnitTest {
     @Test
     void createCustomObjectForShoppingSession() {
         // given
-        var session = new ShoppingSession();
-        session.setShoppingSessionId(1L);
+        var session = ShoppingSession.builder().sessionId(1L).build();
         ShipSetting ship = new ShipSetting(1L, "nigeria", null, null);
         Tax tax = new Tax(1L, "vat", 0.075);
         Cookie[] cookies = {new Cookie("cartcookie", "this is custom cookie")};
@@ -87,43 +85,7 @@ class CheckoutServiceTest extends AbstractUnitTest {
 
     static final BiFunction<Integer, ShoppingSession, List<RaceConditionCartDbMapper>> items = (num, session) -> IntStream
             .range(0, num)
-            .mapToObj(op -> new RaceConditionCartDbMapper() {
-
-                @Override
-                public Long getProductSkuId() {
-                    return (long) num;
-                }
-
-                @Override
-                public String getProductSkuSku() {
-                    return "sku-" + num;
-                }
-
-                @Override
-                public Integer getProductSkuInventory() {
-                    return num;
-                }
-
-                @Override
-                public String getProductSkuSize() {
-                    return "size-" + num;
-                }
-
-                @Override
-                public Long getCartItemId() {
-                    return (long) num;
-                }
-
-                @Override
-                public Integer getCartItemQty() {
-                    return num * 2;
-                }
-
-                @Override
-                public Long getShoppingSessionId() {
-                    return session.sessionId();
-                }
-            })
-            .collect(Collectors.toUnmodifiableList());
+            .mapToObj(op -> new RaceConditionCartDbMapper((long) num, "sku-" + num, num, "size-" + num, (long) num, num * 2, session.sessionId()))
+            .toList();
 
 }

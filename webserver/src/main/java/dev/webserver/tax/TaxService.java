@@ -12,7 +12,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(rollbackFor = Exception.class)
 public class TaxService {
 
     private static final Logger log = LoggerFactory.getLogger(TaxService.class);
@@ -34,6 +33,7 @@ public class TaxService {
      * @throws CustomNotFoundException if {@link Tax} percentage
      *                                 isn't in the right format.
      */
+    @Transactional(rollbackFor = Exception.class)
     public void update(TaxDto dto) {
         try {
             repository

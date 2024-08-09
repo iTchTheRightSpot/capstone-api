@@ -17,7 +17,7 @@ public record ProductResponse (
         BigDecimal price,
         String currency,
         @JsonProperty("image_key")
-        String imageUrl,
+        String imageKey,
         String category,
         double weight,
         @JsonProperty("weight_type")

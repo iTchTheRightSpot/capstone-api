@@ -10,7 +10,7 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}tax")
 @RequiredArgsConstructor
-public class TaxController {
+class TaxController {
 
     private final TaxService service;
 

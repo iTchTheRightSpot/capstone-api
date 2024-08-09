@@ -25,10 +25,10 @@ class ShippingControllerTest extends AbstractIntegration {
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void create() throws Exception {
-        this.mockMvc
+        super.mockMvc
                 .perform(post("/" + path)
                         .with(csrf())
-                        .content(this.mapper.writeValueAsString(
+                        .content(super.mapper.writeValueAsString(
                                 new ShippingDto(
                                         "Canada",
                                         new BigDecimal("10100"),
@@ -43,13 +43,12 @@ class ShippingControllerTest extends AbstractIntegration {
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void update() throws Exception {
-        var shipping = shippingRepository
-                .save(new ShipSetting("Japan", new BigDecimal("25750"), new BigDecimal("35.55")));
+        var shipping = shippingRepository.save(new ShipSetting(null, "Japan", new BigDecimal("25750"), new BigDecimal("35.55")));
 
-        this.mockMvc
+        super.mockMvc
                 .perform(put("/" + path)
                         .with(csrf())
-                        .content(this.mapper.writeValueAsString(
+                        .content(super.mapper.writeValueAsString(
                                 new ShippingMapper(
                                         shipping.shipId(),
                                         shipping.country(),
@@ -66,9 +65,9 @@ class ShippingControllerTest extends AbstractIntegration {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void deleteShipping() throws Exception {
         var shipping = shippingRepository
-                .save(new ShipSetting("France", new BigDecimal("25750"), new BigDecimal("35.55")));
+                .save(new ShipSetting(null, "France", new BigDecimal("25750"), new BigDecimal("35.55")));
 
-        this.mockMvc
+        super.mockMvc
                 .perform(delete("/" + path + "/" + shipping.shipId())
                         .with(csrf())
                 )
@@ -84,7 +83,7 @@ class ShippingControllerTest extends AbstractIntegration {
         assertFalse(optional.isEmpty());
 
         // then
-        this.mockMvc
+        super.mockMvc
                 .perform(delete("/" + path + "/" + optional.get().shipId())
                         .with(csrf())
                 )

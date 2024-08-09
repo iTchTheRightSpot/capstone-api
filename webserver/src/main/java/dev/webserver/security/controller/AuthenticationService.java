@@ -1,9 +1,9 @@
 package dev.webserver.security.controller;
 
-import dev.webserver.security.CapstoneUserDetails;
 import dev.webserver.enumeration.RoleEnum;
 import dev.webserver.exception.DuplicateException;
 import dev.webserver.external.log.ILogEventPublisher;
+import dev.webserver.security.CapstoneUserDetails;
 import dev.webserver.security.JwtService;
 import dev.webserver.user.ClientRole;
 import dev.webserver.user.SarreBrandUser;
@@ -12,7 +12,6 @@ import dev.webserver.user.UserRoleRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -23,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -70,7 +70,7 @@ public class AuthenticationService {
      * @param key is of {@link RoleEnum}. If is equal to CLIENT, we add a
      *            jwt cookie to {@link HttpServletResponse}.
      */
-    @Transactional(rollbackOn = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public void register(HttpServletResponse res, RegisterDto dto, RoleEnum key) {
         if (key.equals(CLIENT)) {
             clientRegister(dto, res);
@@ -97,7 +97,7 @@ public class AuthenticationService {
      * @throws DuplicateException when user principal exists and has a role of worker.
      */
     void workerRegister(RegisterDto dto) {
-        var optional = this.userRepository.userByPrincipal(dto.email().trim());
+        var optional = userRepository.userByPrincipal(dto.email().trim());
 
         if (optional.isPresent() && optional.get().getClientRole().stream()
                 .anyMatch(role -> role.role().equals(WORKER))
@@ -124,7 +124,7 @@ public class AuthenticationService {
         var user = createUser(dto);
 
         var authenticated = UsernamePasswordAuthenticationToken
-                .authenticated(user.getEmail(), null, new CapstoneUserDetails(user).getAuthorities());
+                .authenticated(user.email(), null, new CapstoneUserDetails(user).getAuthorities());
 
         loginImpl(authenticated, response);
     }
@@ -154,7 +154,7 @@ public class AuthenticationService {
         var unauthenticated = UsernamePasswordAuthenticationToken
                 .unauthenticated(dto.principal().trim(), dto.password());
 
-        var authenticated = this.authManager.authenticate(unauthenticated);
+        var authenticated = authManager.authenticate(unauthenticated);
 
         loginImpl(authenticated, res);
 
@@ -188,7 +188,7 @@ public class AuthenticationService {
      * Create and a new User object
      */
     private SarreBrandUser createUser(RegisterDto dto) {
-        var user = this.userRepository
+        var user = userRepository
                 .save(SarreBrandUser.builder()
                         .firstname(dto.firstname().trim())
                         .lastname(dto.lastname().trim())
@@ -196,12 +196,10 @@ public class AuthenticationService {
                         .phoneNumber(dto.phone().trim())
                         .password(passwordEncoder.encode(dto.password()))
                         .enabled(true)
-                        .clientRole(new HashSet<>())
-                        .paymentDetail(new HashSet<>())
                         .build()
                 );
 
-        this.roleRepository.save(new ClientRole(CLIENT, user));
+        roleRepository.save(new ClientRole(CLIENT, user));
 
         return user;
     }

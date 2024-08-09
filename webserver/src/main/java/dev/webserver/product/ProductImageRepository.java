@@ -8,10 +8,11 @@ import java.util.List;
 public interface ProductImageRepository extends CrudRepository<ProductImage, Long> {
 
     @Query(value = """
-    SELECT i
-    FROM ProductImage i
-    INNER JOIN ProductDetail d ON i.productDetails.productDetailId = d.productDetailId
-    WHERE d.productDetailId = :id
+    SELECT
+        i.*
+    FROM product_image i
+    INNER JOIN product_detail d ON i.detail_id = d.detail_id
+    WHERE d.detail_id = :id
     """)
     List<ProductImage> imagesByProductDetailId(long id);
 

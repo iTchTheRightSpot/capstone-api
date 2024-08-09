@@ -24,23 +24,6 @@ class CustomUtilTest extends AbstractUnitTest {
 
     private record AmountConversion(BigDecimal given, BigDecimal expected) { }
 
-    private record HelperObj(int qty, BigDecimal price, double weight) implements CartTotalDbMapper {
-        @Override
-        public Integer getQty() {
-            return HelperObj.this.qty;
-        }
-
-        @Override
-        public BigDecimal getPrice() {
-            return HelperObj.this.price;
-        }
-
-        @Override
-        public Double getWeight() {
-            return HelperObj.this.weight;
-        }
-    }
-
     @Test
     void shouldSuccessfullyCreateTransformMultipartFilesToFile() throws IOException {
         // given
@@ -63,9 +46,9 @@ class CustomUtilTest extends AbstractUnitTest {
     public void testCartItemsTotalAndTotalWeightNGN() {
         // given
         final List<CartTotalDbMapper> list = List.of(
-                new HelperObj(1, new BigDecimal("1800"), 2.5),
-                new HelperObj(5, new BigDecimal("20750"), 3.5),
-                new HelperObj(2, new BigDecimal("39065"), 5)
+                new CartTotalDbMapper(1, new BigDecimal("1800"), 2.5),
+                new CartTotalDbMapper(5, new BigDecimal("20750"), 3.5),
+                new CartTotalDbMapper(2, new BigDecimal("39065"), 5.0)
         );
 
         // when
@@ -80,9 +63,9 @@ class CustomUtilTest extends AbstractUnitTest {
     public void testCartItemsTotalAndTotalWeightUSD() {
         // given
         final List<CartTotalDbMapper> list = List.of(
-                new HelperObj(3, new BigDecimal("110.00"), 10.3),
-                new HelperObj(1, new BigDecimal("120.00"), 1.4),
-                new HelperObj(5, new BigDecimal("30.39"), 6.7)
+                new CartTotalDbMapper(3, new BigDecimal("110.00"), 10.3),
+                new CartTotalDbMapper(1, new BigDecimal("120.00"), 1.4),
+                new CartTotalDbMapper(5, new BigDecimal("30.39"), 6.7)
         );
 
         // when

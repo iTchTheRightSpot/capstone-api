@@ -2,7 +2,7 @@ package dev.webserver.category;
 
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.product.Product;
-import dev.webserver.product.ProductProjection;
+import dev.webserver.product.ProductDbMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jdbc.repository.query.Modifying;
@@ -84,7 +84,7 @@ public interface CategoryRepository extends CrudRepository<Category, Long> {
     WHERE c.category_id = :categoryId AND curr.currency = :currency
     GROUP BY p.uuid, p.name, p.description, p.default_image_key, curr.currency, curr.price
     """)
-    Page<ProductProjection> allProductsByCategoryIdAdminFront(
+    Page<ProductDbMapper> allProductsByCategoryIdAdminFront(
             long categoryId,
             SarreCurrency currency,
             Pageable page
@@ -101,7 +101,7 @@ public interface CategoryRepository extends CrudRepository<Category, Long> {
      * @param currency The currency in which prices are displayed, represented by a {@link SarreCurrency} enum
      *                 value.
      * @param page The pagination information, represented by a {@link Pageable} object.
-     * @return Leveraging Spring Data Projection, a paginated {@link Page} containing {@link ProductProjection} objects.
+     * @return Leveraging Spring Data Projection, a paginated {@link Page} containing {@link ProductDbMapper} objects.
      * */
     @Query(value = """
     WITH RECURSIVE rec_category (id) AS
@@ -125,7 +125,7 @@ public interface CategoryRepository extends CrudRepository<Category, Long> {
     WHERE pr.currency = :#{#currency.name()} AND s.inventory > 0 AND d.is_visible = TRUE
     GROUP BY p.uuid, p.name, p.description, p.default_image_key, pr.currency, pr.price
     """)
-    Page<ProductProjection> allProductsByCategoryIdWhereInStockAndIsVisible(
+    Page<ProductDbMapper> allProductsByCategoryIdWhereInStockAndIsVisible(
             long categoryId,
             SarreCurrency currency,
             Pageable page

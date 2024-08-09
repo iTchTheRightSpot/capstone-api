@@ -9,7 +9,7 @@ public interface TaxRepository extends CrudRepository<Tax, Long> {
 
     @Transactional
     @Modifying
-    @Query("UPDATE tax t SET t.name = :name, t.rate = :rate WHERE t.taxId = :id")
+    @Query("UPDATE tax t SET t.name = :name, t.rate = :rate WHERE t.tax_id = :id")
     void updateTaxByTaxId(long id, String name, double rate);
 
 }

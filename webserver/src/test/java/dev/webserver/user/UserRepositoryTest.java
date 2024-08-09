@@ -4,9 +4,6 @@ import com.github.javafaker.Faker;
 import dev.webserver.AbstractRepositoryTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-
-import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -32,8 +29,6 @@ class UserRepositoryTest extends AbstractRepositoryTest {
                         .phoneNumber("0000000000")
                         .password("password")
                         .enabled(true)
-                        .clientRole(new HashSet<>())
-                        .paymentDetail(new HashSet<>())
                         .build()
         );
 
@@ -45,10 +40,7 @@ class UserRepositoryTest extends AbstractRepositoryTest {
                         .phoneNumber("0000000000")
                         .password("password")
                         .enabled(true)
-                        .clientRole(new HashSet<>())
-                        .paymentDetail(new HashSet<>())
-                        .build()
-        );
+                        .build());
 
         // method to test
         var optional = repository.userByPrincipal(principal);
@@ -67,10 +59,7 @@ class UserRepositoryTest extends AbstractRepositoryTest {
                         .phoneNumber("0000000000")
                         .password("password")
                         .enabled(true)
-                        .clientRole(new HashSet<>())
-                        .paymentDetail(new HashSet<>())
-                        .build()
-        );
+                        .build());
 
         repository.save(
                 SarreBrandUser.builder()
@@ -80,13 +69,10 @@ class UserRepositoryTest extends AbstractRepositoryTest {
                         .phoneNumber("0000000000")
                         .password("password")
                         .enabled(true)
-                        .clientRole(new HashSet<>())
-                        .paymentDetail(new HashSet<>())
-                        .build()
-        );
+                        .build());
 
         // when
-        var page = repository.allUsers(PageRequest.of(0, 20));
+        var page = repository.allUsers();
 
         // then
         assertEquals(2, page.getNumberOfElements());

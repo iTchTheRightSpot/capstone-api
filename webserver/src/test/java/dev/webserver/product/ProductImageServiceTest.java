@@ -44,7 +44,7 @@ class ProductImageServiceTest extends AbstractUnitTest {
     }
 
     private static final ProductDetail detail = ProductDetail.builder()
-            .productDetailId(1L)
+            .detailId(1L)
             .colour("red")
             .build();
 

@@ -2,6 +2,7 @@ package dev.webserver.payment;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
+import dev.webserver.TestUtility;
 import dev.webserver.cart.CartDto;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
@@ -23,7 +24,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -62,52 +62,36 @@ class PaymentControllerTest extends AbstractIntegration {
     private void preSaveNecessaryData() {
         shippingRepository
                 .save(new ShipSetting(
+                        null,
                         "Canada",
                         new BigDecimal("20000"),
                         new BigDecimal("25.20")
                 ));
         shippingRepository
                 .save(new ShipSetting(
+                        null,
                         "Nigeria",
                         new BigDecimal("40000.00"),
                         new BigDecimal("30.55")
                 ));
 
-        var category = categoryRepository
-                .save(
-                        Category.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .parentCategory(null)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        var category = categoryRepository.save(Category.builder().name("category").isVisible(true).build());
 
         TestData.dummyProducts(category, 2, productService);
 
-        var clothes = categoryRepository
-                .save(
-                        Category.builder()
-                                .name("clothes")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        var clothes = categoryRepository.save(Category.builder().name("clothes").isVisible(true).build());
 
         TestData.dummyProducts(clothes, 5, productService);
     }
 
     private ProductSku productSku() {
-        var list = this.productSkuRepository.findAll();
+        var list = TestUtility.toList(productSkuRepository.findAll());
         assertFalse(list.isEmpty());
         return list.getFirst();
     }
 
     private Cookie createNewShoppingSessionCookie() throws Exception {
-        MvcResult result = this.mockMvc
+        MvcResult result = super.mockMvc
                 .perform(get(cartPath).with(csrf()))
                 .andReturn();
 
@@ -119,12 +103,9 @@ class PaymentControllerTest extends AbstractIntegration {
         super.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(this.mapper
-                                .writeValueAsString(new CartDto(sku.getSku(), sku.getInventory()))
-                        )
+                        .content(super.mapper.writeValueAsString(new CartDto(sku.sku(), sku.inventory())))
                         .with(csrf())
-                        .cookie(cookie)
-                )
+                        .cookie(cookie))
                 .andExpect(status().isCreated());
 
         return cookie;
@@ -152,7 +133,7 @@ class PaymentControllerTest extends AbstractIntegration {
     void raceConditionWhereAUserIsIndecisiveAboutQtyInTheirCart() throws Exception {
         preSaveNecessaryData();
 
-        var list = this.productSkuRepository.findAll();
+        var list = TestUtility.toList(productSkuRepository.findAll());
 
         // Retrieve cookie unique to every device
         MvcResult result = super.mockMvc
@@ -168,9 +149,7 @@ class PaymentControllerTest extends AbstractIntegration {
         super.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(super.mapper
-                                .writeValueAsString(new CartDto(sku.getSku(), sku.getInventory() - 1))
-                        )
+                        .content(super.mapper.writeValueAsString(new CartDto(sku.sku(), sku.inventory() - 1)))
                         .with(csrf())
                         .cookie(cookie)
                 )
@@ -190,9 +169,7 @@ class PaymentControllerTest extends AbstractIntegration {
         super.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(super.mapper
-                                .writeValueAsString(new CartDto(sku.getSku(), 1))
-                        )
+                        .content(super.mapper.writeValueAsString(new CartDto(sku.sku(), 1)))
                         .with(csrf())
                         .cookie(cookie)
                 )
@@ -205,7 +182,7 @@ class PaymentControllerTest extends AbstractIntegration {
                     .perform(post(cartPath)
                             .contentType(APPLICATION_JSON)
                             .content(super.mapper
-                                    .writeValueAsString(new CartDto(s.getSku(), s.getInventory()))
+                                    .writeValueAsString(new CartDto(s.sku(), s.inventory()))
                             )
                             .with(csrf())
                             .cookie(cookie)
@@ -225,7 +202,7 @@ class PaymentControllerTest extends AbstractIntegration {
     }
 
     private Cookie[] impl(int num) throws Exception {
-        var list = this.productSkuRepository.findAll();
+        var list = TestUtility.toList(productSkuRepository.findAll());
 
         var sku = list.getFirst();
 
@@ -247,9 +224,7 @@ class PaymentControllerTest extends AbstractIntegration {
             super.mockMvc
                     .perform(post(cartPath)
                             .contentType(APPLICATION_JSON)
-                            .content(super.mapper
-                                    .writeValueAsString(new CartDto(sku.getSku(), 1))
-                            )
+                            .content(super.mapper.writeValueAsString(new CartDto(sku.sku(), 1)))
                             .with(csrf())
                             .cookie(cookie)
                     )
@@ -263,12 +238,14 @@ class PaymentControllerTest extends AbstractIntegration {
     void multipleUserTryPurchasingTheLastItemButOnlyOneUserOrRequestIsSuccessfully() throws Exception {
         shippingRepository
                 .save(new ShipSetting(
+                        null,
                         new Faker().country().name(),
                         new BigDecimal("25025"),
                         new BigDecimal("30.20")
                 ));
         shippingRepository
                 .save(new ShipSetting(
+                        null,
                         new Faker().country().name(),
                         new BigDecimal("3075"),
                         new BigDecimal("45.19")
@@ -279,16 +256,7 @@ class PaymentControllerTest extends AbstractIntegration {
                 new PriceCurrencyDto(new BigDecimal("75000"), "NGN"),
         };
 
-        var category = categoryRepository
-                .save(
-                        Category.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .parentCategory(null)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        var category = categoryRepository.save(Category.builder().name("category").isVisible(true).build());
 
         // create a product of one variant where inventory is 1
         TestData.dummyProductsTestTotalAmount(
@@ -313,9 +281,9 @@ class PaymentControllerTest extends AbstractIntegration {
         assertEquals(1, Collections.frequency(results, 200));
         assertEquals(numOfUsers - 1, Collections.frequency(results, 409));
 
-        var skus = productSkuRepository.findAll();
+        var skus = TestUtility.toList(productSkuRepository.findAll());
         assertEquals(1, skus.size());
-        assertEquals(0, skus.getFirst().getInventory());
+        assertEquals(0, skus.getFirst().inventory());
     }
 
     private @NotNull List<Supplier<MvcResult>> getSuppliers(Cookie[] cookies) {
@@ -356,9 +324,7 @@ class PaymentControllerTest extends AbstractIntegration {
         super.mockMvc
                 .perform(post(cartPath)
                         .contentType(APPLICATION_JSON)
-                        .content(this.mapper
-                                .writeValueAsString(new CartDto(sku.getSku(), sku.getInventory()))
-                        )
+                        .content(super.mapper.writeValueAsString(new CartDto(sku.sku(), sku.inventory())))
                         .with(csrf())
                         .cookie(cookie)
                 )
@@ -371,6 +337,7 @@ class PaymentControllerTest extends AbstractIntegration {
     void validateTotalAmountUSD() throws Exception {
         shippingRepository
                 .save(new ShipSetting(
+                        null,
                         "Canada",
                         new BigDecimal("55000"),
                         new BigDecimal("30.20")
@@ -386,11 +353,7 @@ class PaymentControllerTest extends AbstractIntegration {
                         Category.builder()
                                 .name("category")
                                 .isVisible(true)
-                                .parentCategory(null)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+                                .build());
 
         int qty = 1;
         double weight = 2.5;
@@ -440,21 +403,13 @@ class PaymentControllerTest extends AbstractIntegration {
 
         shippingRepository
                 .save(new ShipSetting(
+                        null,
                         "nigeria",
                         new BigDecimal("20000"),
                         new BigDecimal("25.20")
                 ));
 
-        var category = categoryRepository
-                .save(
-                        Category.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .parentCategory(null)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        var category = categoryRepository.save(Category.builder().name("category").isVisible(true).build());
 
         int qty = 5;
         double weight = 5.5;
@@ -474,9 +429,7 @@ class PaymentControllerTest extends AbstractIntegration {
                 .convertCurrency(
                         ngnConversion,
                         NGN,
-                        arr[1].price()
-                                .multiply(new BigDecimal(qty))
-                                .add(new BigDecimal("20000"))
+                        arr[1].price().multiply(new BigDecimal(qty)).add(new BigDecimal("20000"))
                 );
 
         super.mockMvc

@@ -2,6 +2,7 @@ package dev.webserver.category;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
+import dev.webserver.TestUtility;
 import dev.webserver.data.TestData;
 import dev.webserver.exception.DuplicateException;
 import dev.webserver.exception.ResourceAttachedException;
@@ -13,13 +14,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import java.util.HashSet;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class WorkerCategoryControllerTest extends AbstractIntegration {
 
@@ -37,30 +37,17 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
                         Category.builder()
                                 .name("category")
                                 .isVisible(true)
-                                .parentCategory(null)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+                                .build());
 
         TestData.dummyProducts(category, 2, service);
 
-        var clothes = repository
-                .save(
-                        Category.builder()
-                                .name("clothes")
-                                .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        var clothes = repository.save(Category.builder().name("clothes").isVisible(true).build());
 
         TestData.dummyProducts(clothes, 5, service);
     }
 
     private Category category() {
-        var list = this.repository.findAll();
+        var list = TestUtility.toList(repository.findAll());
         assertFalse(list.isEmpty());
         return list.getFirst();
     }
@@ -70,7 +57,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
     void allCategories() throws Exception {
         dummy();
 
-        this.mockMvc
+        super.mockMvc
                 .perform(get(path).contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.table").isArray())
@@ -80,23 +67,14 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void allProductsByCategoryId() throws Exception {
-        var category = repository
-                .save(
-                        Category.builder()
-                                .name("category")
-                                .isVisible(true)
-                                .parentCategory(null)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
-                                .build()
-                );
+        var category = repository.save(Category.builder().name("category").isVisible(true).build());
 
         TestData.dummyProducts(category, 15, service);
 
         // Then
         super.mockMvc
                 .perform(get(path + "/products")
-                        .param("category_id", String.valueOf(category.getCategoryId()))
+                        .param("category_id", String.valueOf(category.categoryId()))
                         .param("page", "0")
                         .param("size", "20")
                 )
@@ -115,7 +93,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
         var dto = new CategoryDto(new Faker().commerce().productName(), true, null);
 
         // Then
-        this.mockMvc
+        super.mockMvc
                 .perform(post(path)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
@@ -130,14 +108,14 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
         dummy();
 
         // Given
-        var dto = new CategoryDto(new Faker().commerce().productName(), true, category().getCategoryId());
+        var dto = new CategoryDto(new Faker().commerce().productName(), true, category().categoryId());
 
         // Then
-        this.mockMvc
+        super.mockMvc
                 .perform(post(path)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.mapper.writeValueAsString(dto))
+                        .content(super.mapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isCreated());
     }
@@ -148,15 +126,15 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
         dummy();
 
         // Given
-        var category = this.repository.findAll().getFirst();
-        var dto = new UpdateCategoryDto(category.getCategoryId(), null, "Updated", category.isVisible());
+        var category = TestUtility.toList(repository.findAll()).getFirst();
+        var dto = new UpdateCategoryDto(category.categoryId(), null, "Updated", category.isVisible());
 
         // Then
-        this.mockMvc
+        super.mockMvc
                 .perform(put(path)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.mapper.writeValueAsString(dto))
+                        .content(super.mapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isNoContent());
     }
@@ -167,17 +145,17 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
         dummy();
 
         // given
-        var category = this.repository.findAll();
+        var category = TestUtility.toList(repository.findAll());
         var first = category.getFirst();
         var second = category.get(1);
-        var dto = new UpdateCategoryDto(first.getCategoryId(), null, second.getName(), first.isVisible());
+        var dto = new UpdateCategoryDto(first.categoryId(), null, second.name(), first.isVisible());
 
         // then
         super.mockMvc
                 .perform(put(path)
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
-                        .content(this.mapper.writeValueAsString(dto))
+                        .content(super.mapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isConflict())
                 .andExpect(result -> assertInstanceOf(DuplicateException.class, result.getResolvedException()));
@@ -192,13 +170,11 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
     void shouldThrowErrorAsCategoryHasOnDeleteRestrict() throws Exception {
         dummy();
 
-        var category = this.repository
-                .findById(category().getCategoryId())
-                .orElse(null);
+        var category = this.repository.findById(category().categoryId()).orElse(null);
         assertNotNull(category);
 
         super.mockMvc
-                .perform(MockMvcRequestBuilders.delete(path + "/{id}", category.getCategoryId())
+                .perform(MockMvcRequestBuilders.delete(path + "/{id}", category.categoryId())
                         .with(csrf())
                 )
                 .andExpect(status().isConflict())

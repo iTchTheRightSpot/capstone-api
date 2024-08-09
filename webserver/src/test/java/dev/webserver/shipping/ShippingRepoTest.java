@@ -19,7 +19,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     void deleteShipSettingById() {
         // given
         var obj = shippingRepository
-                .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
+                .save(new ShipSetting(null, "nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
         long id = obj.shipId();
 
         // when
@@ -33,13 +33,14 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     void shouldThrowExceptionWhenCreatingAnExistingShipSettingPropertyCountry() {
         // given
         shippingRepository
-                .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
+                .save(new ShipSetting(null, "nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
 
         // then
         assertThrows(
                 DataIntegrityViolationException.class,
                 () -> shippingRepository
                         .save(new ShipSetting(
+                                null,
                                 "nigeria",
                                 new BigDecimal("5000"),
                                 new BigDecimal("5.50")
@@ -51,7 +52,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     void updateShipSettingById() {
         // given
         var obj = shippingRepository
-                .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
+                .save(new ShipSetting(null, "nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
         long id = obj.shipId();
 
         // when
@@ -72,11 +73,11 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     void shouldThrowErrorWhenUpdatingShipSettingPropertyCountryToExistingCountry() {
         // given
         var obj = shippingRepository
-                .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
+                .save(new ShipSetting(null, "nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
         long id = obj.shipId();
 
         shippingRepository
-                .save(new ShipSetting("france", new BigDecimal("4500"), new BigDecimal("3.50")));
+                .save(new ShipSetting(null, "france", new BigDecimal("4500"), new BigDecimal("3.50")));
 
         // then
         assertThrows(
@@ -116,7 +117,7 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     void shouldNotReturnDefaultShipSetting() {
         // given
         var obj = shippingRepository
-                .save(new ShipSetting("nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
+                .save(new ShipSetting(null, "nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
 
         // when
         var optional = shippingRepository
@@ -131,11 +132,10 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     void shouldReturnDefaultShipSettingInsertedInMigrationScriptV13() {
         // given
         shippingRepository
-                .save(new ShipSetting("france", new BigDecimal("4500"), new BigDecimal("3.50")));
+                .save(new ShipSetting(null, "france", new BigDecimal("4500"), new BigDecimal("3.50")));
 
         // when
-        var optional = shippingRepository
-                .shippingByCountryElseReturnDefault("nigeria");
+        var optional = shippingRepository.shippingByCountryElseReturnDefault("nigeria");
 
         // then
         assertFalse(optional.isEmpty());

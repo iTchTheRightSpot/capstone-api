@@ -1,8 +1,9 @@
 package dev.webserver.cron;
 
 import dev.webserver.AbstractIntegration;
-import dev.webserver.cart.ShoppingSession;
+import dev.webserver.TestUtility;
 import dev.webserver.cart.IShoppingSessionRepository;
+import dev.webserver.cart.ShoppingSession;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.TestData;
@@ -11,15 +12,11 @@ import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
 import dev.webserver.product.WorkerProductService;
 import dev.webserver.util.CustomUtil;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.time.Instant;
-import java.util.Date;
-import java.util.HashSet;
-
 import static dev.webserver.enumeration.ReservationStatus.PENDING;
-import static java.time.temporal.ChronoUnit.DAYS;
 
 class CronJobTest extends AbstractIntegration {
 
@@ -53,70 +50,64 @@ class CronJobTest extends AbstractIntegration {
         // given
         var sku = productSku();
 
+        final var ldt = CustomUtil.TO_GREENWICH.apply(null);
         var session = sessionRepo
                 .save(
                         new ShoppingSession(
+                                null,
                                 "cookie",
-                                new Date(),
-                                CustomUtil.toUTC(Date.from(Instant.now().minus(1, DAYS))),
-                                new HashSet<>(),
-                                new HashSet<>()
+                                ldt,
+                                ldt.minusDays(1)
                         )
                 );
 
         reservationRepo
                 .save(new OrderReservation(
+                        null,
                         "81a39556-3e26-4c1f-a45a-b40342714b4d",
                         3,
                         PENDING,
-                        CustomUtil.toUTC(Date.from(Instant.now().minus(1, DAYS))),
-                        sku,
-                        session
+                        ldt.minusDays(1),
+                        sku.skuId(),
+                        session.sessionId()
                 ));
 
         reservationRepo
                 .save(new OrderReservation(
+                        null,
                         "ref-dummy",
                         3,
                         PENDING,
-                        CustomUtil.toUTC(Date.from(Instant.now().minus(1, DAYS))),
-                        sku,
-                        session
+                        ldt.minusDays(1),
+                        sku.skuId(),
+                        session.sessionId()
                 ));
 
         // method to test
         cronJob.onDeleteOrderReservations();
 
         // then
-        var payments = paymentDetailRepository.findAll();
-        var reservations = reservationRepo.findAll();
-        var addresses = addressRepository.findAll();
-        var orderDetails = orderDetailRepository.findAll();
-        var authorizations = authorizationRepo.findAll();
+        var payments = TestUtility.toList(paymentDetailRepository.findAll());
+        var reservations = TestUtility.toList(reservationRepo.findAll());
+        var addresses = TestUtility.toList(addressRepository.findAll());
+        var orderDetails = TestUtility.toList(orderDetailRepository.findAll());
+        var authorizations = TestUtility.toList(authorizationRepo.findAll());
 
-        assertTrue(reservations.isEmpty());
-        assertEquals(1, payments.size());
-        assertEquals(1, addresses.size());
-        assertEquals(1, authorizations.size());
-        assertFalse(orderDetails.isEmpty());
+        Assertions.assertTrue(reservations.isEmpty());
+        Assertions.assertEquals(1, payments.size());
+        Assertions.assertEquals(1, addresses.size());
+        Assertions.assertEquals(1, authorizations.size());
+        Assertions.assertFalse(orderDetails.isEmpty());
     }
 
     private ProductSku productSku() {
-        var category = categoryRepository
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .parentCategory(null)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build()
-                );
+        var category = categoryRepository.save(Category.builder().name("category").isVisible(true).build());
 
         TestData.dummyProducts(category, 2, workerProductService);
 
-        var all = skuRepo.findAll();
+        var all = TestUtility.toList(skuRepo.findAll());
 
-        assertFalse(all.isEmpty());
+        Assertions.assertFalse(all.isEmpty());
 
         return all.getFirst();
     }

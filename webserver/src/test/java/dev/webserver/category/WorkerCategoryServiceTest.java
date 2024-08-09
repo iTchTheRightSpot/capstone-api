@@ -24,7 +24,7 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
 
     @BeforeEach
     void setUp() {
-        this.categoryService = new WorkerCategoryService(this.categoryRepository, this.s3Service);
+        categoryService = new WorkerCategoryService(categoryRepository, s3Service);
     }
 
     /** Simulates creating a new ProductCategory when CategoryDTO param parentId is empty */
@@ -35,17 +35,15 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
 
         var category = Category.builder()
                 .name(dto.name().trim())
-                .categories(new HashSet<>())
-                .product(new HashSet<>())
                 .build();
 
         // When
-        when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.empty());
-        when(this.categoryRepository.save(any(Category.class))).thenReturn(category);
+        when(categoryRepository.findByName(anyString())).thenReturn(Optional.empty());
+        when(categoryRepository.save(any(Category.class))).thenReturn(category);
 
         // Then
-        this.categoryService.create(dto);
-        verify(this.categoryRepository, times(1)).save(any(Category.class));
+        categoryService.create(dto);
+        verify(categoryRepository, times(1)).save(any(Category.class));
     }
 
     /** Simulates creating a new ProductCategory when CategoryDTO param parentId is non-empty */
@@ -54,19 +52,15 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         // Given
         var dto = new CategoryDto(new Faker().commerce().department(), true, 1L);
 
-        var category = Category.builder()
-                .name(new Faker().commerce().department())
-                .categories(new HashSet<>())
-                .product(new HashSet<>())
-                .build();
+        var category = Category.builder().name(new Faker().commerce().department()).build();
 
         // When
-        when(this.categoryRepository.findById(anyLong())).thenReturn(Optional.of(category));
-        when(this.categoryRepository.save(any(Category.class))).thenReturn(category);
+        when(categoryRepository.findById(anyLong())).thenReturn(Optional.of(category));
+        when(categoryRepository.save(any(Category.class))).thenReturn(category);
 
         // Then
-        this.categoryService.create(dto);
-        verify(this.categoryRepository, times(1)).save(any(Category.class));
+        categoryService.create(dto);
+        verify(categoryRepository, times(1)).save(any(Category.class));
     }
 
     @Test
@@ -75,13 +69,11 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         var dto = new CategoryDto(new Faker().commerce().department(), true, null);
 
         // When
-        when(this.categoryRepository.findByName(anyString()))
-                .thenReturn(
-                        Optional.of(Category.builder().name(dto.name()).build())
-                );
+        when(categoryRepository.findByName(anyString()))
+                .thenReturn(Optional.of(Category.builder().name(dto.name()).build()));
 
         // Then
-        assertThrows(DuplicateException.class, () -> this.categoryService.create(dto));
+        assertThrows(DuplicateException.class, () -> categoryService.create(dto));
     }
 
     /**
@@ -92,17 +84,13 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         // Given
         var dto = new CategoryDto(new Faker().commerce().department(), true, null);
 
-        var category = Category.builder()
-                .name(new Faker().commerce().department())
-                .categories(new HashSet<>())
-                .product(new HashSet<>())
-                .build();
+        var category = Category.builder().name(new Faker().commerce().department()).build();
 
         // When
-        when(this.categoryRepository.findByName(anyString())).thenReturn(Optional.of(category));
+        when(categoryRepository.findByName(anyString())).thenReturn(Optional.of(category));
 
         // Then
-        assertThrows(DuplicateException.class, () -> this.categoryService.create(dto));
+        assertThrows(DuplicateException.class, () -> categoryService.create(dto));
     }
 
     @Test
@@ -111,13 +99,12 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         var dto = new UpdateCategoryDto(1L, 0L, "update categoryId name", true);
 
         // When
-        doReturn(0).when(this.categoryRepository)
+        doReturn(0).when(categoryRepository)
                 .onDuplicateCategoryName(anyLong(), anyString());
 
         // Then
-        this.categoryService.update(dto);
-        verify(this.categoryRepository, times(1))
-                .update(anyString(), anyBoolean(), anyLong());
+        categoryService.update(dto);
+        verify(categoryRepository, times(1)).update(anyString(), anyBoolean(), anyLong());
     }
 
     @Test
@@ -126,11 +113,11 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
         var dto = new UpdateCategoryDto(1L, 0L,"update categoryId name", true);
 
         // When
-        when(this.categoryRepository.onDuplicateCategoryName(anyLong(), anyString()))
+        when(categoryRepository.onDuplicateCategoryName(anyLong(), anyString()))
                 .thenReturn(1);
 
         // Then
-        assertThrows(DuplicateException.class, () -> this.categoryService.update(dto));
+        assertThrows(DuplicateException.class, () -> categoryService.update(dto));
     }
 
 }

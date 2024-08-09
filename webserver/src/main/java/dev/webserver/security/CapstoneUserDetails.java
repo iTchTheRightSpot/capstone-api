@@ -22,12 +22,12 @@ public record CapstoneUserDetails(SarreBrandUser user) implements UserDetails {
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return user.password();
     }
 
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return user.email();
     }
 
     @Override
@@ -47,7 +47,7 @@ public record CapstoneUserDetails(SarreBrandUser user) implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.isEnabled();
+        return user.enabled();
     }
 
 }

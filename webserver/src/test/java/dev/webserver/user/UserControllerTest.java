@@ -17,7 +17,7 @@ class UserControllerTest extends AbstractIntegration {
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void allUsers() throws Exception {
-        this.mockMvc
+        super.mockMvc
                 .perform(get(path + "/user").with(csrf()))
                 .andExpect(status().isOk());
     }

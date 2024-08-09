@@ -28,28 +28,28 @@ import java.util.Arrays;
 @Configuration
 class JwtConfiguration {
 
-    private static final RSAKey rsaKey = JwtUtil.GENERATERSAKEY();
+    private static final RSAKey RSA_KEY = JwtUtil.GENERATERSAKEY();
 
     @Value(value = "${server.servlet.session.cookie.name}")
-    private String JSESSIONID;
+    private String jsessionid;
     @Value(value = "${jwt.claim}")
-    private String CLAIM;
+    private String claim;
 
     @Bean
     public JwtEncoder jwtEncoder() {
-        JWKSource<SecurityContext> source = new ImmutableJWKSet<>(new JWKSet(rsaKey));
+        JWKSource<SecurityContext> source = new ImmutableJWKSet<>(new JWKSet(RSA_KEY));
         return new NimbusJwtEncoder(source);
     }
 
     @Bean
     public JwtDecoder jwtDecoder() throws JOSEException {
-        return NimbusJwtDecoder.withPublicKey(rsaKey.toRSAPublicKey()).build();
+        return NimbusJwtDecoder.withPublicKey(RSA_KEY.toRSAPublicKey()).build();
     }
 
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         var authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        authoritiesConverter.setAuthoritiesClaimName(CLAIM);
+        authoritiesConverter.setAuthoritiesClaimName(claim);
         authoritiesConverter.setAuthorityPrefix("ROLE_");
 
         var converter = new JwtAuthenticationConverter();
@@ -65,7 +65,7 @@ class JwtConfiguration {
      */
     @Bean
     public BearerTokenResolver bearerTokenResolver(JwtDecoder decoder, JwtService service) {
-        return new BearerResolver(JSESSIONID, decoder, service);
+        return new BearerResolver(jsessionid, decoder, service);
     }
 
     private record BearerResolver(

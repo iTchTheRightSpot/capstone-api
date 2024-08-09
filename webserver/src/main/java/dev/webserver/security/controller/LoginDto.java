@@ -9,7 +9,6 @@ public record LoginDto(
         @NotEmpty(message = "cannot be empty")
         @NotNull(message = "cannot be empty")
         String principal,
-
         @NotEmpty(message = "cannot be empty")
         @NotNull(message = "cannot be empty")
         String password

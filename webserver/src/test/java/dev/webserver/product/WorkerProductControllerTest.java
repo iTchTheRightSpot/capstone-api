@@ -2,8 +2,9 @@ package dev.webserver.product;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
-import dev.webserver.category.CategoryRepository;
+import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
+import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.TestData;
 import dev.webserver.exception.DuplicateException;
 import dev.webserver.exception.ResourceAttachedException;
@@ -13,8 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
-
-import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -44,9 +43,6 @@ class WorkerProductControllerTest extends AbstractIntegration {
                         Category.builder()
                                 .name("category")
                                 .isVisible(true)
-                                .parentCategory(null)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
                                 .build()
                 );
 
@@ -57,9 +53,6 @@ class WorkerProductControllerTest extends AbstractIntegration {
                         Category.builder()
                                 .name("clothes")
                                 .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
                                 .build()
                 );
 
@@ -67,21 +60,21 @@ class WorkerProductControllerTest extends AbstractIntegration {
     }
 
     private String productName() {
-        var list = this.productRepository.findAll();
+        var list = TestUtility.toList(productRepository.findAll());
         assertFalse(list.isEmpty());
-        return list.getFirst().getName();
+        return list.getFirst().name();
     }
 
     private long categoryId() {
-        var list = this.categoryRepository.findAll();
+        var list = TestUtility.toList(categoryRepository.findAll());
         assertFalse(list.isEmpty());
-        return list.getFirst().getCategoryId();
+        return list.getFirst().categoryId();
     }
 
     private String colour() {
-        var list = this.productDetailRepository.findAll();
+        var list = TestUtility.toList(productDetailRepository.findAll());
         assertFalse(list.isEmpty());
-        return list.getFirst().getColour();
+        return list.getFirst().colour();
     }
 
     @Test
@@ -93,9 +86,6 @@ class WorkerProductControllerTest extends AbstractIntegration {
                         Category.builder()
                                 .name("category")
                                 .isVisible(true)
-                                .parentCategory(null)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
                                 .build()
                 );
 
@@ -148,7 +138,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
             requestBuilder.file(file);
         }
 
-        this.mockMvc
+        super.mockMvc
                 .perform(requestBuilder.contentType(MULTIPART_FORM_DATA).with(csrf()))
                 .andExpect(status().isCreated());
     }
@@ -170,7 +160,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
                 "dto",
                 null,
                 "application/json",
-                this.mapper.writeValueAsString(dto).getBytes()
+                super.mapper.writeValueAsString(dto).getBytes()
         );
 
         // request
@@ -180,7 +170,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
             builder.file(file);
         }
 
-        this.mockMvc
+        super.mockMvc
                 .perform(builder
                         .contentType(MULTIPART_FORM_DATA)
                         .with(csrf())
@@ -222,7 +212,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
             builder.file(file);
         }
 
-        this.mockMvc
+        super.mockMvc
                 .perform(builder
                         .contentType(MULTIPART_FORM_DATA)
                         .with(csrf())
@@ -271,26 +261,26 @@ class WorkerProductControllerTest extends AbstractIntegration {
         dummy();
 
         // Given
-        var product = this.productRepository.findAll();
+        var product = TestUtility.toList(productRepository.findAll());
         assertFalse(product.isEmpty());
         assertTrue(product.size() > 2);
 
-        var category = this.categoryRepository.findAll();
+        var category = TestUtility.toList(categoryRepository.findAll());
         assertFalse(category.isEmpty());
 
         // Payload
         var dto = TestData
                 .updateProductDTO(
-                        product.get(0).getUuid(),
-                        product.get(1).getName(),
-                        category.getFirst().getCategoryId()
+                        product.get(0).uuid(),
+                        product.get(1).name(),
+                        category.getFirst().categoryId()
                 );
 
         // Then
-        this.mockMvc
+        super.mockMvc
                 .perform(put(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.mapper.writeValueAsString(dto))
+                        .content(super.mapper.writeValueAsString(dto))
                         .with(csrf())
                 )
                 .andExpect(status().isConflict())
@@ -303,25 +293,25 @@ class WorkerProductControllerTest extends AbstractIntegration {
         dummy();
 
         // given
-        var product = this.productRepository.findAll();
+        var product = TestUtility.toList(productRepository.findAll());
         assertFalse(product.isEmpty());
 
-        var category = this.categoryRepository.findAll();
+        var category = TestUtility.toList(categoryRepository.findAll());
         assertFalse(category.isEmpty());
 
         // Payload
         var dto = TestData
                 .updateProductDTO(
-                        product.getFirst().getUuid(),
+                        product.getFirst().uuid(),
                         "SEJU Development",
-                        category.getFirst().getCategoryId()
+                        category.getFirst().categoryId()
                 );
 
         // Then
-        this.mockMvc
+        super.mockMvc
                 .perform(put(path)
                         .contentType(APPLICATION_JSON)
-                        .content(this.mapper.writeValueAsString(dto))
+                        .content(super.mapper.writeValueAsString(dto))
                         .with(csrf())
                 )
                 .andExpect(status().isNoContent());
@@ -332,19 +322,19 @@ class WorkerProductControllerTest extends AbstractIntegration {
     void deleteProductButExceptionIsThrownDueToResourcesAttached() throws Exception {
         dummy();
 
-        var products = this.productRepository.findAll();
+        var products = TestUtility.toList(productRepository.findAll());
         assertFalse(products.isEmpty());
         var product = products.getFirst();
         assertNotNull(product);
 
-        this.mockMvc
+        super.mockMvc
                 .perform(delete(path)
-                        .param("id", product.getUuid())
+                        .param("id", product.uuid())
                         .with(csrf())
                 )
                 .andExpect(result -> assertInstanceOf(ResourceAttachedException.class, result.getResolvedException()));
 
-        assertFalse(productRepository.findById(product.getProductId()).isEmpty());
+        assertFalse(productRepository.findById(product.productId()).isEmpty());
     }
 
 }

@@ -7,8 +7,8 @@ import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.payment.CartTotalDbMapper;
 import dev.webserver.payment.CheckoutPair;
-import dev.webserver.product.DetailProjection;
 import dev.webserver.product.PriceCurrencyDto;
+import dev.webserver.product.ProductDetailDbMapper;
 import dev.webserver.product.util.CustomMultiPart;
 import dev.webserver.product.util.Variant;
 import jakarta.servlet.http.Cookie;
@@ -45,19 +45,6 @@ public class CustomUtil {
     private static final Logger log = LoggerFactory.getLogger(CustomUtil.class);
 
     /**
-     * Converts {@link LocalDateTime} to UTC greenwich.
-     *
-     * @param date of type java.util.date
-     * @return {@link LocalDateTime} in utc
-     */
-    public static LocalDateTime toUTC(final LocalDateTime date) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return calendar.getTime();
-    }
-
-    /**
      * Converts the current date and time of the specified timezone to Greenwich Mean Time (GMT).
      * <p>
      * If the input timezone is null, "America/Toronto" will be used as the default timezone.
@@ -80,8 +67,7 @@ public class CustomUtil {
      * @return true if the array is in the correct format and contains only
      * {@link SarreCurrency}.
      */
-    public static boolean validateContainsCurrencies(
-            final PriceCurrencyDto[] dto) {
+    public static boolean validateContainsCurrencies(final PriceCurrencyDto[] dto) {
         if (dto.length != 2) {
             return false;
         }
@@ -106,14 +92,14 @@ public class CustomUtil {
 
     /**
      * Converts a String obtained from the getVariants method of
-     * {@link DetailProjection}
+     * {@link ProductDetailDbMapper}
      * to an array of {@link Variant} objects.
      * <p>
      * This method uses the {@link ObjectMapper} to deserialize
      * the input String into an array of {@link Variant} objects.
      *
      * @param str The String obtained from the getVariants method in
-     * {@link DetailProjection}.
+     * {@link ProductDetailDbMapper}.
      * @param clazz The class that invokes this method.
      * @return An array of {@link Variant} objects if successful,
      * or null if an error occurs during deserialization.
@@ -122,7 +108,7 @@ public class CustomUtil {
         try {
             return new ObjectMapper().readValue(str, Variant[].class);
         } catch (JsonProcessingException e) {
-            log.error("error converting from ProductSKUs to Variant. " + clazz);
+            log.error("error converting from ProductSKUs to Variant. {}", clazz);
             return null;
         }
     }
@@ -193,8 +179,7 @@ public class CustomUtil {
      *             into a hierarchy.
      * @return A list of {@link CategoryResponse} objects representing the root categories in the hierarchy.
      */
-    public static List<CategoryResponse> createCategoryHierarchy(
-            final List<CategoryResponse> list) {
+    public static List<CategoryResponse> createCategoryHierarchy(final List<CategoryResponse> list) {
         final Map<Long, CategoryResponse> map = new HashMap<>();
 
         // hierarchy is built by inject root
@@ -231,8 +216,7 @@ public class CustomUtil {
      * @param shippingPrice  The price for shipping the items in the shopping cart.
      * @return The total cost of the shopping cart including tax and shipping as a BigDecimal value.
      */
-    public static BigDecimal calculateTotal(
-            final BigDecimal cartItemsTotal, final double tax, final BigDecimal shippingPrice) {
+    public static BigDecimal calculateTotal(final BigDecimal cartItemsTotal, final double tax, final BigDecimal shippingPrice) {
         var newTax = cartItemsTotal.multiply(BigDecimal.valueOf(tax));
         return cartItemsTotal
                 .add(newTax)
@@ -257,11 +241,11 @@ public class CustomUtil {
      */
     public static CheckoutPair cartItemsTotalAndTotalWeight(final List<CartTotalDbMapper> list) {
         final double sumOfWeight = list.stream()
-                .mapToDouble(CartTotalDbMapper::getWeight)
+                .mapToDouble(CartTotalDbMapper::weight)
                 .sum();
 
         final BigDecimal total = list.stream()
-                .map(p -> p.getPrice().multiply(BigDecimal.valueOf(p.getQty())))
+                .map(p -> p.price().multiply(BigDecimal.valueOf(p.qty())))
                 .reduce(ZERO, BigDecimal::add)
                 .setScale(2, FLOOR);
 

@@ -1,6 +1,7 @@
 package dev.webserver.product;
 
 import dev.webserver.AbstractRepositoryTest;
+import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
@@ -10,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -35,63 +35,51 @@ class PriceCurrencyRepositoryTest extends AbstractRepositoryTest {
     @Test
     void priceCurrencyByProductUUIDAndCurrency() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build());
+        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
                 .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var products = productRepository.findAll();
+        var products = TestUtility.toList(productRepository.findAll());
         assertFalse(products.isEmpty());
 
         // then
         var optional = currencyRepo
-                .priceCurrencyByProductUuidAndCurrency(products.getFirst().getUuid(), SarreCurrency.NGN);
+                .priceCurrencyByProductUuidAndCurrency(products.getFirst().uuid(), SarreCurrency.NGN);
         assertFalse(optional.isEmpty());
 
-        PriceCurrencyProjection pojo = optional.get();
-        assertNotNull(pojo.getName());
-        assertNotNull(pojo.getDescription());
-        assertNotNull(pojo.getCurrency());
-        assertNotNull(pojo.getPrice());
+        PriceCurrencyDbMapper pojo = optional.get();
+        assertNotNull(pojo.name());
+        assertNotNull(pojo.description());
+        assertNotNull(pojo.currency());
+        assertNotNull(pojo.price());
     }
 
     @Test
     void updateProductPriceByProductUuidAndCurrency() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .categories(new HashSet<>())
-                        .product(new HashSet<>())
-                        .build());
+        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
         RepositoryTestData
                 .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var products = productRepository.findAll();
+        var products = TestUtility.toList(productRepository.findAll());
         assertFalse(products.isEmpty());
 
         // then
         currencyRepo
                 .updateProductPriceByProductUuidAndCurrency(
-                        products.getFirst().getUuid(),
+                        products.getFirst().uuid(),
                         new BigDecimal("10.52"),
                         SarreCurrency.USD
                 );
 
         var optional = currencyRepo
-                .priceCurrencyByProductUuidAndCurrency(products.getFirst().getUuid(), SarreCurrency.USD);
+                .priceCurrencyByProductUuidAndCurrency(products.getFirst().uuid(), SarreCurrency.USD);
         assertFalse(optional.isEmpty());
-        assertNotNull(optional.get().getPrice());
-        Assertions.assertEquals(new BigDecimal("10.52"), optional.get().getPrice());
+        assertNotNull(optional.get().price());
+        Assertions.assertEquals(new BigDecimal("10.52"), optional.get().price());
     }
 
 }

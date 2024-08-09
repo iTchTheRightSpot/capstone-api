@@ -12,17 +12,19 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(rollbackFor = Exception.class)
 public class WorkerProductDetailService {
 
     @Value(value = "${aws.bucket}")
     @Setter
-    private String BUCKET;
+    private String bucket;
 
     private final ProductDetailRepository detailRepo;
     private final ProductSkuService skuService;
@@ -45,17 +47,17 @@ public class WorkerProductDetailService {
                 .stream()
                 .map(pojo -> (Supplier<DetailResponse>) () -> {
                     var req = Arrays
-                            .stream(pojo.getImage().split(","))
-                            .map(key -> (Supplier<String>) () -> productImageService.preSignedUrl(BUCKET, key))
+                            .stream(pojo.imageKey().split(","))
+                            .map(key -> (Supplier<String>) () -> productImageService.preSignedUrl(bucket, key))
                             .toList();
 
                     var urls = CustomUtil.asynchronousTasks(req).join();
 
-                    var variants = CustomUtil.toVariantArray(pojo.getVariants(), WorkerProductDetailService.class);
+                    var variants = CustomUtil.toVariantArray(pojo.variants(), WorkerProductDetailService.class);
 
                     return DetailResponse.builder()
-                            .isVisible(pojo.getVisible())
-                            .colour(pojo.getColour())
+                            .isVisible(pojo.isVisible())
+                            .colour(pojo.colour())
                             .urls(urls)
                             .variants(variants)
                             .build();
@@ -72,15 +74,16 @@ public class WorkerProductDetailService {
      * @throws CustomNotFoundException is thrown if product uuid does not exist.
      * @throws DuplicateException      is thrown if product colour exists.
      */
+    @Transactional(rollbackFor = Exception.class)
     public void create(ProductDetailDto dto, MultipartFile[] multipartFiles) {
-        var product = this.productRepository
+        var product = productRepository
                 .productByUuid(dto.uuid())
                 .orElseThrow(() -> new CustomNotFoundException("Product does not exist"));
 
-        Optional<ProductDetail> exist = this.detailRepo.productDetailByColour(dto.colour());
+        Optional<ProductDetail> exist = detailRepo.productDetailByColour(dto.colour());
 
         if (exist.isPresent()) {
-            this.skuService.save(dto.sizeInventory(), exist.get());
+            skuService.save(dto.sizeInventory(), exist.get());
             return;
         }
 
@@ -88,21 +91,19 @@ public class WorkerProductDetailService {
 
         // save ProductDetail
         var detail = ProductDetail.builder()
-                .product(product)
+                .productId(product.productId())
                 .colour(dto.colour())
-                .createAt(CustomUtil.toUTC(new Date()))
+                .createAt(CustomUtil.TO_GREENWICH.apply(null))
                 .isVisible(dto.visible())
-                .productImages(new HashSet<>())
-                .skus(new HashSet<>())
                 .build();
 
         // save ProductDetail
-        var saved = this.detailRepo.save(detail);
+        var saved = detailRepo.save(detail);
 
         // save ProductSKU
-        this.skuService.save(dto.sizeInventory(), saved);
+        skuService.save(dto.sizeInventory(), saved);
 
-        this.productImageService.saveProductImages(detail, files, BUCKET);
+        productImageService.saveProductImages(detail, files, bucket);
     }
 
     /**
@@ -110,8 +111,9 @@ public class WorkerProductDetailService {
      *
      * @param dto of type {@link UpdateProductDetailDto}.
      */
+    @Transactional(rollbackFor = Exception.class)
     public void update(final UpdateProductDetailDto dto) {
-        this.detailRepo.updateProductSkuAndProductDetailByProductSku(
+        detailRepo.updateProductSkuAndProductDetailByProductSku(
                 dto.sku(),
                 dto.colour(),
                 dto.isVisible(),
@@ -129,44 +131,44 @@ public class WorkerProductDetailService {
      * @throws CustomNotFoundException is thrown when sku does not exist.
      * @throws S3Exception             is thrown when deleting from s3.
      */
+    @Transactional(rollbackFor = Exception.class)
     public void delete(final String sku) {
         var detail = productDetailByProductSku(sku);
 
-        var images = this.imageRepo.imagesByProductDetailId(detail.getProductDetailId());
+        var images = imageRepo.imagesByProductDetailId(detail.detailId());
 
         List<ObjectIdentifier> keys = images //
                 .stream() //
-                .map(image -> ObjectIdentifier.builder().key(image.getImageKey()).build())
+                .map(image -> ObjectIdentifier.builder().key(image.imageKey()).build())
                 .toList();
 
         if (!keys.isEmpty()) {
-            this.productImageService.deleteFromS3(keys, BUCKET);
+            productImageService.deleteFromS3(keys, bucket);
         }
 
         // permanently delete
-        this.detailRepo.delete(detail);
+        detailRepo.delete(detail);
     }
 
     /**
      * Save ProductDetail
      */
+    @Transactional(rollbackFor = Exception.class)
     public ProductDetail productDetail(
             final Product product,
             final String colour,
             final boolean visible,
-            final Date date
+            final LocalDateTime date
     ) {
         var detail = ProductDetail.builder()
-                .product(product)
+                .productId(product.productId())
                 .colour(colour)
                 .createAt(date)
                 .isVisible(visible)
-                .productImages(new HashSet<>())
-                .skus(new HashSet<>())
                 .build();
 
         // save ProductDetail
-        return this.detailRepo.save(detail);
+        return detailRepo.save(detail);
     }
 
     /**

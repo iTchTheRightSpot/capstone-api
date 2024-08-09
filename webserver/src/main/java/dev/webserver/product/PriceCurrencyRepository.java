@@ -13,25 +13,20 @@ public interface PriceCurrencyRepository extends CrudRepository<PriceCurrency, L
 
     @Query("""
     SELECT
-    p.name AS name,
-    p.description AS description,
-    c.currency AS currency,
-    c.price AS price
-    FROM Product p
-    INNER JOIN PriceCurrency c ON p.productId = c.product.productId
-    WHERE p.uuid = :uuid AND c.currency = :currency
+        p.name AS name,
+        p.description AS description,
+        c.currency AS currency,
+        c.price AS price
+    FROM product p
+    INNER JOIN price_currency c ON p.product_id = c.product_id
+    WHERE p.uuid = :uuid AND c.currency = :#{#currency.name()}
     GROUP BY p.name, p.description, c.currency, c.price
     """)
-    Optional<PriceCurrencyProjection> priceCurrencyByProductUuidAndCurrency(String uuid, SarreCurrency currency);
+    Optional<PriceCurrencyDbMapper> priceCurrencyByProductUuidAndCurrency(String uuid, SarreCurrency currency);
 
     @Transactional
     @Modifying
-    @Query("""
-    UPDATE PriceCurrency c
-    SET
-    c.price = :price
-    WHERE c.product.uuid = :uuid AND c.currency = :currency
-    """)
+    @Query("UPDATE price_currency SET price = :price WHERE uuid = :uuid AND currency = :#{#currency.name()}")
     void updateProductPriceByProductUuidAndCurrency(String uuid, BigDecimal price, SarreCurrency currency);
 
 }

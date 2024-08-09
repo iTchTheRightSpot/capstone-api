@@ -2,8 +2,9 @@ package dev.webserver.product;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractIntegration;
-import dev.webserver.category.CategoryRepository;
+import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
+import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.TestData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,8 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
-
-import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -43,9 +42,6 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
                         Category.builder()
                                 .name("category")
                                 .isVisible(true)
-                                .parentCategory(null)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
                                 .build()
                 );
 
@@ -56,9 +52,6 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
                         Category.builder()
                                 .name("clothes")
                                 .isVisible(true)
-                                .parentCategory(category)
-                                .categories(new HashSet<>())
-                                .product(new HashSet<>())
                                 .build()
                 );
 
@@ -69,30 +62,30 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void productDetailsByProductUuid() throws Exception {
         // given
-        var list = this.productRepository.findAll();
+        var list = TestUtility.toList(productRepository.findAll());
         assertFalse(list.isEmpty());
 
         // based on setUp
-        super.mockMvc.perform(get(path).param("id", list.getFirst().getUuid())).andExpect(status().isOk());
+        super.mockMvc.perform(get(path).param("id", list.getFirst().uuid())).andExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void shouldSuccessfullyCreateAProductDetail() throws Exception {
-        var list = this.productRepository.findAll();
+        var list = TestUtility.toList(productRepository.findAll());
         assertFalse(list.isEmpty());
 
         // payload
         var dtos = TestData.sizeInventoryDTOArray(5);
 
-        String productID = list.getFirst().getUuid();
+        String productID = list.getFirst().uuid();
         var dto = TestData.productDetailDTO(productID, "exon-mobile-colour", dtos);
 
         var payload = new MockMultipartFile(
                 "dto",
                 null,
                 "application/json",
-                this.mapper.writeValueAsString(dto).getBytes()
+                super.mapper.writeValueAsString(dto).getBytes()
         );
 
         // request
@@ -102,7 +95,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
             builder.file(file);
         }
 
-        this.mockMvc
+        super.mockMvc
                 .perform(builder.contentType(MULTIPART_FORM_DATA).with(csrf()))
                 .andExpect(status().isCreated());
     }
@@ -110,10 +103,10 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
     @Test
     @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
     void shouldSuccessfullyUpdateProductDetail() throws Exception {
-        var list = this.productSkuRepository.findAll();
+        var list = TestUtility.toList(productSkuRepository.findAll());
         assertFalse(list.isEmpty());
 
-        String sku = list.getFirst().getSku();
+        String sku = list.getFirst().sku();
         var dto = new UpdateProductDetailDto(
                 sku,
                 new Faker().commerce().color(),
@@ -135,8 +128,8 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
 
         assertNotNull(findDetail);
 
-        assertEquals(dto.qty(), findDetail.getInventory());
-        assertEquals(dto.size(), findDetail.getSize());
+        assertEquals(dto.qty(), findDetail.inventory());
+        assertEquals(dto.size(), findDetail.size());
     }
 
 }

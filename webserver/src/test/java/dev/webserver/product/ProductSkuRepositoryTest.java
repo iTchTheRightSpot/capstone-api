@@ -131,7 +131,7 @@ class ProductSkuRepositoryTest extends AbstractRepositoryTest {
         ProductSku sku = skus.getFirst();
 
         // save OrderDetail
-        orderRepository.save(new OrderDetail(null, 1, sku.skuId(), paymentDetail.paymentDetailId()));
+        orderRepository.save(new OrderDetail(null, 1, sku.skuId(), paymentDetail.paymentId()));
 
         var session = sessionRepo.save(new ShoppingSession(null, "cookie", ldt, ldt.plusHours(1)));
 

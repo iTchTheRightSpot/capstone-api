@@ -3,11 +3,12 @@ package dev.webserver.payment;
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.external.log.ILogEventPublisher;
-import dev.webserver.external.payment.ThirdPartyPaymentService;
+import dev.webserver.AbstractEnvironment;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,15 +17,19 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 @Service
-@RequiredArgsConstructor
 @Transactional(rollbackFor = Exception.class)
-public class WebhookService {
+public class WebhookService extends AbstractEnvironment {
 
     private static final Logger log = LoggerFactory.getLogger(WebhookService.class);
 
-    private final ThirdPartyPaymentService thirdPartyService;
     private final PaymentDetailService paymentDetailService;
     private final ILogEventPublisher publisher;
+
+    protected WebhookService(final Environment environment, final PaymentDetailService paymentDetailService, final ILogEventPublisher publisher) {
+        super(environment);
+        this.paymentDetailService = paymentDetailService;
+        this.publisher = publisher;
+    }
 
     /**
      * Processes a payment received via webhook from Paystack.
@@ -40,7 +45,7 @@ public class WebhookService {
             final String body = WebHookUtil.httpServletRequestToString(req);
 
             final WebhookConstruct pair = WebHookUtil
-                    .validateRequestFromPayStack(thirdPartyService.payStackCredentials().secretKey(), body);
+                    .validateRequestFromPayStack(super.payStackCredentials().secretKey(), body);
 
             if (!pair.validate().toLowerCase().equals(req.getHeader("x-paystack-signature"))) {
                 log.error("invalid request from paystack");

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 
 import java.util.Optional;
 
@@ -22,6 +23,7 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
 
     private WorkerProductDetailService detailService;
 
+    @Mock private Environment environment;
     @Mock private ProductRepository productRepository;
     @Mock private ProductSkuService skuService;
     @Mock private ProductImageRepository imageRepo;
@@ -31,6 +33,7 @@ class WorkerProductDetailServiceTest extends AbstractUnitTest {
     @BeforeEach
     void setUp() {
         detailService = new WorkerProductDetailService(
+                environment,
                 detailRepo,
                 skuService,
                 imageRepo,

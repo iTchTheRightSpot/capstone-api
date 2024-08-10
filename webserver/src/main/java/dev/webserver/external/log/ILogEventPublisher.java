@@ -25,4 +25,7 @@ public interface ILogEventPublisher {
      */
     void publishPurchase(final String name, final String email);
 
+    void publishSignInOrRegistration(final String firstname, final String email);
+
+    void publishRegistrationException(final String firstname, final String email);
 }

@@ -6,7 +6,7 @@ import dev.webserver.cart.ICartRepository;
 import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.IShoppingSessionRepository;
 import dev.webserver.external.log.ILogEventPublisher;
-import dev.webserver.external.payment.ThirdPartyPaymentService;
+import dev.webserver.AbstractEnvironment;
 import dev.webserver.payment.OrderReservation;
 import dev.webserver.payment.OrderReservationRepository;
 import dev.webserver.payment.PaymentDetailService;
@@ -15,6 +15,7 @@ import dev.webserver.product.ProductSkuRepository;
 import dev.webserver.util.CustomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,9 +23,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -34,7 +32,7 @@ import static org.springframework.http.HttpStatus.*;
 
 @Component
 @Transactional(rollbackFor = Exception.class)
-class CronJob {
+class CronJob extends AbstractEnvironment {
 
     private static final Logger log = LoggerFactory.getLogger(CronJob.class);
 
@@ -44,25 +42,24 @@ class CronJob {
     private final IShoppingSessionRepository sessionRepo;
     private final ICartRepository cartRepository;
     private final PaymentDetailService paymentDetailService;
-    private final String secretKey;
     private final ILogEventPublisher publisher;
 
     public CronJob(
-            RestClient.Builder clientBuilder,
-            ProductSkuRepository skuRepo,
-            OrderReservationRepository reservationRepo,
-            IShoppingSessionRepository sessionRepo,
-            ICartRepository cartRepository,
-            PaymentDetailService paymentDetailService,
-            ThirdPartyPaymentService paymentService,
-            ILogEventPublisher publisher
+            final RestClient.Builder clientBuilder,
+            final ProductSkuRepository skuRepo,
+            final OrderReservationRepository reservationRepo,
+            final IShoppingSessionRepository sessionRepo,
+            final ICartRepository cartRepository,
+            final PaymentDetailService paymentDetailService,
+            final ILogEventPublisher publisher,
+            final Environment environment
     ) {
+        super(environment);
         this.skuRepo = skuRepo;
         this.reservationRepo = reservationRepo;
         this.sessionRepo = sessionRepo;
         this.cartRepository = cartRepository;
         this.paymentDetailService = paymentDetailService;
-        secretKey = paymentService.payStackCredentials().secretKey();
         restClient = clientBuilder.build();
         this.publisher = publisher;
     }
@@ -156,7 +153,7 @@ class CronJob {
                         var node = restClient
                                 .get()
                                 .uri(uri)
-                                .header("Authorization", "Bearer %s".formatted(secretKey))
+                                .header("Authorization", "Bearer %s".formatted(super.payStackCredentials().secretKey()))
                                 .retrieve()
                                 .body(JsonNode.class);
 

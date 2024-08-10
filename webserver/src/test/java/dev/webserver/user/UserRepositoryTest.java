@@ -2,6 +2,7 @@ package dev.webserver.user;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractRepositoryTest;
+import dev.webserver.util.Page;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -22,24 +23,18 @@ class UserRepositoryTest extends AbstractRepositoryTest {
 
         // pre-save
         var user = repository.save(
-                SarreBrandUser.builder()
+                User.builder()
                         .firstname(new Faker().name().firstName())
-                        .lastname(new Faker().name().lastName())
+                        .fullname(new Faker().name().lastName())
                         .email(principal)
-                        .phoneNumber("0000000000")
-                        .password("password")
-                        .enabled(true)
                         .build()
         );
 
         repository.save(
-                SarreBrandUser.builder()
+                User.builder()
                         .firstname(new Faker().name().firstName())
-                        .lastname(new Faker().name().lastName())
+                        .fullname(new Faker().name().lastName())
                         .email("frank@fk.com")
-                        .phoneNumber("0000000000")
-                        .password("password")
-                        .enabled(true)
                         .build());
 
         // method to test
@@ -49,33 +44,27 @@ class UserRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void allUsers() {
+    void listOfUsers() {
         // given
         repository.save(
-                SarreBrandUser.builder()
+                User.builder()
                         .firstname(new Faker().name().firstName())
-                        .lastname(new Faker().name().lastName())
+                        .fullname(new Faker().name().lastName())
                         .email("fk@fk.com")
-                        .phoneNumber("0000000000")
-                        .password("password")
-                        .enabled(true)
                         .build());
 
         repository.save(
-                SarreBrandUser.builder()
+                User.builder()
                         .firstname(new Faker().name().firstName())
-                        .lastname(new Faker().name().lastName())
+                        .fullname(new Faker().name().lastName())
                         .email("frank@fk.com")
-                        .phoneNumber("0000000000")
-                        .password("password")
-                        .enabled(true)
                         .build());
 
         // when
-        var page = repository.allUsers();
+        var page = repository.listOfUsers(Page.of(0, 20));
 
         // then
-        assertEquals(2, page.getNumberOfElements());
+        assertEquals(2, page.size());
     }
 
 }

@@ -1,11 +1,12 @@
 package dev.webserver.product;
 
+import dev.webserver.AbstractEnvironment;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.DuplicateException;
 import dev.webserver.util.CustomUtil;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,18 +20,22 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 @Service
-@RequiredArgsConstructor
-public class WorkerProductDetailService {
-
-    @Value(value = "${aws.bucket}")
-    @Setter
-    private String bucket;
+class WorkerProductDetailService extends AbstractEnvironment {
 
     private final ProductDetailRepository detailRepo;
     private final ProductSkuService skuService;
     private final ProductImageRepository imageRepo;
     private final ProductRepository productRepository;
     private final ProductImageService productImageService;
+
+    protected WorkerProductDetailService(final Environment environment, final ProductDetailRepository detailRepo,final  ProductSkuService skuService, final ProductImageRepository imageRepo, final ProductRepository productRepository, final ProductImageService productImageService) {
+        super(environment);
+        this.detailRepo = detailRepo;
+        this.skuService = skuService;
+        this.imageRepo = imageRepo;
+        this.productRepository = productRepository;
+        this.productImageService = productImageService;
+    }
 
     /**
      * Retrieves {@link ProductDetail} asynchronously by the specified {@link Product} uuid.
@@ -48,7 +53,7 @@ public class WorkerProductDetailService {
                 .map(pojo -> (Supplier<DetailResponse>) () -> {
                     var req = Arrays
                             .stream(pojo.imageKey().split(","))
-                            .map(key -> (Supplier<String>) () -> productImageService.preSignedUrl(bucket, key))
+                            .map(key -> (Supplier<String>) () -> productImageService.preSignedUrl(super.awsbucket, key))
                             .toList();
 
                     var urls = CustomUtil.asynchronousTasks(req).join();
@@ -103,7 +108,7 @@ public class WorkerProductDetailService {
         // save ProductSKU
         skuService.save(dto.sizeInventory(), saved);
 
-        productImageService.saveProductImages(detail, files, bucket);
+        productImageService.saveProductImages(detail, files, super.awsbucket);
     }
 
     /**
@@ -143,7 +148,7 @@ public class WorkerProductDetailService {
                 .toList();
 
         if (!keys.isEmpty()) {
-            productImageService.deleteFromS3(keys, bucket);
+            productImageService.deleteFromS3(keys, super.awsbucket);
         }
 
         // permanently delete

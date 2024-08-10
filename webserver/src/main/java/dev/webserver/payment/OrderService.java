@@ -2,14 +2,13 @@ package dev.webserver.payment;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.webserver.AbstractEnvironment;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.external.aws.IS3Service;
 import dev.webserver.util.CustomUtil;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -19,17 +18,18 @@ import java.util.List;
 import java.util.function.Supplier;
 
 @Service
-@RequiredArgsConstructor
-class OrderService {
+class OrderService extends AbstractEnvironment {
 
     private static final Logger log = LoggerFactory.getLogger(OrderService.class.getName());
 
-    @Setter
-    @Value(value = "${aws.bucket}")
-    private String bucket;
-
     private final OrderDetailRepository repository;
     private final IS3Service s3Service;
+
+    protected OrderService(final Environment environment, final OrderDetailRepository repository, final IS3Service s3Service) {
+        super(environment);
+        this.repository = repository;
+        this.s3Service = s3Service;
+    }
 
     /**
      * Retrieves the order history asynchronously for the currently authenticated user.
@@ -58,7 +58,7 @@ class OrderService {
                         final var array = new ObjectMapper().readValue(db.detail(), OrderHistoryDbMapper[].class);
 
                         final var async = Arrays.stream(array)
-                                .map(a -> (Supplier<OrderHistoryDbMapper>) () -> new OrderHistoryDbMapper(a.name(), s3Service.preSignedUrl(bucket, a.imageKey()), a.colour()))
+                                .map(a -> (Supplier<OrderHistoryDbMapper>) () -> new OrderHistoryDbMapper(a.name(), s3Service.preSignedUrl(super.awsbucket, a.imageKey()), a.colour()))
                                 .toList();
 
                         return new OrderHistoryDto(

@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-class PriceCurrencyRepositoryTest extends AbstractRepositoryTest {
+class ProductPriceCurrencyRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
     private CategoryRepository categoryRepo;

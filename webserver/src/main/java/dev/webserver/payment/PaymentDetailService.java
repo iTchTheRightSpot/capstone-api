@@ -7,7 +7,7 @@ import dev.webserver.cart.ICartRepository;
 import dev.webserver.enumeration.PaymentStatus;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomServerError;
-import dev.webserver.user.SarreBrandUserService;
+import dev.webserver.user.UserService;
 import dev.webserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ public class PaymentDetailService {
     static final Logger log = LoggerFactory.getLogger(PaymentDetailService.class);
 
     private final PaymentDetailRepository paymentDetailRepository;
-    private final SarreBrandUserService userService;
+    private final UserService userService;
     private final AddressRepository addressRepository;
     private final OrderReservationRepository orderReservationRepository;
     private final PaymentAuthorizationRepository paymentAuthorizationRepository;
@@ -101,7 +101,7 @@ public class PaymentDetailService {
         // save PaymentDetail
         return paymentDetailRepository.save(
                 PaymentDetail.builder()
-                        .name(metadata.name())
+                        .fullname(metadata.name())
                         .email(metadata.email())
                         .phone(metadata.phone())
                         .referenceId(reference)
@@ -111,7 +111,7 @@ public class PaymentDetailService {
                         .paymentStatus(PaymentStatus.CONFIRMED)
                         .paidAt(data.get("paid_at").textValue())
                         .createAt(CustomUtil.TO_GREENWICH.apply(null))
-                        .clientId(user != null ? user.clientId() : null)
+                        .userId(user != null ? user.userId() : null)
                         .build()
         );
     }
@@ -124,7 +124,7 @@ public class PaymentDetailService {
      */
     private void address(final WebhookMetaData metadata, final PaymentDetail detail) {
         addressRepository.save(new Address(
-                detail.paymentDetailId(),
+                detail.paymentId(),
                 metadata.address(),
                 metadata.city(),
                 metadata.state(),
@@ -156,7 +156,7 @@ public class PaymentDetailService {
                         .brand(auth.brand())
                         .isReusable(auth.reusable())
                         .signature(auth.signature())
-                        .authorizationId(detail.paymentDetailId())
+                        .authorizationId(detail.paymentId())
                         .build()
         );
     }
@@ -173,7 +173,7 @@ public class PaymentDetailService {
 
         // save OrderDetails
         reservations.forEach(obj -> orderDetailRepository
-                .saveOrderDetail(obj.qty(), obj.skuId(), detail.paymentDetailId()));
+                .saveOrderDetail(obj.qty(), obj.skuId(), detail.paymentId()));
 
         // delete CartItems
         cartRepository.cartIdsByOrderReservationReference(reference)

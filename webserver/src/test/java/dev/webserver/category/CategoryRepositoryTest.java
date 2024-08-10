@@ -4,10 +4,10 @@ import dev.webserver.AbstractRepositoryTest;
 import dev.webserver.data.RepositoryTestData;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.product.*;
+import dev.webserver.util.Page;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.PageRequest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -89,19 +89,19 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                 .allProductsByCategoryIdWhereInStockAndIsVisible(
                         category.categoryId(),
                         SarreCurrency.USD,
-                        PageRequest.of(0, 20)
+                        Page.of(0, 20)
                 );
 
-        assertEquals(8, page.getNumberOfElements());
+        assertEquals(8, page.size());
 
         var page1 = categoryRepo
                 .allProductsByCategoryIdWhereInStockAndIsVisible(
                         clothes.categoryId(),
                         SarreCurrency.USD,
-                        PageRequest.of(0, 20)
+                        Page.of(0, 20)
                 );
 
-        assertEquals(3, page1.getNumberOfElements());
+        assertEquals(3, page1.size());
     }
 
     @Test
@@ -166,10 +166,10 @@ class CategoryRepositoryTest extends AbstractRepositoryTest {
                 .allProductsByCategoryIdAdminFront(
                         category.categoryId(),
                         SarreCurrency.USD,
-                        PageRequest.of(0, 20)
+                        Page.of(0, 20)
                 );
 
-        assertEquals(5, page.getNumberOfElements());
+        assertEquals(5, page.size());
     }
 
 }

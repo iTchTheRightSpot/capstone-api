@@ -1,11 +1,12 @@
 package dev.webserver.external.log;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.webserver.AbstractEnvironment;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
@@ -15,18 +16,14 @@ import org.springframework.web.client.RestClient;
 import java.net.URI;
 
 @Component
-class LogListener implements ApplicationListener<LogEvent> {
+class LogListener extends AbstractEnvironment implements ApplicationListener<LogEvent> {
     private static final Logger log = LoggerFactory.getLogger(LogListener.class);
-
-    @Value("${application.log.webhook.discord}")
-    private String discord;
-    @Value("${spring.profiles.active}")
-    private String profile;
 
     private final ObjectMapper mapper;
     private final RestClient restClient;
 
-    LogListener(final ObjectMapper mapper, final RestClient.Builder client) {
+    LogListener(final ObjectMapper mapper, final RestClient.Builder client, final Environment environment) {
+        super(environment);
         this.mapper = mapper;
         this.restClient = client.build();
     }
@@ -35,7 +32,7 @@ class LogListener implements ApplicationListener<LogEvent> {
     @SneakyThrows
     @Override
     public void onApplicationEvent(final LogEvent event) {
-        if (profile.endsWith("test")) return;
+        if (activeprofile.endsWith("test")) return;
 
         while (!event.queue().isEmpty()) {
             final String payload = mapper.writeValueAsString(new DiscordPayload(event.queue().poll()));

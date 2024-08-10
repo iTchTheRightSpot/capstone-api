@@ -1,18 +1,16 @@
 package dev.webserver.product;
 
+import dev.webserver.AbstractEnvironment;
 import dev.webserver.category.WorkerCategoryService;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.*;
 import dev.webserver.util.CustomUtil;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import dev.webserver.util.Page;
+import dev.webserver.util.Pageable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,7 +18,9 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -29,14 +29,9 @@ import static dev.webserver.enumeration.SarreCurrency.USD;
 import static java.math.RoundingMode.FLOOR;
 
 @Service
-@RequiredArgsConstructor
-public class WorkerProductService {
+public class WorkerProductService extends AbstractEnvironment {
 
     private static final Logger log = LoggerFactory.getLogger(WorkerProductService.class);
-
-    @Value(value = "${aws.bucket}")
-    @Setter
-    private String bucket;
 
     private final PriceCurrencyRepository currencyRepo;
     private final ProductRepository productRepository;
@@ -45,49 +40,31 @@ public class WorkerProductService {
     private final WorkerCategoryService categoryService;
     private final ProductImageService productImageService;
 
-    /**
-     * Sample issue
-     * <p>
-     * We have a {@link Page} of {@link ProductDbMapper}
-     * we need to map to a {@link ProductResponse}. The caveat is whilst mapping
-     * to a {@link ProductResponse}, we need to make a call to S3 to
-     * retrieve a pre-signed url for each {@link ProductResponse} object.
-     * Because we want to achieve this concurrently to improve performance
-     * we need to make use of java multithreading feature. We are going
-     * to use java 21 VirtualThread feature to take advantage of high
-     * through put and to rely on the jvm to manage thread creation instead of
-     * us creating Platform threads.
-     * <p>
-     * 1. Retrieve the {@link Page} of {@link ProductDbMapper} from db.
-     * <p>
-     * 2. Instantiate a VirtualThread executor.
-     * <p>
-     * 3. Iterate the contents of {@link Page} whilst assigning tasks to
-     * executor/thread.
-     * <p>
-     * 4. Do not block each thread by manually calling join instead we wait
-     * for all completion before calling join.
-     * <p>
-     * 6. Return the response to the UI.
-     *
-     * @param currency The users choice of currency to return for each {@link Product}.
-     * @param page     the page used of construct a {@link PageRequest}.
-     * @param size     the size used of construct a {@link PageRequest}.
-     * @return a {@link Page} of {@link ProductResponse}.
-     */
-    public Page<ProductResponse> allProducts(
+    protected WorkerProductService(final Environment environment, final PriceCurrencyRepository currencyRepo, final ProductRepository productRepository, final WorkerProductDetailService detailService, final ProductSkuService skuService, final WorkerCategoryService categoryService, final ProductImageService productImageService) {
+        super(environment);
+        this.currencyRepo = currencyRepo;
+        this.productRepository = productRepository;
+        this.detailService = detailService;
+        this.skuService = skuService;
+        this.categoryService = categoryService;
+        this.productImageService = productImageService;
+    }
+
+    public Pageable<ProductResponse> allProducts(
             final SarreCurrency currency, final int page, final int size
     ) {
-        var pageOfProducts = productRepository.allProductsForAdminFront(currency);
+        final Page of = Page.of(page, size);
+        final Integer count = productRepository.countAllProductsForAdminFront(currency);
+        final var listOfProducts = productRepository.allProductsForAdminFront(of, currency);
 
-        var futures = pageOfProducts.stream()
+        final var futures = listOfProducts.stream()
                 .map(p -> (Supplier<ProductResponse>) () -> new ProductResponse(
                         p.uuid(),
                         p.name(),
                         p.description(),
                         p.price(),
                         p.currency().name(),
-                        productImageService.preSignedUrl(bucket, p.imageKey()),
+                        productImageService.preSignedUrl(awsbucket, p.imageKey()),
                         p.categoryName(),
                         p.weight(),
                         p.weightType()
@@ -95,7 +72,7 @@ public class WorkerProductService {
                 .toList();
 
         final var products = CustomUtil.asynchronousTasks(futures).join();
-        return new PageImpl<>(products, pageOfProducts.getPageable(), pageOfProducts.getTotalElements());
+        return new Pageable<>(of, count, products);
     }
 
     /**
@@ -114,18 +91,18 @@ public class WorkerProductService {
             throw new CustomInvalidFormatException("please check currencies and prices");
         }
 
-        var category = categoryService.findById(dto.categoryId());
+        final var category = categoryService.findById(dto.categoryId());
 
         // throw error if product exits
         if (productRepository.productByName(dto.name().trim()).isPresent()) {
             throw new DuplicateException(dto.name() + " exists");
         }
 
-        StringBuilder defaultImageKey = new StringBuilder();
-        var files = CustomUtil.transformMultipartFile.apply(multipartFiles, defaultImageKey);
+        final StringBuilder defaultImageKey = new StringBuilder();
+        final var files = CustomUtil.transformMultipartFile.apply(multipartFiles, defaultImageKey);
 
         // build Product
-        var p = Product.builder()
+        final var p = Product.builder()
                 .categoryId(category.categoryId())
                 .uuid(UUID.randomUUID().toString())
                 .name(dto.name().trim())
@@ -136,23 +113,23 @@ public class WorkerProductService {
                 .build();
 
         // save Product
-        var product = productRepository.save(p);
+        final var product = productRepository.save(p);
 
         // save ngn & usd price
-        BigDecimal ngn = truncateAmount.apply(dto.priceCurrency(), NGN);
-        BigDecimal usd = truncateAmount.apply(dto.priceCurrency(), USD);
-        currencyRepo.save(new PriceCurrency(null, ngn, NGN, product.productId()));
-        currencyRepo.save(new PriceCurrency(null, usd, USD, product.productId()));
+        final BigDecimal ngn = truncateAmount.apply(dto.priceCurrency(), NGN);
+        final BigDecimal usd = truncateAmount.apply(dto.priceCurrency(), USD);
+        currencyRepo.save(new ProductPriceCurrency(null, ngn, NGN, product.productId()));
+        currencyRepo.save(new ProductPriceCurrency(null, usd, USD, product.productId()));
 
         // save ProductDetails
-        var date = CustomUtil.TO_GREENWICH.apply(null);
-        var detail = detailService.productDetail(product, dto.colour(), dto.visible(), date);
+        final var date = CustomUtil.TO_GREENWICH.apply(null);
+        final var detail = detailService.productDetail(product, dto.colour(), dto.visible(), date);
 
         // save ProductSKUs
         skuService.save(dto.sizeInventory(), detail);
 
         // build and save ProductImages (save to s3)
-        productImageService.saveProductImages(detail, files, bucket);
+        productImageService.saveProductImages(detail, files, awsbucket);
     }
 
     /**
@@ -169,16 +146,16 @@ public class WorkerProductService {
             throw new CustomInvalidFormatException("price cannot be zero");
         }
 
-        var price = dto.price().setScale(2, RoundingMode.FLOOR);
+        final var price = dto.price().setScale(2, RoundingMode.FLOOR);
 
-        boolean bool = productRepository
+        final boolean bool = productRepository
                 .nameNotAssociatedToUuid(dto.uuid(), dto.name()) > 0;
 
         if (bool) {
             throw new DuplicateException(dto.name() + " exists");
         }
 
-        var category = categoryService.findById(dto.categoryId());
+        final var category = categoryService.findById(dto.categoryId());
 
         productRepository.updateProduct(
                 dto.uuid().trim(),
@@ -189,7 +166,7 @@ public class WorkerProductService {
         );
 
         // update price
-        var currency = SarreCurrency.valueOf(dto.currency().toUpperCase());
+        final var currency = SarreCurrency.valueOf(dto.currency().toUpperCase());
         currencyRepo
                 .updateProductPriceByProductUuidAndCurrency(dto.uuid(), price, currency);
     }
@@ -217,7 +194,7 @@ public class WorkerProductService {
         }
 
         if (!keys.isEmpty()) {
-            productImageService.deleteFromS3(keys, bucket);
+            productImageService.deleteFromS3(keys, awsbucket);
         }
     }
 

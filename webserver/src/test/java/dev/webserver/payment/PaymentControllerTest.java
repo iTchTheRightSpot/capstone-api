@@ -45,9 +45,9 @@ class PaymentControllerTest extends AbstractIntegration {
     private String cartPath;
     @Value("${cart.cookie.name}")
     private String CART_COOKIE;
-    @Value("${sarre.usd.to.cent}")
+    @Value("${capstone.usd.to.cent}")
     private String usdConversion;
-    @Value("${sarre.ngn.to.kobo}")
+    @Value("${capstone.ngn.to.kobo}")
     private String ngnConversion;
 
     @Autowired

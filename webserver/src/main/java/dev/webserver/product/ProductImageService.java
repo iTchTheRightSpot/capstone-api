@@ -16,7 +16,6 @@ import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(rollbackFor = Exception.class)
 class ProductImageService {
 
     private final ProductImageRepository repository;
@@ -43,6 +42,7 @@ class ProductImageService {
      *               be uploaded.
      * @throws CustomServerError if there is an error executing the tasks.
      */
+    @Transactional(rollbackFor = Exception.class)
     public void saveProductImages(@NotNull ProductDetail detail, @NotNull CustomMultiPart[] files, @NotNull String bucket) {
         var future = Arrays.stream(files)
                 .map(file -> (Supplier<CustomMultiPart>) () -> {
@@ -53,7 +53,7 @@ class ProductImageService {
 
         // save all images as long as we have successfully saved to s3
         CustomUtil.asynchronousTasks(future).join()
-                .forEach(e -> repository.save(new ProductImage(null, e.key(), e.file().getAbsolutePath(), detail.detailId())));
+                .forEach(e -> repository.save(new ProductImage(null, e.key(), detail.detailId())));
     }
 
 }

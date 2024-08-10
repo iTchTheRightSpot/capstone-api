@@ -33,9 +33,9 @@ public class RepositoryTestData {
         );
 
         priceCurrencyRepository
-                .save(new PriceCurrency(null, new BigDecimal(new Faker().commerce().price()), SarreCurrency.NGN, product.productId()));
+                .save(new ProductPriceCurrency(null, new BigDecimal(new Faker().commerce().price()), SarreCurrency.NGN, product.productId()));
         priceCurrencyRepository
-                .save(new PriceCurrency(null, new BigDecimal(new Faker().commerce().price()), SarreCurrency.USD, product.productId()));
+                .save(new ProductPriceCurrency(null, new BigDecimal(new Faker().commerce().price()), SarreCurrency.USD, product.productId()));
 
         ProductDetail detail = detailRepo.save(
                 ProductDetail.builder()

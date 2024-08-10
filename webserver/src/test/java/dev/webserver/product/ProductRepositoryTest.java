@@ -7,11 +7,11 @@ import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.data.RepositoryTestData;
 import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.util.Page;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -80,10 +80,10 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
         assertFalse(products.isEmpty());
 
         // then
-        Page<ProductDbMapper> page = productRepository
-                .allProductsForAdminFront(SarreCurrency.NGN);
+        final var page = productRepository
+                .allProductsForAdminFront(Page.of(0, 20), SarreCurrency.NGN);
 
-        assertNotEquals(0, page.getTotalElements());
+        assertNotEquals(0, page.size());
 
         for (ProductDbMapper pojo : page) {
             assertNotNull(pojo.uuid());
@@ -115,9 +115,9 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
         assertFalse(products.isEmpty());
 
         // then
-        Page<ProductDbMapper> page = productRepository.allProductsByCurrencyClient(SarreCurrency.NGN);
+        final var page = productRepository.allProductsByCurrencyClient(Page.of(0, 20), SarreCurrency.NGN);
 
-        assertNotEquals(0, page.getTotalElements());
+        assertNotEquals(0, page.size());
 
         for (ProductDbMapper pojo : page) {
             assertNotNull(pojo.uuid());
@@ -209,10 +209,9 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
         assertFalse(products.isEmpty());
 
         // then
-        Page<ProductDbMapper> page = productRepository
-                .productsByNameAndCurrency(products.getFirst().name(), SarreCurrency.USD);
+        final var page = productRepository.productsByNameAndCurrency(products.getFirst().name(), SarreCurrency.USD);
 
-        assertNotEquals(0, page.getTotalElements());
+        assertNotEquals(0, page.size());
 
         for (ProductDbMapper pojo : page) {
             assertNotNull(pojo.uuid());
@@ -261,8 +260,8 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
                         .categoryId(cat.categoryId())
                         .build());
 
-        currencyRepo.save(new PriceCurrency(null, new BigDecimal("45750"), SarreCurrency.NGN, product.productId()));
-        currencyRepo.save(new PriceCurrency(null, new BigDecimal("10.52"), SarreCurrency.USD, product.productId()));
+        currencyRepo.save(new ProductPriceCurrency(null, new BigDecimal("45750"), SarreCurrency.NGN, product.productId()));
+        currencyRepo.save(new ProductPriceCurrency(null, new BigDecimal("10.52"), SarreCurrency.USD, product.productId()));
 
         // then
         assertFalse(TestUtility.toList(currencyRepo.findAll()).isEmpty());

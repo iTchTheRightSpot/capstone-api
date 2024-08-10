@@ -1,9 +1,9 @@
 package dev.webserver.product;
 
 import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.util.Pageable;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,7 +20,7 @@ class ClientProductController {
 
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public Page<ProductResponse> allProducts(
+    public Pageable<ProductResponse> allProducts(
             @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "ngn") String currency
@@ -31,7 +31,7 @@ class ClientProductController {
 
     @ResponseStatus(OK)
     @GetMapping(path = "/find", produces = APPLICATION_JSON_VALUE)
-    public Page<ProductResponse> search(
+    public Pageable<ProductResponse> search(
             @NotNull @RequestParam(name = "search") String search,
             @NotNull @RequestParam(name = "size", defaultValue = "20") Integer size,
             @RequestParam(name = "currency", defaultValue = "ngn") String currency

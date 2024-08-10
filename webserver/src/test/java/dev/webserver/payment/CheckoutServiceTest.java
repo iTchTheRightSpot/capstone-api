@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.springframework.core.env.Environment;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +31,8 @@ class CheckoutServiceTest extends AbstractUnitTest {
     private CheckoutService checkoutService;
 
     @Mock
+    private Environment environment;
+    @Mock
     private ShippingService shippingService;
     @Mock
     private TaxService taxService;
@@ -41,13 +44,12 @@ class CheckoutServiceTest extends AbstractUnitTest {
     @BeforeEach
     void setUp() {
         checkoutService = new CheckoutService(
+                environment,
                 shippingService,
                 taxService,
                 sessionRepo,
                 ICartRepository
         );
-        checkoutService.setCartcookie("cartcookie");
-        checkoutService.setSplit("%");
     }
 
     @Test

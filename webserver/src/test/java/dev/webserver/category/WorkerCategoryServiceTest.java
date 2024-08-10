@@ -7,8 +7,8 @@ import dev.webserver.external.aws.IS3Service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.springframework.core.env.Environment;
 
-import java.util.HashSet;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -19,12 +19,13 @@ class WorkerCategoryServiceTest extends AbstractUnitTest {
 
     private WorkerCategoryService categoryService;
 
+    @Mock private Environment environment;
     @Mock private CategoryRepository categoryRepository;
     @Mock private IS3Service s3Service;
 
     @BeforeEach
     void setUp() {
-        categoryService = new WorkerCategoryService(categoryRepository, s3Service);
+        categoryService = new WorkerCategoryService(environment, categoryRepository, s3Service);
     }
 
     /** Simulates creating a new ProductCategory when CategoryDTO param parentId is empty */

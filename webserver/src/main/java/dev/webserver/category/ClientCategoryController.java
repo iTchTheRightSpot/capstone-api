@@ -2,9 +2,9 @@ package dev.webserver.category;
 
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.product.ProductResponse;
+import dev.webserver.util.Pageable;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,16 +26,16 @@ class ClientCategoryController {
 
     @ResponseStatus(OK)
     @GetMapping(path = "/products", produces = "application/json")
-    public Page<ProductResponse> allProductsByCategoryId(
+    public Pageable<ProductResponse> allProductsByCategoryId(
             @NotNull(message = "category_id cannot be null")
             @RequestParam(name = "category_id")
-            Long id,
+            final Long id,
             @RequestParam(name = "page", defaultValue = "0")
-            Integer page,
+            final Integer page,
             @RequestParam(name = "size", defaultValue = "20")
-            Integer size,
+            final Integer size,
             @RequestParam(name = "currency", defaultValue = "NGN")
-            String currency
+            final String currency
     ) {
         return service.allProductsByCategoryId(SarreCurrency.valueOf(currency), id, page, Math.min(size, 20));
     }

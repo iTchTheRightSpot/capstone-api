@@ -1,5 +1,6 @@
 package dev.webserver.payment;
 
+import dev.webserver.AbstractEnvironment;
 import dev.webserver.cart.Cart;
 import dev.webserver.cart.ICartRepository;
 import dev.webserver.cart.IShoppingSessionRepository;
@@ -13,9 +14,7 @@ import dev.webserver.tax.TaxService;
 import dev.webserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,20 +23,20 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
-class CheckoutService {
-
-    @Setter
-    @Value("${cart.cookie.name}")
-    private String cartcookie;
-    @Setter
-    @Value(value = "${cart.split}")
-    private String split;
+class CheckoutService extends AbstractEnvironment {
 
     private final ShippingService shippingService;
     private final TaxService taxService;
     private final IShoppingSessionRepository sessionRepository;
     private final ICartRepository cartRepository;
+
+    protected CheckoutService(final Environment environment, final ShippingService shippingService, final TaxService taxService, final IShoppingSessionRepository sessionRepository, final ICartRepository cartRepository) {
+        super(environment);
+        this.shippingService = shippingService;
+        this.taxService = taxService;
+        this.sessionRepository = sessionRepository;
+        this.cartRepository = cartRepository;
+    }
 
     /**
      * Generates checkout information based on a user's country and selected currency.
@@ -57,7 +56,7 @@ class CheckoutService {
     public Checkout checkout(final HttpServletRequest req, final String country, final SarreCurrency currency) {
         final CustomCheckoutObject obj = validateCurrentShoppingSession(req, country);
 
-        final var list = this.cartRepository
+        final var list = cartRepository
                 .amountToPayForAllCartItemsForShoppingSession(obj.session().sessionId(), currency);
 
         final BigDecimal shipCost = currency.equals(SarreCurrency.USD)
@@ -113,13 +112,13 @@ class CheckoutService {
      *                                 invalid, or {@link Cart} is empty.
      */
     public CustomCheckoutObject validateCurrentShoppingSession(final HttpServletRequest req, final String country) {
-        final Cookie cookie = CustomUtil.cookie(req, cartcookie);
+        final Cookie cookie = CustomUtil.cookie(req, super.cartcookie);
 
         if (cookie == null) {
             throw new CustomNotFoundException("no cookie found. kindly refresh window");
         }
 
-        final var optional = sessionRepository.shoppingSessionByCookie(cookie.getValue().split(split)[0]);
+        final var optional = sessionRepository.shoppingSessionByCookie(cookie.getValue().split(super.cartCookieSplit)[0]);
 
         if (optional.isEmpty()) {
             throw new CustomNotFoundException("invalid shopping session");

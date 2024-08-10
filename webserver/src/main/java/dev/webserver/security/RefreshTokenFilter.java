@@ -15,6 +15,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Arrays;
 
+import static org.springframework.security.authentication.UsernamePasswordAuthenticationToken.authenticated;
+
 @Component
 @RequiredArgsConstructor
 class RefreshTokenFilter extends OncePerRequestFilter {
@@ -26,7 +28,7 @@ class RefreshTokenFilter extends OncePerRequestFilter {
     @Value(value = "${server.servlet.session.cookie.max-age}")
     private int maxage;
 
-    private final JwtService tokenService;
+    private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
     /**
@@ -36,12 +38,8 @@ class RefreshTokenFilter extends OncePerRequestFilter {
      * logic to validate this is done in AuthService class.
      * */
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
-        Cookie[] cookies = request.getCookies();
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        final Cookie[] cookies = request.getCookies();
 
         // Base case
         if (cookies == null || request.getRequestURI().endsWith("logout")) {
@@ -51,18 +49,20 @@ class RefreshTokenFilter extends OncePerRequestFilter {
 
         // validate refresh token is needed
         Arrays.stream(cookies)
-                .filter(cookie -> cookie.getName().equals(jsessionid) && tokenService.refreshTokenNeeded(cookie))
+                .filter(cookie -> cookie.getName().equals(jsessionid) && jwtService.refreshTokenNeeded(cookie.getValue()))
                 .findFirst()
                 .ifPresent(cookie -> {
-                    String principal = tokenService.extractSubject(cookie);
-                    var userDetails = userDetailsService.loadUserByUsername(principal);
+                    final String userid = jwtService.extractSubject(cookie);
+                    final var userDetails = userDetailsService.loadUserByUsername(userid);
 
-                    String jwt = tokenService.generateToken(UsernamePasswordAuthenticationToken.authenticated(principal, null, userDetails.getAuthorities()));
+                    final UsernamePasswordAuthenticationToken authenticated =
+                            authenticated(userDetails, null, userDetails.getAuthorities());
+
+                    final String jwt = jwtService.generateJwt(authenticated);
 
                     // update cookie
                     cookie.setValue(jwt);
                     cookie.setMaxAge(maxage);
-                    cookie.setHttpOnly(true);
                     cookie.setPath(path);
 
                     // add cookie to response

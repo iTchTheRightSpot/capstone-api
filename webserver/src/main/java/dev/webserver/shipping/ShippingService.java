@@ -10,6 +10,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,15 +24,11 @@ public class ShippingService {
 
     private final ShippingRepository repository;
 
-    /**
-     * Returns all {@code ShipSetting} from the db and
-     * maps it to a {@code ShippingMapper}.
-     * */
     public List<ShippingMapper> shipping() {
-        return repository.findAll()
-                .stream()
-                .map(s -> new ShippingMapper(s.shipId(), s.country(), s.ngnPrice(), s.usdPrice()))
-                .toList();
+        final List<ShippingMapper> list = new ArrayList<>();
+        for (final ShipSetting ship : repository.findAll())
+            list.add(new ShippingMapper(ship.shipId(), ship.country(), ship.ngnPrice(), ship.usdPrice()));
+        return list;
     }
 
     /**
@@ -86,7 +83,7 @@ public class ShippingService {
         repository.deleteShipSettingById(id);
     }
 
-    public ShipSetting shippingByCountryElseReturnDefault(String country) {
+    public ShipSetting shippingByCountryElseReturnDefault(final String country) {
         return repository
                 .shippingByCountryElseReturnDefault(country)
                 .orElseThrow(() -> {

@@ -15,7 +15,7 @@ public record JwtUtil() {
      */
     private static KeyPair RSAKEYPAIR() {
         try {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
             keyPairGenerator.initialize(2048);
             return keyPairGenerator.generateKeyPair();
         } catch (Exception e) {
@@ -27,9 +27,9 @@ public record JwtUtil() {
      * Generate com.nimbusds.jose.jwk.RSAKey at runtime
      * */
     public static RSAKey GENERATERSAKEY() {
-        KeyPair keyPair = RSAKEYPAIR();
-        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+        final KeyPair keyPair = RSAKEYPAIR();
+        final RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+        final RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
         return new RSAKey.Builder(publicKey)
                 .privateKey(privateKey)
                 .keyID(UUID.randomUUID().toString())
@@ -42,8 +42,7 @@ public record JwtUtil() {
         } else if (separator == null) {
             return "";
         }
-
-        int pos = str.indexOf(separator);
+        final int pos = str.indexOf(separator);
         return pos == -1 ? "" : str.substring(pos + separator.length());
     }
 

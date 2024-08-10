@@ -1,12 +1,12 @@
 package dev.webserver.product;
 
+import dev.webserver.AbstractEnvironment;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.external.aws.IS3Service;
 import dev.webserver.util.CustomUtil;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+import dev.webserver.util.Page;
+import dev.webserver.util.Pageable;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -16,30 +16,27 @@ import java.util.function.Supplier;
 import static java.math.RoundingMode.FLOOR;
 
 @Service
-@RequiredArgsConstructor
-class ClientProductService {
-
-    @Value(value = "${aws.bucket}")
-    private String bucket;
+class ClientProductService extends AbstractEnvironment {
 
     private final ProductRepository productRepository;
     private final ProductDetailRepository productDetailRepository;
     private final PriceCurrencyRepository priceCurrencyRepository;
     private final IS3Service s3Service;
 
-    /**
-     * Returns a {@link Page} of {@link ProductResponse}
-     *
-     * @param currency of type {@link SarreCurrency}
-     * @param page number
-     * @param size number of ProductResponse for each page.
-     * @return a Page of {@link ProductResponse}.
-     */
-    public Page<ProductResponse> allProductsByCurrency(SarreCurrency currency, int page, int size) {
-        var pageOfProducts = productRepository
-                .allProductsByCurrencyClient(currency);
+    protected ClientProductService(final Environment environment, final ProductRepository productRepository, final ProductDetailRepository productDetailRepository, final PriceCurrencyRepository priceCurrencyRepository, final IS3Service s3Service) {
+        super(environment);
+        this.productRepository = productRepository;
+        this.productDetailRepository = productDetailRepository;
+        this.priceCurrencyRepository = priceCurrencyRepository;
+        this.s3Service = s3Service;
+    }
 
-        var futures = pageOfProducts.stream()
+    public Pageable<ProductResponse> allProductsByCurrency(final SarreCurrency currency, final int page, final int size) {
+        final Page of = dev.webserver.util.Page.of(page, size);
+        final Integer count = productRepository.countAllProductsByCurrencyClient(currency);
+        final var listOfProducts = productRepository.allProductsByCurrencyClient(of, currency);
+
+        final var futures = listOfProducts.stream()
                 .map(p -> (Supplier<ProductResponse>) () ->
                         ProductResponse.builder()
                                 .id(p.uuid())
@@ -53,34 +50,34 @@ class ClientProductService {
                 .toList();
 
         final var products = CustomUtil.asynchronousTasks(futures).join();
-        return new PageImpl<>(products, pageOfProducts.getPageable(), pageOfProducts.getTotalElements());
+        return new Pageable<>(of, count, products);
     }
 
     public List<DetailResponse> productDetailsByProductUuid(
-            String uuid,
-            SarreCurrency currency
+            final String uuid,
+            final SarreCurrency currency
     ) {
-        var optional = priceCurrencyRepository.priceCurrencyByProductUuidAndCurrency(uuid, currency);
+        final var optional = priceCurrencyRepository.priceCurrencyByProductUuidAndCurrency(uuid, currency);
 
         if (optional.isEmpty())
             return List.of();
 
-        PriceCurrencyDbMapper object = optional.get();
+        final PriceCurrencyDbMapper object = optional.get();
 
-        var futures = productDetailRepository
+        final var futures = productDetailRepository
                 .productDetailsByProductUuidClientFront(uuid)
                 .stream()
                 .map(pojo -> (Supplier<DetailResponse>) () -> {
-                    var suppliers = Arrays
+                    final var suppliers = Arrays
                             .stream(pojo.imageKey().split(","))
-                            .map(key -> (Supplier<String>) () -> s3Service.preSignedUrl(bucket, key))
+                            .map(key -> (Supplier<String>) () -> s3Service.preSignedUrl(super.awsbucket, key))
                             .toList();
 
-                    var urls = CustomUtil
+                    final var urls = CustomUtil
                             .asynchronousTasks(suppliers)
                             .join();
 
-                    var variants = CustomUtil
+                    final var variants = CustomUtil
                             .toVariantArray(pojo.variants(), ClientProductService.class);
 
                     return DetailResponse.builder()
@@ -105,12 +102,12 @@ class ClientProductService {
      * @param currency is of type {@link SarreCurrency}.
      * @return A {@link Page} of {@link ProductResponse}.
      * */
-    public Page<ProductResponse> search(String param, SarreCurrency currency, int size) {
+    public Pageable<ProductResponse> search(final String param, final SarreCurrency currency, final int size) {
         // SQL LIKE Operator
         // https://www.w3schools.com/sql/sql_like.asp
-        var pageOfProducts = productRepository.productsByNameAndCurrency(param + "%", currency);
+        final var listOfProducts = productRepository.productsByNameAndCurrency(param + "%", currency);
 
-        var futures = pageOfProducts.stream()
+        final var futures = listOfProducts.stream()
                 .map(p -> (Supplier<ProductResponse>) () ->
                         ProductResponse.builder()
                                 .id(p.uuid())
@@ -123,7 +120,7 @@ class ClientProductService {
                 .toList();
 
         final var products = CustomUtil.asynchronousTasks(futures).join();
-        return new PageImpl<>(products, pageOfProducts.getPageable(), pageOfProducts.getTotalElements());
+        return new Pageable<>(Page.of(0, size), products.size(), products);
     }
 
 }

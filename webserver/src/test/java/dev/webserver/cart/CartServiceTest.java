@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.springframework.core.env.Environment;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -18,10 +19,10 @@ import static org.mockito.Mockito.*;
 
 class CartServiceTest extends AbstractUnitTest {
 
-    private String cartcookie;
-
     private CartService cartService;
 
+    @Mock
+    private Environment environment;
     @Mock
     private IShoppingSessionRepository sessionRepository;
     @Mock
@@ -34,16 +35,12 @@ class CartServiceTest extends AbstractUnitTest {
     @BeforeEach
     void setUp() {
         cartService = new CartService(
+                environment,
                 sessionRepository,
                 cartRepository,
                 productSKUService,
                 s3Service
         );
-
-        cartService.setSplit("%");
-        cartService.setBound(5);
-        cartService.setCartcookie("CARTCOOKIE");
-        cartcookie = cartService.getCartcookie();
     }
 
     @Test
@@ -53,7 +50,7 @@ class CartServiceTest extends AbstractUnitTest {
         final int maxAgeInSeconds = CustomUtil.TO_GREENWICH.apply(null).plusSeconds(expiration).getSecond();
 
         final String value = "cookie%" + maxAgeInSeconds;
-        final Cookie cookie = new Cookie(cartcookie, value);
+        final Cookie cookie = new Cookie("CARTCOOKIE", value);
         cookie.setMaxAge(maxAgeInSeconds);
 
         final HttpServletResponse res = mock(HttpServletResponse.class);
@@ -77,7 +74,7 @@ class CartServiceTest extends AbstractUnitTest {
         final int maxAgeInSeconds = CustomUtil.TO_GREENWICH.apply(null).plusSeconds(expiration).getSecond();
 
         final String value = "cookie%" + maxAgeInSeconds;
-        final Cookie cookie = new Cookie(cartcookie, value);
+        final Cookie cookie = new Cookie("CARTCOOKIE", value);
         cookie.setMaxAge(maxAgeInSeconds);
 
         final HttpServletResponse res = mock(HttpServletResponse.class);

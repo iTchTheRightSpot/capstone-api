@@ -4,18 +4,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.external.payment.ThirdPartyPaymentService;
 import dev.webserver.external.log.ILogEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.springframework.core.env.Environment;
 
 class WebhookServiceTest extends AbstractUnitTest {
 
     private WebhookService webhookService;
 
     @Mock
-    private ThirdPartyPaymentService thirdPartyPaymentService;
+    private Environment environment;
     @Mock
     private PaymentDetailService paymentDetailService;
     @Mock
@@ -23,7 +23,7 @@ class WebhookServiceTest extends AbstractUnitTest {
 
     @BeforeEach
     void setUpWebHookService() {
-        webhookService = new WebhookService(thirdPartyPaymentService, paymentDetailService, publisher);
+        webhookService = new WebhookService(environment, paymentDetailService, publisher);
     }
 
     @Test

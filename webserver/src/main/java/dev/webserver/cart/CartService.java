@@ -1,5 +1,6 @@
 package dev.webserver.cart;
 
+import dev.webserver.AbstractEnvironment;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomInvalidFormatException;
 import dev.webserver.exception.CustomNotFoundException;
@@ -12,12 +13,9 @@ import dev.webserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,36 +31,27 @@ import static dev.webserver.util.CustomUtil.TO_GREENWICH;
 import static java.time.ZoneOffset.UTC;
 
 @Service
-@RequiredArgsConstructor
-class CartService {
+class CartService extends AbstractEnvironment {
 
     private static final Logger log = LoggerFactory.getLogger(CartService.class);
     private static final long MAX_CART_EXPIRATION_IN_SECONDS = Duration.ofDays(2).getSeconds();
-
-    @Setter @Getter
-    @Value(value = "${cart.split}")
-    private String split;
-    @Setter @Getter
-    @Value(value = "${aws.bucket}")
-    private String bucket;
-    @Setter @Getter
-    @Value("${cart.cookie.name}")
-    private String cartcookie;
-    @Setter @Getter
-    @Value(value = "${server.servlet.session.cookie.secure}")
-    private boolean cookiesecure;
-    @Setter @Getter
-    @Value("${shopping.session.expiration.bound}")
-    private long bound;
 
     private final IShoppingSessionRepository sessionRepository;
     private final ICartRepository cartRepository;
     private final ProductSkuService productSkuService;
     private final IS3Service s3Service;
 
+    protected CartService(final Environment environment, final IShoppingSessionRepository sessionRepository, final ICartRepository cartRepository, final ProductSkuService productSkuService, IS3Service s3Service) {
+        super(environment);
+        this.sessionRepository = sessionRepository;
+        this.cartRepository = cartRepository;
+        this.productSkuService = productSkuService;
+        this.s3Service = s3Service;
+    }
+
     /**
      * Updates the expiration of a cookie if it is within the expiration period.
-     * If the cookie is valid and is within {@link #bound}, cookie is updated and
+     * If the cookie is valid and is within {@link #shoppingSessionBoundInSeconds}, cookie is updated and
      * sent back in the response.
      *
      * @param response    the HttpServletResponse object to add the updated cookie to
@@ -72,7 +61,7 @@ class CartService {
      */
     void validateCookieExpiration(final HttpServletResponse response, final Cookie cookie) {
         try {
-            final String[] arr = cookie.getValue().split(split);
+            final String[] arr = cookie.getValue().split(super.cartCookieSplit);
 
             final var now = TO_GREENWICH.apply(null);
             final long parsed = Long.parseLong(arr[1]);
@@ -81,9 +70,9 @@ class CartService {
 
             final Duration between = Duration.between(now, cookieDate);
 
-            final long hours = between.toHours();
+            final long seconds = between.toSeconds();
 
-            if (hours <= bound) {
+            if (seconds <= shoppingSessionBoundInSeconds) {
                 // update cookie expiry
                 final LocalDateTime expirationLdt = now.plusSeconds(MAX_CART_EXPIRATION_IN_SECONDS);
                 final int maxAgeInSeconds = expirationLdt.getSecond();
@@ -129,7 +118,7 @@ class CartService {
         if (cookie == null) {
             // cookie value
             final int maxAgeInSeconds = TO_GREENWICH.apply(null).plusSeconds(MAX_CART_EXPIRATION_IN_SECONDS).getSecond();
-            final String value = UUID.randomUUID() + split + maxAgeInSeconds;
+            final String value = UUID.randomUUID() + super.cartCookieSplit + maxAgeInSeconds;
 
             // cookie
             final Cookie c = new Cookie(cartcookie, value);
@@ -145,14 +134,14 @@ class CartService {
 
         validateCookieExpiration(res, cookie);
 
-        final String[] arr = cookie.getValue().split(split);
+        final String[] arr = cookie.getValue().split(super.cartCookieSplit);
 
         final var futures = sessionRepository
                 .cartItemsByCookieValue(currency, arr[0])
                 .stream()
                 .map(db -> (Supplier<CartResponse>) () -> new CartResponse(
                         db.uuid(),
-                        s3Service.preSignedUrl(bucket, db.imageKey()),
+                        s3Service.preSignedUrl(awsbucket, db.imageKey()),
                         db.name(),
                         db.price(),
                         db.currency(),
@@ -206,7 +195,7 @@ class CartService {
         }
 
         try {
-            final String[] arr = cookie.getValue().split(split);
+            final String[] arr = cookie.getValue().split(super.cartCookieSplit);
             final var optional = sessionRepository.shoppingSessionByCookie(arr[0]);
 
             if (optional.isEmpty()) {
@@ -262,7 +251,7 @@ class CartService {
             return;
         }
 
-        final String[] arr = cookie.getValue().split(split);
+        final String[] arr = cookie.getValue().split(super.cartCookieSplit);
 
         cartRepository.deleteCartByCookieAndProductSku(arr[0], sku);
     }

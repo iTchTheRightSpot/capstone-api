@@ -1,85 +1,49 @@
 package dev.webserver;
 
-import dev.webserver.security.controller.RegisterDto;
-import dev.webserver.security.controller.AuthenticationService;
 import dev.webserver.enumeration.RoleEnum;
 import dev.webserver.external.log.DiscordPayload;
 import dev.webserver.payment.OrderHistoryDbMapper;
 import dev.webserver.product.util.Variant;
-import dev.webserver.external.payment.PaymentCredentialObj;
-import dev.webserver.user.ClientRole;
-import dev.webserver.user.SarreBrandUser;
+import dev.webserver.user.Role;
+import dev.webserver.user.RoleRepository;
+import dev.webserver.user.User;
 import dev.webserver.user.UserRepository;
-import dev.webserver.user.UserRoleRepository;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportRuntimeHints;
-import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
-import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.HashSet;
-
-import static org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO;
 
 @SpringBootApplication
 @EnableScheduling
 @ImportRuntimeHints(value = {MyRuntimeHints.class})
-@RegisterReflectionForBinding(value = {Variant.class, OrderHistoryDbMapper.class, PaymentCredentialObj.class, DiscordPayload.class})
-// https://docs.spring.io/spring-data/rest/reference/data-commons/repositories/core-extensions.html
-@EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)
-public class Application {
+@RegisterReflectionForBinding(value = {Variant.class, OrderHistoryDbMapper.class, AbstractEnvironment.PaymentCredentialObj.class, DiscordPayload.class})
+public class Application extends AbstractEnvironment {
 
-    @Value(value = "${user.principal}")
-    private String principal;
-    @Value(value = "${user.password}")
-    private String password;
+    protected Application(final Environment environment) {
+        super(environment);
+    }
 
-    public static void main(String[] args) {
+    public static void main(final String... args) {
         SpringApplication.run(Application.class, args);
     }
 
     @Bean
-    @Profile(value = { "default", "aws", "native-test" })
-    public CommandLineRunner commandLineRunner(
-            AuthenticationService service,
-            UserRepository repository,
-            UserRoleRepository roleRepository,
-            PasswordEncoder encoder,
-            Environment env
-    ) {
+    public CommandLineRunner commandLineRunner(final UserRepository repository, final RoleRepository roleRepository) {
         return args -> {
-            if (repository.userByPrincipal(principal).isEmpty()) {
-                if (env.matchesProfiles("native-test")) {
-                    var user = repository.save(SarreBrandUser.builder()
-                            .firstname("SEJU")
-                            .lastname("Development")
-                            .email(principal)
-                            .password(encoder.encode(password))
-                            .phoneNumber("0000000000")
-                            .enabled(true)
-                            .clientRole(new HashSet<>())
-                            .build());
-                    roleRepository.save(new ClientRole(RoleEnum.CLIENT, user));
-                    roleRepository.save(new ClientRole(RoleEnum.WORKER, user));
-                    roleRepository.save(new ClientRole(RoleEnum.NATIVE, user));
-                } else {
-                    var dto = new RegisterDto(
-                            "SEJU",
-                            "Development",
-                            principal,
-                            principal,
-                            "0000000000",
-                            password
-                    );
-                    service.register(null, dto, RoleEnum.WORKER);
-                }
+            if (repository.userByPrincipal(developerEmail.trim()).isEmpty()) {
+                final User user = repository.save(User.builder()
+                        .email(developerEmail.trim())
+                        .firstname(developerFirstname)
+                        .fullname(developerLastName)
+                        .build());
+
+                roleRepository.save(new Role(null, RoleEnum.USER, user.userId()));
+                roleRepository.save(new Role(null, RoleEnum.WORKER, user.userId()));
+                roleRepository.save(new Role(null, RoleEnum.DEVELOPER, user.userId()));
             }
         };
     }

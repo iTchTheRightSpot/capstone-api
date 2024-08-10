@@ -78,7 +78,7 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
         assertFalse(skus.isEmpty());
         var sku = skus.getFirst();
 
-        orderDetailRepository.save(new OrderDetail(null, sku.inventory(), sku.skuId(), paymentDetail.paymentDetailId()));
+        orderDetailRepository.save(new OrderDetail(null, sku.inventory(), sku.skuId(), paymentDetail.paymentId()));
 
         // then
         var details = orderDetailRepository.orderHistoryByPrincipal("hello@hello.com");
@@ -140,7 +140,7 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
 
         // method to test
         orderDetailRepository
-                .saveOrderDetail(sku.inventory(), sku.skuId(), paymentDetail.paymentDetailId());
+                .saveOrderDetail(sku.inventory(), sku.skuId(), paymentDetail.paymentId());
 
         // then
         assertFalse(TestUtility.toList(orderDetailRepository.findAll()).isEmpty());

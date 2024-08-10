@@ -1,5 +1,6 @@
 package dev.webserver.payment;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
@@ -9,12 +10,14 @@ import org.springframework.data.relational.core.mapping.Table;
 @Builder
 public record OrderDetail(
         @Id
-        @Column("order_detail_id")
-        Long orderDetailId,
+        @Column("order_id")
+        Long orderId,
         int qty,
+        @NotNull(message = "order_detail sku_id cannot be null")
         @Column("sku_id")
         Long skuId,
-        @Column("payment_detail_id")
+        @NotNull(message = "order_detail payment_id cannot be null")
+        @Column("payment_id")
         Long paymentDetailId
 ) {
 }

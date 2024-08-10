@@ -5,12 +5,12 @@ import dev.webserver.cart.ICartRepository;
 import dev.webserver.cart.ShoppingSession;
 import dev.webserver.enumeration.ReservationStatus;
 import dev.webserver.exception.OutOfStockException;
-import dev.webserver.external.payment.ThirdPartyPaymentService;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.springframework.core.env.Environment;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,23 +28,23 @@ class RaceConditionServiceTest extends AbstractUnitTest {
     private RaceConditionService raceConditionService;
 
     @Mock
+    private Environment environment;
+    @Mock
     private ProductSkuRepository skuRepo;
     @Mock
     private ICartRepository ICartRepository;
     @Mock
     private OrderReservationRepository reservationRepo;
     @Mock
-    private ThirdPartyPaymentService thirdPartyService;
-    @Mock
     private CheckoutService checkoutService;
 
     @BeforeEach
     void setUp() {
         raceConditionService = new RaceConditionService(
+                environment,
                 skuRepo,
                 ICartRepository,
                 reservationRepo,
-                thirdPartyService,
                 checkoutService
         );
     }

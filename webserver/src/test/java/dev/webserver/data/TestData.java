@@ -4,7 +4,7 @@ import com.github.javafaker.Faker;
 import dev.webserver.category.Category;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.product.*;
-import dev.webserver.user.SarreBrandUser;
+import dev.webserver.user.User;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -21,25 +21,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestData {
 
-    public static SarreBrandUser client() {
-        return SarreBrandUser.builder()
+    public static User client() {
+        return User.builder()
                 .firstname(new Faker().name().firstName())
-                .lastname(new Faker().name().lastName())
+                .fullname(new Faker().name().lastName())
                 .email(new Faker().name().fullName())
-                .phoneNumber(new Faker().phoneNumber().phoneNumber())
-                .password(new Faker().phoneNumber().phoneNumber())
-                .enabled(true)
                 .build();
     }
 
-    public static SarreBrandUser worker() {
-        return SarreBrandUser.builder()
+    public static User worker() {
+        return User.builder()
                 .firstname(new Faker().name().firstName())
-                .lastname(new Faker().name().lastName())
+                .fullname(new Faker().name().fullName())
                 .email(new Faker().name().fullName())
-                .phoneNumber(new Faker().phoneNumber().phoneNumber())
-                .password(new Faker().phoneNumber().phoneNumber())
-                .enabled(true)
                 .build();
     }
 

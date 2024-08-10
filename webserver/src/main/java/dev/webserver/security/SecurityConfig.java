@@ -1,32 +1,26 @@
 package dev.webserver.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.webserver.AbstractEnvironment;
 import dev.webserver.exception.ExceptionResponse;
+import dev.webserver.user.RoleRepository;
 import dev.webserver.user.UserRepository;
-import dev.webserver.user.UserRoleRepository;
 import jakarta.servlet.DispatcherType;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
-import org.springframework.security.authentication.AuthenticationEventPublisher;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
@@ -51,8 +45,7 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
-class SecurityConfig {
+class SecurityConfig extends AbstractEnvironment {
 
     /**
      * Reason for Consumer<ResponseCookie.ResponseCookieBuilder> as per docs secure, domain
@@ -60,7 +53,7 @@ class SecurityConfig {
      *
      * @see <a href="https://github.com/spring-projects/spring-security/blob/main/web/src/main/java/org/springframework/security/web/csrf/CookieCsrfTokenRepository.java">documentation</a>
      */
-    static final BiFunction<Boolean, String, CookieCsrfTokenRepository> csrfRepo = (secure, sameSite) -> {
+    static final BiFunction<Boolean, String, CookieCsrfTokenRepository> CSRF_REPO = (secure, sameSite) -> {
         final Consumer<ResponseCookie.ResponseCookieBuilder> consumer = (cookie) -> cookie
                 .httpOnly(false)
                 .secure(secure)
@@ -68,46 +61,27 @@ class SecurityConfig {
                 .sameSite(sameSite)
                 .maxAge(-1);
 
-        var csrf = new CookieCsrfTokenRepository();
+        final var csrf = new CookieCsrfTokenRepository();
         csrf.setCookieCustomizer(consumer);
         return csrf;
     };
 
-    @Value(value = "${server.servlet.session.cookie.name}")
-    private String jsessionid;
-    @Value(value = "${server.servlet.session.cookie.secure}")
-    private boolean cookiesecure;
-    @Value(value = "${server.servlet.session.cookie.same-site}")
-    private String samesite;
-    @Value(value = "${cors.ui.domain}")
-    private String corsdomain;
-    @Value("/${api.endpoint.baseurl}")
-    private String baseurl;
-    @Value("${spring.profiles.active}")
-    private String profile;
-
-    @Bean
-    public UserDetailsService userDetailsService(UserRepository repository, final UserRoleRepository roleRepository) {
-        return username -> repository
-                .userByPrincipal(username)
-                .map(CapstoneUserDetails::new)
-                .orElseThrow(() -> new UsernameNotFoundException(username + " not found"));
+    protected SecurityConfig(final Environment environment) {
+        super(environment);
     }
 
     @Bean
-    public AuthenticationManager manager(
-            UserDetailsService service,
-            PasswordEncoder encoder,
-            @Qualifier(value = "authenticationEventPublisher") AuthenticationEventPublisher publisher
-    ) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(service);
-        provider.setPasswordEncoder(encoder);
+    public UserDetailsService userDetailsService(final UserRepository repository, final RoleRepository roleRepository) {
+        return email -> {
+            final var user = repository.userByPrincipal(email).orElseThrow(() -> new UsernameNotFoundException(email + " not found"));
+            final var roles = roleRepository.allRolesByUserId(user.userId());
+            return new UserDetailz(user, roles);
+        };
+    }
 
-        ProviderManager manager = new ProviderManager(provider);
-        manager.setAuthenticationEventPublisher(publisher);
-        manager.setEraseCredentialsAfterAuthentication(true);
-        return manager;
+    @Bean
+    public SavedRequestAwareAuthenticationSuccessHandler successHandler() {
+        return new SavedRequestAwareAuthenticationSuccessHandler();
     }
 
     /**
@@ -115,25 +89,20 @@ class SecurityConfig {
      */
     @Bean
     public CookieSerializer cookieSerializer() {
-        var serializer = new DefaultCookieSerializer();
+        final var serializer = new DefaultCookieSerializer();
         serializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
         return serializer;
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(15);
-    }
-
-    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        var config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(corsdomain));
+        final var config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(super.corsdomain));
         config.setAllowedMethods(List.of(GET.name(), PUT.name(), POST.name(), DELETE.name(), OPTIONS.name()));
         config.setAllowedHeaders(List.of(CONTENT_TYPE, ACCEPT, "X-XSRF-TOKEN"));
         config.setAllowCredentials(true);
 
-        var source = new UrlBasedCorsConfigurationSource();
+        final var source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
@@ -143,38 +112,39 @@ class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain filterChain(
-            HttpSecurity http,
-            ObjectMapper mapper,
-            RefreshTokenFilter refreshTokenFilter,
-            JwtAuthenticationConverter converter
+            final HttpSecurity http,
+            final ObjectMapper mapper,
+            final RefreshTokenFilter refreshTokenFilter,
+            final JwtAuthenticationConverter converter
     ) throws Exception {
 
-        if (profile.equals("native-test")) {
+        if (activeprofile.equals("native-test")) {
             http.csrf(AbstractHttpConfigurer::disable)
                     .authorizeHttpRequests(registry -> registry.anyRequest().permitAll());
         } else {
-            final String[] pubRoutes = {"/error", "/actuator/health", baseurl + "csrf", baseurl + "client/**", baseurl + "worker/auth/login", baseurl + "cart/**", baseurl + "payment/**", baseurl + "checkout/**"};
-            var csrfTokenRepository = csrfRepo.apply(cookiesecure, samesite);
+            final String[] pubRoutes = {"/error", "/api/v1/actuator/health", baseurl + "csrf", baseurl + "client/**", baseurl + "worker/auth/login", baseurl + "cart/**", baseurl + "payment/**", baseurl + "checkout/**", baseurl + "active/**"};
+            final var csrfTokenRepository = CSRF_REPO.apply(cookiesecure, samesite);
 
-            // csrf config
-            // https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html
             http
+                    // csrf config
+                    // https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html
                     .csrf(csrf -> csrf
                             .ignoringRequestMatchers(antMatcher(POST, baseurl + "payment/webhook"))
                             .csrfTokenRepository(csrfTokenRepository)
                             .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                     .addFilterAfter(new CookieCsrfFilter(), BasicAuthenticationFilter.class)
+
+                    // global route protection
                     .authorizeHttpRequests(registry -> registry
                             .requestMatchers(pubRoutes).permitAll()
                             .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
                             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                            .requestMatchers(baseurl + "cron/**").hasRole(NATIVE.name())
-                            .requestMatchers(baseurl + "native/**").hasRole(NATIVE.name())
+                            .requestMatchers("/api/v1/actuator/**").hasRole(DEVELOPER.name())
                             .requestMatchers(baseurl + "shipping/**").hasRole(WORKER.name())
                             .requestMatchers(baseurl + "tax/**").hasRole(WORKER.name())
                             .requestMatchers(baseurl + "worker/**").hasRole(WORKER.name())
                             .requestMatchers(baseurl + "auth/worker").hasRole(WORKER.name())
-                            .requestMatchers(baseurl + "order/**").hasAnyRole(WORKER.name(), CLIENT.name())
+                            .requestMatchers(baseurl + "order/**").hasAnyRole(WORKER.name(), USER.name())
                             .anyRequest().denyAll());
         }
 
@@ -211,8 +181,16 @@ class SecurityConfig {
                 .logout(config -> config
                         .logoutUrl(baseurl + "logout")
                         .deleteCookies(jsessionid)
-                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(OK))
-                )
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            record LogoutSuccessRes(String message, String redirect, HttpStatus status) {}
+
+                            final String redirect = String
+                                    .format("%s%sauthentication/authenticate", request.getRequestURL().toString().replace(request.getRequestURI(), ""), baseurl);
+                            final String str = mapper.writeValueAsString(new LogoutSuccessRes("", redirect, OK));
+                            response.setStatus(OK.value());
+                            response.getWriter().write(str);
+                            response.flushBuffer();
+                        }))
                 .build();
     }
 

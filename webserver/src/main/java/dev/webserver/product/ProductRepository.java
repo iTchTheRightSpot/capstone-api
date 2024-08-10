@@ -1,11 +1,10 @@
 package dev.webserver.product;
 
 import dev.webserver.enumeration.SarreCurrency;
-import org.springframework.data.domain.Page;
+import dev.webserver.util.Page;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -14,18 +13,29 @@ import java.util.Optional;
 public interface ProductRepository extends CrudRepository<Product, Long> {
 
     @Query(value = "SELECT * FROM product p WHERE p.name = :name")
-    Optional<Product> productByName(@Param(value = "name") String name);
+    Optional<Product> productByName(final String name);
 
     @Query(value = "SELECT * FROM product p WHERE p.uuid = :uuid")
-    Optional<Product> productByUuid(@Param(value = "uuid") String uuid);
+    Optional<Product> productByUuid(final String uuid);
 
-    @Query(value = "SELECT COUNT (p.productId) FROM product p WHERE p.name = :name AND p.uuid != :uuid")
-    int nameNotAssociatedToUuid(String uuid, String name);
+    @Query(value = "SELECT COUNT(p.productId) FROM product p WHERE p.name = :name AND p.uuid != :uuid")
+    int nameNotAssociatedToUuid(final String uuid, final String name);
 
     @Transactional
     @Modifying
     @Query("DELETE FROM product p WHERE p.uuid = :uuid")
-    void deleteByProductUuid(String uuid);
+    void deleteByProductUuid(final String uuid);
+
+    @Query(value = """
+    SELECT
+        COUNT(p.uuid)
+    FROM product p
+    INNER JOIN product_category cat ON p.category_id = cat.category_id
+    INNER JOIN price_currency c ON p.product_id = c.product_id
+    WHERE c.currency = :#{#currency.name()}
+    GROUP BY p.uuid
+    """)
+    Integer countAllProductsForAdminFront(final SarreCurrency currency);
 
     @Query(value = """
     SELECT
@@ -43,12 +53,23 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     INNER JOIN price_currency c ON p.product_id = c.product_id
     WHERE c.currency = :#{#currency.name()}
     GROUP BY p.uuid, p.name, p.description, p.default_image_Key, p.weight, p.weight_type, c.currency, c.price, cat.name
+    LIMIT :#{#page.size()} OFFSET :#{#page.offset()}
     """)
-    Page<ProductDbMapper> allProductsForAdminFront(SarreCurrency currency);
+    List<ProductDbMapper> allProductsForAdminFront(final Page page, final SarreCurrency currency);
 
-    /**
-     * Returns a Product based non default currency
-     * */
+    @Query(value = """
+    SELECT
+        COUNT(p.uuid)
+    FROM product p
+    INNER JOIN product_category cat ON cat.category_id = p.category_id
+    INNER JOIN product_detail pd ON pd.product_id = p.product_id
+    INNER JOIN price_currency c ON p.product_id = c.product_id
+    INNER JOIN product_sku sku ON pd.detail_id = sku.detail_id
+    WHERE cat.is_visible = TRUE AND pd.is_visible = TRUE AND sku.inventory > 0 AND c.currency = :#{#currency.name()}
+    GROUP BY p.uuid
+    """)
+    Integer countAllProductsByCurrencyClient(final SarreCurrency currency);
+
     @Query(value = """
     SELECT
         p.uuid AS uuid,
@@ -62,13 +83,14 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
         cat.name AS categoryName
     FROM product p
     INNER JOIN product_category cat ON cat.category_id = p.category_id
-    INNER JOIN product_detail pd ON pd.product.product_id = p.product_id
-    INNER JOIN price_currency c ON p.product_id = c.product.product_id
+    INNER JOIN product_detail pd ON pd.product_id = p.product_id
+    INNER JOIN price_currency c ON p.product_id = c.product_id
     INNER JOIN product_sku sku ON pd.detail_id = sku.detail_id
     WHERE cat.is_visible = TRUE AND pd.is_visible = TRUE AND sku.inventory > 0 AND c.currency = :#{#currency.name()}
     GROUP BY p.uuid, p.name, p.description, p.default_image_key, c.currency, c.price, cat.name
+    LIMIT :#{#page.size()} OFFSET :#{#page.offset()}
     """)
-    Page<ProductDbMapper> allProductsByCurrencyClient(SarreCurrency currency);
+    List<ProductDbMapper> allProductsByCurrencyClient(final Page page, final SarreCurrency currency);
 
     @Transactional
     @Modifying
@@ -82,11 +104,11 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     WHERE p.uuid = :uuid
     """)
     void updateProduct(
-            @Param(value = "uuid") String uuid,
-            @Param(value = "name") String name,
-            @Param(value = "desc") String desc,
-            @Param(value = "weight") double weight,
-            Long categoryId
+            final String uuid,
+            final String name,
+            final String desc,
+            final double weight,
+            final Long categoryId
     );
 
     @Query(value = """
@@ -97,7 +119,7 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     INNER JOIN product p ON p.product_id = pd.product_id
     WHERE p.uuid = :uuid
     """)
-    List<ProductImageDbMapper> productImagesByProductUuid(@Param(value = "uuid") String uuid);
+    List<ProductImageDbMapper> productImagesByProductUuid(final String uuid);
 
     // https://www.w3schools.com/sql/sql_like.asp
     @Query("""
@@ -118,6 +140,6 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     WHERE p.name LIKE :name AND sku.inventory > 0 AND c.currency = :#{#currency.name()}
     GROUP BY p.uuid, p.name, p.default_image_key, p.weight, p.weight_type, c.currency, c.price, cat.name
     """)
-    Page<ProductDbMapper> productsByNameAndCurrency(String name, SarreCurrency currency);
+    List<ProductDbMapper> productsByNameAndCurrency(final String name, final SarreCurrency currency);
 
 }

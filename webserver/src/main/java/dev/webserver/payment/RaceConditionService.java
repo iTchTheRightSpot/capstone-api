@@ -1,30 +1,25 @@
 package dev.webserver.payment;
 
+import dev.webserver.AbstractEnvironment;
 import dev.webserver.cart.Cart;
 import dev.webserver.cart.ICartRepository;
 import dev.webserver.cart.ShoppingSession;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.OutOfStockException;
-import dev.webserver.external.payment.ThirdPartyPaymentService;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
 import dev.webserver.shipping.ShipSetting;
 import dev.webserver.util.CustomUtil;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,27 +28,23 @@ import java.util.stream.Collectors;
 import static dev.webserver.enumeration.ReservationStatus.PENDING;
 
 @Service
-@RequiredArgsConstructor
 @Transactional(rollbackFor = Exception.class)
-public class RaceConditionService {
+public class RaceConditionService extends AbstractEnvironment {
 
     private static final Logger log = LoggerFactory.getLogger(RaceConditionService.class);
-
-    @Setter
-    @Value("${sarre.usd.to.cent}")
-    private String usdConversion;
-    @Setter
-    @Value("${sarre.ngn.to.kobo}")
-    private String ngnConversion;
-    @Setter
-    @Value("${race-condition.expiration.bound}")
-    private long bound;
 
     private final ProductSkuRepository productSkuRepository;
     private final ICartRepository cartRepository;
     private final OrderReservationRepository reservationRepository;
-    private final ThirdPartyPaymentService thirdPartyService;
     private final CheckoutService checkoutService;
+
+    protected RaceConditionService(final Environment environment, final ProductSkuRepository productSkuRepository, final ICartRepository cartRepository, final OrderReservationRepository reservationRepository, final CheckoutService checkoutService) {
+        super(environment);
+        this.productSkuRepository = productSkuRepository;
+        this.cartRepository = cartRepository;
+        this.reservationRepository = reservationRepository;
+        this.checkoutService = checkoutService;
+    }
 
     /**
      * Prevents race conditions or overselling by temporarily reserving inventory
@@ -94,7 +85,7 @@ public class RaceConditionService {
 
         final String reference = UUID.randomUUID().toString();
 
-        raceConditionImpl(reference, reservations, obj.cartItems(), ldt.plusMinutes(bound), obj.session());
+        raceConditionImpl(reference, reservations, obj.cartItems(), ldt.plusSeconds(raceConditionExpirationBound), obj.session());
 
         final var list = cartRepository
                 .amountToPayForAllCartItemsForShoppingSession(obj.session().sessionId(), currency);
@@ -109,10 +100,9 @@ public class RaceConditionService {
                 );
 
         // if ngn remove leading zeros
-        final var secret = thirdPartyService.payStackCredentials();
         return new PaymentResponse(
                 reference,
-                secret.pubKey(),
+                super.payStackCredentials().pubKey(),
                 currency,
                 CustomUtil.convertCurrency(
                         currency.equals(SarreCurrency.NGN) ? ngnConversion : usdConversion,

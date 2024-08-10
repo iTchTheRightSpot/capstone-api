@@ -1,20 +1,21 @@
 package dev.webserver.security;
 
-import dev.webserver.user.SarreBrandUser;
+import dev.webserver.user.Role;
+import dev.webserver.user.User;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
-public record CapstoneUserDetails(SarreBrandUser user) implements UserDetails {
+public record UserDetailz(User user, List<Role> roles) implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return user
-                .getClientRole()
+        return roles
                 .stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.role().toString()))
                 .collect(Collectors.toSet());
@@ -22,7 +23,7 @@ public record CapstoneUserDetails(SarreBrandUser user) implements UserDetails {
 
     @Override
     public String getPassword() {
-        return user.password();
+        return null;
     }
 
     @Override
@@ -47,7 +48,7 @@ public record CapstoneUserDetails(SarreBrandUser user) implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.enabled();
+        return true;
     }
 
 }

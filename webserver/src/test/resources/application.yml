@@ -118,7 +118,7 @@ cart:
     name: 'CARTCOOKIE'
   split: '%'
 
-sarre:
+capstone:
   usd:
     to:
       cent: 100
@@ -128,7 +128,7 @@ sarre:
 
 race-condition:
   expiration:
-    bound: 15
+    bound: 900
 shopping:
   session:
     expiration:

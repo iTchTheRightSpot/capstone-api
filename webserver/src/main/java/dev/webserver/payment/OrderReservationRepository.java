@@ -6,7 +6,6 @@ import dev.webserver.product.ProductSku;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -44,13 +43,13 @@ public interface OrderReservationRepository extends CrudRepository<OrderReservat
     WHERE s.sku = :sku AND sh.cookie = :cookie AND o.status = :#{#status.name()}
     """)
     void deductFromProductSkuInventoryAndReplaceReservationQty(
-            int productSkuQty,
-            int reservationQty,
-            String reference,
-            LocalDateTime expire,
-            String cookie,
-            String sku,
-            ReservationStatus status
+            final int productSkuQty,
+            final int reservationQty,
+            final String reference,
+            final LocalDateTime expire,
+            final String cookie,
+            final String sku,
+            final ReservationStatus status
     );
 
     /**
@@ -83,18 +82,18 @@ public interface OrderReservationRepository extends CrudRepository<OrderReservat
     WHERE sh.cookie = :cookie AND s.sku = :sku AND o.status = :#{#status.name()}
     """)
     void addToProductSkuInventoryAndReplaceReservationQty(
-            int productSkuQty,
-            int reservationQty,
-            String reference,
-            LocalDateTime expire,
-            String cookie,
-            String sku,
-            @Param(value = "status") ReservationStatus status
+            final int productSkuQty,
+            final int reservationQty,
+            final String reference,
+            final LocalDateTime expire,
+            final String cookie,
+            final String sku,
+            final ReservationStatus status
     );
 
     // TODO maybe index expire_at AND status?
     @Query("SELECT * FROM order_reservation o WHERE o.expire_at <= :date AND o.status = :status")
-    List<OrderReservation> allPendingExpiredReservations(LocalDateTime date, ReservationStatus status);
+    List<OrderReservation> allPendingExpiredReservations(final LocalDateTime date, final ReservationStatus status);
 
     @Query("""
     SELECT
@@ -103,12 +102,12 @@ public interface OrderReservationRepository extends CrudRepository<OrderReservat
         p.sku AS sku
     FROM order_reservation o
     INNER JOIN product_sku p ON o.sku_id = p.sku_id
-    WHERE o.session_id = :id AND o.expire_at > :date AND o.status = :status
+    WHERE o.session_id = :sessionId AND o.expire_at > :date AND o.status = :status
     """)
     List<OrderReservationDbMapper> allPendingNoneExpiredReservationsAssociatedToShoppingSession(
-            @Param("id") long sessionId,
-            LocalDateTime date,
-            ReservationStatus status
+            final long sessionId,
+            final LocalDateTime date,
+            final ReservationStatus status
     );
 
     /**
@@ -127,7 +126,7 @@ public interface OrderReservationRepository extends CrudRepository<OrderReservat
     INNER JOIN product_sku p ON o.sku_id = p.sku_id
     WHERE o.reference = :reference
     """)
-    List<PaymentDetailDbMapper> allReservationsByReference(String reference);
+    List<PaymentDetailDbMapper> allReservationsByReference(final String reference);
 
     @Transactional
     @Modifying
@@ -136,12 +135,12 @@ public interface OrderReservationRepository extends CrudRepository<OrderReservat
     VALUE (:reference, :qty, :#{#status.name()}, :date, :skuId, :sessionId);
     """)
     void saveOrderReservation(
-            String reference,
-            int qty,
-            ReservationStatus status,
-            LocalDateTime date,
-            long skuId,
-            long sessionId
+            final String reference,
+            final int qty,
+            final ReservationStatus status,
+            final LocalDateTime date,
+            final long skuId,
+            final long sessionId
     );
 
 }

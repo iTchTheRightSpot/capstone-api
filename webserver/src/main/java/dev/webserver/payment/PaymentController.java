@@ -27,15 +27,15 @@ public class PaymentController {
             @NotNull(message = "currency cannot be null")
             @NotEmpty(message = "currency cannot be empty")
             @RequestParam(name = "currency")
-            String currency,
+            final String currency,
             @NotNull(message = "country cannot be null")
             @NotEmpty(message = "country cannot be empty")
             @RequestParam(name = "country")
-            String country,
-            HttpServletRequest req
+            final String country,
+            final HttpServletRequest req
     ) {
-        var sc = SarreCurrency.valueOf(currency.toUpperCase());
-        return this.raceConditionService.raceCondition(req, country, sc);
+        final var sc = SarreCurrency.valueOf(currency.toUpperCase());
+        return raceConditionService.raceCondition(req, country, sc);
     }
 
     /**
@@ -44,8 +44,8 @@ public class PaymentController {
      * */
     @ResponseStatus(CREATED)
     @PostMapping(path = "/webhook")
-    public void webhook(HttpServletRequest req) {
-        this.webhookService.webhook(req);
+    public void webhook(final HttpServletRequest req) {
+        webhookService.webhook(req);
     }
 
 }

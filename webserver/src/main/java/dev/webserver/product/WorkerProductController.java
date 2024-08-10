@@ -1,10 +1,10 @@
 package dev.webserver.product;
 
 import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.util.Pageable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,12 +21,15 @@ class WorkerProductController {
 
     @ResponseStatus(OK)
     @GetMapping(produces = APPLICATION_JSON_VALUE)
-    public Page<ProductResponse> allProducts(
-            @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @RequestParam(name = "size", defaultValue = "20") Integer size,
-            @RequestParam(name = "currency", defaultValue = "ngn") String currency
+    public Pageable<ProductResponse> allProducts(
+            @RequestParam(name = "page", defaultValue = "0")
+            final Integer page,
+            @RequestParam(name = "size", defaultValue = "20")
+            final Integer size,
+            @RequestParam(name = "currency", defaultValue = "ngn")
+            final String currency
     ) {
-        SarreCurrency c = SarreCurrency.valueOf(currency.toUpperCase());
+        final SarreCurrency c = SarreCurrency.valueOf(currency.toUpperCase());
         return service.allProducts(c, page, Math.min(size, 20));
     }
 
@@ -36,10 +39,10 @@ class WorkerProductController {
     @ResponseStatus(CREATED)
     @PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
     public void create(
-            @Valid @RequestPart CreateProductDto dto,
-            @NotNull @RequestPart MultipartFile[] files
+            @Valid @RequestPart final CreateProductDto dto,
+            @NotNull @RequestPart final MultipartFile[] files
     ) {
-        this.service.create(dto, files);
+        service.create(dto, files);
     }
 
     /**
@@ -49,8 +52,8 @@ class WorkerProductController {
      */
     @ResponseStatus(NO_CONTENT)
     @PutMapping(consumes = APPLICATION_JSON_VALUE)
-    public void update(@Valid @RequestBody UpdateProductDto dto) {
-        this.service.update(dto);
+    public void update(@Valid @RequestBody final UpdateProductDto dto) {
+        service.update(dto);
     }
 
     /**
@@ -60,8 +63,8 @@ class WorkerProductController {
      */
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping
-    public void delete(@NotNull @RequestParam(value = "id") String uuid) {
-        this.service.delete(uuid.trim());
+    public void delete(@NotNull @RequestParam(value = "id") final String uuid) {
+        service.delete(uuid.trim());
     }
 
 }

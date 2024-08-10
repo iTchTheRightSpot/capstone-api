@@ -1,8 +1,6 @@
 package dev.integration.client;
 
 import dev.integration.AbstractNative;
-import dev.webserver.security.controller.LoginDto;
-import dev.webserver.security.controller.RegisterDto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;

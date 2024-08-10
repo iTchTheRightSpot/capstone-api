@@ -1,19 +1,8 @@
 package dev.webserver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.webserver.security.controller.RegisterDto;
-import dev.webserver.security.controller.AuthenticationService;
-import dev.webserver.category.CategoryDto;
-import dev.webserver.category.Category;
-import dev.webserver.category.CategoryRepository;
-import dev.webserver.category.WorkerCategoryService;
-import dev.webserver.data.TestData;
-import dev.webserver.enumeration.RoleEnum;
-import dev.webserver.product.WorkerProductService;
-import dev.webserver.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -25,7 +14,7 @@ class ApplicationTest {
     public static void main(String... args) {
         SpringApplication
                 .from(Application::main)
-                .with(TestConfig.class, TestController.class, DummyData.class)
+                .with(TestConfig.class, TestController.class)
                 .run(args);
     }
 
@@ -41,9 +30,8 @@ class ApplicationTest {
 
         @Bean
         @ServiceConnection
-        // @RestartScope
         static MySQLContainer<?> mySQLContainer() {
-            try (var sql = new MySQLContainer<>("mysql:8.0")) {
+            try (final var sql = new MySQLContainer<>("mysql:8.0")) {
                 return sql.withDatabaseName("capstone_db")
                         .withUsername("capstone")
                         .withPassword("capstone");
@@ -54,75 +42,4 @@ class ApplicationTest {
         }
 
     }
-
-    @TestConfiguration(proxyBeanMethods = false)
-    static class DummyData {
-
-        @Bean
-        public CommandLineRunner runner(
-                AuthenticationService authenticationService,
-                UserRepository repository,
-                WorkerCategoryService catService,
-                WorkerProductService workerProductService,
-                CategoryRepository categoryRepository
-        ) {
-            return args -> {
-
-                if (categoryRepository.findByName("category").isEmpty()) {
-                    extracted(catService, workerProductService);
-                }
-
-                if (repository.userByPrincipal("admin@admin.com").isEmpty()) {
-                    var dto = new RegisterDto(
-                            "SEJU",
-                            "Development",
-                            "admin@admin.com",
-                            "",
-                            "0000000000",
-                            "password123"
-                    );
-                    authenticationService.register(null, dto, RoleEnum.WORKER);
-                }
-            };
-        }
-
-        private static void extracted(WorkerCategoryService catService, WorkerProductService service) {
-            var category = Category.builder()
-                    .categoryId(1L)
-                    .build();
-            catService.create(new CategoryDto("category", true, null));
-            TestData.dummyProducts(category, 2, service);
-
-            var clothes = Category.builder()
-                    .categoryId(2L)
-                    .build();
-            catService.create(new CategoryDto("clothes", true, 1L));
-            TestData.dummyProducts(clothes, 5, service);
-
-            var shirt = Category.builder()
-                    .categoryId(3L)
-                    .build();
-            catService.create(new CategoryDto("t-shirt", true, 2L));
-            TestData.dummyProducts(shirt, 10, service);
-
-            var furniture = Category.builder()
-                    .categoryId(4L)
-                    .build();
-            catService.create(new CategoryDto("furniture", true, null));
-            TestData.dummyProducts(furniture, 3, service);
-
-            var collection = Category.builder()
-                    .categoryId(5L)
-                    .build();
-            catService.create(new CategoryDto("collection", true, null));
-            TestData.dummyProducts(collection, 1, service);
-
-            var winter = Category.builder()
-                    .categoryId(6L)
-                    .build();
-            catService.create(new CategoryDto("winter 2024", true, 5L));
-            TestData.dummyProducts(winter, 15, service);
-        }
-    }
-
 }

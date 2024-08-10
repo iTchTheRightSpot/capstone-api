@@ -1,127 +1,70 @@
 package dev.webserver.security;
 
-import dev.webserver.enumeration.RoleEnum;
+import dev.webserver.AbstractEnvironment;
 import jakarta.servlet.http.Cookie;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 
-import static java.time.temporal.ChronoUnit.MINUTES;
+import static dev.webserver.security.JwtEnum.*;
+import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
 @Service
-@RequiredArgsConstructor
-@Getter
-@Setter
-public class JwtService {
+class JwtService extends AbstractEnvironment {
 
-    private static final Logger log = LoggerFactory.getLogger(JwtService.class.getName());
+    private final JwtEncoder encoder;
+    private final JwtDecoder decoder;
 
-    @Value(value = "${server.servlet.session.cookie.max-age}")
-    private int maxage; // seconds
-    @Value(value = "${jwt.claim}")
-    private String claim;
-    @Value("${spring.application.name}")
-    private String application;
+    protected JwtService(final Environment environment, final JwtEncoder encoder, final JwtDecoder decoder) {
+        super(environment);
+        this.encoder = encoder;
+        this.decoder = decoder;
+    }
 
-    private int boundToSendRefreshToken = 15; // minutes
-
-    private final JwtEncoder jwtEncoder;
-    private final JwtDecoder jwtDecoder;
-
-    /**
-     * Generates a jwt token
-     *
-     * @param authentication of type org.springframework.security.core
-     * @return String which is jwt
-     * */
-    public String generateToken(@NotNull final Authentication authentication) {
-        Instant now = Instant.now();
-
-        String[] role = authentication.getAuthorities() //
-                .stream() //
-                .map(authority -> JwtUtil.substringAfter(authority.getAuthority(), "ROLE_"))
-                .toArray(String[]::new);
-
-        JwtClaimsSet claims = JwtClaimsSet.builder()
+    public String generateJwt(@NotNull final Authentication authentication) {
+        final UserDetailz details = (UserDetailz) authentication.getPrincipal();
+        final String[] roles = details.getAuthorities().stream().map(authority -> JwtUtil.substringAfter(authority.getAuthority(), "ROLE_")).toArray(String[]::new);
+        final Instant now = Instant.now();
+        final JwtClaimsSet set = JwtClaimsSet.builder()
                 .issuer(application)
                 .issuedAt(now)
                 .expiresAt(now.plus(maxage, SECONDS))
-                .subject(authentication.getName())
-                .claim(claim, role)
+                .subject(String.valueOf(details.user().userId()))
+                .claims((map) -> map.putAll(Map.of(CLAIMS.property(), roles, FIRSTNAME.property(), details.user().firstname(), USER_ID.property(), details.user().userId())))
                 .build();
 
-        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        return encoder.encode(JwtEncoderParameters.from(set)).getTokenValue();
     }
 
-    /**
-     * Validates if jwt token is valid and it matches chosen role
-     * */
-    public boolean matchesRole(@NotNull final Cookie cookie, @NotNull final RoleEnum role) {
+    public boolean jwtNoneExpired(final String jwt) {
         try {
-            return jwtDecoder
-                    .decode(cookie.getValue())
-                    .getClaims()
-                    .entrySet()
-                    .stream()
-                    .filter(entry -> claim.equals(entry.getKey()))
-                    .map(Map.Entry::getValue)
-                    .filter(value -> value instanceof List<?>)
-                    .map(value -> (List<?>) value)
-                    .flatMap(List::stream)
-                    .filter(item -> item instanceof String)
-                    .map(item -> (String) item)
-                    .anyMatch(roleName -> roleName.equals(role.name()));
-        } catch (JwtException | NullPointerException e) {
-            return false;
-        }
-    }
-
-    /**
-     * Simply validates if token is expired or not
-     * */
-    public boolean _isTokenNoneExpired(@NotNull final Cookie cookie) {
-        try {
-            this.jwtDecoder.decode(cookie.getValue());
+            decoder.decode(jwt);
             return true;
         } catch (JwtException ex) {
             return false;
         }
     }
 
-    /**
-     * Returns true if token is within expiration bound
-     *
-     * @param cookie of type jakarta.servlet.http.Cookie
-     * @return boolean
-     * */
-    public boolean refreshTokenNeeded(@NotNull final Cookie cookie) {
+    public boolean refreshTokenNeeded(final String jwt) {
         try {
-            Jwt jwt = jwtDecoder.decode(cookie.getValue()); // throws an error if jwt is not valid
-            var expiresAt = jwt.getExpiresAt();
-            var now = Instant.now();
-            var bound = now.plus(boundToSendRefreshToken, MINUTES);
+            final Jwt decoded = decoder.decode(jwt);
+            final Instant expiresAt = decoded.getExpiresAt();
+            final Instant now = Instant.now();
             assert expiresAt != null;
-            return expiresAt.isAfter(now) && expiresAt.isBefore(bound);
+            return expiresAt.isAfter(now) && expiresAt.isBefore(now.plus(5, HOURS));
         } catch (JwtException | NullPointerException e) {
-            log.error("JWT exception %s, %s".formatted(e.getMessage(), RefreshTokenFilter.class));
             return false;
         }
     }
 
     public String extractSubject(final Cookie cookie) {
-        return jwtDecoder.decode(cookie.getValue()).getSubject();
+        return decoder.decode(cookie.getValue()).getSubject();
     }
 
 }

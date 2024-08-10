@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Optional;
 
-public interface PriceCurrencyRepository extends CrudRepository<PriceCurrency, Long> {
+public interface PriceCurrencyRepository extends CrudRepository<ProductPriceCurrency, Long> {
 
     @Query("""
     SELECT

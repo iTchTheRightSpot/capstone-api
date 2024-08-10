@@ -5,23 +5,12 @@ import dev.webserver.cart.CartResponse;
 import dev.webserver.category.CategoryDto;
 import dev.webserver.category.UpdateCategoryDto;
 import dev.webserver.category.WorkerCategoryResponse;
-import dev.webserver.payment.CheckoutPair;
-import dev.webserver.payment.CustomCheckoutObject;
-import dev.webserver.external.payment.PaymentCredentialObj;
 import dev.webserver.external.log.DiscordPayload;
-import dev.webserver.payment.OrderHistoryDto;
-import dev.webserver.payment.PaymentDto;
-import dev.webserver.payment.SkuQtyDto;
-import dev.webserver.payment.PaymentResponse;
-import dev.webserver.payment.WebhookAuthorization;
-import dev.webserver.payment.WebhookConstruct;
-import dev.webserver.payment.WebhookMetaData;
+import dev.webserver.payment.*;
 import dev.webserver.product.*;
 import dev.webserver.product.util.CustomMultiPart;
-import dev.webserver.product.DetailResponse;
 import dev.webserver.product.util.Variant;
-import dev.webserver.security.controller.LoginDto;
-import dev.webserver.security.controller.RegisterDto;
+import dev.webserver.security.controller.ActiveUser;
 import dev.webserver.shipping.ShippingDto;
 import dev.webserver.shipping.ShippingMapper;
 import dev.webserver.tax.TaxDto;
@@ -42,8 +31,7 @@ final class MyRuntimeHints implements RuntimeHintsRegistrar {
         hints.serialization()
                 .registerType(CartDto.class)
                 .registerType(CartResponse.class)
-                .registerType(LoginDto.class)
-                .registerType(RegisterDto.class)
+                .registerType(ActiveUser.class)
                 .registerType(CategoryDto.class)
                 .registerType(WorkerCategoryResponse.class)
                 .registerType(UpdateCategoryDto.class)
@@ -60,7 +48,7 @@ final class MyRuntimeHints implements RuntimeHintsRegistrar {
                 .registerType(SkuQtyDto.class)
                 .registerType(ShippingDto.class)
                 .registerType(ShippingMapper.class)
-                .registerType(PaymentCredentialObj.class)
+                .registerType(AbstractEnvironment.PaymentCredentialObj.class)
                 .registerType(CheckoutPair.class)
                 .registerType(CustomCheckoutObject.class)
                 .registerType(TaxDto.class)

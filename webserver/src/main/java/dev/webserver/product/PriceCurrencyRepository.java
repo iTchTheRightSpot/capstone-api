@@ -18,7 +18,7 @@ public interface PriceCurrencyRepository extends CrudRepository<ProductPriceCurr
         c.currency AS currency,
         c.price AS price
     FROM product p
-    INNER JOIN price_currency c ON p.product_id = c.product_id
+    INNER JOIN product_price_currency c ON p.product_id = c.product_id
     WHERE p.uuid = :uuid AND c.currency = :#{#currency.name()}
     GROUP BY p.name, p.description, c.currency, c.price
     """)
@@ -26,7 +26,7 @@ public interface PriceCurrencyRepository extends CrudRepository<ProductPriceCurr
 
     @Transactional
     @Modifying
-    @Query("UPDATE price_currency SET price = :price WHERE uuid = :uuid AND currency = :#{#currency.name()}")
+    @Query("UPDATE product_price_currency SET price = :price WHERE uuid = :uuid AND currency = :#{#currency.name()}")
     void updateProductPriceByProductUuidAndCurrency(String uuid, BigDecimal price, SarreCurrency currency);
 
 }

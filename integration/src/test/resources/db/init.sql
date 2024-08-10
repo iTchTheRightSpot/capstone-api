@@ -1,11 +1,11 @@
-INSERT IGNORE INTO product_category(name, is_visible, parent_category_id)
+INSERT IGNORE INTO category(name, is_visible, parent_category_id)
 VALUES ('clothes', true, null), ('t-shirt', true, 1);
 
 INSERT IGNORE INTO product(name, description, default_image_key, category_id, uuid, weight, weight_type)
 VALUES ('product-1', 'lorem 5000', 'image-key-1', 1, 'product-uuid-1', 2.5, 'kg'),
        ('product-2', 'lorem 5000', 'image-key-2', 1, 'product-uuid-2', 3.5, 'kg');
 
-INSERT IGNORE INTO price_currency(price, currency, product_id) VALUE (99.99, 'NGN', 1);
+INSERT IGNORE INTO product_price_currency(price, currency, product_id) VALUE (99.99, 'NGN', 1);
 
 INSERT IGNORE INTO product_detail(detail_id, colour, is_visible, created_at, product_id)
 VALUES (1, 'red', true, timestamp('2024-03-26', '12:20:45'), 1),

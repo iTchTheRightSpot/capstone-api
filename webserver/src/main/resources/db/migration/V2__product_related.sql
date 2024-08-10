@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS product
     weight_type       VARCHAR(2)    NOT NULL DEFAULT 'kg',
     category_id       BIGINT        NOT NULL,
     PRIMARY KEY (product_id),
-    CONSTRAINT `product_category_and_product_FK` FOREIGN KEY (category_id) references category (category_id) ON DELETE RESTRICT
+    CONSTRAINT `category_and_product_FK` FOREIGN KEY (category_id) references category (category_id) ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS product_price_currency

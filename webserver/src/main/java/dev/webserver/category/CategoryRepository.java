@@ -78,7 +78,7 @@ public interface CategoryRepository extends CrudRepository<Category, Long> {
         curr.price AS price
     FROM product p
     INNER JOIN category c ON c.categoryId = p.category_id
-    INNER JOIN price_currency curr ON curr.product_id = p.product_id
+    INNER JOIN product_price_currency curr ON curr.product_id = p.product_id
     WHERE c.category_id = :categoryId AND curr.currency = :currency
     GROUP BY p.uuid, p.name, p.description, p.default_image_key, curr.currency, curr.price
     LIMIT :#{#page.size()} OFFSET :#{#page.offset()}
@@ -95,7 +95,7 @@ public interface CategoryRepository extends CrudRepository<Category, Long> {
         COUNT(p.uuid)
     FROM product p
     INNER JOIN category c ON c.categoryId = p.category_id
-    INNER JOIN price_currency curr ON curr.product_id = p.product_id
+    INNER JOIN product_price_currency curr ON curr.product_id = p.product_id
     WHERE c.category_id = :categoryId AND curr.currency = :currency
     GROUP BY p.uuid
     """)
@@ -113,7 +113,7 @@ public interface CategoryRepository extends CrudRepository<Category, Long> {
         COUNT(p.uuid)
     FROM category c1
     INNER JOIN product p ON c1.id = p.category_id
-    INNER JOIN price_currency pr ON p.product_id = pr.product_id
+    INNER JOIN product_price_currency pr ON p.product_id = pr.product_id
     INNER JOIN product_detail d ON p.product_id = d.product_id
     INNER JOIN product_sku s ON d.detail_id = s.detail_id
     WHERE pr.currency = :#{#currency.name()} AND s.inventory > 0 AND d.is_visible = TRUE
@@ -150,7 +150,7 @@ public interface CategoryRepository extends CrudRepository<Category, Long> {
         pr.price AS price
     FROM category c1
     INNER JOIN product p ON c1.id = p.category_id
-    INNER JOIN price_currency pr ON p.product_id = pr.product_id
+    INNER JOIN product_price_currency pr ON p.product_id = pr.product_id
     INNER JOIN product_detail d ON p.product_id = d.product_id
     INNER JOIN product_sku s ON d.detail_id = s.detail_id
     WHERE pr.currency = :#{#currency.name()} AND s.inventory > 0 AND d.is_visible = TRUE

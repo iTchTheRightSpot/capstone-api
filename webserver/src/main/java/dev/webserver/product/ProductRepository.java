@@ -30,8 +30,8 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     SELECT
         COUNT(p.uuid)
     FROM product p
-    INNER JOIN product_category cat ON p.category_id = cat.category_id
-    INNER JOIN price_currency c ON p.product_id = c.product_id
+    INNER JOIN category cat ON p.category_id = cat.category_id
+    INNER JOIN product_price_currency c ON p.product_id = c.product_id
     WHERE c.currency = :#{#currency.name()}
     GROUP BY p.uuid
     """)
@@ -49,8 +49,8 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
         c.price AS price,
         cat.name AS categoryName
     FROM product p
-    INNER JOIN product_category cat ON p.category_id = cat.category_id
-    INNER JOIN price_currency c ON p.product_id = c.product_id
+    INNER JOIN category cat ON p.category_id = cat.category_id
+    INNER JOIN product_price_currency c ON p.product_id = c.product_id
     WHERE c.currency = :#{#currency.name()}
     GROUP BY p.uuid, p.name, p.description, p.default_image_Key, p.weight, p.weight_type, c.currency, c.price, cat.name
     LIMIT :#{#page.size()} OFFSET :#{#page.offset()}
@@ -61,9 +61,9 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     SELECT
         COUNT(p.uuid)
     FROM product p
-    INNER JOIN product_category cat ON cat.category_id = p.category_id
+    INNER JOIN category cat ON cat.category_id = p.category_id
     INNER JOIN product_detail pd ON pd.product_id = p.product_id
-    INNER JOIN price_currency c ON p.product_id = c.product_id
+    INNER JOIN product_price_currency c ON p.product_id = c.product_id
     INNER JOIN product_sku sku ON pd.detail_id = sku.detail_id
     WHERE cat.is_visible = TRUE AND pd.is_visible = TRUE AND sku.inventory > 0 AND c.currency = :#{#currency.name()}
     GROUP BY p.uuid
@@ -82,9 +82,9 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
         p.weight_type AS weight_type,
         cat.name AS categoryName
     FROM product p
-    INNER JOIN product_category cat ON cat.category_id = p.category_id
+    INNER JOIN category cat ON cat.category_id = p.category_id
     INNER JOIN product_detail pd ON pd.product_id = p.product_id
-    INNER JOIN price_currency c ON p.product_id = c.product_id
+    INNER JOIN product_price_currency c ON p.product_id = c.product_id
     INNER JOIN product_sku sku ON pd.detail_id = sku.detail_id
     WHERE cat.is_visible = TRUE AND pd.is_visible = TRUE AND sku.inventory > 0 AND c.currency = :#{#currency.name()}
     GROUP BY p.uuid, p.name, p.description, p.default_image_key, c.currency, c.price, cat.name
@@ -133,8 +133,8 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
         c.currency AS currency,
         cat.name AS categoryName
     FROM product p
-    INNER JOIN product_category cat ON p.category_id = cat.category_id
-    INNER JOIN price_currency c ON p.product_id = c.product_id
+    INNER JOIN category cat ON p.category_id = cat.category_id
+    INNER JOIN product_price_currency c ON p.product_id = c.product_id
     INNER JOIN product_detail pd ON p.product_id = pd.product_id
     INNER JOIN product_sku sku ON pd.productDetail_id = sku.productDetail_id
     WHERE p.name LIKE :name AND sku.inventory > 0 AND c.currency = :#{#currency.name()}

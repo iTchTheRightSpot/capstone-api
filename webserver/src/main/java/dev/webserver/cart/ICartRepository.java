@@ -15,7 +15,7 @@ public interface ICartRepository extends CrudRepository<Cart, Long> {
 
     @Transactional
     @Modifying
-    @Query("UPDATE cart SET qty = :qty WHERE cartId = :cartId")
+    @Query("UPDATE cart SET qty = :qty WHERE cart_id = :cartId")
     void updateCartQtyByCartId(long cartId, int qty);
 
     @Transactional
@@ -42,7 +42,7 @@ public interface ICartRepository extends CrudRepository<Cart, Long> {
     INNER JOIN product_sku ps ON c.sku_id = ps.sku_id
     INNER JOIN product_detail d ON ps.detail_id = d.detail_id
     INNER JOIN product p ON d.product_id = p.product_id
-    INNER JOIN price_currency pc ON p.product_id = pc.product_id
+    INNER JOIN product_price_currency pc ON p.product_id = pc.product_id
     WHERE c.session_id = :sessionId AND pc.currency = :currency
     """)
     List<CartTotalDbMapper> amountToPayForAllCartItemsForShoppingSession(long sessionId, SarreCurrency currency);

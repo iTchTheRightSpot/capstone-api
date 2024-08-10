@@ -39,7 +39,7 @@ public class CustomRunInitScripts {
      * Validate if database is empty.
      * */
     private static boolean scriptsBeenRan(String dburl, String username, String password) throws SQLException {
-        String query = "SELECT count(*) FROM product_category";
+        String query = "SELECT count(*) FROM category";
         try (var conn = connection(dburl, username, password); var statement = conn.createStatement()) {
             ResultSet rs = statement.executeQuery(query);
             int i = 0;

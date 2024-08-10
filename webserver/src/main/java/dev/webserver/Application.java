@@ -13,12 +13,14 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
+@Import(value = {PrimaryKeyConfiguration.class})
 @ImportRuntimeHints(value = {MyRuntimeHints.class})
 @RegisterReflectionForBinding(value = {Variant.class, OrderHistoryDbMapper.class, AbstractEnvironment.PaymentCredentialObj.class, DiscordPayload.class})
 public class Application extends AbstractEnvironment {

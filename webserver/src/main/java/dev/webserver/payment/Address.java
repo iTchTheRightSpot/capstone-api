@@ -10,7 +10,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 @Table(name = "address")
 @Builder
-record Address(
+public record Address(
         @Id
         @Column("address_id")
         Long addressId,

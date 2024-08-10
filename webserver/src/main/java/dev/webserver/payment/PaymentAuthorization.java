@@ -10,7 +10,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 @Table(name = "payment_authorization")
 @Builder
-record PaymentAuthorization(
+public record PaymentAuthorization(
         @Id
         @Column("authorization_id")
         Long authorizationId,

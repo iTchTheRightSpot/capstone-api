@@ -1,7 +1,5 @@
-package dev.webserver.cron;
+package dev.webserver;
 
-import dev.webserver.AbstractIntegration;
-import dev.webserver.TestUtility;
 import dev.webserver.cart.IShoppingSessionRepository;
 import dev.webserver.cart.ShoppingSession;
 import dev.webserver.category.Category;

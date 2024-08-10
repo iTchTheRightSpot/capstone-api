@@ -1,4 +1,4 @@
-package dev.webserver.cron;
+package dev.webserver;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.webserver.cart.Cart;
@@ -6,7 +6,6 @@ import dev.webserver.cart.ICartRepository;
 import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.IShoppingSessionRepository;
 import dev.webserver.external.log.ILogEventPublisher;
-import dev.webserver.AbstractEnvironment;
 import dev.webserver.payment.OrderReservation;
 import dev.webserver.payment.OrderReservationRepository;
 import dev.webserver.payment.PaymentDetailService;
@@ -16,6 +15,7 @@ import dev.webserver.util.CustomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +23,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -35,6 +36,8 @@ import static org.springframework.http.HttpStatus.*;
 class CronJob extends AbstractEnvironment {
 
     private static final Logger log = LoggerFactory.getLogger(CronJob.class);
+
+    public record CustomCronJobObject (OrderReservation reservation, JsonNode node, HttpStatus status) implements Serializable { }
 
     private final RestClient restClient;
     private final ProductSkuRepository skuRepo;

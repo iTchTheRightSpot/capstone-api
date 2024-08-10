@@ -52,7 +52,7 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
 
         var paymentDetail = paymentDetailRepository
                 .save(PaymentDetail.builder()
-                        .name(new Faker().name().fullName())
+                        .fullname(new Faker().name().fullName())
                         .email("hello@hello.com")
                         .phone("0000000000")
                         .referenceId("unique-payment-categoryId")

@@ -58,7 +58,8 @@ final class MyRuntimeHints implements RuntimeHintsRegistrar {
                 .registerType(WebhookConstruct.class)
                 .registerType(DiscordPayload.class)
                 .registerType(CustomMultiPart.class)
-                .registerType(ProductResponse.class);
+                .registerType(ProductResponse.class)
+                .registerType(CronJob.CustomCronJobObject.class);
     }
 
 }

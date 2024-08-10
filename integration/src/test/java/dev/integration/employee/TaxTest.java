@@ -1,4 +1,4 @@
-package dev.integration.worker;
+package dev.integration.employee;
 
 import dev.integration.AbstractNative;
 import dev.webserver.tax.TaxDto;

@@ -1,25 +1,20 @@
-package dev.integration.worker;
+package dev.integration.employee;
 
 import dev.integration.AbstractNative;
-import dev.webserver.shipping.ShippingDto;
-import dev.webserver.shipping.ShippingMapper;
+import dev.webserver.category.CategoryDto;
+import dev.webserver.category.UpdateCategoryDto;
+import dev.webserver.category.WorkerCategoryResponse;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ShippingTest extends AbstractNative {
+class WorkerCategoryTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
-    private final String path = route + "shipping";
 
     @BeforeAll
     static void before() {
@@ -27,25 +22,34 @@ class ShippingTest extends AbstractNative {
     }
 
     @Test
-    @Order(1)
-    void shouldSuccessfullyRetrieveShippingObjects() {
+    void shouldSuccessfullyRetrieveACategory() {
         var get = testTemplate.exchange(
-                path,
+                route + "worker/category",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                new ParameterizedTypeReference<List<ShippingMapper>>() {}
+                WorkerCategoryResponse.class
         );
+
         assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
     }
 
     @Test
-    @Order(2)
-    void shouldSuccessfullyCreateShippingDetails() {
+    void shouldSuccessfullyRetrieveProductsBaseOnCategory() {
+        var get = testTemplate.exchange(
+                route + "worker/category/products?category_id=1",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                Object.class
+        );
+
+        assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());
+    }
+
+    @Test
+    void shouldSuccessfullyCreateACategory() {
         var post = testTemplate.postForEntity(
-                path,
-                new HttpEntity<>(new ShippingDto("brazil",
-                        new BigDecimal("2410"), new BigDecimal("15.99")),
-                        headers),
+                route + "worker/category",
+                new HttpEntity<>(new CategoryDto("worker-cat", true, null), headers),
                 Void.class
         );
 
@@ -53,25 +57,21 @@ class ShippingTest extends AbstractNative {
     }
 
     @Test
-    @Order(3)
-    void shouldSuccessfullyUpdateShippingSetting() {
-        var put = testTemplate.exchange(
-                path,
+    void shouldSuccessfullyUpdateACategory() {
+        var update = testTemplate.exchange(
+                route + "worker/category",
                 HttpMethod.PUT,
-                new HttpEntity<>(new ShippingMapper(3L, "Ecuador",
-                        new BigDecimal("2410"), new BigDecimal("15.99")),
-                        headers),
+                new HttpEntity<>(new UpdateCategoryDto(1L, null, "frank", false), headers),
                 Void.class
         );
 
-        assertEquals(HttpStatusCode.valueOf(204), put.getStatusCode());
+        assertEquals(HttpStatusCode.valueOf(204), update.getStatusCode());
     }
 
     @Test
-    @Order(4)
-    void shouldSuccessfullyDeleteShippingSetting() {
+    void shouldSuccessfullyDeleteACategory() {
         var delete = testTemplate.exchange(
-                path + "/3",
+                route + "worker/category/2",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class
@@ -81,10 +81,9 @@ class ShippingTest extends AbstractNative {
     }
 
     @Test
-    @Order(5)
-    void shouldNotSuccessfullyDeleteDefaultShippingSetting() {
+    void shouldThrowErrorWhenDeletingACategoryAsItHasDetailsAttached() {
         var delete = testTemplate.exchange(
-                path + "/1",
+                route + "worker/category/1",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class

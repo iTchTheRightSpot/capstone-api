@@ -1,4 +1,4 @@
-package dev.integration.worker;
+package dev.integration.employee;
 
 import com.github.javafaker.Faker;
 import dev.integration.AbstractNative;

@@ -122,7 +122,7 @@ class SecurityConfig extends AbstractEnvironment {
             http.csrf(AbstractHttpConfigurer::disable)
                     .authorizeHttpRequests(registry -> registry.anyRequest().permitAll());
         } else {
-            final String[] pubRoutes = {"/error", "/api/v1/actuator/health", baseurl + "csrf", baseurl + "client/**", baseurl + "worker/auth/login", baseurl + "cart/**", baseurl + "payment/**", baseurl + "checkout/**", baseurl + "active/**"};
+            final String[] pubRoutes = {"/error", "/api/v1/actuator/health", baseurl + "csrf", baseurl + "cart/**", baseurl + "payment/**", baseurl + "checkout/**", baseurl + "active/**"};
             final var csrfTokenRepository = CSRF_REPO.apply(cookiesecure, samesite);
 
             http
@@ -140,11 +140,8 @@ class SecurityConfig extends AbstractEnvironment {
                             .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
                             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                             .requestMatchers("/api/v1/actuator/**").hasRole(DEVELOPER.name())
-                            .requestMatchers(baseurl + "shipping/**").hasRole(WORKER.name())
-                            .requestMatchers(baseurl + "tax/**").hasRole(WORKER.name())
-                            .requestMatchers(baseurl + "worker/**").hasRole(WORKER.name())
-                            .requestMatchers(baseurl + "auth/worker").hasRole(WORKER.name())
-                            .requestMatchers(baseurl + "order/**").hasAnyRole(WORKER.name(), USER.name())
+                            .requestMatchers(baseurl + "employee/**").hasRole(EMPLOYEE.name())
+                            .requestMatchers(baseurl + "order/**").hasAnyRole(USER.name())
                             .anyRequest().denyAll());
         }
 

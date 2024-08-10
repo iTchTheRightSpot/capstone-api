@@ -42,7 +42,7 @@ public class Application extends AbstractEnvironment {
                         .build());
 
                 roleRepository.save(new Role(null, RoleEnum.USER, user.userId()));
-                roleRepository.save(new Role(null, RoleEnum.WORKER, user.userId()));
+                roleRepository.save(new Role(null, RoleEnum.EMPLOYEE, user.userId()));
                 roleRepository.save(new Role(null, RoleEnum.DEVELOPER, user.userId()));
             }
         };

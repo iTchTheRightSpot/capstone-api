@@ -15,7 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class ClientCategoryControllerTest extends AbstractIntegration {
 
-    @Value(value = "/${api.endpoint.baseurl}client/category")
+    @Value(value = "/${api.endpoint.baseurl}category")
     private String path;
 
     @Autowired

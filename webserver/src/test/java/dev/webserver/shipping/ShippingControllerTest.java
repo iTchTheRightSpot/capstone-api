@@ -16,14 +16,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class ShippingControllerTest extends AbstractIntegration {
 
-    @Value("${api.endpoint.baseurl}shipping")
+    @Value("${api.endpoint.baseurl}employee/shipping")
     private String path;
 
     @Autowired
     private ShippingRepository shippingRepository;
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void create() throws Exception {
         super.mockMvc
                 .perform(post("/" + path)
@@ -41,7 +41,7 @@ class ShippingControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void update() throws Exception {
         var shipping = shippingRepository.save(new ShipSetting(null, "Japan", new BigDecimal("25750"), new BigDecimal("35.55")));
 
@@ -62,7 +62,7 @@ class ShippingControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void deleteShipping() throws Exception {
         var shipping = shippingRepository
                 .save(new ShipSetting(null, "France", new BigDecimal("25750"), new BigDecimal("35.55")));
@@ -75,7 +75,7 @@ class ShippingControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void deleteDefaultShouldThrowError() throws Exception {
         // given
         var optional = shippingRepository

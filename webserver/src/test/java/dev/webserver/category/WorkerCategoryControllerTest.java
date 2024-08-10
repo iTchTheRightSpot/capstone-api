@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class WorkerCategoryControllerTest extends AbstractIntegration {
 
-    @Value(value = "/${api.endpoint.baseurl}worker/category")
+    @Value(value = "/${api.endpoint.baseurl}employee/category")
     private String path;
 
     @Autowired
@@ -53,7 +53,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void allCategories() throws Exception {
         dummy();
 
@@ -65,7 +65,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void allProductsByCategoryId() throws Exception {
         var category = repository.save(Category.builder().name("category").isVisible(true).build());
 
@@ -85,7 +85,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void shouldSuccessfullyCreateACategoryWhenParentIdDoesNotExists() throws Exception {
         dummy();
 
@@ -103,7 +103,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void shouldSuccessfullyCreateACategoryWhenParentIdExists() throws Exception {
         dummy();
 
@@ -121,7 +121,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void shouldSuccessfullyUpdateACategory() throws Exception {
         dummy();
 
@@ -140,7 +140,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void shouldThrowErrorDueToDuplicateCategoryName() throws Exception {
         dummy();
 
@@ -162,7 +162,7 @@ class WorkerCategoryControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     @DisplayName(value = """
     exception thrown when trying to delete a product because it has a
     subcategory and product attached.

@@ -14,11 +14,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class TaxControllerTest extends AbstractIntegration {
 
-    @Value("${api.endpoint.baseurl}tax")
+    @Value("${api.endpoint.baseurl}employee/tax")
     private String path;
 
     @Test
-    @WithMockUser(username = "hello@hello.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "hello@hello.com", password = "password", roles = {"EMPLOYEE"})
     void taxes() throws Exception {
         super.mockMvc
                 .perform(get( "/" + path).with(csrf()))
@@ -28,7 +28,7 @@ class TaxControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "hello@hello.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "hello@hello.com", password = "password", roles = {"EMPLOYEE"})
     void update() throws Exception {
         // given
         var dto = new TaxDto(1L, "fish", 12.3256);

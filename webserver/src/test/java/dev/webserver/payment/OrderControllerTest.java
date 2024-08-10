@@ -14,7 +14,7 @@ class OrderControllerTest extends AbstractIntegration {
     private String path;
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"CLIENT"})
+    @WithMockUser(username = "admin@admin.com", roles = {"USER"})
     void orderHistory() throws Exception {
         super.mockMvc.perform(get(path)).andExpect(status().isOk());
     }

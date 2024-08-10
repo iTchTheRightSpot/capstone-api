@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class WorkerProductDetailControllerTest extends AbstractIntegration {
 
-    @Value(value = "/${api.endpoint.baseurl}worker/product/detail")
+    @Value(value = "/${api.endpoint.baseurl}employee/product/detail")
     private String path;
 
     @Autowired
@@ -59,7 +59,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void productDetailsByProductUuid() throws Exception {
         // given
         var list = TestUtility.toList(productRepository.findAll());
@@ -70,7 +70,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void shouldSuccessfullyCreateAProductDetail() throws Exception {
         var list = TestUtility.toList(productRepository.findAll());
         assertFalse(list.isEmpty());
@@ -101,7 +101,7 @@ class WorkerProductDetailControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"EMPLOYEE"})
     void shouldSuccessfullyUpdateProductDetail() throws Exception {
         var list = TestUtility.toList(productSkuRepository.findAll());
         assertFalse(list.isEmpty());

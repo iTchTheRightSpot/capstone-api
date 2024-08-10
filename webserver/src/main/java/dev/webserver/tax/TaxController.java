@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "${api.endpoint.baseurl}tax")
+@RequestMapping(path = "${api.endpoint.baseurl}employee/tax")
 @RequiredArgsConstructor
 class TaxController {
 

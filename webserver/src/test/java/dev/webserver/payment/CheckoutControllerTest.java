@@ -103,7 +103,7 @@ class CheckoutControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "client@client.com", password = "password", roles = {"CLIENT"})
+    @WithMockUser(username = "client@client.com")
     void shouldSuccessfullyReturnCheckoutDetailsWithPrincipalPropertyNotEmpty() throws Exception {
         // given
         Cookie cooke = createNewShoppingSessionCookie();

@@ -11,11 +11,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class UserControllerTest extends AbstractIntegration {
 
-    @Value(value = "/${api.endpoint.baseurl}worker")
+    @Value(value = "/${api.endpoint.baseurl}employee")
     private String path;
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void allUsers() throws Exception {
         super.mockMvc
                 .perform(get(path + "/user").with(csrf()))

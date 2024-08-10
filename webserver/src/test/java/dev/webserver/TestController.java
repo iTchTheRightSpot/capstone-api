@@ -12,13 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 class TestController {
 
     @GetMapping(path = "/client")
-    @PreAuthorize(value = "hasRole('ROLE_CLIENT')")
+    @PreAuthorize(value = "hasRole('ROLE_USER')")
     public String client() {
         return "client";
     }
 
     @GetMapping(path = "/worker")
-    @PreAuthorize(value = "hasRole('ROLE_WORKER')")
+    @PreAuthorize(value = "hasRole('ROLE_EMPLOYEE')")
     public String worker() {
         return "worker";
     }

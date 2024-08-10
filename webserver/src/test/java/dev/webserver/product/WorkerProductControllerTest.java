@@ -78,7 +78,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void allProducts() throws Exception {
         // given
         var category = categoryRepository
@@ -106,7 +106,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void shouldSuccessfullyCreateAProduct() throws Exception {
         dummy();
 
@@ -144,7 +144,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void validateProductIsCreatedWhenSizeInventoryDTOArrayIsOne() throws Exception {
         dummy();
 
@@ -179,7 +179,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void shouldThrowErrorBecauseProductColourIsADuplicate() throws Exception {
         dummy();
 
@@ -221,7 +221,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void shouldThrowErrorAsSizeInventoryIsNotPresentInRequest() throws Exception {
         dummy();
 
@@ -256,7 +256,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void shouldThrowErrorAsProductNameExists() throws Exception {
         dummy();
 
@@ -288,7 +288,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void shouldSuccessfullyUpdateAProduct() throws Exception {
         dummy();
 
@@ -318,7 +318,7 @@ class WorkerProductControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "admin@admin.com", password = "password", roles = {"WORKER"})
+    @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void deleteProductButExceptionIsThrownDueToResourcesAttached() throws Exception {
         dummy();
 

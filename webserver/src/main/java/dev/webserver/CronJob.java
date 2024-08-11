@@ -103,19 +103,18 @@ class CronJob extends AbstractEnvironment {
      * <a href="https://paystack.com/docs/api/integration/#update-timeout">updating the timeout</a>.
      */
     public void onDeleteOrderReservations() {
-        var date = CustomUtil.TO_GREENWICH.apply(null);
-
-        var reservations = reservationRepo.allPendingExpiredReservations(date, PENDING);
+        final var reservations = reservationRepo
+                .allPendingExpiredReservations(CustomUtil.TO_GREENWICH.apply(null), PENDING);
 
         onResponseFromPaystack(reservations)
                 .stream()
                 .filter(reservation -> onSuccess(reservation) || reservation.status().equals(BAD_REQUEST) || reservation.status().equals(NOT_FOUND))
                 .forEach(obj -> {
                     if (obj.status().equals(OK)) {
-                        JsonNode data = obj.node().get("data");
-                        JsonNode metadata = data.get("metadata");
-                        String email = metadata.get("email").asText();
-                        String reference = data.get("reference").textValue();
+                        final JsonNode data = obj.node().get("data");
+                        final JsonNode metadata = data.get("metadata");
+                        final String email = metadata.get("email").asText();
+                        final String reference = data.get("reference").textValue();
 
                         if (!paymentDetailService.paymentDetailExists(email, reference)) {
                             paymentDetailService.onSuccessfulPayment(data);
@@ -144,16 +143,16 @@ class CronJob extends AbstractEnvironment {
     private List<CustomCronJobObject> onResponseFromPaystack(
             final List<OrderReservation> reservations
     ) {
-        var futures = reservations.stream()
+        final var futures = reservations.stream()
                 .map(reservation -> (Supplier<CustomCronJobObject>) () -> {
-                    var uri = UriComponentsBuilder
+                    final var uri = UriComponentsBuilder
                             .fromUriString("https://api.paystack.co/transaction/verify")
                             .pathSegment(reservation.reference())
                             .build()
                             .toUri();
 
                     try {
-                        var node = restClient
+                        final var node = restClient
                                 .get()
                                 .uri(uri)
                                 .header("Authorization", "Bearer %s".formatted(super.payStackCredentials().secretKey()))
@@ -162,7 +161,7 @@ class CronJob extends AbstractEnvironment {
 
                         return new CustomCronJobObject(reservation, node, OK);
                     } catch (Exception e) {
-                        var status = switch (e) {
+                        final var status = switch (e) {
                             case HttpClientErrorException.BadRequest ignored1 -> BAD_REQUEST;
                             case HttpClientErrorException.NotFound ignored2 -> NOT_FOUND;
                             case HttpClientErrorException.Forbidden ignored3 -> FORBIDDEN;
@@ -183,7 +182,7 @@ class CronJob extends AbstractEnvironment {
     /**
      * Filters successful {@link OrderReservation}.
      * */
-    private boolean onSuccess(CustomCronJobObject obj) {
+    private boolean onSuccess(final CustomCronJobObject obj) {
         return obj.status().equals(OK)
                 && obj.node().get("message").textValue().equalsIgnoreCase("Verification successful")
                 && obj.node().get("data").get("status").textValue().equalsIgnoreCase("success");

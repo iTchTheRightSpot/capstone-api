@@ -3,7 +3,6 @@ package dev.webserver.cart;
 import dev.webserver.AbstractUnitTest;
 import dev.webserver.external.aws.IS3Service;
 import dev.webserver.product.ProductSkuService;
-import dev.webserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,12 +11,13 @@ import org.mockito.Mock;
 import org.springframework.core.env.Environment;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class CartServiceTest extends AbstractUnitTest {
+final class CartServiceTest extends AbstractUnitTest {
 
     private CartService cartService;
 
@@ -41,26 +41,27 @@ class CartServiceTest extends AbstractUnitTest {
                 productSKUService,
                 s3Service
         );
+        super.setUpEnvironmentVariables(cartService);
     }
 
     @Test
-    void shouldUpdateCookieMaxAge() {
+    void shouldUpdateShoppingSessionCookieAsItIsAboutToExpire() {
         // when
-        final long expiration = Duration.ofHours(1).getSeconds();
-        final int maxAgeInSeconds = CustomUtil.TO_GREENWICH.apply(null).plusSeconds(expiration).getSecond();
+        final long maxAgeInSeconds = Instant.now().plusSeconds(Duration.ofMinutes(30).getSeconds()).getEpochSecond();
 
         final String value = "cookie%" + maxAgeInSeconds;
         final Cookie cookie = new Cookie("CARTCOOKIE", value);
-        cookie.setMaxAge(maxAgeInSeconds);
+        cookie.setMaxAge((int) maxAgeInSeconds);
 
+        // when
         final HttpServletResponse res = mock(HttpServletResponse.class);
+        cartService.setShoppingSessionExpirationBoundInSeconds(1800L); // 30 mins
 
         // method to test
         cartService.validateCookieExpiration(res, cookie);
 
         // then
-        verify(sessionRepository, times(1))
-                .updateShoppingSessionExpiry(anyString(), any(LocalDateTime.class));
+        verify(sessionRepository, times(1)).updateShoppingSessionExpiry(anyString(), any(LocalDateTime.class));
     }
 
     /**
@@ -68,23 +69,24 @@ class CartServiceTest extends AbstractUnitTest {
      * so no update should be made
      * */
     @Test
-    void shouldNotUpdateCookieMaxAge() {
+    void shouldNotUpdateShoppingSessionCookieAsItIsNotWithinExpirationBound() {
         // when
-        final long expiration = Duration.ofHours(10).getSeconds();
-        final int maxAgeInSeconds = CustomUtil.TO_GREENWICH.apply(null).plusSeconds(expiration).getSecond();
+        final long maxAgeInSeconds = Instant.now()
+                .plusSeconds(Duration.ofHours(10).getSeconds())
+                .getEpochSecond();
 
         final String value = "cookie%" + maxAgeInSeconds;
         final Cookie cookie = new Cookie("CARTCOOKIE", value);
-        cookie.setMaxAge(maxAgeInSeconds);
+        cookie.setMaxAge((int) maxAgeInSeconds);
 
+        // when
         final HttpServletResponse res = mock(HttpServletResponse.class);
 
         // method to test
         cartService.validateCookieExpiration(res, cookie);
 
         // then
-        verify(sessionRepository, times(0))
-                .updateShoppingSessionExpiry(anyString(), any(LocalDateTime.class));
+        verify(sessionRepository, times(0)).updateShoppingSessionExpiry(anyString(), any(LocalDateTime.class));
     }
 
 }

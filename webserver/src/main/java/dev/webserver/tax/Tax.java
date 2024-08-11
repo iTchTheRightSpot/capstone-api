@@ -8,6 +8,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.math.BigDecimal;
+
 @Table(name = "tax")
 @Builder
 public record Tax(
@@ -19,6 +21,6 @@ public record Tax(
         @Size.List({@Size(max = 5, message = "tax name length of 5")})
         String name,
         @NotNull(message = "tax rate be null")
-        Double rate
+        BigDecimal rate
 ) {
 }

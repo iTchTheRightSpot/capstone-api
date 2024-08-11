@@ -4,13 +4,13 @@ import dev.webserver.AbstractRepositoryTest;
 import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
-import dev.webserver.data.RepositoryTestData;
+import dev.webserver.RepositoryTestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-class ProductImageRepositoryTest extends AbstractRepositoryTest {
+final class ProductImageRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
     private CategoryRepository categoryRepo;
@@ -23,25 +23,25 @@ class ProductImageRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private ProductDetailRepository detailRepo;
     @Autowired
-    private PriceCurrencyRepository priceCurrencyRepository;
+    private ProductPriceCurrencyRepository productPriceCurrencyRepository;
 
     @Test
     void imagesByProductDetailId() {
         // given
-        var cat = categoryRepo
+        final var cat = categoryRepo
                 .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .build());
         RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
+                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var details = TestUtility.toList(detailRepo.findAll());
+        final var details = TestUtility.toList(detailRepo.findAll());
         assertFalse(details.isEmpty());
 
         // then
-        var images = imageRepo
+        final var images = imageRepo
                 .imagesByProductDetailId(details.getFirst().detailId());
 
         assertFalse(images.isEmpty());

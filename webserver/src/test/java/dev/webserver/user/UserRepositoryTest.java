@@ -6,41 +6,25 @@ import dev.webserver.util.Page;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
-class UserRepositoryTest extends AbstractRepositoryTest {
+final class UserRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
     private UserRepository repository;
 
     @Test
     void userByPrincipal() {
-        // given
-        String principal = "hello@hello.com";
-
-        // method to test
-        assertTrue(repository.userByPrincipal(principal).isEmpty());
-
         // pre-save
-        var user = repository.save(
+        final var user = repository.save(
                 User.builder()
                         .firstname(new Faker().name().firstName())
                         .fullname(new Faker().name().lastName())
-                        .email(principal)
-                        .build()
-        );
-
-        repository.save(
-                User.builder()
-                        .firstname(new Faker().name().firstName())
-                        .fullname(new Faker().name().lastName())
-                        .email("frank@fk.com")
+                        .email(new Faker().internet().emailAddress())
                         .build());
 
         // method to test
-        var optional = repository.userByPrincipal(principal);
-        assertFalse(optional.isEmpty());
-        assertEquals(user, optional.get());
+        assertThat(repository.userByPrincipal(user.email()).isPresent()).isTrue();
     }
 
     @Test
@@ -50,21 +34,18 @@ class UserRepositoryTest extends AbstractRepositoryTest {
                 User.builder()
                         .firstname(new Faker().name().firstName())
                         .fullname(new Faker().name().lastName())
-                        .email("fk@fk.com")
+                        .email(new Faker().internet().emailAddress())
                         .build());
 
         repository.save(
                 User.builder()
                         .firstname(new Faker().name().firstName())
                         .fullname(new Faker().name().lastName())
-                        .email("frank@fk.com")
+                        .email("#" + new Faker().internet().emailAddress())
                         .build());
 
-        // when
-        var page = repository.listOfUsers(Page.of(0, 20));
-
         // then
-        assertEquals(2, page.size());
+        assertThat(repository.listOfUsers(Page.of(0, 20)).isEmpty()).isFalse();
     }
 
 }

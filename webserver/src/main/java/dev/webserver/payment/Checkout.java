@@ -13,7 +13,7 @@ public record Checkout (
         @JsonProperty("tax_name")
         String tax,
         @JsonProperty("tax_rate")
-        double rate,
+        BigDecimal rate,
         @JsonProperty("tax_total")
         BigDecimal taxTotal,
         @JsonProperty("sub_total")

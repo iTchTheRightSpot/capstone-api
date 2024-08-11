@@ -16,7 +16,7 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
 @Service
-class JwtService extends AbstractEnvironment {
+public class JwtService extends AbstractEnvironment {
 
     private final JwtEncoder encoder;
     private final JwtDecoder decoder;
@@ -34,7 +34,7 @@ class JwtService extends AbstractEnvironment {
         final JwtClaimsSet set = JwtClaimsSet.builder()
                 .issuer(application)
                 .issuedAt(now)
-                .expiresAt(now.plus(maxage, SECONDS))
+                .expiresAt(now.plus(cookiemaxage, SECONDS))
                 .subject(String.valueOf(details.user().userId()))
                 .claims((map) -> map.putAll(Map.of(CLAIMS.property(), roles, FIRSTNAME.property(), details.user().firstname(), USER_ID.property(), details.user().userId())))
                 .build();

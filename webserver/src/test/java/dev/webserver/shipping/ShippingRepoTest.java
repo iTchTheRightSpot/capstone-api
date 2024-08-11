@@ -5,12 +5,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.relational.core.conversion.DbActionExecutionException;
 
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ShippingRepoTest extends AbstractRepositoryTest {
+final class ShippingRepoTest extends AbstractRepositoryTest {
 
     @Autowired
     private ShippingRepository shippingRepository;
@@ -37,14 +38,8 @@ class ShippingRepoTest extends AbstractRepositoryTest {
 
         // then
         assertThrows(
-                DataIntegrityViolationException.class,
-                () -> shippingRepository
-                        .save(new ShipSetting(
-                                null,
-                                "nigeria",
-                                new BigDecimal("5000"),
-                                new BigDecimal("5.50")
-                        ))
+                DbActionExecutionException.class,
+                () -> shippingRepository.save(new ShipSetting(null, "nigeria", new BigDecimal("5000"), new BigDecimal("5.50")))
         );
     }
 
@@ -116,12 +111,11 @@ class ShippingRepoTest extends AbstractRepositoryTest {
     @Test
     void shouldNotReturnDefaultShipSetting() {
         // given
-        var obj = shippingRepository
-                .save(new ShipSetting(null, "nigeria", new BigDecimal("4500"), new BigDecimal("3.50")));
+        final var obj = shippingRepository
+                .save(new ShipSetting(null, "nigeria", new BigDecimal("4500.00"), new BigDecimal("3.50")));
 
         // when
-        var optional = shippingRepository
-                .shippingByCountryElseReturnDefault(obj.country());
+        final var optional = shippingRepository.shippingByCountryElseReturnDefault(obj.country());
 
         // then
         assertFalse(optional.isEmpty());

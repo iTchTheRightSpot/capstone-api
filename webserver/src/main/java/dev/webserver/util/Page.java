@@ -1,6 +1,6 @@
 package dev.webserver.util;
 
-public class Page {
+public final class Page {
     private final int page;
     private final int size;
     private final int offset;

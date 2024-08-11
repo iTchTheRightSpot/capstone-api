@@ -5,11 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.test.context.support.WithMockUser;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class UserControllerTest extends AbstractIntegration {
+final class UserControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}employee")
     private String path;
@@ -17,9 +16,7 @@ class UserControllerTest extends AbstractIntegration {
     @Test
     @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void allUsers() throws Exception {
-        super.mockMvc
-                .perform(get(path + "/user").with(csrf()))
-                .andExpect(status().isOk());
+        super.mockMvc.perform(get(path)).andExpect(status().isOk());
     }
 
 }

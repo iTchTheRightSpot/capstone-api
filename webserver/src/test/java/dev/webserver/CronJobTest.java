@@ -4,11 +4,10 @@ import dev.webserver.cart.IShoppingSessionRepository;
 import dev.webserver.cart.ShoppingSession;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
-import dev.webserver.data.TestData;
 import dev.webserver.payment.*;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
-import dev.webserver.product.WorkerProductService;
+import dev.webserver.product.EmployeeProductService;
 import dev.webserver.util.CustomUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -21,7 +20,7 @@ class CronJobTest extends AbstractIntegration {
     @Autowired
     private CronJob cronJob;
     @Autowired
-    private WorkerProductService workerProductService;
+    private EmployeeProductService employeeProductService;
     @Autowired
     private CategoryRepository categoryRepository;
     @Autowired
@@ -46,10 +45,10 @@ class CronJobTest extends AbstractIntegration {
         }
 
         // given
-        var sku = productSku();
+        final var sku = productSku();
 
         final var ldt = CustomUtil.TO_GREENWICH.apply(null);
-        var session = sessionRepo
+        final var session = sessionRepo
                 .save(
                         new ShoppingSession(
                                 null,
@@ -85,11 +84,11 @@ class CronJobTest extends AbstractIntegration {
         cronJob.onDeleteOrderReservations();
 
         // then
-        var payments = TestUtility.toList(paymentDetailRepository.findAll());
-        var reservations = TestUtility.toList(reservationRepo.findAll());
-        var addresses = TestUtility.toList(addressRepository.findAll());
-        var orderDetails = TestUtility.toList(orderDetailRepository.findAll());
-        var authorizations = TestUtility.toList(authorizationRepo.findAll());
+        final var payments = TestUtility.toList(paymentDetailRepository.findAll());
+        final var reservations = TestUtility.toList(reservationRepo.findAll());
+        final var addresses = addressRepository.findAll();
+        final var orderDetails = TestUtility.toList(orderDetailRepository.findAll());
+        final var authorizations = authorizationRepo.findAll();
 
         Assertions.assertTrue(reservations.isEmpty());
         Assertions.assertEquals(1, payments.size());
@@ -99,11 +98,11 @@ class CronJobTest extends AbstractIntegration {
     }
 
     private ProductSku productSku() {
-        var category = categoryRepository.save(Category.builder().name("category").isVisible(true).build());
+        final var category = categoryRepository.save(Category.builder().name("category").isVisible(true).build());
 
-        TestData.dummyProducts(category, 2, workerProductService);
+        TestData.dummyProducts(category, 2, employeeProductService);
 
-        var all = TestUtility.toList(skuRepo.findAll());
+        final var all = TestUtility.toList(skuRepo.findAll());
 
         Assertions.assertFalse(all.isEmpty());
 

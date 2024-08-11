@@ -97,8 +97,9 @@ public interface OrderReservationRepository extends CrudRepository<OrderReservat
 
     @Query("""
     SELECT
-        o.reservation_id AS reservationId,
+        o.reservation_id AS reservation_id,
         o.qty AS qty,
+        p.sku_id AS sku_id,
         p.sku AS sku
     FROM order_reservation o
     INNER JOIN product_sku p ON o.sku_id = p.sku_id
@@ -119,9 +120,9 @@ public interface OrderReservationRepository extends CrudRepository<OrderReservat
      * */
     @Query("""
     SELECT
-        o.reservation_id AS reservationId,
+        o.reservation_id AS reservation_id,
         o.qty AS qty,
-        p.sku_id AS skuId
+        p.sku_id AS sku_id
     FROM order_reservation o
     INNER JOIN product_sku p ON o.sku_id = p.sku_id
     WHERE o.reference = :reference

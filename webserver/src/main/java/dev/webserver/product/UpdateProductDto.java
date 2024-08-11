@@ -35,5 +35,5 @@ public record UpdateProductDto(
         Long categoryId,
 
         @NotNull(message = "cannot be null")
-        Double weight
+        BigDecimal weight
 ) implements Serializable { }

@@ -17,10 +17,10 @@ public interface OrderDetailRepository extends CrudRepository<OrderDetail, Long>
      */
     @Query(value = """
     SELECT
-    p.created_at AS createdAt,
+    p.created_at AS created_at,
     p.currency as currency,
     p.amount as amount,
-    p.reference_id AS referenceId,
+    p.reference_id AS reference_id,
     CONCAT('[',
         GROUP_CONCAT(
             DISTINCT JSON_OBJECT(
@@ -31,18 +31,18 @@ public interface OrderDetailRepository extends CrudRepository<OrderDetail, Long>
         ),
     ']') AS detail
     FROM order_detail o
-    INNER JOIN payment_detail p ON o.payment_detail_id = p.payment_detail_id
+    INNER JOIN payment_detail p ON o.payment_id = p.payment_id
     INNER JOIN product_sku s ON o.sku_id = s.sku_id
     INNER JOIN product_detail d ON s.detail_id = d.detail_id
     INNER JOIN product prod ON d.product_id = prod.product_id
     WHERE p.email = :principal
     GROUP BY p.reference_id
     """)
-    List<OrderDetailDbMapper> orderHistoryByPrincipal(String principal);
+    List<OrderDetailDbMapper> orderHistoryByPrincipal(final String principal);
 
     @Transactional
     @Modifying
-    @Query(value = "INSERT INTO order_detail(qty, sku_id, payment_detail_id) VALUE (:qty, :skuId, :detailId)")
-    void saveOrderDetail(int qty, long skuId, long detailId);
+    @Query(value = "INSERT INTO order_detail(qty, sku_id, payment_id) VALUE (:qty, :skuId, :detailId)")
+    void saveOrderDetail(final int qty, long skuId, final long detailId);
 
 }

@@ -7,9 +7,11 @@ import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+// TODO update all storefront methods here to take into consideration category visibility
 public interface ProductRepository extends CrudRepository<Product, Long> {
 
     @Query(value = "SELECT * FROM product p WHERE p.name = :name")
@@ -18,7 +20,7 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     @Query(value = "SELECT * FROM product p WHERE p.uuid = :uuid")
     Optional<Product> productByUuid(final String uuid);
 
-    @Query(value = "SELECT COUNT(p.productId) FROM product p WHERE p.name = :name AND p.uuid != :uuid")
+    @Query(value = "SELECT COUNT(p.product_id) FROM product p WHERE p.name = :name AND p.uuid != :uuid")
     int nameNotAssociatedToUuid(final String uuid, final String name);
 
     @Transactional
@@ -26,28 +28,20 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     @Query("DELETE FROM product p WHERE p.uuid = :uuid")
     void deleteByProductUuid(final String uuid);
 
-    @Query(value = """
-    SELECT
-        COUNT(p.uuid)
-    FROM product p
-    INNER JOIN category cat ON p.category_id = cat.category_id
-    INNER JOIN product_price_currency c ON p.product_id = c.product_id
-    WHERE c.currency = :#{#currency.name()}
-    GROUP BY p.uuid
-    """)
-    Integer countAllProductsForAdminFront(final SarreCurrency currency);
+    @Query(value = "SELECT COUNT(product_id) FROM product")
+    int countAllProductsForAdminFront();
 
     @Query(value = """
     SELECT
         p.uuid AS uuid,
         p.name AS name,
         p.description AS description,
-        p.default_image_key AS imageKey,
+        p.default_image_key AS image_key,
         p.weight AS weight,
-        p.weightType AS weight_type,
+        p.weight_type AS weight_type,
         c.currency AS currency,
         c.price AS price,
-        cat.name AS categoryName
+        cat.name AS category_name
     FROM product p
     INNER JOIN category cat ON p.category_id = cat.category_id
     INNER JOIN product_price_currency c ON p.product_id = c.product_id
@@ -58,36 +52,53 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     List<ProductDbMapper> allProductsForAdminFront(final Page page, final SarreCurrency currency);
 
     @Query(value = """
+    WITH RECURSIVE rec_category (id) AS
+    (
+        SELECT category_id FROM category
+        WHERE parent_id IS NULL AND is_visible IS TRUE
+        UNION ALL
+        SELECT c.category_id FROM rec_category rec
+        INNER JOIN category c ON rec.id = c.parent_id
+        WHERE c.is_visible IS TRUE
+    )
     SELECT
-        COUNT(p.uuid)
-    FROM product p
-    INNER JOIN category cat ON cat.category_id = p.category_id
+        COUNT(DISTINCT p.product_id)
+    FROM rec_category r
+    INNER JOIN product p ON p.category_id = r.id
     INNER JOIN product_detail pd ON pd.product_id = p.product_id
     INNER JOIN product_price_currency c ON p.product_id = c.product_id
     INNER JOIN product_sku sku ON pd.detail_id = sku.detail_id
-    WHERE cat.is_visible = TRUE AND pd.is_visible = TRUE AND sku.inventory > 0 AND c.currency = :#{#currency.name()}
-    GROUP BY p.uuid
+    WHERE pd.is_visible = TRUE AND sku.inventory > 0
     """)
-    Integer countAllProductsByCurrencyClient(final SarreCurrency currency);
+    int countAllProductsStoreFront();
 
     @Query(value = """
+    WITH RECURSIVE rec_category (id, name) AS
+    (
+        SELECT category_id, name FROM category
+        WHERE parent_id IS NULL AND is_visible IS TRUE
+        UNION ALL
+        SELECT c.category_id, c.name FROM rec_category rec
+        INNER JOIN category c ON rec.id = c.parent_id
+        WHERE c.is_visible IS TRUE
+    )
     SELECT
         p.uuid AS uuid,
         p.name AS name,
         p.description AS description,
-        c.currency AS currency,
-        c.price AS price,
-        p.default_image_key AS imageKey,
+        p.default_image_key AS image_key,
         p.weight AS weight,
         p.weight_type AS weight_type,
-        cat.name AS categoryName
-    FROM product p
-    INNER JOIN category cat ON cat.category_id = p.category_id
+        c.currency AS currency,
+        c.price AS price,
+        r.name AS category_name
+    FROM rec_category r
+    INNER JOIN product p ON r.id = p.category_id
     INNER JOIN product_detail pd ON pd.product_id = p.product_id
     INNER JOIN product_price_currency c ON p.product_id = c.product_id
     INNER JOIN product_sku sku ON pd.detail_id = sku.detail_id
-    WHERE cat.is_visible = TRUE AND pd.is_visible = TRUE AND sku.inventory > 0 AND c.currency = :#{#currency.name()}
-    GROUP BY p.uuid, p.name, p.description, p.default_image_key, c.currency, c.price, cat.name
+    WHERE pd.is_visible = TRUE AND sku.inventory > 0 AND c.currency = :#{#currency.name()}
+    GROUP BY p.uuid, p.name, p.description, p.default_image_key, p.weight, p.weight_type, c.currency, c.price, r.name
     LIMIT :#{#page.size()} OFFSET :#{#page.offset()}
     """)
     List<ProductDbMapper> allProductsByCurrencyClient(final Page page, final SarreCurrency currency);
@@ -107,15 +118,15 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
             final String uuid,
             final String name,
             final String desc,
-            final double weight,
+            final BigDecimal weight,
             final Long categoryId
     );
 
     @Query(value = """
     SELECT
-        img.image_key as imageKey
+        img.image_key as image_key
     FROM product_image img
-    INNER JOIN product_image pd ON img.detail_id = pd.detail_id
+    INNER JOIN product_detail pd ON img.detail_id = pd.detail_id
     INNER JOIN product p ON p.product_id = pd.product_id
     WHERE p.uuid = :uuid
     """)
@@ -126,17 +137,17 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     SELECT
         p.uuid AS uuid,
         p.name AS name,
-        p.default_image_key AS imageKey,
+        p.default_image_key AS image_key,
         p.weight AS weight,
-        p.weight_type AS weightType,
+        p.weight_type AS weight_type,
         c.price AS price,
         c.currency AS currency,
-        cat.name AS categoryName
+        cat.name AS category_name
     FROM product p
     INNER JOIN category cat ON p.category_id = cat.category_id
     INNER JOIN product_price_currency c ON p.product_id = c.product_id
     INNER JOIN product_detail pd ON p.product_id = pd.product_id
-    INNER JOIN product_sku sku ON pd.productDetail_id = sku.productDetail_id
+    INNER JOIN product_sku sku ON pd.detail_id = sku.detail_id
     WHERE p.name LIKE :name AND sku.inventory > 0 AND c.currency = :#{#currency.name()}
     GROUP BY p.uuid, p.name, p.default_image_key, p.weight, p.weight_type, c.currency, c.price, cat.name
     """)

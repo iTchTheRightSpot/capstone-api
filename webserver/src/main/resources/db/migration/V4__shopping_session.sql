@@ -23,13 +23,13 @@ CREATE TABLE IF NOT EXISTS cart
 CREATE TABLE IF NOT EXISTS order_reservation
 (
     reservation_id BIGINT                        NOT NULL UNIQUE AUTO_INCREMENT,
-    reference      VARCHAR(36)                   NOT NULL UNIQUE,
+    reference      VARCHAR(36)                   NOT NULL,
     qty            INTEGER                       NOT NULL,
     status         ENUM ('CONFIRMED', 'PENDING') NOT NULL DEFAULT 'PENDING',
     expire_at      TIMESTAMP                     NOT NULL,
     session_id     BIGINT,
     sku_id         BIGINT,
     PRIMARY KEY (reservation_id),
-    CONSTRAINT `shopping_session_and_order_reservation_fk` FOREIGN KEY (session_id) REFERENCES shopping_session (session_id) ON DELETE SET NULL,
-    CONSTRAINT `product_sku_and_order_reservation_fk` FOREIGN KEY (session_id) REFERENCES product_sku (session_id) ON DELETE SET NULL
+    CONSTRAINT `shopping_session_and_order_reservation_FK` FOREIGN KEY (session_id) REFERENCES shopping_session (session_id) ON DELETE RESTRICT,
+    CONSTRAINT `product_sku_and_order_reservation_FK` FOREIGN KEY (sku_id) REFERENCES product_sku (sku_id) ON DELETE RESTRICT
 );

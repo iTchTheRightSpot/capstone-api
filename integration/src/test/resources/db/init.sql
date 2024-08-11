@@ -1,4 +1,4 @@
-INSERT IGNORE INTO category(name, is_visible, parent_category_id)
+INSERT IGNORE INTO category(name, is_visible, parent_id)
 VALUES ('clothes', true, null), ('t-shirt', true, 1);
 
 INSERT IGNORE INTO product(name, description, default_image_key, category_id, uuid, weight, weight_type)
@@ -12,7 +12,7 @@ VALUES (1, 'red', true, timestamp('2024-03-26', '12:20:45'), 1),
        (2, 'greenish', true, timestamp('2024-03-26', '12:20:45'), 1),
        (3, 'yellow-brown', true, timestamp('2024-03-26', '12:20:45'), 1);;
 
-INSERT IGNORE INTO product_image(image_key, image_path, detail_id) VALUE ('image-key', 'image-path-is', 1);
+INSERT IGNORE INTO product_image(image_key, detail_id) VALUE ('image-key', 1);
 
 INSERT IGNORE INTO product_sku(sku, size, inventory, detail_id)
 VALUES ('product-sku-1', 'small', 10, 1),

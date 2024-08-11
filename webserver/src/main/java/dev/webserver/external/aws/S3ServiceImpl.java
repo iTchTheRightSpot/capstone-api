@@ -1,5 +1,6 @@
 package dev.webserver.external.aws;
 
+import dev.webserver.AbstractEnvironment;
 import dev.webserver.exception.CustomServerError;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-class S3ServiceImpl implements IS3Service {
+class S3ServiceImpl extends AbstractEnvironment implements IS3Service {
 
     private static final Logger log = LoggerFactory.getLogger(S3ServiceImpl.class);
 
@@ -27,13 +28,11 @@ class S3ServiceImpl implements IS3Service {
     private final S3Presigner s3Presigner;
     private final boolean profile;
 
-    public S3ServiceImpl(S3Client s3Client, S3Presigner s3Presigner, Environment env) {
+    public S3ServiceImpl(final S3Client s3Client, final S3Presigner s3Presigner, final Environment env) {
+        super(env);
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
-
-        String active = env.getProperty("spring.profiles.active", "default");
-
-        profile = active.endsWith("test");
+        profile = activeprofile.endsWith("test");
     }
 
     @Override

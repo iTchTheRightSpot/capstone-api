@@ -19,7 +19,7 @@ public record ProductResponse (
         @JsonProperty("image_key")
         String imageKey,
         String category,
-        double weight,
+        BigDecimal weight,
         @JsonProperty("weight_type")
         String weightType
 ) implements Serializable {}

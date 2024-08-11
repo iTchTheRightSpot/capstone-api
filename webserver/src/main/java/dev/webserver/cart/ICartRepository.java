@@ -49,22 +49,22 @@ public interface ICartRepository extends CrudRepository<Cart, Long> {
 
     @Query("""
     SELECT
-        p.sku_id AS skuId,
+        p.sku_id AS sku_id,
         p.sku AS sku,
         p.size AS size,
         p.inventory AS inventory,
-        c.cart_id AS cartId,
+        c.cart_id AS cart_id,
         c.qty AS qty,
-        c.session_id AS sessionId
+        c.session_id AS session_id
     FROM cart c
     INNER JOIN product_sku p ON c.sku_id = p.sku_id
     WHERE c.session_id = :sessionId
     """)
-    List<RaceConditionCartDbMapper> cartByShoppingSessionId(long sessionId);
+    List<RaceConditionCartDbMapper> cartsByShoppingSessionId(long sessionId);
 
     @Query("""
     SELECT
-        c.cartId
+        c.cart_id
     FROM cart c
     INNER JOIN shopping_session s ON c.session_id = s.session_id
     INNER JOIN order_reservation o ON s.session_id = o.session_id

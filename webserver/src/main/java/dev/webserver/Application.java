@@ -3,7 +3,7 @@ package dev.webserver;
 import dev.webserver.enumeration.RoleEnum;
 import dev.webserver.external.log.DiscordPayload;
 import dev.webserver.payment.OrderHistoryDbMapper;
-import dev.webserver.product.util.Variant;
+import dev.webserver.product.Variant;
 import dev.webserver.user.Role;
 import dev.webserver.user.RoleRepository;
 import dev.webserver.user.User;
@@ -13,14 +13,12 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-@Import(value = {PrimaryKeyConfiguration.class})
 @ImportRuntimeHints(value = {MyRuntimeHints.class})
 @RegisterReflectionForBinding(value = {Variant.class, OrderHistoryDbMapper.class, AbstractEnvironment.PaymentCredentialObj.class, DiscordPayload.class})
 public class Application extends AbstractEnvironment {
@@ -38,7 +36,7 @@ public class Application extends AbstractEnvironment {
         return args -> {
             if (repository.userByPrincipal(developerEmail.trim()).isEmpty()) {
                 final User user = repository.save(User.builder()
-                        .email(developerEmail.trim())
+                        .email(developerEmail)
                         .firstname(developerFirstname)
                         .fullname(developerLastName)
                         .build());

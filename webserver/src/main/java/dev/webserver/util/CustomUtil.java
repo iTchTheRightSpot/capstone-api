@@ -9,8 +9,8 @@ import dev.webserver.payment.CartTotalDbMapper;
 import dev.webserver.payment.CheckoutPair;
 import dev.webserver.product.PriceCurrencyDto;
 import dev.webserver.product.ProductDetailDbMapper;
-import dev.webserver.product.util.CustomMultiPart;
-import dev.webserver.product.util.Variant;
+import dev.webserver.product.CustomMultiPart;
+import dev.webserver.product.Variant;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -156,7 +156,7 @@ public class CustomUtil {
      * if not found.
      */
     public static Cookie cookie (final HttpServletRequest req, final String name) {
-        Cookie[] cookies = req.getCookies();
+        final Cookie[] cookies = req.getCookies();
         return cookies == null
                 ? null
                 : Arrays.stream(cookies)
@@ -186,18 +186,18 @@ public class CustomUtil {
         map.put(-1L, new CategoryResponse("root"));
 
         // add all to map
-        for (CategoryResponse cat : list) {
+        for (final CategoryResponse cat : list) {
             map.put(cat.categoryId(), cat);
         }
 
-        for (CategoryResponse entry : list) {
+        for (final CategoryResponse entry : list) {
             if (entry.parentId() == null) {
                 // create a new leaf from root as parentId category seen
                 map.get(-1L).addToChildren(entry);
             } else {
                 // add child to parentId
-                var parent = map.get(entry.parentId());
-                var child = map.get(entry.categoryId());
+                final var parent = map.get(entry.parentId());
+                final var child = map.get(entry.categoryId());
                 parent.addToChildren(child);
             }
         }
@@ -216,11 +216,8 @@ public class CustomUtil {
      * @param shippingPrice  The price for shipping the items in the shopping cart.
      * @return The total cost of the shopping cart including tax and shipping as a BigDecimal value.
      */
-    public static BigDecimal calculateTotal(final BigDecimal cartItemsTotal, final double tax, final BigDecimal shippingPrice) {
-        var newTax = cartItemsTotal.multiply(BigDecimal.valueOf(tax));
-        return cartItemsTotal
-                .add(newTax)
-                .add(shippingPrice);
+    public static BigDecimal calculateTotal(final BigDecimal cartItemsTotal, final BigDecimal tax, final BigDecimal shippingPrice) {
+        return cartItemsTotal.add(cartItemsTotal.multiply(tax)).add(shippingPrice);
     }
 
     /**

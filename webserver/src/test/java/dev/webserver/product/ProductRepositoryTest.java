@@ -2,10 +2,10 @@ package dev.webserver.product;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractRepositoryTest;
+import dev.webserver.RepositoryTestData;
 import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
-import dev.webserver.data.RepositoryTestData;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.util.Page;
 import org.junit.jupiter.api.Assertions;
@@ -16,9 +16,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-class ProductRepositoryTest extends AbstractRepositoryTest {
+final class ProductRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
     private CategoryRepository categoryRepo;
@@ -27,34 +28,30 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private ProductDetailRepository detailRepo;
     @Autowired
-    private PriceCurrencyRepository priceCurrencyRepository;
+    private ProductPriceCurrencyRepository productPriceCurrencyRepository;
     @Autowired
     private ProductSkuRepository skuRepo;
     @Autowired
     private ProductImageRepository imageRepo;
     @Autowired
-    private PriceCurrencyRepository currencyRepo;
+    private ProductPriceCurrencyRepository currencyRepo;
 
     @Test
     void nameNotAssociatedToUuid() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .build());
+        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
+                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
         RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
+                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var products = TestUtility.toList(productRepository.findAll());
+        final var products = TestUtility.toList(productRepository.findAll());
         assertEquals(2, products.size());
 
-        Product first = products.getFirst();
-        Product second = products.get(1);
+        final Product first = products.getFirst();
+        final Product second = products.get(1);
 
         // then
         assertEquals(0, productRepository.nameNotAssociatedToUuid(first.uuid(), "test-1"));
@@ -66,176 +63,170 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
     @Test
     void allProductsAdminFront() {
         // given
-        var cat = categoryRepo
+        final var cat = categoryRepo
                 .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .build());
 
         RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
+                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var products = TestUtility.toList(productRepository.findAll());
-        assertFalse(products.isEmpty());
+        final var products = TestUtility.toList(productRepository.findAll());
+        assertThat(products.isEmpty()).isFalse();
 
-        // then
-        final var page = productRepository
-                .allProductsForAdminFront(Page.of(0, 20), SarreCurrency.NGN);
+        // method to test
+        final var page = productRepository.allProductsForAdminFront(Page.of(0, 20), SarreCurrency.NGN);
 
-        assertNotEquals(0, page.size());
+        // assert
+        assertThat(page.size()).isNotEqualTo(0);
 
-        for (ProductDbMapper pojo : page) {
-            assertNotNull(pojo.uuid());
-            assertNotNull(pojo.name());
-            assertNotNull(pojo.description());
-            assertNotNull(pojo.price());
-            assertNotNull(pojo.categoryName());
-            assertNotNull(pojo.imageKey());
-            assertNotNull(pojo.weight());
-            assertNotNull(pojo.weightType());
-            assertNotNull(pojo.categoryName());
+        for (final ProductDbMapper pojo : page) {
+            assertThat(pojo.uuid()).isNotNull();
+            assertThat(pojo.name()).isNotNull();
+            assertThat(pojo.description()).isNotNull();
+            assertThat(pojo.imageKey()).isNotNull();
+            assertThat(pojo.weight()).isNotNull();
+            assertThat(pojo.weightType()).isNotNull();
+            assertThat(pojo.currency()).isNotNull();
+            assertThat(pojo.price()).isNotNull();
+            assertThat(pojo.categoryName()).isNotNull();
         }
     }
 
     @Test
     void allProductsByCurrencyClient() {
         // given
-        var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .build());
+        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
+                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var products = TestUtility.toList(productRepository.findAll());
+        final var products = TestUtility.toList(productRepository.findAll());
         assertFalse(products.isEmpty());
 
         // then
         final var page = productRepository.allProductsByCurrencyClient(Page.of(0, 20), SarreCurrency.NGN);
 
-        assertNotEquals(0, page.size());
+        assertThat(page.size()).isNotEqualTo(0);
 
-        for (ProductDbMapper pojo : page) {
-            assertNotNull(pojo.uuid());
-            assertNotNull(pojo.name());
-            assertNotNull(pojo.description());
-            assertNotNull(pojo.price());
-            assertNotNull(pojo.categoryName());
-            assertNotNull(pojo.imageKey());
-            assertNotNull(pojo.weight());
-            assertNotNull(pojo.weightType());
-            assertNotNull(pojo.categoryName());
+        for (final ProductDbMapper pojo : page) {
+            assertThat(pojo.uuid()).isNotNull();
+            assertThat(pojo.name()).isNotNull();
+            assertThat(pojo.description()).isNotNull();
+            assertThat(pojo.currency()).isNotNull();
+            assertThat(pojo.price()).isNotNull();
+            assertThat(pojo.imageKey()).isNotNull();
+            assertThat(pojo.weight()).isNotNull();
+            assertThat(pojo.weightType()).isNotNull();
+            assertThat(pojo.categoryName()).isNotNull();
         }
     }
 
     @Test
     void updateProductAndItsCategoryId() {
         // given
-        var cat = categoryRepo
+        final var cat = categoryRepo
                 .save(Category.builder()
                         .name("category")
                         .isVisible(true)
                         .build());
 
-        var collection = categoryRepo
+        final var collection = categoryRepo
                 .save(Category.builder()
                         .name("collection")
                         .isVisible(true)
                         .build());
 
         RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
+                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var products = TestUtility.toList(productRepository.findAll());
+        final var products = TestUtility.toList(productRepository.findAll());
         assertFalse(products.isEmpty());
-        var product = products.getFirst();
+        final var product = products.getFirst();
 
         // then
-        String desc = new Faker().gameOfThrones().dragon();
+        final String desc = new Faker().gameOfThrones().dragon();
         productRepository
                 .updateProduct(
                         product.uuid(),
                         "test-1",
                         desc,
-                        10.5,
+                        new BigDecimal("10.50"),
                         collection.categoryId()
                 );
 
-        var optional = productRepository.findById(product.productId());
+        final var optional = productRepository.findById(product.productId());
         assertFalse(optional.isEmpty());
 
-        Product product1 = optional.get();
+        final Product product1 = optional.get();
         assertEquals("test-1", product1.name());
         assertEquals(desc, product1.description());
-        assertEquals(10.5, product1.weight());
+        assertEquals(new BigDecimal("10.50"), product1.weight());
         Assertions.assertEquals(collection.categoryId(), product1.categoryId());
     }
 
     @Test
     void productImagesByProductUuid() {
         // given
-        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
+        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
+                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var products = TestUtility.toList(productRepository.findAll());
+        final var products = TestUtility.toList(productRepository.findAll());
         assertFalse(products.isEmpty());
 
-        List<ProductImageDbMapper> images = productRepository
-                .productImagesByProductUuid(products.getFirst().uuid());
+        final List<ProductImageDbMapper> images = productRepository.productImagesByProductUuid(products.getFirst().uuid());
 
-        for (ProductImageDbMapper pojo : images) {
-            assertNotNull(pojo.imageKey());
-        }
+        assertThat(images.size()).isNotEqualTo(0);
+
+        for (final ProductImageDbMapper pojo : images) assertThat(pojo.imageKey()).isNotNull();
     }
 
     @Test
     void productsByNameAndCurrency() {
         // given
-        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
+        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
+                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var products = TestUtility.toList(productRepository.findAll());
+        final var products = TestUtility.toList(productRepository.findAll());
         assertFalse(products.isEmpty());
 
         // then
-        final var page = productRepository.productsByNameAndCurrency(products.getFirst().name(), SarreCurrency.USD);
+        final var list = productRepository.productsByNameAndCurrency(products.getFirst().name(), SarreCurrency.USD);
 
-        assertNotEquals(0, page.size());
+        assertThat(list.size()).isNotEqualTo(0);
 
-        for (ProductDbMapper pojo : page) {
-            assertNotNull(pojo.uuid());
-            assertNotNull(pojo.name());
-            assertNotNull(pojo.description());
-            assertNotNull(pojo.price());
-            assertNotNull(pojo.categoryName());
-            assertNotNull(pojo.imageKey());
-            assertNotNull(pojo.weight());
-            assertNotNull(pojo.weightType());
-            assertNotNull(pojo.categoryName());
+        for (final ProductDbMapper pojo : list) {
+            assertThat(pojo.uuid()).isNotNull();
+            assertThat(pojo.name()).isNotNull();
+            assertThat(pojo.currency()).isNotNull();
+            assertThat(pojo.price()).isNotNull();
+            assertThat(pojo.imageKey()).isNotNull();
+            assertThat(pojo.weight()).isNotNull();
+            assertThat(pojo.weightType()).isNotNull();
+            assertThat(pojo.categoryName()).isNotNull();
         }
     }
 
     @Test
     void validateOnDeleteNoActionConstraintWhenDeletingAProductByUuid() {
         // given
-        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
+        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
+                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var products = TestUtility.toList(productRepository.findAll());
+        final var products = TestUtility.toList(productRepository.findAll());
         assertFalse(products.isEmpty());
 
         // then
@@ -247,15 +238,15 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
     @Test
     void validateOnDeleteCascadeWhenDeletingAProductWithNoDetailsButIsAttachedToPriceCurrency() {
         // given
-        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
+        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
-        var product = productRepository
+        final var product = productRepository
                 .save(Product.builder()
                         .uuid("uuid")
                         .name("product-1")
                         .description(new Faker().lorem().fixedString(500))
                         .defaultKey("default-image-key")
-                        .weight(2.5)
+                        .weight(new BigDecimal("2.5"))
                         .weightType("kg")
                         .categoryId(cat.categoryId())
                         .build());
@@ -267,6 +258,18 @@ class ProductRepositoryTest extends AbstractRepositoryTest {
         assertFalse(TestUtility.toList(currencyRepo.findAll()).isEmpty());
         productRepository.deleteByProductUuid(product.uuid());
         assertTrue(TestUtility.toList(currencyRepo.findAll()).isEmpty());
+    }
+
+    @Test
+    void countAllProductsForAdminFront() {
+        // given
+        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
+
+        RepositoryTestData
+                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
+
+        // method to test
+        assertThat(productRepository.countAllProductsForAdminFront()).isEqualTo(1);
     }
 
 }

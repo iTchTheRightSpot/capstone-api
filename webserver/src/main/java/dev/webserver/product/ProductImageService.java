@@ -2,10 +2,11 @@ package dev.webserver.product;
 
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.external.aws.IS3Service;
-import dev.webserver.product.util.CustomMultiPart;
 import dev.webserver.util.CustomUtil;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
@@ -18,14 +19,15 @@ import java.util.function.Supplier;
 @RequiredArgsConstructor
 class ProductImageService {
 
+    private static final Logger log = LoggerFactory.getLogger(ProductImageService.class);
     private final ProductImageRepository repository;
     private final IS3Service service;
 
-    public String preSignedUrl(@NotNull String bucket, @NotNull String key) {
+    public String preSignedUrl(@NotNull final String bucket, @NotNull final String key) {
         return service.preSignedUrl(bucket, key);
     }
 
-    public void deleteFromS3(@NotNull List<ObjectIdentifier> keys, @NotNull String bucket) {
+    public void deleteFromS3(@NotNull final List<ObjectIdentifier> keys, @NotNull final String bucket) {
         service.deleteFromS3(keys, bucket);
     }
 
@@ -43,8 +45,8 @@ class ProductImageService {
      * @throws CustomServerError if there is an error executing the tasks.
      */
     @Transactional(rollbackFor = Exception.class)
-    public void saveProductImages(@NotNull ProductDetail detail, @NotNull CustomMultiPart[] files, @NotNull String bucket) {
-        var future = Arrays.stream(files)
+    public void saveProductImages(@NotNull final ProductDetail detail, @NotNull final CustomMultiPart[] files, @NotNull final String bucket) {
+        final var futures = Arrays.stream(files)
                 .map(file -> (Supplier<CustomMultiPart>) () -> {
                     service.uploadToS3(file.file(), file.metadata(), bucket, file.key());
                     return file;
@@ -52,7 +54,12 @@ class ProductImageService {
                 .toList();
 
         // save all images as long as we have successfully saved to s3
-        CustomUtil.asynchronousTasks(future).join()
+        CustomUtil.asynchronousTasks(futures)
+                .exceptionally(ex -> {
+                    log.error(ex.getMessage());
+                    throw new CustomServerError("internal server error");
+                })
+                .join()
                 .forEach(e -> repository.save(new ProductImage(null, e.key(), detail.detailId())));
     }
 

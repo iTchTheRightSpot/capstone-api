@@ -51,7 +51,7 @@ class CartService extends AbstractEnvironment {
 
     /**
      * Updates the expiration of a cookie if it is within the expiration period.
-     * If the cookie is valid and is within {@link #shoppingSessionBoundInSeconds}, cookie is updated and
+     * If the cookie is valid and is within {@link #shoppingSessionExpirationBoundInSeconds}, cookie is updated and
      * sent back in the response.
      *
      * @param response    the HttpServletResponse object to add the updated cookie to
@@ -68,11 +68,7 @@ class CartService extends AbstractEnvironment {
 
             final var cookieDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(parsed), UTC);
 
-            final Duration between = Duration.between(now, cookieDate);
-
-            final long seconds = between.toSeconds();
-
-            if (seconds <= shoppingSessionBoundInSeconds) {
+            if (Duration.between(now, cookieDate).toSeconds() <= shoppingSessionExpirationBoundInSeconds) {
                 // update cookie expiry
                 final LocalDateTime expirationLdt = now.plusSeconds(MAX_CART_EXPIRATION_IN_SECONDS);
                 final int maxAgeInSeconds = expirationLdt.getSecond();
@@ -83,7 +79,7 @@ class CartService extends AbstractEnvironment {
 
                 // cookie
                 cookie.setValue(value);
-                cookie.setPath("/");
+                cookie.setPath(super.cookiepath);
                 cookie.setMaxAge(maxAgeInSeconds);
 
                 response.addCookie(cookie);
@@ -113,19 +109,19 @@ class CartService extends AbstractEnvironment {
             final HttpServletRequest req,
             final HttpServletResponse res
     ) {
-        final Cookie cookie = CustomUtil.cookie(req, cartcookie);
+        final Cookie cookie = CustomUtil.cookie(req, super.cartcookie);
 
         if (cookie == null) {
             // cookie value
-            final int maxAgeInSeconds = TO_GREENWICH.apply(null).plusSeconds(MAX_CART_EXPIRATION_IN_SECONDS).getSecond();
+            final long maxAgeInSeconds = Instant.now().plusSeconds(MAX_CART_EXPIRATION_IN_SECONDS).getEpochSecond();
             final String value = UUID.randomUUID() + super.cartCookieSplit + maxAgeInSeconds;
 
             // cookie
-            final Cookie c = new Cookie(cartcookie, value);
-            c.setMaxAge(maxAgeInSeconds);
+            final Cookie c = new Cookie(super.cartcookie, value);
+            c.setMaxAge((int) maxAgeInSeconds);
             c.setHttpOnly(true);
-            c.setPath("/");
-            c.setSecure(cookiesecure);
+            c.setPath(super.cookiepath);
+            c.setSecure(super.cookiesecure);
 
             res.addCookie(c);
 
@@ -216,7 +212,7 @@ class CartService extends AbstractEnvironment {
         final ShoppingSession session = sessionRepository.save(ShoppingSession.builder()
                 .sessionId(null)
                 .cookie(cookie)
-                .createAt(TO_GREENWICH.apply(null))
+                .createdAt(TO_GREENWICH.apply(null))
                 .expireAt(LocalDateTime.ofInstant(Instant.ofEpochSecond(expirationEpochSeconds), UTC))
                 .build());
 
@@ -245,7 +241,7 @@ class CartService extends AbstractEnvironment {
      * */
     @Transactional(rollbackFor = Exception.class)
     public void deleteFromCart(final HttpServletRequest req, final String sku) {
-        final Cookie cookie = CustomUtil.cookie(req, cartcookie);
+        final Cookie cookie = CustomUtil.cookie(req, super.cartcookie);
 
         if (cookie == null) {
             return;

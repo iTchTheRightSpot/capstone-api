@@ -30,17 +30,10 @@ public interface ProductSkuRepository extends CrudRepository<ProductSku, Long> {
     @Query("UPDATE product_sku s SET s.inventory = (s.inventory - :qty) WHERE s.sku = :sku")
     void updateProductSkuInventoryBySubtractingFromExistingInventory(String sku, int qty);
 
-    /**
-     * Updates a {@link ProductSku} inventory property by adding qty in parameter to
-     * {@link ProductSku} inventory.
-     *
-     * @param sku is a unique string for every {@link ProductSku}.
-     * @param qty the number to add to an existing {@link ProductSku} inventory.
-     * */
     @Transactional
     @Modifying
-    @Query("UPDATE product_sku s SET s.inventory = (s.inventory + :qty) WHERE s.sku = :sku")
-    void updateProductSkuInventoryByAddingToExistingInventory(String sku, int qty);
+    @Query("UPDATE product_sku s SET s.inventory = (s.inventory + :qty) WHERE s.sku_id = :skuId")
+    void updateProductSkuInventoryByAddingToExistingInventory(long skuId, int qty);
 
     /**
      * Deletes a {@link ProductSku} by its property sku.
@@ -62,9 +55,7 @@ public interface ProductSkuRepository extends CrudRepository<ProductSku, Long> {
      *         or empty if no {@link Product} is found with the provided sku.
      */
     @Query("""
-    SELECT
-        *
-    FROM product p
+    SELECT * FROM product p
     INNER JOIN product_detail d ON p.product_id = d.product_id
     INNER JOIN product_sku s ON d.detail_id = s.detail_id
     WHERE s.sku = :sku

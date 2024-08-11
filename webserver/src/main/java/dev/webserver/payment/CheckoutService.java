@@ -126,7 +126,7 @@ class CheckoutService extends AbstractEnvironment {
 
         final ShoppingSession session = optional.get();
 
-        final var carts = cartRepository.cartByShoppingSessionId(session.sessionId());
+        final var carts = cartRepository.cartsByShoppingSessionId(session.sessionId());
 
         if (carts.isEmpty()) {
             throw new CustomNotFoundException("cart is empty");

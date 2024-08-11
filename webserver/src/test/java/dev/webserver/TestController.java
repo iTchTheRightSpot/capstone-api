@@ -1,24 +1,19 @@
 package dev.webserver;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(path = "test")
-@Profile(value = {"test"})
+@RequestMapping(path = "${api.endpoint.baseurl}")
 class TestController {
 
-    @GetMapping(path = "/client")
-    @PreAuthorize(value = "hasRole('ROLE_USER')")
+    @GetMapping(path = "/product/test")
     public String client() {
         return "client";
     }
 
-    @GetMapping(path = "/worker")
-    @PreAuthorize(value = "hasRole('ROLE_EMPLOYEE')")
+    @GetMapping(path = "employee/test")
     public String worker() {
         return "worker";
     }

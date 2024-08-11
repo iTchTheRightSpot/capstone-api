@@ -1,40 +1,42 @@
 package dev.webserver;
 
+import lombok.Setter;
 import org.springframework.core.env.Environment;
 
 import java.io.Serializable;
 
+@Setter
 public abstract class AbstractEnvironment {
     // paystack
     public record PaymentCredentialObj(String pubKey, String secretKey) implements Serializable {}
 
-    protected final String developerEmail;
-    protected final String developerFirstname;
-    protected final String developerLastName;
-    protected final String paystackPubKey;
-    protected final String paystackSecretKey;
-    protected final String ngnConversion;
-    protected final String usdConversion;
-    protected final long raceConditionExpirationBound;
-    protected final String cartcookie;
-    protected final String cartCookieSplit;
-    protected final String jsessionid;
-    protected final boolean cookiesecure;
-    protected final String samesite;
-    protected final String cookiepath;
-    protected final int maxage;
-    protected final String corsdomain;
-    protected final String baseurl;
-    protected final String activeprofile;
-    protected final String application;
-    protected final String uiRedirect;
-    protected final String mailExceptionRedirect;
-    protected final String awsbucket;
-    protected final long shoppingSessionBoundInSeconds;
-    protected final String discord;
-    protected final String applicationContactEmail;
+    protected String developerEmail;
+    protected String developerFirstname;
+    protected String developerLastName;
+    protected String paystackPubKey;
+    protected String paystackSecretKey;
+    protected String ngnConversion;
+    protected String usdConversion;
+    protected Long raceConditionExpirationBound;
+    protected String cartcookie;
+    protected String cartCookieSplit;
+    protected String jsessionid;
+    protected Boolean cookiesecure;
+    protected String cookiesamesite;
+    protected String cookiepath;
+    protected Integer cookiemaxage;
+    protected String corsdomain;
+    protected String baseurl;
+    protected String activeprofile;
+    protected String application;
+    protected String uiRedirect;
+    protected String mailExceptionRedirect;
+    protected String awsbucket;
+    protected Long shoppingSessionExpirationBoundInSeconds;
+    protected String discord;
+    protected String applicationContactEmail;
 
-    protected AbstractEnvironment(Environment environment) {
+    protected AbstractEnvironment(final Environment environment) {
         // developer
         developerEmail = environment.getProperty("developer.email", "developer@email.com");
         developerFirstname = environment.getProperty("developer.firstname", "developer");
@@ -48,13 +50,13 @@ public abstract class AbstractEnvironment {
         // cart
         cartcookie = environment.getProperty("cart.cookie.name", "CARTCOOKIE");
         cartCookieSplit = environment.getProperty("cart.split", "%");
-        shoppingSessionBoundInSeconds = environment.getProperty("shopping.session.expiration.bound", Long.class, 18000L);
+        shoppingSessionExpirationBoundInSeconds = environment.getProperty("shopping.session.expiration.bound", Long.class, 1800L);
         // session cookie
         jsessionid = environment.getProperty("server.servlet.session.cookie.name", "JSESSIONID");
         cookiesecure = environment.getProperty("server.servlet.session.cookie.secure", Boolean.class, true);
-        samesite = environment.getProperty("server.servlet.session.cookie.same-site", "lax");
+        cookiesamesite = environment.getProperty("server.servlet.session.cookie.same-site", "lax");
         cookiepath = environment.getProperty("server.servlet.session.cookie.path", "/");
-        maxage = environment.getProperty("server.servlet.session.cookie.max-age", Integer.class, 18000);
+        cookiemaxage = environment.getProperty("server.servlet.session.cookie.max-age", Integer.class, 18000);
         // application
         application = environment.getProperty("spring.application.name", "Capstone Api");
         activeprofile = environment.getProperty("spring.profiles.active", "default");

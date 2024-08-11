@@ -6,24 +6,25 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 public record CreateProductDto(
         @JsonProperty(value = "category_id")
         @NotNull(message = "Please select categoryId as product has to below to a categoryId")
         Long categoryId,
 
-        @NotNull(message = "Name cannot be null")
-        @NotEmpty(message = "Please enter product name")
-        @Size(max = 80, message = "Max of 80")
+        @NotNull(message = "product name cannot be null")
+        @NotEmpty(message = "product name cannot be empty")
+        @Size(max = 50, message = "Max of 50")
         String name,
 
-        @Size(max = 1000, message = "max of 1000 letters")
+        @Size(max = 2000, message = "max of 2000 letters")
         @NotNull(message = "Please enter product description")
         @NotEmpty(message = "Please enter product description")
         String desc,
 
         @NotNull
-        Double weight,
+        BigDecimal weight,
 
         @NotNull(message = "cannot be empty")
         PriceCurrencyDto[] priceCurrency,
@@ -37,5 +38,6 @@ public record CreateProductDto(
 
         @NotNull(message = "Please enter or choose product colour")
         @NotEmpty(message = "Please enter or choose product colour")
+        @Size(max = 50, message = "colour has to have a max of 50 letters")
         String colour
 ) implements Serializable { }

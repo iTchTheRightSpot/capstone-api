@@ -19,7 +19,6 @@ server:
 logging:
   level:
     org:
-      hibernate: error
       springframework:
         jdbc: trace
         security: trace
@@ -57,51 +56,62 @@ spring:
       max-file-size: 6MB
       max-request-size: 10MB
       enabled: true
-  jpa:
-    generate-ddl: true
-    hibernate:
-      ddl-auto: validate
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: google-client-id
+            client-secret: google-client-secret
+            redirectUri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - profile
+              - email
+              - openid
+  mail:
+    host: smtp.gmail.com
+    protocol: smtp
+    port: 587
+    username: test
+    password: mail-password
+    default-encoding: UTF-8
     properties:
-      jakarta:
-        persistence:
-          sharedCache:
-            mode: ALL
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: true
-    open-in-view: false
-    defer-datasource-initialization: false
-  sql:
-    init:
-      mode: always
+      "[mail.mime.charset]": UTF
+      "[mail.smtp.connectiontimeout]": 5000 # 5 secs
+      "[mail.smtp.timeout]": 5000
+      "[mail.smtp.writetimeout]": 5000
+      "[mail.smtp.auth]": true
+      "[mail.smtp.starttls.enable]": true
+      "[mail.smtp.starttls.required]": true
+    application:
+      contact-email: developer@email.com
 
 management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: 'health,info'
+      base-path: /api/v1/actuator
 
 api:
   endpoint:
-    baseurl: ${API_PREFIX:api/v1/}
+    baseurl: api/v1/
 
 application:
   log:
     webhook:
-      discord: ${APPLICATION_LOG_WEBHOOK_DISCORD:discord}
+      discord: discord
 
-user:
-  principal: ${USER_PRINCIPAL:admin@admin.com}
-  password: ${USER_PASSWORD:password123}
+developer:
+  email: admin@admin.com
+  firstname: developer
+  lastname: developer
 
 paystack:
   pub:
-    key: ${PAYSTACK_PUB_KEY:paystack-pub}
+    key: paystack-pub
   secret:
-    key: ${PAYSTACK_SECRET_KEY:paystack-secret}
-
-jwt:
-  claim: role
+    key: paystack-secret
 
 cors:
   ui:
@@ -109,9 +119,6 @@ cors:
 
 aws:
   bucket: development
-  paystack:
-    secret:
-      id: ${AWS_PAYSTACK_SECRET_ID:pay}
 
 cart:
   cookie:
@@ -132,4 +139,4 @@ race-condition:
 shopping:
   session:
     expiration:
-      bound: 5
+      bound: 1800

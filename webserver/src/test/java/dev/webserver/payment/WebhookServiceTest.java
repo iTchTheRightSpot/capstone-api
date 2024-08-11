@@ -24,6 +24,7 @@ class WebhookServiceTest extends AbstractUnitTest {
     @BeforeEach
     void setUpWebHookService() {
         webhookService = new WebhookService(environment, paymentDetailService, publisher);
+        super.setUpEnvironmentVariables(webhookService);
     }
 
     @Test

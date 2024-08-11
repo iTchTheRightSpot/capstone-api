@@ -4,12 +4,11 @@ import dev.webserver.cart.CartDto;
 import dev.webserver.cart.CartResponse;
 import dev.webserver.category.CategoryDto;
 import dev.webserver.category.UpdateCategoryDto;
-import dev.webserver.category.WorkerCategoryResponse;
 import dev.webserver.external.log.DiscordPayload;
 import dev.webserver.payment.*;
 import dev.webserver.product.*;
-import dev.webserver.product.util.CustomMultiPart;
-import dev.webserver.product.util.Variant;
+import dev.webserver.product.CustomMultiPart;
+import dev.webserver.product.Variant;
 import dev.webserver.security.controller.ActiveUser;
 import dev.webserver.shipping.ShippingDto;
 import dev.webserver.shipping.ShippingMapper;
@@ -33,7 +32,6 @@ final class MyRuntimeHints implements RuntimeHintsRegistrar {
                 .registerType(CartResponse.class)
                 .registerType(ActiveUser.class)
                 .registerType(CategoryDto.class)
-                .registerType(WorkerCategoryResponse.class)
                 .registerType(UpdateCategoryDto.class)
                 .registerType(CreateProductDto.class)
                 .registerType(ProductDetailDto.class)

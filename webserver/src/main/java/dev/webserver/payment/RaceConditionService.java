@@ -139,7 +139,7 @@ public class RaceConditionService extends AbstractEnvironment {
     ) {
         try {
             if (reservations.isEmpty()) {
-                for (var cart : carts) {
+                for (final var cart : carts) {
                     onCartItemQtyGreaterThanProductSkuInventory(cart);
 
                     productSkuRepository
@@ -258,7 +258,7 @@ public class RaceConditionService extends AbstractEnvironment {
         for (final Map.Entry<String, OrderReservationDbMapper> entry : reservations.entrySet()) {
             final OrderReservationDbMapper reservation = entry.getValue();
             productSkuRepository
-                    .updateProductSkuInventoryByAddingToExistingInventory(reservation.sku(), reservation.qty());
+                    .updateProductSkuInventoryByAddingToExistingInventory(reservation.skuId(), reservation.qty());
             reservationRepository.deleteById(reservation.reservationId());
         }
     }

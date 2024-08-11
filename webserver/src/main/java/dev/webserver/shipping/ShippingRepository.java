@@ -67,7 +67,7 @@ public interface ShippingRepository extends CrudRepository<ShipSetting, Long> {
     WHERE s.country = (
         CASE WHEN (
                 SELECT
-                COUNT(s)
+                COUNT(s.ship_id)
                 FROM ship_setting s
                 WHERE s.country = :country
             ) > 0

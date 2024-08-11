@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface UserRepository extends CrudRepository<User, Long> {
 
     @Query(value = "SELECT * FROM user c WHERE c.email = :principal")
-    Optional<User> userByPrincipal(String principal);
+    Optional<User> userByPrincipal(final String principal);
 
     @Query(value = "SELECT * FROM user u LIMIT :#{#page.size()} OFFSET :#{#page.offset()}")
     List<User> listOfUsers(final Page page);

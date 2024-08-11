@@ -3,7 +3,7 @@ package dev.integration.employee;
 import com.github.javafaker.Faker;
 import dev.integration.AbstractNative;
 import dev.integration.TestData;
-import dev.webserver.category.WorkerCategoryResponse;
+import dev.webserver.category.CategoryResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.http.*;
@@ -25,7 +25,7 @@ class WorkerProductTest extends AbstractNative {
                 route + "worker/product",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                WorkerCategoryResponse.class
+                CategoryResponse.class
         );
 
         assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());

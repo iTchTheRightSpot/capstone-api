@@ -3,7 +3,6 @@ package dev.webserver.product;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -15,16 +14,14 @@ public interface ProductDetailRepository extends CrudRepository<ProductDetail, L
      * Returns a {@link ProductDetail} by {@link ProductSku} property sku
      * */
     @Query(value = """
-    SELECT
-        d.*
-    FROM product_detail d
+    SELECT d.* FROM product_detail d
     INNER JOIN product_sku s ON d.detail_id = s.detail_id
     WHERE s.sku = :sku
     """)
-    Optional<ProductDetail> productDetailByProductSku(@Param(value = "sku") String sku);
+    Optional<ProductDetail> productDetailByProductSku(final String sku);
 
     @Query("SELECT * FROM product_detail WHERE colour = :colour")
-    Optional<ProductDetail> productDetailByColour(String colour);
+    Optional<ProductDetail> productDetailByColour(final String colour);
 
     /**
      * using native MySQL query, method updates a {@link ProductDetail} and {@link ProductSku}.
@@ -34,15 +31,15 @@ public interface ProductDetailRepository extends CrudRepository<ProductDetail, L
     @Query(value = """
     UPDATE product_sku s
     INNER JOIN product_detail d ON d.detail_id = s.detail_id
-    SET d.colour = :colour, d.is_visible = :visible, s.inventory = :qty, s.size = :s
+    SET d.colour = :colour, d.is_visible = :visible, s.inventory = :qty, s.size = :size
     WHERE s.sku = :sku
     """)
     void updateProductSkuAndProductDetailByProductSku(
-            @Param(value = "sku") String sku,
-            String colour,
-            @Param(value = "visible") boolean visible,
-            @Param(value = "qty") int qty,
-            @Param(value = "s") String size
+            final String sku,
+            final String colour,
+            final boolean visible,
+            final int qty,
+            final String size
     );
 
     /**
@@ -57,9 +54,9 @@ public interface ProductDetailRepository extends CrudRepository<ProductDetail, L
      */
     @Query(value = """
     SELECT
-    d.is_visible AS isVisible,
+            d.is_visible AS is_visible,
     d.colour AS colour,
-    GROUP_CONCAT(DISTINCT i.image_key) AS imageKey,
+            GROUP_CONCAT(DISTINCT i.image_key) AS image_key,
     CONCAT('[',
         GROUP_CONCAT(
             DISTINCT JSON_OBJECT(
@@ -76,13 +73,13 @@ public interface ProductDetailRepository extends CrudRepository<ProductDetail, L
     WHERE p.uuid = :uuid AND d.is_visible = true
     GROUP BY d.is_visible, d.colour
     """)
-    List<ProductDetailDbMapper> productDetailsByProductUuidClientFront(@Param(value = "uuid") String uuid);
+    List<ProductDetailDbMapper> productDetailsByProductUuidClientFront(final String uuid);
 
     @Query(value = """
     SELECT
-    d.is_visible AS isVisible,
+            d.is_visible AS is_visible,
     d.colour AS colour,
-    GROUP_CONCAT(DISTINCT i.image_key) AS imageKey,
+            GROUP_CONCAT(DISTINCT i.image_key) AS image_key,
     CONCAT('[',
         GROUP_CONCAT(
             DISTINCT JSON_OBJECT(
@@ -99,6 +96,6 @@ public interface ProductDetailRepository extends CrudRepository<ProductDetail, L
     WHERE p.uuid = :uuid
     GROUP BY d.is_visible, d.colour
     """)
-    List<ProductDetailDbMapper> productDetailsByProductUuidAdminFront(@Param(value = "uuid") String uuid);
+    List<ProductDetailDbMapper> productDetailsByProductUuidAdminFront(final String uuid);
 
 }

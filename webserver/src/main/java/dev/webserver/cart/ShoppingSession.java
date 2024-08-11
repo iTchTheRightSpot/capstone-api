@@ -21,7 +21,7 @@ public record ShoppingSession(
         @Size.List({@Size(max = 100, message = "shopping_session cookie max length of 100")})
         String cookie,
         @Column("created_at")
-        LocalDateTime createAt,
+        LocalDateTime createdAt,
         @NotNull(message = "shopping_session expire_at cannot be null")
         @Column("expire_at")
         LocalDateTime expireAt // indexed

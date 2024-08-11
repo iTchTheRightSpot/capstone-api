@@ -5,10 +5,10 @@ import dev.webserver.TestUtility;
 import dev.webserver.cart.CartDto;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
-import dev.webserver.data.TestData;
+import dev.webserver.TestData;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
-import dev.webserver.product.WorkerProductService;
+import dev.webserver.product.EmployeeProductService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ class CheckoutControllerTest extends AbstractIntegration {
     private String cookie;
 
     @Autowired
-    private WorkerProductService service;
+    private EmployeeProductService service;
     @Autowired
     private CategoryRepository categoryRepository;
     @Autowired

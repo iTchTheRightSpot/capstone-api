@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS product
     name              VARCHAR(50)   NOT NULL UNIQUE,
     description       VARCHAR(2000) NOT NULL,
     default_image_key VARCHAR(36)   NOT NULL UNIQUE,
-    weight            FLOAT(5, 2)   NOT NULL DEFAULT 0.0,
+    weight            DECIMAL(5, 2) NOT NULL DEFAULT 0.0,
     weight_type       VARCHAR(2)    NOT NULL DEFAULT 'kg',
     category_id       BIGINT        NOT NULL,
     PRIMARY KEY (product_id),

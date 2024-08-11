@@ -34,7 +34,7 @@ spring:
     virtual:
       enabled: true
   profiles:
-    active: default
+    active: aws
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/capstone_db}
@@ -106,9 +106,6 @@ application:
     webhook:
       discord: ${APPLICATION_LOG_WEBHOOK_DISCORD:discord}
 
-user:
-  principal: ${USER_PRINCIPAL:admin@admin.com}
-
 paystack:
   pub:
     key: ${PAYSTACK_PUB_KEY:paystack-pub}
@@ -141,4 +138,4 @@ race-condition:
 shopping:
   session:
     expiration:
-      bound: 18000
+      bound: 1800

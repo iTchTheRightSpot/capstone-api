@@ -2,7 +2,6 @@ package dev.webserver.product;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import dev.webserver.product.util.Variant;
 import lombok.Builder;
 
 import java.io.Serializable;

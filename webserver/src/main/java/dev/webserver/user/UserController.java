@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(path = "${api.endpoint.baseurl}worker/user")
+@RequestMapping(path = "${api.endpoint.baseurl}employee")
 @RequiredArgsConstructor
 public class UserController {
 

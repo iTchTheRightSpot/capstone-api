@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-class RaceConditionServiceTest extends AbstractUnitTest {
+final class RaceConditionServiceTest extends AbstractUnitTest {
 
     private RaceConditionService raceConditionService;
 
@@ -32,7 +32,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
     @Mock
     private ProductSkuRepository skuRepo;
     @Mock
-    private ICartRepository ICartRepository;
+    private ICartRepository iCartRepository;
     @Mock
     private OrderReservationRepository reservationRepo;
     @Mock
@@ -43,16 +43,17 @@ class RaceConditionServiceTest extends AbstractUnitTest {
         raceConditionService = new RaceConditionService(
                 environment,
                 skuRepo,
-                ICartRepository,
+                iCartRepository,
                 reservationRepo,
                 checkoutService
         );
+        super.setUpEnvironmentVariables(raceConditionService);
     }
 
     @Test
     void errorThrownDueToCartQtyGreaterThanProductSkuInventory() {
         // given
-        var sku = ProductSku.builder()
+        final var sku = ProductSku.builder()
                 .skuId(1L)
                 .sku("sku-0")
                 .size("medium")
@@ -60,14 +61,14 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .build();
 
         final var ldt = LocalDateTime.now();
-        var session = new ShoppingSession(
+        final var session = new ShoppingSession(
                 1L,
                 "cookie",
                 ldt,
                 ldt.plusHours(1)
         );
 
-        var list = List.of(
+        final var list = List.of(
                 new RaceConditionCartDbMapper(
                         1L,
                         sku.sku(),
@@ -79,9 +80,9 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 )
         );
 
-        Map<String, OrderReservationDbMapper> map = list.stream()
+        final Map<String, OrderReservationDbMapper> map = list.stream()
                 .collect(Collectors.toMap(RaceConditionCartDbMapper::sku,
-                        pojo -> new OrderReservationDbMapper(1L, pojo.qty(), pojo.sku())));
+                        pojo -> new OrderReservationDbMapper(1L, pojo.qty(), sku.skuId(), pojo.sku())));
         // then
         assertThrows(OutOfStockException.class,
                 () -> raceConditionService
@@ -98,14 +99,14 @@ class RaceConditionServiceTest extends AbstractUnitTest {
     @Test
     void onPendingReservationsUserDidNotAddExtraProductSkuToTheirCartOrUpdateQtyOfAnItemInCart() {
         // given
-        var sku = ProductSku.builder()
+        final var sku = ProductSku.builder()
                 .skuId(1L)
                 .sku("sku-0")
                 .size("medium")
                 .inventory(10)
                 .build();
 
-        var sku1 = ProductSku.builder()
+        final var sku1 = ProductSku.builder()
                 .skuId(2L)
                 .sku("sku-1")
                 .size("large")
@@ -113,14 +114,14 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .build();
 
         final var ldt = LocalDateTime.now();
-        var session = new ShoppingSession(
+        final var session = new ShoppingSession(
                 1L,
                 "cookie",
                 ldt,
                 ldt.plusHours(1)
         );
 
-        var cartItems = List.of(
+        final var cartItems = List.of(
                 new RaceConditionCartDbMapper(
                         1L,
                         sku.sku(),
@@ -141,9 +142,9 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 )
         );
 
-        var reservations = cartItems.stream()
+        final var reservations = cartItems.stream()
                 .collect(Collectors.toMap(RaceConditionCartDbMapper::sku,
-                        pojo -> new OrderReservationDbMapper(1L, pojo.qty(), pojo.sku())));
+                        pojo -> new OrderReservationDbMapper(1L, pojo.qty(), sku.skuId(), pojo.sku())));
 
         // method to test
         raceConditionService
@@ -183,7 +184,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .saveOrderReservation(anyString(), anyInt(), any(ReservationStatus.class), any(LocalDateTime.class), anyLong(), anyLong());
 
         verify(skuRepo, times(0))
-                .updateProductSkuInventoryByAddingToExistingInventory(anyString(), anyInt());
+                .updateProductSkuInventoryByAddingToExistingInventory(anyLong(), anyInt());
 
         verify(reservationRepo, times(0)).deleteById(anyLong());
     }
@@ -191,14 +192,14 @@ class RaceConditionServiceTest extends AbstractUnitTest {
     @Test
     void userAddedAnExtraItemToTheirCartAndAlsoDecreasedTheQtyOfAnExistingItem() {
         // given
-        var sku = ProductSku.builder()
+        final var sku = ProductSku.builder()
                 .skuId(1L)
                 .sku("sku-0")
                 .size("medium")
                 .inventory(10)
                 .build();
 
-        var sku1 = ProductSku.builder()
+        final var sku1 = ProductSku.builder()
                 .skuId(2L)
                 .sku("sku-1")
                 .size("large")
@@ -206,14 +207,14 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .build();
 
         final var ldt = LocalDateTime.now();
-        var session = new ShoppingSession(
+        final var session = new ShoppingSession(
                 1L,
                 "cookie",
                 ldt,
                 ldt.plusHours(1)
         );
 
-        var cartItems = List.of(
+        final var cartItems = List.of(
                 new RaceConditionCartDbMapper(
                         sku.skuId(),
                         sku.sku(),
@@ -234,8 +235,8 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 )
         );
 
-        var reservation = Stream.of(sku)
-                .collect(Collectors.toMap(ProductSku::sku, s -> new OrderReservationDbMapper(1L, 7, s.sku())));
+        final var reservation = Stream.of(sku)
+                .collect(Collectors.toMap(ProductSku::sku, s -> new OrderReservationDbMapper(1L, 7, s.skuId(), s.sku())));
 
         // method to test
         raceConditionService
@@ -275,7 +276,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .saveOrderReservation(anyString(), anyInt(), any(ReservationStatus.class), any(LocalDateTime.class), anyLong(), anyLong());
 
         verify(skuRepo, times(0))
-                .updateProductSkuInventoryByAddingToExistingInventory(anyString(), anyInt());
+                .updateProductSkuInventoryByAddingToExistingInventory(anyLong(), anyInt());
         verify(reservationRepo, times(0)).deleteById(anyLong());
     }
 
@@ -283,14 +284,14 @@ class RaceConditionServiceTest extends AbstractUnitTest {
     @Test
     void userAddedAnExtraItemToTheirCartAndIncreasedTheQtyOfAnExistingItem() {
         // given
-        var sku = ProductSku.builder()
+        final var sku = ProductSku.builder()
                 .skuId(1L)
                 .sku("sku-0")
                 .size("medium")
                 .inventory(10)
                 .build();
 
-        var sku1 = ProductSku.builder()
+        final var sku1 = ProductSku.builder()
                 .skuId(2L)
                 .sku("sku-1")
                 .size("large")
@@ -298,14 +299,14 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .build();
 
         final var ldt = LocalDateTime.now();
-        var session = new ShoppingSession(
+        final var session = new ShoppingSession(
                 1L,
                 "cookie",
                 ldt,
                 ldt.plusHours(1)
         );
 
-        var cartItems = List.of(
+        final var cartItems = List.of(
                 new RaceConditionCartDbMapper(
                         sku.skuId(),
                         sku.sku(),
@@ -326,8 +327,8 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 )
         );
 
-        var reservation = Stream.of(sku)
-                .collect(Collectors.toMap(ProductSku::sku, s -> new OrderReservationDbMapper(1L, 3, s.sku())));
+        final var reservation = Stream.of(sku)
+                .collect(Collectors.toMap(ProductSku::sku, s -> new OrderReservationDbMapper(1L, 3, s.skuId(), s.sku())));
 
         // then
         raceConditionService
@@ -366,21 +367,21 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .saveOrderReservation(anyString(), anyInt(), any(ReservationStatus.class), any(LocalDateTime.class), anyLong(), anyLong());
 
         verify(skuRepo, times(0))
-                .updateProductSkuInventoryByAddingToExistingInventory(anyString(), anyInt());
+                .updateProductSkuInventoryByAddingToExistingInventory(anyLong(), anyInt());
         verify(reservationRepo, times(0)).deleteById(anyLong());
     }
 
     @Test
     void updateProductSkuInventoryBecauseUserDeletesAllItemsFromCart() {
         // given
-        var sku = ProductSku.builder()
+        final var sku = ProductSku.builder()
                 .skuId(1L)
                 .sku("sku-0")
                 .size("medium")
                 .inventory(10)
                 .build();
 
-        var sku1 = ProductSku.builder()
+        final var sku1 = ProductSku.builder()
                 .skuId(2L)
                 .sku("sku-1")
                 .size("large")
@@ -388,16 +389,16 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .build();
 
         final var ldt = LocalDateTime.now();
-        var session = new ShoppingSession(
+        final var session = new ShoppingSession(
                 1L,
                 "cookie",
                 ldt,
                 ldt.plusHours(1)
         );
 
-        var reservations = Stream.of(sku, sku1)
+        final var reservations = Stream.of(sku, sku1)
                 .collect(Collectors.toMap(ProductSku::sku,
-                        s -> new OrderReservationDbMapper(1L, s.inventory(), s.sku())));
+                        s -> new OrderReservationDbMapper(1L, s.inventory(), s.skuId(), s.sku())));
 
         // method to test
         raceConditionService
@@ -437,7 +438,7 @@ class RaceConditionServiceTest extends AbstractUnitTest {
                 .saveOrderReservation(anyString(), anyInt(), any(ReservationStatus.class), any(LocalDateTime.class), anyLong(), anyLong());
 
         verify(skuRepo, times(2))
-                .updateProductSkuInventoryByAddingToExistingInventory(anyString(), anyInt());
+                .updateProductSkuInventoryByAddingToExistingInventory(anyLong(), anyInt());
         verify(reservationRepo, times(2)).deleteById(anyLong());
     }
 

@@ -2,10 +2,10 @@ package dev.webserver.util;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractUnitTest;
+import dev.webserver.TestData;
 import dev.webserver.category.CategoryResponse;
-import dev.webserver.payment.CheckoutPair;
-import dev.webserver.data.TestData;
 import dev.webserver.payment.CartTotalDbMapper;
+import dev.webserver.payment.CheckoutPair;
 import dev.webserver.product.PriceCurrencyDto;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -27,15 +27,15 @@ class CustomUtilTest extends AbstractUnitTest {
     @Test
     void shouldSuccessfullyCreateTransformMultipartFilesToFile() throws IOException {
         // given
-        var mockFiles = TestData.files();
+        final var mockFiles = TestData.files();
 
         // when
-        var objs = CustomUtil.transformMultipartFile.apply(mockFiles, new StringBuilder());
+        final var objs = CustomUtil.transformMultipartFile.apply(mockFiles, new StringBuilder());
 
         // then
-        for (var obj : objs) {
+        for (final var obj : objs) {
             assertTrue(Files.exists(obj.file().toPath()));
-            var body = RequestBody.fromFile(obj.file());
+            final var body = RequestBody.fromFile(obj.file());
             assertEquals(Files.probeContentType(obj.file().toPath()), body.contentType());
             assertFalse(obj.key().isBlank());
             assertFalse(obj.metadata().isEmpty());
@@ -80,7 +80,7 @@ class CustomUtilTest extends AbstractUnitTest {
     void calculateTotalInNGN() {
         // when
         final BigDecimal res = CustomUtil
-                .calculateTotal(new BigDecimal("1200"), 0.0725, new BigDecimal("500"))
+                .calculateTotal(new BigDecimal("1200"), new BigDecimal("0.0725"), new BigDecimal("500"))
                 .setScale(2, FLOOR);
 
         // then
@@ -90,8 +90,8 @@ class CustomUtilTest extends AbstractUnitTest {
     @Test
     void calculateTotalInUSD() {
         // when
-        BigDecimal res = CustomUtil
-                .calculateTotal(new BigDecimal("75.00"), 0.05, new BigDecimal("10.48"))
+        final BigDecimal res = CustomUtil
+                .calculateTotal(new BigDecimal("75.00"), new BigDecimal("0.05"), new BigDecimal("10.48"))
                 .setScale(2, FLOOR);
 
         // then
@@ -145,13 +145,13 @@ class CustomUtilTest extends AbstractUnitTest {
 
     @Test
     void fromUsdToCent() {
-        AmountConversion[] arr = {
+        final AmountConversion[] arr = {
                 new AmountConversion(new BigDecimal("0"), new BigDecimal("0")),
                 new AmountConversion(new BigDecimal("1"), new BigDecimal("100.00")),
                 new AmountConversion(new BigDecimal("20.00"), new BigDecimal("2000.00")),
         };
 
-        for (AmountConversion obj : arr) {
+        for (final AmountConversion obj : arr) {
             assertEquals(obj.expected(), CustomUtil
                     .convertCurrency("100", USD, obj.given())
             );
@@ -160,7 +160,7 @@ class CustomUtilTest extends AbstractUnitTest {
 
     @Test
     void shouldCreateHierarchyForCategory() {
-        var actual = CustomUtil.createCategoryHierarchy(db());
+        final var actual = CustomUtil.createCategoryHierarchy(db());
         assertEquals(res(), actual);
     }
 
@@ -179,24 +179,24 @@ class CustomUtilTest extends AbstractUnitTest {
 
     final List<CategoryResponse> res() {
         // super parentId
-        var category = new CategoryResponse(1L, null, "category", true);
+        final var category = new CategoryResponse(1L, null, "category", true);
 
-        var clothes = new CategoryResponse(2L, category.categoryId(), "clothes", true);
+        final var clothes = new CategoryResponse(2L, category.categoryId(), "clothes", true);
         category.addToChildren(clothes);
 
-        var top = new CategoryResponse(3L, clothes.categoryId(), "top", true);
+        final var top = new CategoryResponse(3L, clothes.categoryId(), "top", true);
         clothes.addToChildren(top);
 
         top.addToChildren(new CategoryResponse(8L, top.categoryId(), "long-sleeve", true));
 
         // super parentId
-        var collection = new CategoryResponse(4L, null, "collection", true);
+        final var collection = new CategoryResponse(4L, null, "collection", true);
 
-        var fall = new CategoryResponse(5L, collection.categoryId(), "fall 2023", true);
+        final var fall = new CategoryResponse(5L, collection.categoryId(), "fall 2023", true);
         collection.addToChildren(fall);
         fall.addToChildren(new CategoryResponse(7L, fall.categoryId(), "jacket fall 2023", true));
 
-        var summer = new CategoryResponse(6L, collection.categoryId(), "summer 2023", true);
+        final var summer = new CategoryResponse(6L, collection.categoryId(), "summer 2023", true);
         collection.addToChildren(summer);
 
         return List.of(category, collection);

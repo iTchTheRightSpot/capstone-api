@@ -3,7 +3,6 @@ package dev.webserver.product;
 import dev.webserver.AbstractUnitTest;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.external.aws.IS3Service;
-import dev.webserver.product.util.CustomMultiPart;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -11,12 +10,13 @@ import org.mockito.Mock;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class ProductImageServiceTest extends AbstractUnitTest {
+final class ProductImageServiceTest extends AbstractUnitTest {
 
     private ProductImageService service;
 
@@ -64,15 +64,25 @@ class ProductImageServiceTest extends AbstractUnitTest {
     void shouldThrowErrorWhenExceptionOccursDuringMultiThreadedS3Upload() {
         // when
         for (int i = 0; i < files.length; i++) {
-            if (i == 1)
+            if (i == (files.length - 1))
                 doThrow(new CustomServerError("simulate exception"))
                         .when(s3Service)
                         .uploadToS3(any(File.class), anyMap(), anyString(), anyString());
         }
 
-        // then
+        // method to test and assert
         assertThrows(CustomServerError.class,
-                () -> service.saveProductImages(detail, files, "bucket"));
+                () -> {
+                    try {
+                        service.saveProductImages(detail, files, "bucket");
+                    } catch (CompletionException e) {
+                        // Unwrap the exception and rethrow the cause if it's a CustomServerError
+                        if (e.getCause() instanceof CustomServerError) {
+                            throw e.getCause();
+                        }
+                        throw e;
+                    }
+                });
     }
 
 }

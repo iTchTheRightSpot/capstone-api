@@ -24,7 +24,7 @@ class PaymentDetailRepositoryTest extends AbstractRepositoryTest {
         final var ldt = CustomUtil.TO_GREENWICH.apply(null);
         repository.save(
                 PaymentDetail.builder()
-                        .name("Bane Anderson")
+                        .fullname("Bane Anderson")
                         .email("baneanderson@email.com")
                         .phone("0000000000")
                         .referenceId("ref-bane")
@@ -38,7 +38,7 @@ class PaymentDetailRepositoryTest extends AbstractRepositoryTest {
         );
 
         // when
-        var optional = repository
+        final var optional = repository
                 .paymentDetailByEmailAndReference("baneanderson@email.com", "ref-bane");
 
         // then
@@ -48,7 +48,7 @@ class PaymentDetailRepositoryTest extends AbstractRepositoryTest {
     @Test
     void shouldNotSuccessfullyRetrieveAPaymentDetailByEmailAndReference() {
         // when
-        var optional = repository
+        final var optional = repository
                 .paymentDetailByEmailAndReference("baneanderson@email.com", "ref-bane");
 
         // then

@@ -43,6 +43,7 @@ public record PaymentDetail(
         @Size.List({@Size(max = 30, message = "payment_detail payment_provider max length of 30")})
         @Column("payment_provider")
         String paymentProvider,
+        @NotNull(message = "payment_detail payment_status cannot be null")
         @Column("payment_status")
         PaymentStatus paymentStatus,
         @NotNull(message = "payment_detail paid_at cannot be null")

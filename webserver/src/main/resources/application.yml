@@ -22,7 +22,6 @@ server:
 logging:
   level:
     org:
-      hibernate: error
       springframework:
         jdbc: trace
         security: trace
@@ -94,7 +93,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: "health,info"
+        include: 'health,info'
       base-path: /api/v1/actuator
 
 api:
@@ -143,4 +142,4 @@ race-condition:
 shopping:
   session:
     expiration:
-      bound: 18000
+      bound: 1800

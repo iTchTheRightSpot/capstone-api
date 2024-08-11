@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Setter
-public class Pageable <T> {
+public final class Pageable <T> {
     private final int page;
     private final int size;
     private final int totalPages;

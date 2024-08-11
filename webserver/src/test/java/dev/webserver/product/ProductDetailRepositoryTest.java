@@ -2,24 +2,22 @@ package dev.webserver.product;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractRepositoryTest;
+import dev.webserver.RepositoryTestData;
 import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
-import dev.webserver.data.RepositoryTestData;
-import dev.webserver.product.util.Variant;
 import dev.webserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ProductDetailRepositoryTest extends AbstractRepositoryTest {
+final class ProductDetailRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
     private CategoryRepository categoryRepo;
@@ -28,7 +26,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private ProductDetailRepository detailRepo;
     @Autowired
-    private PriceCurrencyRepository priceCurrencyRepository;
+    private ProductPriceCurrencyRepository productPriceCurrencyRepository;
     @Autowired
     private ProductSkuRepository skuRepo;
     @Autowired
@@ -37,13 +35,13 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
     @Test
     void productDetailByProductSku() {
         // given
-        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
+        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
+                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var skus = TestUtility.toList(skuRepo.findAll());
+        final var skus = TestUtility.toList(skuRepo.findAll());
         assertFalse(skus.isEmpty());
 
         // then
@@ -53,15 +51,15 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
     @Test
     void updateProductSkuAndProductDetailByProductSku() {
         // given
-        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
+        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
         RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
+                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var details = TestUtility.toList(detailRepo.findAll());
+        final var details = TestUtility.toList(detailRepo.findAll());
         assertFalse(details.isEmpty());
 
-        var skus = TestUtility.toList(skuRepo.findAll());
+        final var skus = TestUtility.toList(skuRepo.findAll());
         assertFalse(skus.isEmpty());
         ProductSku sku = skus.getFirst();
 
@@ -75,9 +73,9 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         "medium size"
                 );
 
-        var optional = skuRepo.productSkuBySku(sku.sku());
+        final var optional = skuRepo.productSkuBySku(sku.sku());
         assertFalse(optional.isEmpty());
-        ProductSku temp = optional.get();
+        final ProductSku temp = optional.get();
 
         assertEquals("medium size", temp.size());
         assertEquals(2100, temp.inventory());
@@ -86,13 +84,13 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
     @Test
     void productDetailByColour() {
         // given
-        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
+        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
+                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
 
         // when
-        var details = TestUtility.toList(detailRepo.findAll());
+        final var details = TestUtility.toList(detailRepo.findAll());
         assertFalse(details.isEmpty());
         ProductDetail first = details.getFirst();
 
@@ -113,7 +111,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         .name("product 1")
                         .description(new Faker().lorem().fixedString(500))
                         .defaultKey("default-key")
-                        .weight(2.5)
+                        .weight(new BigDecimal("2.5"))
                         .weightType("kg")
                         .categoryId(cat.categoryId())
                         .build());
@@ -128,7 +126,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         .build());
 
         for (int i = 0; i < 3; i++) {
-            imageRepo.save(new ProductImage(null, UUID.randomUUID().toString(), "path", detail.detailId()));
+            imageRepo.save(new ProductImage(null, UUID.randomUUID().toString(), detail.detailId()));
         }
 
         for (int i = 0; i < 7; i++) {
@@ -145,7 +143,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
         var details = detailRepo.productDetailsByProductUuidClientFront(product.uuid());
         assertFalse(details.isEmpty());
 
-        for (ProductDetailDbMapper pojo : details) {
+        for (final ProductDetailDbMapper pojo : details) {
             assertNotNull(pojo.isVisible());
             assertNotNull(pojo.colour());
             assertNotNull(pojo.imageKey());
@@ -187,7 +185,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         .name("product 1")
                         .description(new Faker().lorem().fixedString(500))
                         .defaultKey("default-key")
-                        .weight(2.5)
+                        .weight(new BigDecimal("2.5"))
                         .weightType("kg")
                         .categoryId(cat.categoryId())
                         .build());
@@ -201,7 +199,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         .productId(product.productId())
                         .build());
 
-        imageRepo.save(new ProductImage(null, UUID.randomUUID().toString(), "path", detail.detailId()));
+        imageRepo.save(new ProductImage(null, UUID.randomUUID().toString(), detail.detailId()));
 
         skuRepo.save(
                 ProductSku.builder()
@@ -212,8 +210,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         .build());
 
         // then
-        var details = detailRepo
-                .productDetailsByProductUuidClientFront(product.uuid());
+        var details = detailRepo.productDetailsByProductUuidClientFront(product.uuid());
         assertFalse(details.isEmpty());
 
         for (ProductDetailDbMapper pojo : details) {
@@ -258,7 +255,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         .name("product 1")
                         .description(new Faker().lorem().fixedString(500))
                         .defaultKey("default-key")
-                        .weight(2.5)
+                        .weight(new BigDecimal("2.5"))
                         .weightType("kg")
                         .categoryId(cat.categoryId())
                         .build());
@@ -273,7 +270,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                         .build());
 
         for (int i = 0; i < 5; i++)
-            imageRepo.save(new ProductImage(null, UUID.randomUUID().toString(), "path", detail.detailId()));
+            imageRepo.save(new ProductImage(null, UUID.randomUUID().toString(), detail.detailId()));
 
         for (int i = 0; i < 3; i++) {
             skuRepo.save(
@@ -296,7 +293,7 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
 
         for (int i = 0; i < 2; i++) {
             imageRepo.save(
-                    new ProductImage(null, UUID.randomUUID().toString(), "path " + (i + 10), detail2.detailId())
+                    new ProductImage(null, UUID.randomUUID().toString(), detail2.detailId())
             );
         }
 
@@ -310,11 +307,10 @@ class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                             .build());
         }
 
-        var res2 = detailRepo
-                .productDetailsByProductUuidAdminFront(product.uuid());
+        var res2 = detailRepo.productDetailsByProductUuidAdminFront(product.uuid());
         assertEquals(2, res2.size());
 
-        for (ProductDetailDbMapper pojo : res2) {
+        for (final ProductDetailDbMapper pojo : res2) {
             assertNotNull(pojo.variants());
             assertNotNull(pojo.colour());
             assertNotNull(pojo.imageKey());

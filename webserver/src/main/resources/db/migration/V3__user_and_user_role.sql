@@ -11,7 +11,7 @@ CREATE TABLE `user`
 CREATE TABLE `role`
 (
     role_id BIGINT                                     NOT NULL UNIQUE AUTO_INCREMENT,
-    role    ENUM ('USER', 'WORKER', 'ADMIN', 'NATIVE') NOT NULL DEFAULT 'USER',
+    role    ENUM ('USER', 'EMPLOYEE', 'DEVELOPER')     NOT NULL DEFAULT 'USER',
     user_id BIGINT                                     NOT NULL,
     PRIMARY KEY (role_id),
     CONSTRAINT `user_and_role_FK` FOREIGN KEY (user_id) references `user` (user_id) ON DELETE CASCADE

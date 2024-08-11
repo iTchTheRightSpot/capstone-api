@@ -8,15 +8,15 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 
 public record UpdateCategoryDto(
-        @NotNull(message = "cannot be empty")
+        @NotNull(message = "category category_id cannot be null")
         @JsonProperty(value = "category_id")
-        Long id,
+        Long categoryId,
         @JsonProperty(value = "parent_id")
         Long parentId,
-        @NotNull(message = "cannot be empty")
-        @NotEmpty(message = "cannot be empty")
-        @Size(max = 50, message = "name cannot exceed length of 50")
+        @NotNull(message = "category name cannot be null")
+        @NotEmpty(message = "category name cannot be empty")
+        @Size(max = 50, message = "category name cannot exceed length of 50")
         String name,
-        @NotNull(message = "cannot be null")
+        @NotNull(message = "category visibility cannot be null")
         Boolean visible
-) implements Serializable { }
+) implements Serializable {}

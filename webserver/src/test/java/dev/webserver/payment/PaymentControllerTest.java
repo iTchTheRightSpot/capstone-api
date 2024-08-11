@@ -6,11 +6,11 @@ import dev.webserver.TestUtility;
 import dev.webserver.cart.CartDto;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
-import dev.webserver.data.TestData;
+import dev.webserver.TestData;
 import dev.webserver.product.PriceCurrencyDto;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
-import dev.webserver.product.WorkerProductService;
+import dev.webserver.product.EmployeeProductService;
 import dev.webserver.shipping.ShipSetting;
 import dev.webserver.shipping.ShippingRepository;
 import dev.webserver.util.CustomUtil;
@@ -51,7 +51,7 @@ class PaymentControllerTest extends AbstractIntegration {
     private String ngnConversion;
 
     @Autowired
-    private WorkerProductService productService;
+    private EmployeeProductService productService;
     @Autowired
     private ProductSkuRepository productSkuRepository;
     @Autowired
@@ -264,7 +264,7 @@ class PaymentControllerTest extends AbstractIntegration {
                 arr,
                 1, // 1 product
                 1, // variant qty
-                5.5, // 5.5kg
+                new BigDecimal("5.5"), // 5.5kg
                 productService
         );
 
@@ -356,7 +356,6 @@ class PaymentControllerTest extends AbstractIntegration {
                                 .build());
 
         int qty = 1;
-        double weight = 2.5;
 
         TestData
                 .dummyProductsTestTotalAmount(
@@ -364,7 +363,7 @@ class PaymentControllerTest extends AbstractIntegration {
                         arr,
                         1, // 1 product
                         qty, // 1 variants
-                        weight, // 2.5kg
+                        new BigDecimal("2.5"), // 2.5kg
                         productService
                 );
 
@@ -412,14 +411,13 @@ class PaymentControllerTest extends AbstractIntegration {
         var category = categoryRepository.save(Category.builder().name("category").isVisible(true).build());
 
         int qty = 5;
-        double weight = 5.5;
         TestData
                 .dummyProductsTestTotalAmount(
                         category,
                         arr,
                         1, // 1 product
                         qty, // 5 variants
-                        weight, // 5.5kg
+                        new BigDecimal("5.5"), // 5.5kg
                         productService
                 );
 

@@ -12,22 +12,22 @@ import java.util.Optional;
 
 public interface IShoppingSessionRepository extends CrudRepository<ShoppingSession, Long> {
 
-    @Query("SELECT s FROM shopping_session WHERE cookie = :cookie")
-    Optional<ShoppingSession> shoppingSessionByCookie(String cookie);
+    @Query("SELECT * FROM shopping_session WHERE cookie = :cookie")
+    Optional<ShoppingSession> shoppingSessionByCookie(final String cookie);
 
     @Transactional
     @Modifying
-    @Query(value = "UPDATE shopping_session SET expireAt = :d WHERE cookie = :cookie")
-    void updateShoppingSessionExpiry(String cookie, LocalDateTime d);
+    @Query(value = "UPDATE shopping_session SET expire_at = :d WHERE cookie = :cookie")
+    void updateShoppingSessionExpiry(final String cookie, final LocalDateTime d);
 
     @Query(value = """
     SELECT
         p.uuid AS uuid,
-        p.default_image_key AS imageKey,
+        p.default_image_key AS image_key,
         p.name AS name,
         p.weight AS weight,
-        p.weight_type AS weightType,
-        s.session_id AS sessionId,
+        p.weight_type AS weight_type,
+        s.session_id AS session_id,
         cur.currency AS currency,
         cur.price AS price,
         d.colour AS colour,
@@ -45,7 +45,7 @@ public interface IShoppingSessionRepository extends CrudRepository<ShoppingSessi
     """)
     List<CartDbMapper> cartItemsByCookieValue(SarreCurrency currency, String cookie);
 
-    @Query("SELECT * FROM shopping_session s WHERE s.expire_at <= :d")
-    List<ShoppingSession> allExpiredShoppingSession(LocalDateTime d);
+    @Query("SELECT * FROM shopping_session WHERE expire_at <= :d")
+    List<ShoppingSession> allExpiredShoppingSession(final LocalDateTime d);
 
 }

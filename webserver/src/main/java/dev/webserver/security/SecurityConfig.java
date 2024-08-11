@@ -3,21 +3,21 @@ package dev.webserver.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.AbstractEnvironment;
 import dev.webserver.exception.ExceptionResponse;
+import dev.webserver.external.log.ILogEventPublisher;
 import dev.webserver.user.RoleRepository;
 import dev.webserver.user.UserRepository;
+import dev.webserver.user.UserService;
 import jakarta.servlet.DispatcherType;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
@@ -114,16 +114,20 @@ class SecurityConfig extends AbstractEnvironment {
     public SecurityFilterChain filterChain(
             final HttpSecurity http,
             final ObjectMapper mapper,
-            final RefreshTokenFilter refreshTokenFilter,
-            final JwtAuthenticationConverter converter
+            final UserDetailsService detailsService,
+            final Environment environment,
+            final SavedRequestAwareAuthenticationSuccessHandler successHandler,
+            final JwtService jwtService,
+            final UserService userService,
+            final ILogEventPublisher publisher
     ) throws Exception {
 
         if (activeprofile.equals("native-test")) {
             http.csrf(AbstractHttpConfigurer::disable)
                     .authorizeHttpRequests(registry -> registry.anyRequest().permitAll());
         } else {
-            final String[] pubRoutes = {"/error", "/api/v1/actuator/health", baseurl + "csrf", baseurl + "cart/**", baseurl + "payment/**", baseurl + "checkout/**", baseurl + "active/**"};
-            final var csrfTokenRepository = CSRF_REPO.apply(cookiesecure, samesite);
+            final String[] pubRoutes = {"/error", "/api/v1/actuator/health", baseurl + "csrf", baseurl + "category/**", baseurl + "product/**", baseurl + "cart/**", baseurl + "payment/**", baseurl + "checkout/**", baseurl + "active/**"};
+            final var csrfTokenRepository = CSRF_REPO.apply(cookiesecure, cookiesamesite);
 
             http
                     // csrf config
@@ -141,7 +145,7 @@ class SecurityConfig extends AbstractEnvironment {
                             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                             .requestMatchers("/api/v1/actuator/**").hasRole(DEVELOPER.name())
                             .requestMatchers(baseurl + "employee/**").hasRole(EMPLOYEE.name())
-                            .requestMatchers(baseurl + "order/**").hasAnyRole(USER.name())
+                            .requestMatchers(baseurl + "order/**").hasRole(USER.name())
                             .anyRequest().denyAll());
         }
 
@@ -150,10 +154,15 @@ class SecurityConfig extends AbstractEnvironment {
                 // cors config
                 .cors(withDefaults())
 
+                // social auth
+                .oauth2Login(form -> form
+                        .loginPage(baseurl + "authentication/authenticate").permitAll()
+                        .successHandler(new FederationSuccessHandler(environment, successHandler, jwtService, userService, publisher)))
+
                 // jwt
-                .addFilterBefore(refreshTokenFilter, BearerTokenAuthenticationFilter.class)
                 // https://docs.spring.io/spring-security/reference/6.0/servlet/oauth2/resource-server/jwt.html
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)))
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()))
+                .addFilterBefore(new RefreshJwtFilter(jsessionid, cookiepath, cookiemaxage, jwtService, detailsService), BearerTokenAuthenticationFilter.class)
 
                 // session management
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
@@ -161,13 +170,15 @@ class SecurityConfig extends AbstractEnvironment {
                 // global security exception handing
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, exception) -> {
-                            final String str = mapper.writeValueAsString(new ExceptionResponse(exception.getMessage(), UNAUTHORIZED));
+                            final String redirect = String
+                                    .format("%s%sauthentication/authenticate", request.getRequestURL().toString().replace(request.getRequestURI(), ""), baseurl);
+                            final String str = mapper.writeValueAsString(new ExceptionResponse(exception.getMessage(), redirect, UNAUTHORIZED));
                             response.setStatus(UNAUTHORIZED.value());
                             response.getWriter().write(str);
                             response.flushBuffer();
                         })
                         .accessDeniedHandler((request, response, exception) -> {
-                            final String str = mapper.writeValueAsString(new ExceptionResponse("Access Denied", FORBIDDEN));
+                            final String str = mapper.writeValueAsString(new ExceptionResponse(exception.getMessage(), "", FORBIDDEN));
                             response.setStatus(FORBIDDEN.value());
                             response.getWriter().write(str);
                             response.flushBuffer();
@@ -179,11 +190,9 @@ class SecurityConfig extends AbstractEnvironment {
                         .logoutUrl(baseurl + "logout")
                         .deleteCookies(jsessionid)
                         .logoutSuccessHandler((request, response, authentication) -> {
-                            record LogoutSuccessRes(String message, String redirect, HttpStatus status) {}
-
                             final String redirect = String
                                     .format("%s%sauthentication/authenticate", request.getRequestURL().toString().replace(request.getRequestURI(), ""), baseurl);
-                            final String str = mapper.writeValueAsString(new LogoutSuccessRes("", redirect, OK));
+                            final String str = mapper.writeValueAsString(new ExceptionResponse("", redirect, OK));
                             response.setStatus(OK.value());
                             response.getWriter().write(str);
                             response.flushBuffer();

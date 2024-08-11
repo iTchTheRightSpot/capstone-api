@@ -19,7 +19,7 @@ public record Category(
         @Size.List({@Size(max = 50, message = "category name max length of 50")})
         String name,
         @Column("is_visible")
-        boolean isVisible,
+        Boolean isVisible,
         @Column("parent_id")
         Long parentId
 ) {

@@ -14,7 +14,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class ShippingControllerTest extends AbstractIntegration {
+final class ShippingControllerTest extends AbstractIntegration {
 
     @Value("${api.endpoint.baseurl}employee/shipping")
     private String path;
@@ -25,16 +25,17 @@ class ShippingControllerTest extends AbstractIntegration {
     @Test
     @WithMockUser(username = "admin@admin.com", roles = {"EMPLOYEE"})
     void create() throws Exception {
+        final String payload = super.mapper.writeValueAsString(
+                new ShippingDto(
+                        "Canada",
+                        new BigDecimal("10100"),
+                        new BigDecimal("20.24")
+                )
+        );
         super.mockMvc
                 .perform(post("/" + path)
                         .with(csrf())
-                        .content(super.mapper.writeValueAsString(
-                                new ShippingDto(
-                                        "Canada",
-                                        new BigDecimal("10100"),
-                                        new BigDecimal("20.24")
-                                )
-                        ))
+                        .content(payload)
                         .contentType(APPLICATION_JSON)
                 )
                 .andExpect(status().isCreated());
@@ -68,9 +69,7 @@ class ShippingControllerTest extends AbstractIntegration {
                 .save(new ShipSetting(null, "France", new BigDecimal("25750"), new BigDecimal("35.55")));
 
         super.mockMvc
-                .perform(delete("/" + path + "/" + shipping.shipId())
-                        .with(csrf())
-                )
+                .perform(delete("/" + path + "/" + shipping.shipId()).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 

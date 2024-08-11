@@ -22,7 +22,6 @@ server:
 logging:
   level:
     org:
-      hibernate: error
       springframework:
         jdbc: trace
         security: trace
@@ -34,7 +33,7 @@ spring:
     virtual:
       enabled: true
   profiles:
-    active: default
+    active: native-test
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/capstone_db}
@@ -101,9 +100,6 @@ api:
   endpoint:
     baseurl: ${API_PREFIX:api/v1/}
 
-user:
-  principal: ${USER_PRINCIPAL:admin@admin.com}
-
 paystack:
   pub:
     key: ${PAYSTACK_PUB_KEY:paystack-pub}
@@ -141,4 +137,4 @@ race-condition:
 shopping:
   session:
     expiration:
-      bound: 18000
+      bound: 1800

@@ -2,8 +2,8 @@ package dev.integration.employee;
 
 import dev.integration.AbstractNative;
 import dev.webserver.category.CategoryDto;
+import dev.webserver.category.CategoryResponse;
 import dev.webserver.category.UpdateCategoryDto;
-import dev.webserver.category.WorkerCategoryResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -27,7 +27,7 @@ class WorkerCategoryTest extends AbstractNative {
                 route + "worker/category",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                WorkerCategoryResponse.class
+                CategoryResponse.class
         );
 
         assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());

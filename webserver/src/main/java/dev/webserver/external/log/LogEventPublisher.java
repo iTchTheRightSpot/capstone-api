@@ -35,4 +35,14 @@ class LogEventPublisher implements ILogEventPublisher {
         publisher.publishEvent(new LogEvent(this, new ConcurrentLinkedDeque<>(List.of(message))));
     }
 
+    @Override
+    public void publishSignInOrRegistration(final String firstname, final String email) {
+
+    }
+
+    @Override
+    public void publishRegistrationException(final String firstname, final String email) {
+
+    }
+
 }

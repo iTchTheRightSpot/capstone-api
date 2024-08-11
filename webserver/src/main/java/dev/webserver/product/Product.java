@@ -8,6 +8,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.math.BigDecimal;
+
 @Table(name = "product")
 @Builder
 public record Product(
@@ -37,7 +39,7 @@ public record Product(
         })
         @Column("default_image_key")
         String defaultKey,
-        Double weight,
+        BigDecimal weight,
         @Column("weight_type")
         String weightType, // default injected in migration script
         @NotNull(message = "product category_id cannot be null")

@@ -4,10 +4,10 @@ import dev.webserver.AbstractIntegration;
 import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
-import dev.webserver.data.TestData;
+import dev.webserver.TestData;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
-import dev.webserver.product.WorkerProductService;
+import dev.webserver.product.EmployeeProductService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class CartControllerTest extends AbstractIntegration {
+final class CartControllerTest extends AbstractIntegration {
 
     @Value(value = "/${api.endpoint.baseurl}cart")
     private String path;
@@ -34,7 +34,7 @@ class CartControllerTest extends AbstractIntegration {
     @Autowired
     private IShoppingSessionRepository sessionRepository;
     @Autowired
-    private WorkerProductService workerProductService;
+    private EmployeeProductService employeeProductService;
     @Autowired
     private ProductSkuRepository productSkuRepository;
     @Autowired
@@ -44,11 +44,11 @@ class CartControllerTest extends AbstractIntegration {
     void before() {
         var category = categoryRepository.save(Category.builder().name("category").isVisible(true).build());
 
-        TestData.dummyProducts(category, 2, workerProductService);
+        TestData.dummyProducts(category, 2, employeeProductService);
 
         var clothes = categoryRepository.save(Category.builder().name("clothes").isVisible(true).build());
 
-        TestData.dummyProducts(clothes, 5, workerProductService);
+        TestData.dummyProducts(clothes, 5, employeeProductService);
     }
 
     private ProductSku productSku() {

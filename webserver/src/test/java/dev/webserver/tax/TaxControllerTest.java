@@ -6,19 +6,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 
+import java.math.BigDecimal;
+
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class TaxControllerTest extends AbstractIntegration {
+final class TaxControllerTest extends AbstractIntegration {
 
     @Value("${api.endpoint.baseurl}employee/tax")
     private String path;
 
     @Test
-    @WithMockUser(username = "hello@hello.com", password = "password", roles = {"EMPLOYEE"})
+    @WithMockUser(username = "hello@hello.com", roles = {"EMPLOYEE"})
     void taxes() throws Exception {
         super.mockMvc
                 .perform(get( "/" + path).with(csrf()))
@@ -28,10 +30,10 @@ class TaxControllerTest extends AbstractIntegration {
     }
 
     @Test
-    @WithMockUser(username = "hello@hello.com", password = "password", roles = {"EMPLOYEE"})
+    @WithMockUser(username = "hello@hello.com", roles = {"EMPLOYEE"})
     void update() throws Exception {
         // given
-        var dto = new TaxDto(1L, "fish", 12.3256);
+        var dto = new TaxDto(1L, "fish", new BigDecimal("12.3256"));
 
         // when
         super.mockMvc

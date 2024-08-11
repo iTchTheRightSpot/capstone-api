@@ -4,10 +4,9 @@ import dev.webserver.AbstractRepositoryTest;
 import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
-import dev.webserver.data.RepositoryTestData;
+import dev.webserver.RepositoryTestData;
 import dev.webserver.product.*;
 import dev.webserver.util.CustomUtil;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -16,9 +15,10 @@ import java.time.LocalDateTime;
 import static dev.webserver.enumeration.SarreCurrency.NGN;
 import static dev.webserver.enumeration.SarreCurrency.USD;
 import static dev.webserver.util.CustomUtil.TO_GREENWICH;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-class IShoppingSessionRepositoryTest extends AbstractRepositoryTest {
+final class IShoppingSessionRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
     private IShoppingSessionRepository sessionRepository;
@@ -33,7 +33,7 @@ class IShoppingSessionRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private ProductDetailRepository detailRepository;
     @Autowired
-    private PriceCurrencyRepository priceCurrencyRepository;
+    private ProductPriceCurrencyRepository productPriceCurrencyRepository;
     @Autowired
     private ProductImageRepository imageRepository;
 
@@ -44,7 +44,7 @@ class IShoppingSessionRepositoryTest extends AbstractRepositoryTest {
         sessionRepository.save(ShoppingSession.builder()
                 .sessionId(null)
                 .cookie("cookie")
-                .createAt(ldt)
+                .createdAt(ldt)
                 .expireAt(ldt.plusHours(1))
                 .build());
 
@@ -59,16 +59,16 @@ class IShoppingSessionRepositoryTest extends AbstractRepositoryTest {
         final ShoppingSession session = sessionRepository.save(ShoppingSession.builder()
                 .sessionId(null)
                 .cookie("cookie")
-                .createAt(ldt)
+                .createdAt(ldt)
                 .expireAt(ldt.plusHours(1))
                 .build());
 
-        final var update = session.expireAt().plusHours(2);
         // method to test
-        sessionRepository.updateShoppingSessionExpiry("cookie", update);
+        sessionRepository.updateShoppingSessionExpiry("cookie", session.expireAt().plusDays(1));
 
         // when
-        Assertions.assertNotEquals(session.expireAt(), update);
+        assertThat(session.expireAt().plusDays(1).toLocalDate())
+                .isEqualTo(sessionRepository.findById(session.sessionId()).orElseThrow().expireAt().toLocalDate());
     }
 
     @Test
@@ -77,7 +77,7 @@ class IShoppingSessionRepositoryTest extends AbstractRepositoryTest {
         final var cat = categoryRepository.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepository, priceCurrencyRepository, imageRepository, skuRepository);
+                .createProduct(3, cat, productRepository, detailRepository, productPriceCurrencyRepository, imageRepository, skuRepository);
 
         final var skus = TestUtility.toList(skuRepository.findAll());
         assertEquals(3, skus.size());
@@ -86,13 +86,12 @@ class IShoppingSessionRepositoryTest extends AbstractRepositoryTest {
         final ShoppingSession session = sessionRepository.save(ShoppingSession.builder()
                 .sessionId(null)
                 .cookie("cookie")
-                .createAt(ldt)
+                .createdAt(ldt)
                 .expireAt(ldt.plusHours(1))
                 .build());
 
-        for (final ProductSku sku : skus) {
+        for (final ProductSku sku : skus)
             iCartRepository.save(new Cart(null, sku.inventory() - 1, session.sessionId(), sku.skuId()));
-        }
 
         // when
         final var usd = sessionRepository.cartItemsByCookieValue(USD, "cookie");
@@ -137,21 +136,20 @@ class IShoppingSessionRepositoryTest extends AbstractRepositoryTest {
     @Test
     void allExpiredShoppingSession() {
         // given
-        final LocalDateTime ldt = CustomUtil.TO_GREENWICH.apply(null).minusHours(2);
-        final LocalDateTime expire = ldt.minusHours(1);
+        final LocalDateTime ldt = CustomUtil.TO_GREENWICH.apply(null);
 
         int num = 5;
 
-        for (int i = 0; i < num; i++) {
-            sessionRepository.save(ShoppingSession.builder()
-                    .cookie("cookie" + i)
-                    .createAt(ldt)
-                    .expireAt(expire)
-                    .build());
-        }
+        for (int i = 0; i < num; i++)
+            sessionRepository.save(
+                    ShoppingSession.builder()
+                            .cookie("cookie" + i)
+                            .createdAt(ldt)
+                            .expireAt(ldt.minusHours(i))
+                            .build());
 
         // when
-        assertEquals(num, sessionRepository.allExpiredShoppingSession(expire).size());
+        assertEquals(num, sessionRepository.allExpiredShoppingSession(ldt.minusHours(0)).size());
     }
 
 }

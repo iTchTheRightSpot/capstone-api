@@ -18,7 +18,7 @@ public record ProductDetail(
         Long detailId,
         @NotNull(message = "product_detail colour cannot be null")
         @NotEmpty(message = "product_detail colour cannot be empty")
-        @Size.List({@Size(max = 36, message = "product_detail colour max length of 50")})
+        @Size.List({@Size(max = 50, message = "product_detail colour max length of 50")})
         String colour,
         @Column("is_visible")
         boolean isVisible,

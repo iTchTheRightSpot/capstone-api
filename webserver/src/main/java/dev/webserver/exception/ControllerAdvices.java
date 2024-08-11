@@ -34,68 +34,62 @@ class ControllerAdvices {
     @ExceptionHandler(value = {DuplicateException.class, ResourceAttachedException.class, OutOfStockException.class})
     public ResponseEntity<ExceptionResponse> duplicateException(final RuntimeException ex) {
         final String message = ex.getCause() != null ? formatErrorMessage.apply(ex.getCause().getClass(), ex.getMessage()) : ex.getMessage();
-        final var res = new ExceptionResponse(message, CONFLICT);
+        final var res = new ExceptionResponse(message, "", CONFLICT);
         return new ResponseEntity<>(res, CONFLICT);
-    }
-
-    @ExceptionHandler(value = {CustomNotFoundException.class})
-    public ResponseEntity<ExceptionResponse> customNotFoundException(final CustomNotFoundException ex) {
-        final var res = new ExceptionResponse(ex.getMessage(), NOT_FOUND);
-        return new ResponseEntity<>(res, NOT_FOUND);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ExceptionResponse> handleMaxFileSizeExceeded() {
-        final var res = new ExceptionResponse("One of more files are too large. Each file has to be %s", PAYLOAD_TOO_LARGE);
+        final var res = new ExceptionResponse("One of more files are too large. Each file has to be %s", "", PAYLOAD_TOO_LARGE);
         return new ResponseEntity<>(res, PAYLOAD_TOO_LARGE);
     }
 
     @ExceptionHandler({S3Exception.class, CustomServerError.class})
     public ResponseEntity<ExceptionResponse> awsException(final RuntimeException ex) {
         final String message = ex.getCause() != null ? formatErrorMessage.apply(ex.getCause().getClass(), ex.getMessage()) : ex.getMessage();
-        final var res = new ExceptionResponse(message, INTERNAL_SERVER_ERROR);
+        final var res = new ExceptionResponse(message, "", INTERNAL_SERVER_ERROR);
         return new ResponseEntity<>(res, INTERNAL_SERVER_ERROR);
     }
-
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ExceptionResponse> methodArgumentException(final MethodArgumentNotValidException ex) {
         final String message = ex.getBindingResult().getAllErrors().getFirst().getDefaultMessage();
-        return new ResponseEntity<>(new ExceptionResponse(message, BAD_REQUEST), BAD_REQUEST);
+        return new ResponseEntity<>(new ExceptionResponse(message, "", BAD_REQUEST), BAD_REQUEST);
+    }
+
+    @ExceptionHandler(CustomBadRequestException.class)
+    public ResponseEntity<ExceptionResponse> badRequestException(final CustomBadRequestException ex) {
+        final String message = ex.getCause() != null ? formatErrorMessage.apply(ex.getCause().getClass(), ex.getMessage()) : ex.getMessage();
+        return new ResponseEntity<>(new ExceptionResponse(message, "", BAD_REQUEST), BAD_REQUEST);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ExceptionResponse> missingRequestParameterException(final MissingServletRequestParameterException ex) {
-        return new ResponseEntity<>(new ExceptionResponse(ex.getMessage(), BAD_REQUEST), BAD_REQUEST);
+        return new ResponseEntity<>(new ExceptionResponse(ex.getMessage(), "", BAD_REQUEST), BAD_REQUEST);
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ExceptionResponse> handlerMethodException(final HandlerMethodValidationException ex) {
         final String message = ex.getAllValidationResults().getFirst().getResolvableErrors().getFirst().getDefaultMessage();
-        return new ResponseEntity<>(new ExceptionResponse(message, BAD_REQUEST), BAD_REQUEST);
+        return new ResponseEntity<>(new ExceptionResponse(message, "", BAD_REQUEST), BAD_REQUEST);
     }
 
     @ExceptionHandler({CustomInvalidFormatException.class})
     public ResponseEntity<ExceptionResponse> formatException(final CustomInvalidFormatException ex) {
-        final var res = new ExceptionResponse(ex.getMessage(), BAD_REQUEST);
+        final var res = new ExceptionResponse(ex.getMessage(), "", BAD_REQUEST);
         return new ResponseEntity<>(res, BAD_REQUEST);
     }
 
     @ExceptionHandler({SQLIntegrityConstraintViolationException.class})
-    public ResponseEntity<ExceptionResponse> sqlDuplicateException() {
-        final var res = new ExceptionResponse("duplicate entry(s)", CONFLICT);
+    public ResponseEntity<ExceptionResponse> sqlIntegrityException(final SQLIntegrityConstraintViolationException e) {
+        log.error("SqlIntegrityException Exception {}", e.getMessage());
+        final var res = new ExceptionResponse("sql conflict", "", CONFLICT);
         return new ResponseEntity<>(res, CONFLICT);
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ExceptionResponse> currencyException() {
-        final var res = new ExceptionResponse("invalid currency type", BAD_REQUEST);
-        return new ResponseEntity<>(res, BAD_REQUEST);
     }
 
     @ExceptionHandler({PatternSyntaxException.class})
     public ResponseEntity<ExceptionResponse> formatException() {
-       final var res = new ExceptionResponse("invalid cookie", BAD_REQUEST);
+       final var res = new ExceptionResponse("invalid cookie", "", BAD_REQUEST);
         return new ResponseEntity<>(res, BAD_REQUEST);
     }
 
@@ -107,27 +101,27 @@ class ControllerAdvices {
             default -> "please verify your request";
         };
 
-        final var res = new ExceptionResponse(message, BAD_REQUEST);
+        final var res = new ExceptionResponse(message, "", BAD_REQUEST);
         return new ResponseEntity<>(res, BAD_REQUEST);
     }
 
     @ExceptionHandler(value = {NullPointerException.class})
     public ResponseEntity<ExceptionResponse> nullException(final NullPointerException e) {
         log.error("NullPointerException ExceptionHandler {}", e.getMessage());
-        final var res = new ExceptionResponse("an error occurred", INTERNAL_SERVER_ERROR);
+        final var res = new ExceptionResponse("an error occurred", "", INTERNAL_SERVER_ERROR);
         return new ResponseEntity<>(res, INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ExceptionResponse> illegalStateException(final IllegalArgumentException ex) {
         final String message = ex.getCause() != null ? formatErrorMessage.apply(ex.getCause().getClass(), ex.getMessage()) : ex.getMessage();
-        return new ResponseEntity<>(new ExceptionResponse(message, BAD_REQUEST), BAD_REQUEST);
+        return new ResponseEntity<>(new ExceptionResponse(message, "", BAD_REQUEST), BAD_REQUEST);
     }
 
     @ExceptionHandler(CustomNotFoundException.class)
     public ResponseEntity<ExceptionResponse> notFoundException(final CustomNotFoundException ex) {
         final String message = ex.getCause() != null ? formatErrorMessage.apply(ex.getCause().getClass(), ex.getMessage()) : ex.getMessage();
-        return new ResponseEntity<>(new ExceptionResponse(message, NOT_FOUND), NOT_FOUND);
+        return new ResponseEntity<>(new ExceptionResponse(message, "", NOT_FOUND), NOT_FOUND);
     }
 
 }

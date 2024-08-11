@@ -7,7 +7,8 @@ import dev.webserver.AbstractRepositoryTest;
 import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
-import dev.webserver.data.RepositoryTestData;
+import dev.webserver.RepositoryTestData;
+import dev.webserver.enumeration.PaymentStatus;
 import dev.webserver.enumeration.SarreCurrency;
 import dev.webserver.product.*;
 import dev.webserver.util.CustomUtil;
@@ -28,7 +29,7 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
     @Autowired
     private ProductDetailRepository detailRepo;
     @Autowired
-    private PriceCurrencyRepository priceCurrencyRepository;
+    private ProductPriceCurrencyRepository productPriceCurrencyRepository;
     @Autowired
     private ProductImageRepository imageRepo;
     @Autowired
@@ -43,58 +44,56 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
     @Test
     void orderHistoryByPrincipal() throws JsonProcessingException {
         // given
-        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
+        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
-                .createProduct(2, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
+                .createProduct(2, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
 
-        final var ldt = CustomUtil.TO_GREENWICH.apply(null);
-
-        var paymentDetail = paymentDetailRepository
+        final var paymentDetail = paymentDetailRepository
                 .save(PaymentDetail.builder()
                         .fullname(new Faker().name().fullName())
                         .email("hello@hello.com")
                         .phone("0000000000")
                         .referenceId("unique-payment-categoryId")
-                        .currency(SarreCurrency.USD)
+                        .currency(SarreCurrency.NGN)
+                        .paymentStatus(PaymentStatus.CONFIRMED)
                         .amount(new BigDecimal("50.65"))
                         .paymentProvider("Paystack")
-                        .createAt(ldt)
+                        .createAt(CustomUtil.TO_GREENWICH.apply(null))
                         .build());
 
         addressRepository.save(new Address(
-                null,
-                "address boulevard",
-                "city",
-                "state",
-                "postcode",
-                "Transylvania",
+                paymentDetail.paymentId(),
+                new Faker().address().streetAddress(),
+                new Faker().address().city(),
+                new Faker().address().state(),
+                new Faker().address().zipCode(),
+                new Faker().address().country(),
                 new Faker().lorem().characters(500))
         );
 
-
         // when
-        var skus = TestUtility.toList(skuRepo.findAll());
+        final var skus = TestUtility.toList(skuRepo.findAll());
         assertFalse(skus.isEmpty());
-        var sku = skus.getFirst();
+        final var sku = skus.getFirst();
 
         orderDetailRepository.save(new OrderDetail(null, sku.inventory(), sku.skuId(), paymentDetail.paymentId()));
 
         // then
-        var details = orderDetailRepository.orderHistoryByPrincipal("hello@hello.com");
+        final var details = orderDetailRepository.orderHistoryByPrincipal("hello@hello.com");
 
         assertFalse(details.isEmpty());
 
-        for (OrderDetailDbMapper pojo : details) {
+        for (final OrderDetailDbMapper pojo : details) {
             assertNotNull(pojo.createdAt());
             assertNotNull(pojo.currency());
             assertNotNull(pojo.amount());
             assertNotNull(pojo.referenceId());
 
-            OrderHistoryDbMapper[] arr = new ObjectMapper().readValue(pojo.detail(), OrderHistoryDbMapper[].class);
+            final OrderHistoryDbMapper[] arr = new ObjectMapper().readValue(pojo.detail(), OrderHistoryDbMapper[].class);
             assertNotNull(arr);
 
-            for (OrderHistoryDbMapper mapper : arr) {
+            for (final OrderHistoryDbMapper mapper : arr) {
                 assertNotNull(mapper.name());
                 assertNotNull(mapper.colour());
                 assertNotNull(mapper.imageKey());
@@ -104,43 +103,41 @@ class OrderDetailRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     void shouldSuccessfullySaveOrderDetail() {
-        var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
+        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
-                .createProduct(2, cat, productRepository, detailRepo, priceCurrencyRepository, imageRepo, skuRepo);
+                .createProduct(2, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
 
         final var ldt = CustomUtil.TO_GREENWICH.apply(null);
-        var paymentDetail = paymentDetailRepository
+        final var paymentDetail = paymentDetailRepository
                 .save(PaymentDetail.builder()
-                        .name(new Faker().name().fullName())
-                        .email("hello@hello.com")
-                        .phone("0000000000")
+                        .fullname(new Faker().name().fullName())
+                        .email(new Faker().internet().emailAddress())
+                        .phone(new Faker().phoneNumber().phoneNumber())
                         .referenceId("unique-payment-categoryId")
                         .currency(SarreCurrency.USD)
+                        .paymentStatus(PaymentStatus.CONFIRMED)
                         .amount(new BigDecimal("50.65"))
                         .paymentProvider("Paystack")
                         .createAt(ldt)
                         .build());
 
         addressRepository.save(new Address(
-                null,
-                "address boulevard",
-                "city",
-                "state",
-                "postcode",
-                "Transylvania",
-                new Faker().lorem().characters(500))
-        );
-
+                paymentDetail.paymentId(),
+                new Faker().address().streetAddress(),
+                new Faker().address().city(),
+                new Faker().address().state(),
+                new Faker().address().zipCode(),
+                new Faker().address().country(),
+                new Faker().lorem().characters(900)));
 
         // when
-        var skus = TestUtility.toList(skuRepo.findAll());
+        final var skus = TestUtility.toList(skuRepo.findAll());
         assertFalse(skus.isEmpty());
-        var sku = skus.getFirst();
+        final var sku = skus.getFirst();
 
         // method to test
-        orderDetailRepository
-                .saveOrderDetail(sku.inventory(), sku.skuId(), paymentDetail.paymentId());
+        orderDetailRepository.saveOrderDetail(sku.inventory(), sku.skuId(), paymentDetail.paymentId());
 
         // then
         assertFalse(TestUtility.toList(orderDetailRepository.findAll()).isEmpty());

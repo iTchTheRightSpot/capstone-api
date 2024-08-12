@@ -82,24 +82,10 @@ final class NativeEmployeeProductDetailTest extends AbstractNative {
     }
 
     @Test
-    void shouldSuccessfullyDeleteAProductDetail() {
-        headers.set(CONTENT_TYPE, APPLICATION_JSON_VALUE);
-
-        var delete = testTemplate.exchange(
-                path + "/product-sku-3",
-                HttpMethod.DELETE,
-                new HttpEntity<>(headers),
-                Void.class
-        );
-
-        assertEquals(HttpStatusCode.valueOf(204), delete.getStatusCode());
-    }
-
-    @Test
     void shouldSuccessfullyDeleteAProductSku() {
         headers.set(CONTENT_TYPE, APPLICATION_JSON_VALUE);
 
-        var delete = testTemplate.exchange(
+        final var delete = testTemplate.exchange(
                 path + "/sku?sku=product-sku-2",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),

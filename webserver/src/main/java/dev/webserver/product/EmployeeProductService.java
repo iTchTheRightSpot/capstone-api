@@ -18,8 +18,8 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -120,8 +120,7 @@ public class EmployeeProductService extends AbstractEnvironment {
         currencyRepo.save(new ProductPriceCurrency(null, usd, USD, product.productId()));
 
         // save ProductDetails
-        final var date = CustomUtil.TO_GREENWICH.apply(null);
-        final var detail = detailService.productDetail(product, dto.colour(), dto.visible(), date);
+        final var detail = detailService.productDetail(product, dto.colour(), dto.visible());
 
         // save ProductSKUs
         skuService.save(dto.sizeInventory(), detail);
@@ -178,10 +177,8 @@ public class EmployeeProductService extends AbstractEnvironment {
      */
     @Transactional(rollbackFor = Exception.class)
     public void delete(final String uuid) {
-        final List<ObjectIdentifier> keys = productRepository.productImagesByProductUuid(uuid)
-                .stream() //
-                .map(img -> ObjectIdentifier.builder().key(img.imageKey()).build()) //
-                .toList();
+        final var product = productRepository.productByUuid(uuid)
+                .orElseThrow(() -> new CustomNotFoundException("product not found"));
 
         try {
             productRepository.deleteByProductUuid(uuid);
@@ -190,9 +187,13 @@ public class EmployeeProductService extends AbstractEnvironment {
             throw new ResourceAttachedException("resource(s) attached to product");
         }
 
-        if (!keys.isEmpty()) {
-            productImageService.deleteFromS3(keys, awsbucket);
-        }
+        final var keys = new ArrayList<>(
+                productRepository.productImagesByProductUuid(uuid).stream()
+                        .map(img -> ObjectIdentifier.builder().key(img.imageKey()).build())
+                        .toList());
+        keys.add(ObjectIdentifier.builder().key(product.defaultKey()).build());
+
+        productImageService.deleteFromS3(keys, awsbucket);
     }
 
     /**

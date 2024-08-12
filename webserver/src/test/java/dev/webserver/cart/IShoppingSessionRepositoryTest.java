@@ -136,7 +136,7 @@ final class IShoppingSessionRepositoryTest extends AbstractRepositoryTest {
     @Test
     void allExpiredShoppingSession() {
         // given
-        final LocalDateTime ldt = CustomUtil.TO_GREENWICH.apply(null);
+        final LocalDateTime ldt = CustomUtil.TO_GREENWICH.apply(null).minusMinutes(10);
 
         int num = 5;
 
@@ -149,7 +149,7 @@ final class IShoppingSessionRepositoryTest extends AbstractRepositoryTest {
                             .build());
 
         // when
-        assertEquals(num, sessionRepository.allExpiredShoppingSession(ldt.minusHours(0)).size());
+        assertEquals(num, sessionRepository.allExpiredShoppingSession(ldt.plusMinutes(10)).size());
     }
 
 }

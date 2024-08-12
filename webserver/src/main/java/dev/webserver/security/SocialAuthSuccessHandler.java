@@ -25,8 +25,8 @@ import static org.springframework.security.authentication.UsernamePasswordAuthen
 /**
  * Implementation for successful authentication by social login.
  * */
-final class FederationSuccessHandler extends AbstractEnvironment implements AuthenticationSuccessHandler {
-    private static final Logger log = LoggerFactory.getLogger(FederationSuccessHandler.class);
+final class SocialAuthSuccessHandler extends AbstractEnvironment implements AuthenticationSuccessHandler {
+    private static final Logger log = LoggerFactory.getLogger(SocialAuthSuccessHandler.class);
 
     private final StringBuilder redirect = new StringBuilder();
 
@@ -34,7 +34,7 @@ final class FederationSuccessHandler extends AbstractEnvironment implements Auth
     private final BiConsumer<HttpServletResponse, OAuth2User> oauth2UserHandler;
     private final BiConsumer<HttpServletResponse, OidcUser> oidcUserHandler;
 
-    public FederationSuccessHandler(
+    public SocialAuthSuccessHandler(
             final Environment environment,
             final SavedRequestAwareAuthenticationSuccessHandler successHandler,
             final JwtService jwtService,

@@ -31,9 +31,9 @@ public record PaymentDetail(
         @NotEmpty(message = "payment_detail phone cannot be empty")
         @Size.List({@Size(max = 20, message = "payment_detail phone max length of 20")})
         String phone,
-        @NotNull(message = "payment_detail reference_id cannot be null")
-        @NotEmpty(message = "payment_detail reference_id cannot be empty")
-        @Size.List({@Size(max = 255, message = "payment_detail reference_id max length of 255")})
+        @NotNull(message = "reference_id cannot be null")
+        @NotEmpty(message = "reference_id cannot be empty")
+        @Size.List({@Size(max = 255, message = "reference_id max length of 255")})
         @Column("reference_id")
         String referenceId, // equivalent to reference id
         CapstoneCurrency currency,
@@ -48,7 +48,7 @@ public record PaymentDetail(
         PaymentStatus paymentStatus,
         @NotNull(message = "payment_detail paid_at cannot be null")
         @NotEmpty(message = "payment_detail paid_at cannot be empty")
-        @Size.List({@Size(max = 255, message = "payment_detail paid_at max length of 255")})
+        @Size.List({@Size(max = 30, message = "payment_detail paid_at max length of 255")})
         @Column("paid_at")
         String paidAt,
         @NotNull(message = "payment_detail created_at cannot be null")

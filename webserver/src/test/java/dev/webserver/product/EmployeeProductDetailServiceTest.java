@@ -22,7 +22,6 @@ final class EmployeeProductDetailServiceTest extends AbstractUnitTest {
     @Mock private Environment environment;
     @Mock private ProductRepository productRepository;
     @Mock private ProductSkuService skuService;
-    @Mock private ProductImageRepository imageRepo;
     @Mock private ProductDetailRepository detailRepo;
     @Mock private ProductImageService productImageService;
 
@@ -32,7 +31,6 @@ final class EmployeeProductDetailServiceTest extends AbstractUnitTest {
                 environment,
                 detailRepo,
                 skuService,
-                imageRepo,
                 productRepository,
                 productImageService
         );

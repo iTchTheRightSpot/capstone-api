@@ -48,12 +48,6 @@ class EmployeeProductDetailController {
     }
 
     @ResponseStatus(NO_CONTENT)
-    @DeleteMapping(path = "/{sku}")
-    public void delete(@NotNull(message = "ProductSku sku cannot be null") @PathVariable(value = "sku") final String sku) {
-        detailService.delete(sku);
-    }
-
-    @ResponseStatus(NO_CONTENT)
     @DeleteMapping(path = "/sku")
     public void deleteProductSku(@NotNull(message = "ProductSku sku cannot be null") @RequestParam(value = "sku") final String sku) {
         skuService.delete(sku);

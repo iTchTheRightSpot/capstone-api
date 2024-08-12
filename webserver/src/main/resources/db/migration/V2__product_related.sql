@@ -26,11 +26,10 @@ CREATE TABLE IF NOT EXISTS product_detail
 (
     detail_id  BIGINT      NOT NULL UNIQUE AUTO_INCREMENT,
     colour     VARCHAR(50) NOT NULL,
-    is_visible BOOLEAN              DEFAULT FALSE,
-    created_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_visible BOOLEAN DEFAULT FALSE,
     product_id BIGINT      NOT NULL,
     PRIMARY KEY (detail_id),
-    CONSTRAINT `product_and_product_detail_FK` FOREIGN KEY (product_id) references product (product_id) ON DELETE RESTRICT
+    CONSTRAINT `product_and_product_detail_FK` FOREIGN KEY (product_id) references product (product_id) ON DELETE CASCADE
 );
 
 CREATE TABLE product_sku
@@ -41,8 +40,8 @@ CREATE TABLE product_sku
     inventory INTEGER     NOT NULL,
     detail_id BIGINT      NOT NULL,
     PRIMARY KEY (sku_id),
-    CONSTRAINT `product_detail_and_product_sku_FK` FOREIGN KEY (detail_id) references product_detail (detail_id) ON DELETE RESTRICT,
-    CONSTRAINT `product_sku_inventory_greater_than_zero_CHECK` CHECK ( inventory >= 0 )
+    CONSTRAINT `product_sku_inventory_greater_than_zero_CHECK` CHECK ( inventory >= 0 ),
+    CONSTRAINT `product_detail_and_product_sku_FK` FOREIGN KEY (detail_id) references product_detail (detail_id) ON DELETE RESTRICT
 );
 
 CREATE TABLE product_image

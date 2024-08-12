@@ -1,6 +1,8 @@
 package dev.webserver.util;
 
-public final class Page {
+import java.io.Serializable;
+
+public final class Page implements Serializable {
     private final int page;
     private final int size;
     private final int offset;

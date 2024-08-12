@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.core.env.Environment;
 
-class WebhookServiceTest extends AbstractUnitTest {
+final class WebhookServiceTest extends AbstractUnitTest {
 
     private WebhookService webhookService;
 
@@ -30,7 +30,7 @@ class WebhookServiceTest extends AbstractUnitTest {
     @Test
     void shouldSuccessfullyProcessWebHookBasedOnMockData() throws JsonProcessingException {
         // given
-        JsonNode node = new ObjectMapper().readValue(dummyPaystackWebhook, JsonNode.class);
+        final JsonNode node = new ObjectMapper().readValue(dummyPaystackWebhook, JsonNode.class);
 
         // method to test
         webhookService.onSuccessWebHook(node.get("data"));

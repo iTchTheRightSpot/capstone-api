@@ -8,8 +8,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.LocalDateTime;
-
 @Table(name = "product_detail")
 @Builder
 public record ProductDetail(
@@ -22,8 +20,6 @@ public record ProductDetail(
         String colour,
         @Column("is_visible")
         boolean isVisible,
-        @Column("created_at")
-        LocalDateTime createAt,
         @NotNull(message = "product_detail product_id cannot be null")
         @Column("product_id")
         Long productId

@@ -20,7 +20,7 @@ final class RefreshJwtFilter extends OncePerRequestFilter {
     private final String path;
     private final int maxage;
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final UserDetailsService detailsService;
 
     @Override
     protected void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain filterChain) throws ServletException, IOException {
@@ -38,7 +38,7 @@ final class RefreshJwtFilter extends OncePerRequestFilter {
                 .findFirst()
                 .ifPresent(cookie -> {
                     final String jwt = jwtService
-                            .generateJwt(DemoUser.UPAT.apply(jwtService.extractSubject(cookie), userDetailsService));
+                            .generateJwt(DemoUser.UPAT.apply(jwtService.extractSubject(cookie), detailsService));
 
                     // update cookie
                     cookie.setValue(jwt);

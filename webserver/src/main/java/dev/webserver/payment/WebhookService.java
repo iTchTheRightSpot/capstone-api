@@ -1,11 +1,10 @@
 package dev.webserver.payment;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import dev.webserver.AbstractEnvironment;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.external.log.ILogEventPublisher;
-import dev.webserver.AbstractEnvironment;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -18,7 +17,7 @@ import java.security.NoSuchAlgorithmException;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class WebhookService extends AbstractEnvironment {
+class WebhookService extends AbstractEnvironment {
 
     private static final Logger log = LoggerFactory.getLogger(WebhookService.class);
 
@@ -39,13 +38,12 @@ public class WebhookService extends AbstractEnvironment {
      * @throws CustomServerError if there is an error parsing the request or an invalid request
      * is received from Paystack.
      */
-    public void webhook(HttpServletRequest req) {
+    public void webhook(final HttpServletRequest req) {
         try {
             log.info("webhook received");
             final String body = WebHookUtil.httpServletRequestToString(req);
 
-            final WebhookConstruct pair = WebHookUtil
-                    .validateRequestFromPayStack(super.payStackCredentials().secretKey(), body);
+            final var pair = WebHookUtil.validateRequestFromPayStack(super.payStackCredentials().secretKey(), body);
 
             if (!pair.validate().toLowerCase().equals(req.getHeader("x-paystack-signature"))) {
                 log.error("invalid request from paystack");
@@ -76,7 +74,7 @@ public class WebhookService extends AbstractEnvironment {
             throw new CustomServerError("error constructing WebhookConstruct");
         } catch (CustomServerError e) {
             log.error("error from paystack webhook {}", e.getMessage());
-            throw new CustomServerError(e.getMessage());
+            throw new CustomServerError("error from paystack webhook");
         }
     }
 
@@ -86,7 +84,7 @@ public class WebhookService extends AbstractEnvironment {
      * @param data contains details of a successful payment.
      * @throws CustomServerError if there is an error occurs transforming data to a custom object.
      */
-    void onSuccessWebHook(JsonNode data) {
+    void onSuccessWebHook(final JsonNode data) {
         paymentDetailService.onSuccessfulPayment(data);
     }
 

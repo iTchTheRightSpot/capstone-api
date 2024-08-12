@@ -4,7 +4,6 @@ import com.github.javafaker.Faker;
 import dev.webserver.category.Category;
 import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.product.*;
-import dev.webserver.util.CustomUtil;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -40,7 +39,6 @@ public final class RepositoryTestData {
                 ProductDetail.builder()
                         .colour(UUID.randomUUID().toString())
                         .isVisible(true)
-                        .createAt(CustomUtil.TO_GREENWICH.apply(null))
                         .productId(product.productId())
                         .build());
 

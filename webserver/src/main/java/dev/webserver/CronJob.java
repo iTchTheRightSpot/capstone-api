@@ -179,9 +179,6 @@ class CronJob extends AbstractEnvironment {
         return CustomUtil.asynchronousTasks(futures).join();
     }
 
-    /**
-     * Filters successful {@link OrderReservation}.
-     * */
     private boolean onSuccess(final CustomCronJobObject obj) {
         return obj.status().equals(OK)
                 && obj.node().get("message").textValue().equalsIgnoreCase("Verification successful")

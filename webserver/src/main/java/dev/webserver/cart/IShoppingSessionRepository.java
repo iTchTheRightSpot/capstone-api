@@ -43,7 +43,7 @@ public interface IShoppingSessionRepository extends CrudRepository<ShoppingSessi
     WHERE s.cookie = :cookie AND cur.currency = :currency
     GROUP BY p.uuid, s.session_id, p.default_image_key, p.name, cur.currency, cur.price, d.colour, ps.size, ps.sku, c.qty
     """)
-    List<CartDbMapper> cartItemsByCookieValue(CapstoneCurrency currency, String cookie);
+    List<CartDbMapper> cartItemsByCookieValue(final CapstoneCurrency currency, final String cookie);
 
     @Query("SELECT * FROM shopping_session WHERE expire_at <= :d")
     List<ShoppingSession> allExpiredShoppingSession(final LocalDateTime d);

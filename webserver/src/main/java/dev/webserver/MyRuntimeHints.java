@@ -12,6 +12,8 @@ import dev.webserver.security.demo.LoginDto;
 import dev.webserver.shipping.ShippingDto;
 import dev.webserver.shipping.ShippingMapper;
 import dev.webserver.tax.TaxDto;
+import dev.webserver.util.Page;
+import dev.webserver.util.Pageable;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 
@@ -57,7 +59,9 @@ final class MyRuntimeHints implements RuntimeHintsRegistrar {
                 .registerType(CustomMultiPart.class)
                 .registerType(ProductResponse.class)
                 .registerType(CronJob.CustomCronJobObject.class)
-                .registerType(LoginDto.class);
+                .registerType(LoginDto.class)
+                .registerType(Pageable.class)
+                .registerType(Page.class);
     }
 
 }

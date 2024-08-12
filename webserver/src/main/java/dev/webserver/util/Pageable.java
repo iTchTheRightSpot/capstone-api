@@ -3,11 +3,12 @@ package dev.webserver.util;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 @Setter
-public final class Pageable <T> {
+public final class Pageable <T> implements Serializable {
     private final int page;
     private final int size;
     private final int totalPages;

@@ -7,10 +7,10 @@ VALUES ('product-1', 'lorem 5000', 'image-key-1', 1, 'product-uuid-1', 2.5, 'kg'
 
 INSERT IGNORE INTO product_price_currency(price, currency, product_id) VALUE (99.99, 'NGN', 1);
 
-INSERT IGNORE INTO product_detail(detail_id, colour, is_visible, created_at, product_id)
-VALUES (1, 'red', true, timestamp('2024-03-26', '12:20:45'), 1),
-       (2, 'greenish', true, timestamp('2024-03-26', '12:20:45'), 1),
-       (3, 'yellow-brown', true, timestamp('2024-03-26', '12:20:45'), 1);;
+INSERT IGNORE INTO product_detail(detail_id, colour, is_visible, product_id)
+VALUES (1, 'red', true, 1),
+       (2, 'greenish', true, 1),
+       (3, 'yellow-brown', true, 1);
 
 INSERT IGNORE INTO product_image(image_key, detail_id) VALUE ('image-key', 1);
 

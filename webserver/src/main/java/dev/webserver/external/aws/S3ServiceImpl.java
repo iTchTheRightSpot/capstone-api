@@ -62,7 +62,7 @@ class S3ServiceImpl extends AbstractEnvironment implements IS3Service {
         }
     }
 
-    public void deleteFromS3(List<ObjectIdentifier> keys, String bucket) {
+    public void deleteFromS3(final List<ObjectIdentifier> keys, final String bucket) {
         if (profile) {
             return;
         }
@@ -73,8 +73,8 @@ class S3ServiceImpl extends AbstractEnvironment implements IS3Service {
      * Delete image(s) from s3.
      * @see <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/DeleteObjects.java">aws docs</a>
      * */
-    private void deleteFromS3Impl(List<ObjectIdentifier> keys, String bucketName) {
-        DeleteObjectsRequest build = DeleteObjectsRequest.builder()
+    private void deleteFromS3Impl(final List<ObjectIdentifier> keys, final String bucketName) {
+        final DeleteObjectsRequest build = DeleteObjectsRequest.builder()
                 .bucket(bucketName)
                 .delete(Delete.builder().objects(keys).build())
                 .build();

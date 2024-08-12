@@ -23,8 +23,8 @@ public class ProductSkuService {
     /**
      * Saves {@link ProductSku} based on {@link SizeInventoryDto} array.
      */
-    public void save(SizeInventoryDto[] arr, ProductDetail detail) {
-        for (var dto : arr) {
+    public void save(final SizeInventoryDto[] arr, final ProductDetail detail) {
+        for (final var dto : arr)
             repository.save(
                     ProductSku.builder()
                             .sku(UUID.randomUUID().toString())
@@ -32,7 +32,7 @@ public class ProductSkuService {
                             .inventory(dto.qty())
                             .detailId(detail.detailId())
                             .build());
-        }
+
     }
 
     /**

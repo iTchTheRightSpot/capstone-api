@@ -10,16 +10,6 @@ import java.util.Optional;
 
 public interface ProductDetailRepository extends CrudRepository<ProductDetail, Long> {
 
-    /**
-     * Returns a {@link ProductDetail} by {@link ProductSku} property sku
-     * */
-    @Query(value = """
-    SELECT d.* FROM product_detail d
-    INNER JOIN product_sku s ON d.detail_id = s.detail_id
-    WHERE s.sku = :sku
-    """)
-    Optional<ProductDetail> productDetailByProductSku(final String sku);
-
     @Query("SELECT * FROM product_detail WHERE colour = :colour")
     Optional<ProductDetail> productDetailByColour(final String colour);
 

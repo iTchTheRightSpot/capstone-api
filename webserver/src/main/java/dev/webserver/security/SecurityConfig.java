@@ -159,7 +159,7 @@ class SecurityConfig extends AbstractEnvironment {
                 // social auth
                 .oauth2Login(form -> form
                         .loginPage(baseurl + "authentication/authenticate").permitAll()
-                        .successHandler(new FederationSuccessHandler(environment, successHandler, jwtService, userService, publisher)))
+                        .successHandler(new SocialAuthSuccessHandler(environment, successHandler, jwtService, userService, publisher)))
 
                 // jwt
                 // https://docs.spring.io/spring-security/reference/6.0/servlet/oauth2/resource-server/jwt.html

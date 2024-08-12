@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS cart
     sku_id     BIGINT  NOT NULL,
     PRIMARY KEY (cart_id),
     CONSTRAINT `shopping_session_cart_FK` FOREIGN KEY (session_id) REFERENCES shopping_session (session_id) ON DELETE CASCADE,
-    CONSTRAINT `product_sku_cart_FK` FOREIGN KEY (sku_id) REFERENCES product_sku (sku_id) ON DELETE CASCADE,
+    CONSTRAINT `product_sku_cart_FK` FOREIGN KEY (sku_id) REFERENCES product_sku (sku_id) ON DELETE RESTRICT,
     CONSTRAINT `cart_qty_greater_than_zero_CHECK` CHECK ( qty >= 0 )
 );
 
@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS order_reservation
     status         ENUM ('CONFIRMED', 'PENDING') NOT NULL DEFAULT 'PENDING',
     expire_at      TIMESTAMP                     NOT NULL,
     session_id     BIGINT,
-    sku_id         BIGINT,
+    sku_id BIGINT NOT NULL,
     PRIMARY KEY (reservation_id),
-    CONSTRAINT `shopping_session_and_order_reservation_FK` FOREIGN KEY (session_id) REFERENCES shopping_session (session_id) ON DELETE RESTRICT,
+    CONSTRAINT `shopping_session_and_order_reservation_FK` FOREIGN KEY (session_id) REFERENCES shopping_session (session_id) ON DELETE SET NULL,
     CONSTRAINT `product_sku_and_order_reservation_FK` FOREIGN KEY (sku_id) REFERENCES product_sku (sku_id) ON DELETE RESTRICT
 );

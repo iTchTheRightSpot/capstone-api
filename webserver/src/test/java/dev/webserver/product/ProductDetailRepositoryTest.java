@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -31,22 +30,6 @@ final class ProductDetailRepositoryTest extends AbstractRepositoryTest {
     private ProductSkuRepository skuRepo;
     @Autowired
     private ProductImageRepository imageRepo;
-
-    @Test
-    void productDetailByProductSku() {
-        // given
-        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
-
-        RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
-
-        // when
-        final var skus = TestUtility.toList(skuRepo.findAll());
-        assertFalse(skus.isEmpty());
-
-        // then
-        assertFalse(detailRepo.productDetailByProductSku(skus.getFirst().sku()).isEmpty());
-    }
 
     @Test
     void updateProductSkuAndProductDetailByProductSku() {
@@ -121,7 +104,6 @@ final class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                 ProductDetail.builder()
                         .colour("green")
                         .isVisible(true)
-                        .createAt(LocalDateTime.now())
                         .productId(product.productId())
                         .build());
 
@@ -195,7 +177,6 @@ final class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                 ProductDetail.builder()
                         .colour("black")
                         .isVisible(true)
-                        .createAt(LocalDateTime.now())
                         .productId(product.productId())
                         .build());
 
@@ -265,7 +246,6 @@ final class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                 ProductDetail.builder()
                         .colour("red")
                         .isVisible(true)
-                        .createAt(LocalDateTime.now())
                         .productId(product.productId())
                         .build());
 
@@ -287,7 +267,6 @@ final class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                 ProductDetail.builder()
                         .colour("brown")
                         .isVisible(true)
-                        .createAt(LocalDateTime.now())
                         .productId(product.productId())
                         .build());
 

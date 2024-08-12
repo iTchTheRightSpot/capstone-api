@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 class CsrfController {
 
     @GetMapping
-    public CsrfToken csrf(CsrfToken csrfToken) {
+    public CsrfToken csrf(final CsrfToken csrfToken) {
         return csrfToken;
     }
 

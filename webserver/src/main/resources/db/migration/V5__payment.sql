@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS payment_detail
     amount           DECIMAL(20, 3)               NOT NULL,
     payment_provider VARCHAR(30)                  NOT NULL,
     payment_status   ENUM ('CONFIRMED', 'REFUND') NOT NULL,
-    paid_at          VARCHAR(255),
+    paid_at          VARCHAR(30),
     created_at       TIMESTAMP                    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id          BIGINT,
     PRIMARY KEY (payment_id),

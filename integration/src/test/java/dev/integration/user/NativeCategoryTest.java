@@ -24,7 +24,7 @@ final class NativeCategoryTest extends AbstractNative {
 
     @Test
     void shouldSuccessfullyRetrieveAllCategories() {
-        var get = testTemplate.exchange(
+        final var get = testTemplate.exchange(
                 route + "category",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
@@ -36,7 +36,7 @@ final class NativeCategoryTest extends AbstractNative {
 
     @Test
     void shouldSuccessfullyRetrieveProductsBaseOnCategory() {
-        var get = testTemplate.exchange(
+        final var get = testTemplate.exchange(
                 route + "category/products?category_id=1",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),

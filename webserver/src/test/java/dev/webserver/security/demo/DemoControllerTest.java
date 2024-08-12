@@ -30,7 +30,7 @@ final class DemoControllerTest extends AbstractIntegration {
                                 .content(dto)
                                 .contentType("application/json")
                                 .with(csrf()))
-                        .andExpect(status().isCreated())
+                        .andExpect(status().isOk())
                         .andReturn()
                         .getResponse()
                         .getCookie(jsessionid))

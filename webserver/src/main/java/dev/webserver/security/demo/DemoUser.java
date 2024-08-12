@@ -31,7 +31,7 @@ public final class DemoUser {
     public static final ActiveUser active = ActiveUser.builder()
             .name(demo.firstname())
             .email(demo.email())
-            .userId(-1L)
+            .userId(demo.userId())
             .imageKey(null)
             .roles(List.of(RoleEnum.DEMO, RoleEnum.USER))
             .build();

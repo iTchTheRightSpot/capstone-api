@@ -37,9 +37,9 @@ class DemoController extends AbstractEnvironment {
         response.addCookie(cookie);
     };
 
-    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseStatus(HttpStatus.OK)
     @PostMapping(consumes = "application/json")
-    public void demo(@Valid @RequestBody final LoginDto dto, final HttpServletResponse response) {
+    public void login(@Valid @RequestBody final LoginDto dto, final HttpServletResponse response) {
         final Authentication authenticate = manager.authenticate(unauthenticated(dto.principal().trim(), dto.password().trim()));
         cookieHandler.accept(jwtService.generateJwt(authenticate), response);
     }

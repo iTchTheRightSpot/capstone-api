@@ -1,6 +1,7 @@
 package dev.webserver.security.controller;
 
 import dev.webserver.security.JwtEnum;
+import dev.webserver.security.demo.DemoUser;
 import dev.webserver.user.Role;
 import dev.webserver.user.RoleRepository;
 import dev.webserver.user.UserRepository;
@@ -34,6 +35,10 @@ class ActiveUserController {
         final JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
 
         final long userid = jwt.getToken().getClaim(JwtEnum.USER_ID.property());
+
+        if (userid == -1L) {
+            return DemoUser.active;
+        }
 
         final var userOptional = userRepository.findById(userid);
 

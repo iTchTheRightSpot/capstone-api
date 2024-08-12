@@ -1,10 +1,10 @@
 package dev.integration.employee;
 
 import dev.integration.AbstractNative;
-import dev.integration.TestData;
+import dev.integration.NativeTestData;
+import dev.webserver.product.DetailResponse;
 import dev.webserver.product.ProductDetailDto;
 import dev.webserver.product.UpdateProductDetailDto;
-import dev.webserver.product.DetailResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.core.ParameterizedTypeReference;
@@ -23,16 +23,17 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class WorkerProductDetailTest extends AbstractNative {
+final class NativeEmployeeProductDetailTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
+    private static final String path = route + "employee/product/detail";
 
     @Test
     void shouldSuccessfullyRetrieveProductDetails() {
         headers.set(CONTENT_TYPE, APPLICATION_JSON_VALUE);
 
         var get = testTemplate.exchange(
-                route + "worker/product/detail?id=product-uuid",
+                path + "?id=product-uuid",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 new ParameterizedTypeReference<List<DetailResponse>>() {}
@@ -49,14 +50,14 @@ class WorkerProductDetailTest extends AbstractNative {
                 "product-uuid-1",
                 true,
                 "brown",
-                TestData.sizeInventoryDTOArray(3)
+                NativeTestData.sizeInventoryDTOArray(3)
         );
 
-        MultiValueMap<String, Object> multipartData = TestData.mockMultiPart(mapper.writeValueAsString(dto));
+        MultiValueMap<String, Object> multipartData = NativeTestData.mockMultiPart(mapper.writeValueAsString(dto));
 
         // request
         var post = testTemplate.postForEntity(
-                route + "worker/product/detail",
+                path,
                 new HttpEntity<>(multipartData, headers),
                 Void.class
         );
@@ -71,7 +72,7 @@ class WorkerProductDetailTest extends AbstractNative {
         var dto = new UpdateProductDetailDto("product-sku-2", "green", true, 4, "large");
 
         var update = testTemplate.exchange(
-                route + "worker/product/detail",
+                path,
                 HttpMethod.PUT,
                 new HttpEntity<>(dto, headers),
                 Void.class
@@ -85,7 +86,7 @@ class WorkerProductDetailTest extends AbstractNative {
         headers.set(CONTENT_TYPE, APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
-                route + "worker/product/detail/product-sku-3",
+                path + "/product-sku-3",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class
@@ -99,7 +100,7 @@ class WorkerProductDetailTest extends AbstractNative {
         headers.set(CONTENT_TYPE, APPLICATION_JSON_VALUE);
 
         var delete = testTemplate.exchange(
-                route + "worker/product/detail/sku?sku=product-sku-2",
+                path + "/sku?sku=product-sku-2",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class

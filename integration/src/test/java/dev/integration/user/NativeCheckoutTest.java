@@ -1,7 +1,7 @@
-package dev.integration.client;
+package dev.integration.user;
 
 import dev.integration.AbstractNative;
-import dev.integration.MockRequest;
+import dev.integration.NativeMockRequest;
 import dev.webserver.cart.CartDto;
 import dev.webserver.payment.Checkout;
 import org.junit.jupiter.api.BeforeAll;
@@ -19,7 +19,7 @@ final class NativeCheckoutTest extends AbstractNative {
 
     @BeforeAll
     static void before() {
-        String cartcookie = MockRequest.CARTCOOKIE(testTemplate, route);
+        String cartcookie = NativeMockRequest.CARTCOOKIE(testTemplate, route);
 
         assertNotNull(cartcookie);
 

@@ -6,7 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 
-public class MockRequest {
+public final class NativeMockRequest {
 
     public static String CARTCOOKIE(TestRestTemplate template, String route) {
         var headers = new HttpHeaders();

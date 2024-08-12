@@ -30,7 +30,7 @@ import java.util.stream.IntStream;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestData {
+public class NativeTestData {
 
     @NotNull
     public static SizeInventoryDto[] sizeInventoryDTOArray(int size) {
@@ -116,7 +116,7 @@ public class TestData {
                 categoryId,
                 productName,
                 new Faker().lorem().fixedString(1000),
-                new Faker().number().randomDouble(5, 0, 50),
+                BigDecimal.valueOf(new Faker().number().randomDouble(5, 0, 50)),
                 arr,
                 true,
                 dtos,
@@ -137,7 +137,7 @@ public class TestData {
                 "ngn",
                 new BigDecimal(new Faker().number().numberBetween(1000, 700000)),
                 categoryId,
-                new Faker().number().randomDouble(5, 100, 100)
+                BigDecimal.valueOf(new Faker().number().randomDouble(5, 100, 100))
         );
     }
 

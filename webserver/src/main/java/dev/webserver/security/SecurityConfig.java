@@ -72,8 +72,9 @@ class SecurityConfig extends AbstractEnvironment {
 
     @Bean
     public UserDetailsService userDetailsService(final UserRepository repository, final RoleRepository roleRepository) {
-        return email -> {
-            final var user = repository.userByPrincipal(email).orElseThrow(() -> new UsernameNotFoundException(email + " not found"));
+        return userid -> {
+            final var user = repository.findById(Long.parseLong(userid))
+                    .orElseThrow(() -> new UsernameNotFoundException(userid + " not found"));
             final var roles = roleRepository.allRolesByUserId(user.userId());
             return new UserDetailz(user, roles);
         };
@@ -126,7 +127,7 @@ class SecurityConfig extends AbstractEnvironment {
             http.csrf(AbstractHttpConfigurer::disable)
                     .authorizeHttpRequests(registry -> registry.anyRequest().permitAll());
         } else {
-            final String[] pubRoutes = {"/error", "/api/v1/actuator/health", baseurl + "csrf", baseurl + "category/**", baseurl + "product/**", baseurl + "cart/**", baseurl + "payment/**", baseurl + "checkout/**", baseurl + "active/**"};
+            final String[] pubRoutes = {"/error", "/api/v1/actuator/health", baseurl + "demo/**", baseurl + "csrf", baseurl + "category/**", baseurl + "product/**", baseurl + "cart/**", baseurl + "payment/**", baseurl + "checkout/**", baseurl + "active/**"};
             final var csrfTokenRepository = CSRF_REPO.apply(cookiesecure, cookiesamesite);
 
             http
@@ -144,8 +145,7 @@ class SecurityConfig extends AbstractEnvironment {
                             .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
                             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                             .requestMatchers("/api/v1/actuator/**").hasRole(DEVELOPER.name())
-                            .requestMatchers(baseurl + "demo/**").hasRole(DEMO.name())
-                            .requestMatchers(GET, baseurl + "employee/**").hasRole(DEMO.name())
+                            .requestMatchers(GET, baseurl + "employee/**").hasAnyRole(DEMO.name(), EMPLOYEE.name())
                             .requestMatchers(baseurl + "employee/**").hasRole(EMPLOYEE.name())
                             .requestMatchers(baseurl + "order/**").hasRole(USER.name())
                             .anyRequest().denyAll());

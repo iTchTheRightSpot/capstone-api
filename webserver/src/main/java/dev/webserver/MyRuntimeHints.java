@@ -7,9 +7,8 @@ import dev.webserver.category.UpdateCategoryDto;
 import dev.webserver.external.log.DiscordPayload;
 import dev.webserver.payment.*;
 import dev.webserver.product.*;
-import dev.webserver.product.CustomMultiPart;
-import dev.webserver.product.Variant;
 import dev.webserver.security.controller.ActiveUser;
+import dev.webserver.security.demo.LoginDto;
 import dev.webserver.shipping.ShippingDto;
 import dev.webserver.shipping.ShippingMapper;
 import dev.webserver.tax.TaxDto;
@@ -57,7 +56,8 @@ final class MyRuntimeHints implements RuntimeHintsRegistrar {
                 .registerType(DiscordPayload.class)
                 .registerType(CustomMultiPart.class)
                 .registerType(ProductResponse.class)
-                .registerType(CronJob.CustomCronJobObject.class);
+                .registerType(CronJob.CustomCronJobObject.class)
+                .registerType(LoginDto.class);
     }
 
 }

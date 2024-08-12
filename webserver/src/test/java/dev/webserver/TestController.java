@@ -1,6 +1,7 @@
 package dev.webserver;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -8,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(path = "${api.endpoint.baseurl}")
 class TestController {
 
-    @GetMapping(path = "/product/test")
+    @GetMapping(path = "order/test")
     public String client() {
         return "client";
     }
@@ -16,6 +17,11 @@ class TestController {
     @GetMapping(path = "employee/test")
     public String worker() {
         return "worker";
+    }
+
+    @PostMapping(path = "employee/test")
+    public void workerpost() {
+        System.out.println("POST REQUEST");
     }
 
 }

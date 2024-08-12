@@ -1,7 +1,7 @@
-package dev.integration.client;
+package dev.integration.user;
 
 import dev.integration.AbstractNative;
-import dev.integration.MockRequest;
+import dev.integration.NativeMockRequest;
 import dev.webserver.cart.CartDto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
@@ -13,13 +13,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CartControllerTest extends AbstractNative {
+final class NativeCartControllerTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
 
     @BeforeAll
     static void before() {
-        String cartcookie = MockRequest.CARTCOOKIE(testTemplate, route);
+        String cartcookie = NativeMockRequest.CARTCOOKIE(testTemplate, route);
         assertNotNull(cartcookie);
 
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);

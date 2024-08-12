@@ -44,7 +44,7 @@ class PaymentControllerTest extends AbstractIntegration {
     @Value(value = "/${api.endpoint.baseurl}cart")
     private String cartPath;
     @Value("${cart.cookie.name}")
-    private String CART_COOKIE;
+    private String cartcookie;
     @Value("${capstone.usd.to.cent}")
     private String usdConversion;
     @Value("${capstone.ngn.to.kobo}")
@@ -95,7 +95,7 @@ class PaymentControllerTest extends AbstractIntegration {
                 .perform(get(cartPath).with(csrf()))
                 .andReturn();
 
-        Cookie cookie = result.getResponse().getCookie(CART_COOKIE);
+        Cookie cookie = result.getResponse().getCookie(cartcookie);
         assertNotNull(cookie);
 
         var sku = productSku();
@@ -140,7 +140,7 @@ class PaymentControllerTest extends AbstractIntegration {
                 .perform(get(cartPath).with(csrf()))
                 .andReturn();
 
-        Cookie cookie = result.getResponse().getCookie(CART_COOKIE);
+        Cookie cookie = result.getResponse().getCookie(cartcookie);
         assertNotNull(cookie);
 
         var sku = list.getFirst();
@@ -213,7 +213,7 @@ class PaymentControllerTest extends AbstractIntegration {
                     .perform(get(cartPath).with(csrf()))
                     .andReturn()
                     .getResponse()
-                    .getCookie(CART_COOKIE);
+                    .getCookie(cartcookie);
 
             assertNotNull(cookie);
             cookies[i] = cookie;
@@ -316,7 +316,7 @@ class PaymentControllerTest extends AbstractIntegration {
                 .perform(get(cartPath).with(csrf()))
                 .andReturn();
 
-        Cookie cookie = result.getResponse().getCookie(CART_COOKIE);
+        Cookie cookie = result.getResponse().getCookie(cartcookie);
         assertNotNull(cookie);
 
         var sku = productSku();

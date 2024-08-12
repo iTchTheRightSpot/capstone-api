@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Loads dummy data in resources for testing.
  * */
-public class CustomRunInitScripts {
+public final class NativeCustomRunInitScripts {
 
     /**
      * Establishes connection with database.

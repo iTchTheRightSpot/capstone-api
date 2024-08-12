@@ -1,12 +1,15 @@
 package dev.webserver.user;
 
+import dev.webserver.enumeration.RoleEnum;
 import dev.webserver.external.mail.IMailService;
+import dev.webserver.security.UserDetailz;
 import dev.webserver.util.Page;
 import dev.webserver.util.Pageable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -14,6 +17,7 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository repository;
+    private final RoleRepository roleRepository;
     private final IMailService mailService;
 
     public Optional<User> userByPrincipal(final String principal) {
@@ -32,20 +36,19 @@ public class UserService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public User create(final String fullname, final String firstname, final String email, final String imageKey) {
+    public UserDetailz create(final String fullname, final String firstname, final String email, final String imageKey) {
         final var optional = repository.userByPrincipal(email);
+
         if (optional.isPresent()) {
             final User user = optional.get();
             repository.updateUserImage(user.userId(), imageKey);
             user.setImageKey(imageKey);
-
-            return user;
+            return new UserDetailz(user, roleRepository.allRolesByUserId(user.userId()));
         }
 
-        final User user = User.builder().firstname(firstname).fullname(fullname).email(email).imageKey(imageKey).build();
-        final User saved = repository.save(user);
+        final User user = repository.save(User.builder().firstname(firstname).fullname(fullname).email(email).imageKey(imageKey).build());
         mailService.registrationEmail(email, firstname);
 
-        return saved;
+        return new UserDetailz(user, List.of(roleRepository.save(new Role(null, RoleEnum.USER, user.userId()))));
     }
 }

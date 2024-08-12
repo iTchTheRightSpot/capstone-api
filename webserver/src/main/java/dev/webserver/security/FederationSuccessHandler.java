@@ -18,14 +18,12 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.function.BiConsumer;
 
 import static org.springframework.security.authentication.UsernamePasswordAuthenticationToken.authenticated;
 
 /**
  * Implementation for successful authentication by social login.
- * <a href="https://docs.spring.io/spring-authorization-server/reference/guides/how-to-social-login.html">documentation</a>
  * */
 final class FederationSuccessHandler extends AbstractEnvironment implements AuthenticationSuccessHandler {
     private static final Logger log = LoggerFactory.getLogger(FederationSuccessHandler.class);
@@ -55,11 +53,9 @@ final class FederationSuccessHandler extends AbstractEnvironment implements Auth
             redirect.setLength(0);
 
             try {
-                final UserDetailz details =
-                        new UserDetailz(userService.create(fullname, firstname, email, picture), List.of());
+                final var details = userService.create(fullname, firstname, email, picture);
 
-                final String jwt = jwtService
-                        .generateJwt(authenticated(details, null, details.getAuthorities()));
+                final String jwt = jwtService.generateJwt(authenticated(details, null, details.getAuthorities()));
 
                 cookieHandler.accept(jwt, response);
                 publisher.publishSignInOrRegistration(firstname, email);
@@ -83,7 +79,7 @@ final class FederationSuccessHandler extends AbstractEnvironment implements Auth
     };
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(final HttpServletRequest request, final HttpServletResponse response, final Authentication authentication) throws IOException, ServletException {
         if (authentication instanceof OAuth2AuthenticationToken) {
             if (authentication.getPrincipal() instanceof OidcUser) { // OIDC_USER represents google auth
                 oidcUserHandler.accept(response, (OidcUser) authentication.getPrincipal());

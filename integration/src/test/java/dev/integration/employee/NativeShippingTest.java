@@ -16,10 +16,10 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ShippingTest extends AbstractNative {
+final class NativeShippingTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
-    private final String path = route + "shipping";
+    private final String path = route + "employee/shipping";
 
     @BeforeAll
     static void before() {

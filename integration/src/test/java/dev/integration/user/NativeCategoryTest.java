@@ -1,4 +1,4 @@
-package dev.integration.client;
+package dev.integration.user;
 
 import dev.integration.AbstractNative;
 import dev.webserver.category.CategoryResponse;
@@ -13,7 +13,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ClientCategoryTest extends AbstractNative {
+final class NativeCategoryTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
 

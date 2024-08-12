@@ -8,9 +8,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Defines the routes for countries we can ship to.
- * */
 @RestController
 @RequestMapping(path = "${api.endpoint.baseurl}employee/shipping")
 @RequiredArgsConstructor

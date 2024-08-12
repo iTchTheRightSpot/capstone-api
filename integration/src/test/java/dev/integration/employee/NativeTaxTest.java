@@ -9,14 +9,16 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TaxTest extends AbstractNative {
+final class NativeTaxTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
+    private static final String path = route + "employee/tax";
 
     @BeforeAll
     static void before() {
@@ -27,7 +29,7 @@ class TaxTest extends AbstractNative {
     @Test
     void shouldSuccessfullyRetrieveATaxDto() {
         var get = testTemplate.exchange(
-                route + "tax",
+                path,
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 new ParameterizedTypeReference<List<TaxDto>>() {}
@@ -40,9 +42,9 @@ class TaxTest extends AbstractNative {
     @Test
     void shouldSuccessfullyUpdateTax() {
         var put = testTemplate.exchange(
-                route + "tax",
+                path,
                 HttpMethod.PUT,
-                new HttpEntity<>(new TaxDto(1L, "tax", 6.5), headers),
+                new HttpEntity<>(new TaxDto(1L, "tax", new BigDecimal("6.5")), headers),
                 Void.class
         );
 

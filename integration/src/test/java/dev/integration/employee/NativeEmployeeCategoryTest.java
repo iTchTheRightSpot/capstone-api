@@ -12,9 +12,10 @@ import org.springframework.http.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class WorkerCategoryTest extends AbstractNative {
+final class NativeEmployeeCategoryTest extends AbstractNative {
 
     private static final HttpHeaders headers = new HttpHeaders();
+    private final String path = route + "employee/category";
 
     @BeforeAll
     static void before() {
@@ -24,7 +25,7 @@ class WorkerCategoryTest extends AbstractNative {
     @Test
     void shouldSuccessfullyRetrieveACategory() {
         var get = testTemplate.exchange(
-                route + "worker/category",
+                path,
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 CategoryResponse.class
@@ -36,7 +37,7 @@ class WorkerCategoryTest extends AbstractNative {
     @Test
     void shouldSuccessfullyRetrieveProductsBaseOnCategory() {
         var get = testTemplate.exchange(
-                route + "worker/category/products?category_id=1",
+                path + "/products?category_id=1",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 Object.class
@@ -48,7 +49,7 @@ class WorkerCategoryTest extends AbstractNative {
     @Test
     void shouldSuccessfullyCreateACategory() {
         var post = testTemplate.postForEntity(
-                route + "worker/category",
+                path,
                 new HttpEntity<>(new CategoryDto("worker-cat", true, null), headers),
                 Void.class
         );
@@ -59,7 +60,7 @@ class WorkerCategoryTest extends AbstractNative {
     @Test
     void shouldSuccessfullyUpdateACategory() {
         var update = testTemplate.exchange(
-                route + "worker/category",
+                path,
                 HttpMethod.PUT,
                 new HttpEntity<>(new UpdateCategoryDto(1L, null, "frank", false), headers),
                 Void.class
@@ -71,7 +72,7 @@ class WorkerCategoryTest extends AbstractNative {
     @Test
     void shouldSuccessfullyDeleteACategory() {
         var delete = testTemplate.exchange(
-                route + "worker/category/2",
+                path + "/2",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class
@@ -83,7 +84,7 @@ class WorkerCategoryTest extends AbstractNative {
     @Test
     void shouldThrowErrorWhenDeletingACategoryAsItHasDetailsAttached() {
         var delete = testTemplate.exchange(
-                route + "worker/category/1",
+                path + "/1",
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class

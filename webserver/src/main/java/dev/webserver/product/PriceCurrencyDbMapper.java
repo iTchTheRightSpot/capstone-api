@@ -1,6 +1,6 @@
 package dev.webserver.product;
 
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 
 import java.math.BigDecimal;
 
@@ -9,6 +9,6 @@ public record PriceCurrencyDbMapper(
         String name,
         String description,
         // price currency
-        SarreCurrency currency,
+        CapstoneCurrency currency,
         BigDecimal price
 ) {}

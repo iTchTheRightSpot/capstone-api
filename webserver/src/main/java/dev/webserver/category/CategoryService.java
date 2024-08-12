@@ -1,7 +1,7 @@
 package dev.webserver.category;
 
 import dev.webserver.AbstractEnvironment;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.external.aws.IS3Service;
 import dev.webserver.product.ProductResponse;
 import dev.webserver.util.CustomUtil;
@@ -38,7 +38,7 @@ class CategoryService extends AbstractEnvironment {
     }
 
     public Pageable<ProductResponse> allProductsByCategoryId(
-            final SarreCurrency currency,
+            final CapstoneCurrency currency,
             final long categoryId,
             final int page,
             final int size

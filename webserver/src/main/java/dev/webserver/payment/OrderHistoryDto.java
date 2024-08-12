@@ -1,13 +1,13 @@
 package dev.webserver.payment;
 
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 
 public record OrderHistoryDto(
         long date,
-        SarreCurrency currency,
+        CapstoneCurrency currency,
         BigDecimal amount,
         String orderNumber,
         OrderHistoryDbMapper[] detail

@@ -3,7 +3,7 @@ package dev.webserver.payment;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.xml.bind.DatatypeConverter;
 import org.slf4j.Logger;
@@ -27,7 +27,7 @@ public final class WebHookUtil {
         return new BigDecimal(number.toString());
     }
 
-    public static BigDecimal fromLowestCurrencyFormToCurrency(BigDecimal amount, SarreCurrency currency) {
+    public static BigDecimal fromLowestCurrencyFormToCurrency(BigDecimal amount, CapstoneCurrency currency) {
         return switch (currency) {
             // 1 kobo = 7.93 naira as per https://www.coinbase.com/en-gb/converter/kobo/ngn
             case NGN -> amount.multiply(new BigDecimal("7.93")).setScale(2, FLOOR);

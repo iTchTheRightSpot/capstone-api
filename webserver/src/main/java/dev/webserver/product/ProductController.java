@@ -1,6 +1,6 @@
 package dev.webserver.product;
 
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.util.Pageable;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -29,7 +29,7 @@ class ProductController {
             @RequestParam(name = "currency", defaultValue = "ngn")
             final String currency
     ) {
-        final var sc = SarreCurrency.valueOf(currency.toUpperCase());
+        final var sc = CapstoneCurrency.valueOf(currency.toUpperCase());
         return this.service.allProductsByCurrency(sc, page, Math.min(size, 20));
     }
 
@@ -45,7 +45,7 @@ class ProductController {
             @RequestParam(name = "currency", defaultValue = "ngn")
             final String currency
     ) {
-        final var c = SarreCurrency.valueOf(currency.toUpperCase());
+        final var c = CapstoneCurrency.valueOf(currency.toUpperCase());
         return this.service.search(search, c, size);
     }
 
@@ -59,7 +59,7 @@ class ProductController {
             @RequestParam(value = "currency", defaultValue = "ngn")
             final String currency
     ) {
-        final var c = SarreCurrency.valueOf(currency.toUpperCase());
+        final var c = CapstoneCurrency.valueOf(currency.toUpperCase());
         return this.service.productDetailsByProductUuid(uuid, c);
     }
 

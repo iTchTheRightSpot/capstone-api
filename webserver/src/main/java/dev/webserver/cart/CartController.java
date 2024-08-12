@@ -1,6 +1,6 @@
 package dev.webserver.cart;
 
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -30,7 +30,7 @@ class CartController {
             HttpServletRequest req,
             HttpServletResponse res
     ) {
-        SarreCurrency s = SarreCurrency.valueOf(currency.toUpperCase());
+        CapstoneCurrency s = CapstoneCurrency.valueOf(currency.toUpperCase());
         return cartService.cartItems(s, req, res);
     }
 

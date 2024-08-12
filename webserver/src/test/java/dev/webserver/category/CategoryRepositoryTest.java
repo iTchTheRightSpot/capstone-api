@@ -2,7 +2,7 @@ package dev.webserver.category;
 
 import dev.webserver.AbstractRepositoryTest;
 import dev.webserver.RepositoryTestData;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.product.*;
 import dev.webserver.util.Page;
 import org.junit.jupiter.api.Test;
@@ -90,12 +90,12 @@ final class CategoryRepositoryTest extends AbstractRepositoryTest {
         // method to test
         final var list = categoryRepo.allProductsByCategoryIdWhereInStockAndIsVisible(
                 category.categoryId(),
-                SarreCurrency.USD,
+                CapstoneCurrency.USD,
                 Page.of(0, 20)
         );
         final var list1 = categoryRepo.allProductsByCategoryIdWhereInStockAndIsVisible(
                 clothes.categoryId(),
-                SarreCurrency.USD,
+                CapstoneCurrency.USD,
                 Page.of(0, 20)
         );
 
@@ -126,7 +126,7 @@ final class CategoryRepositoryTest extends AbstractRepositoryTest {
         // method to test
         final var list2 = categoryRepo.allProductsByCategoryIdWhereInStockAndIsVisible(
                 category.categoryId(),
-                SarreCurrency.USD,
+                CapstoneCurrency.USD,
                 Page.of(0, 20)
         );
 
@@ -177,13 +177,13 @@ final class CategoryRepositoryTest extends AbstractRepositoryTest {
         // method to test
         final var list = categoryRepo.allProductsByCategoryIdAdminFront(
                 category.categoryId(),
-                SarreCurrency.USD,
+                CapstoneCurrency.USD,
                 Page.of(0, 20)
         );
 
         final var list1 = categoryRepo.allProductsByCategoryIdAdminFront(
                 men.categoryId(),
-                SarreCurrency.USD,
+                CapstoneCurrency.USD,
                 Page.of(0, 20)
         );
 

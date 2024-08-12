@@ -5,7 +5,7 @@ import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.RepositoryTestData;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +46,7 @@ class ProductProductPriceCurrencyRepositoryTest extends AbstractRepositoryTest {
 
         // then
         var optional = currencyRepo
-                .priceCurrencyByProductUuidAndCurrency(products.getFirst().uuid(), SarreCurrency.NGN);
+                .priceCurrencyByProductUuidAndCurrency(products.getFirst().uuid(), CapstoneCurrency.NGN);
         assertFalse(optional.isEmpty());
 
         PriceCurrencyDbMapper pojo = optional.get();
@@ -72,11 +72,11 @@ class ProductProductPriceCurrencyRepositoryTest extends AbstractRepositoryTest {
                 .updateProductPriceByProductUuidAndCurrency(
                         products.getFirst().uuid(),
                         new BigDecimal("10.52"),
-                        SarreCurrency.USD
+                        CapstoneCurrency.USD
                 );
 
         var optional = currencyRepo
-                .priceCurrencyByProductUuidAndCurrency(products.getFirst().uuid(), SarreCurrency.USD);
+                .priceCurrencyByProductUuidAndCurrency(products.getFirst().uuid(), CapstoneCurrency.USD);
         assertFalse(optional.isEmpty());
         assertNotNull(optional.get().price());
         Assertions.assertEquals(new BigDecimal("10.52"), optional.get().price());

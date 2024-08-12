@@ -1,6 +1,6 @@
 package dev.webserver.product;
 
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import org.springframework.data.annotation.Id;
@@ -17,7 +17,7 @@ public record ProductPriceCurrency(
         Long currencyId,
         @NotNull(message = "product_price_currency price cannot be null")
         BigDecimal price,
-        SarreCurrency currency,
+        CapstoneCurrency currency,
         @NotNull(message = "product_price_currency product_id cannot be null")
         @Column("product_id")
         Long productId

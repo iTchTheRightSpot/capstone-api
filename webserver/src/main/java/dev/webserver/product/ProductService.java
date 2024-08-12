@@ -1,7 +1,7 @@
 package dev.webserver.product;
 
 import dev.webserver.AbstractEnvironment;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.external.aws.IS3Service;
 import dev.webserver.util.CustomUtil;
 import dev.webserver.util.Page;
@@ -31,11 +31,10 @@ class ProductService extends AbstractEnvironment {
         this.s3Service = s3Service;
     }
 
-    public Pageable<ProductResponse> allProductsByCurrency(final SarreCurrency currency, final int page, final int size) {
+    public Pageable<ProductResponse> allProductsByCurrency(final CapstoneCurrency currency, final int page, final int size) {
         final Page of = dev.webserver.util.Page.of(page, size);
-        // TODO improve test on all layers
         final int count = productRepository.countAllProductsStoreFront();
-        final var listOfProducts = productRepository.allProductsByCurrencyClient(of, currency);
+        final var listOfProducts = productRepository.allProductsByCurrencyStoreFront(of, currency);
 
         final var futures = listOfProducts.stream()
                 .map(p -> (Supplier<ProductResponse>) () ->
@@ -56,7 +55,7 @@ class ProductService extends AbstractEnvironment {
 
     public List<DetailResponse> productDetailsByProductUuid(
             final String uuid,
-            final SarreCurrency currency
+            final CapstoneCurrency currency
     ) {
         final var optional = productPriceCurrencyRepository.priceCurrencyByProductUuidAndCurrency(uuid, currency);
 
@@ -96,14 +95,7 @@ class ProductService extends AbstractEnvironment {
         return CustomUtil.asynchronousTasks(futures).join();
     }
 
-    /**
-     * Returns a {@link Page} of {@link ProductResponse} asynchronously.
-     *
-     * @param param is the user input.
-     * @param currency is of type {@link SarreCurrency}.
-     * @return A {@link Page} of {@link ProductResponse}.
-     * */
-    public Pageable<ProductResponse> search(final String param, final SarreCurrency currency, final int size) {
+    public Pageable<ProductResponse> search(final String param, final CapstoneCurrency currency, final int size) {
         // SQL LIKE Operator
         // https://www.w3schools.com/sql/sql_like.asp
         final var listOfProducts = productRepository.productsByNameAndCurrency(param + "%", currency);

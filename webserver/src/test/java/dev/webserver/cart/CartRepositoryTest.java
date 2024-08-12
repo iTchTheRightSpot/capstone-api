@@ -15,8 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;
 
-import static dev.webserver.enumeration.SarreCurrency.NGN;
-import static dev.webserver.enumeration.SarreCurrency.USD;
+import static dev.webserver.enumeration.CapstoneCurrency.NGN;
+import static dev.webserver.enumeration.CapstoneCurrency.USD;
 import static dev.webserver.util.CustomUtil.TO_GREENWICH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;

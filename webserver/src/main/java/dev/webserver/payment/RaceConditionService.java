@@ -4,7 +4,7 @@ import dev.webserver.AbstractEnvironment;
 import dev.webserver.cart.Cart;
 import dev.webserver.cart.ICartRepository;
 import dev.webserver.cart.ShoppingSession;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.OutOfStockException;
 import dev.webserver.product.ProductSku;
@@ -70,7 +70,7 @@ public class RaceConditionService extends AbstractEnvironment {
     public PaymentResponse raceCondition(
             final HttpServletRequest req,
             final String country,
-            final SarreCurrency currency
+            final CapstoneCurrency currency
     ) {
         final CustomCheckoutObject obj = checkoutService
                 .validateCurrentShoppingSession(req, country.toLowerCase().trim());
@@ -94,7 +94,7 @@ public class RaceConditionService extends AbstractEnvironment {
                 .calculateTotal(
                         CustomUtil.cartItemsTotalAndTotalWeight(list).total(),
                         obj.tax().rate(),
-                        currency.equals(SarreCurrency.USD)
+                        currency.equals(CapstoneCurrency.USD)
                                 ? obj.ship().usdPrice()
                                 : obj.ship().ngnPrice()
                 );
@@ -105,7 +105,7 @@ public class RaceConditionService extends AbstractEnvironment {
                 super.payStackCredentials().pubKey(),
                 currency,
                 CustomUtil.convertCurrency(
-                        currency.equals(SarreCurrency.NGN) ? ngnConversion : usdConversion,
+                        currency.equals(CapstoneCurrency.NGN) ? ngnConversion : usdConversion,
                         currency,
                         total
                 )

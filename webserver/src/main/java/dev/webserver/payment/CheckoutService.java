@@ -5,7 +5,7 @@ import dev.webserver.cart.Cart;
 import dev.webserver.cart.ICartRepository;
 import dev.webserver.cart.IShoppingSessionRepository;
 import dev.webserver.cart.ShoppingSession;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.shipping.ShipSetting;
 import dev.webserver.shipping.ShippingService;
@@ -53,13 +53,13 @@ class CheckoutService extends AbstractEnvironment {
      * @return A {@link Checkout} object containing objects needed to be sent to the UI.
      * @throws CustomNotFoundException If any required information is missing or invalid.
      */
-    public Checkout checkout(final HttpServletRequest req, final String country, final SarreCurrency currency) {
+    public Checkout checkout(final HttpServletRequest req, final String country, final CapstoneCurrency currency) {
         final CustomCheckoutObject obj = validateCurrentShoppingSession(req, country);
 
         final var list = cartRepository
                 .amountToPayForAllCartItemsForShoppingSession(obj.session().sessionId(), currency);
 
-        final BigDecimal shipCost = currency.equals(SarreCurrency.USD)
+        final BigDecimal shipCost = currency.equals(CapstoneCurrency.USD)
                 ? obj.ship().usdPrice()
                 : obj.ship().ngnPrice();
 

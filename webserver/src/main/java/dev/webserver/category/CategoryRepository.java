@@ -1,6 +1,6 @@
 package dev.webserver.category;
 
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.product.Product;
 import dev.webserver.product.ProductDbMapper;
 import dev.webserver.util.Page;
@@ -97,7 +97,7 @@ public interface CategoryRepository extends CrudRepository<Category, Long> {
     """)
     List<ProductDbMapper> allProductsByCategoryIdAdminFront(
             final long categoryId,
-            final SarreCurrency currency,
+            final CapstoneCurrency currency,
             final Page page
     );
 
@@ -129,7 +129,7 @@ public interface CategoryRepository extends CrudRepository<Category, Long> {
      * all its subcategories. With the obtained categories, we retrieve all products associated with them.
      *
      * @param categoryId The primary key of {@link Category}.
-     * @param currency The currency in which prices are displayed, represented by a {@link SarreCurrency} enum
+     * @param currency The currency in which prices are displayed, represented by a {@link CapstoneCurrency} enum
      *                 value.
      * @param page The pagination information, represented by a {@link Page} object.
      * @return Leveraging Spring Data Projection, a paginated {@link Page} containing {@link ProductDbMapper} objects.
@@ -162,7 +162,7 @@ public interface CategoryRepository extends CrudRepository<Category, Long> {
     """)
     List<ProductDbMapper> allProductsByCategoryIdWhereInStockAndIsVisible(
             final long categoryId,
-            final SarreCurrency currency,
+            final CapstoneCurrency currency,
             final Page page
     );
 

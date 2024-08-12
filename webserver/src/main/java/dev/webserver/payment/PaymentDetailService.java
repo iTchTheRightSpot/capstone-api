@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.cart.ICartRepository;
 import dev.webserver.enumeration.PaymentStatus;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.user.UserService;
 import dev.webserver.util.CustomUtil;
@@ -96,7 +96,7 @@ public class PaymentDetailService {
         // find user
         var user = userService.userByPrincipal(metadata.principal()).orElse(null);
 
-        var currency = SarreCurrency.valueOf(data.get("currency").textValue().toUpperCase());
+        var currency = CapstoneCurrency.valueOf(data.get("currency").textValue().toUpperCase());
 
         // save PaymentDetail
         return paymentDetailRepository.save(

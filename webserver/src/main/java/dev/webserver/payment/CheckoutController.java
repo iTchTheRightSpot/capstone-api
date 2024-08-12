@@ -1,6 +1,6 @@
 package dev.webserver.payment;
 
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ class CheckoutController {
             @NotNull @RequestParam("currency") String currency,
             HttpServletRequest req
     ) {
-        SarreCurrency c = SarreCurrency.valueOf(currency.toUpperCase());
+        CapstoneCurrency c = CapstoneCurrency.valueOf(currency.toUpperCase());
         return service.checkout(req, country, c);
     }
 

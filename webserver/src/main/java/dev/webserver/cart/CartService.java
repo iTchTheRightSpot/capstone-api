@@ -1,7 +1,7 @@
 package dev.webserver.cart;
 
 import dev.webserver.AbstractEnvironment;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.exception.CustomInvalidFormatException;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.OutOfStockException;
@@ -105,7 +105,7 @@ class CartService extends AbstractEnvironment {
      * @throws CustomInvalidFormatException if the cart cookie value is invalid or cannot be parsed.
      */
     public List<CartResponse> cartItems(
-            final SarreCurrency currency,
+            final CapstoneCurrency currency,
             final HttpServletRequest req,
             final HttpServletResponse res
     ) {

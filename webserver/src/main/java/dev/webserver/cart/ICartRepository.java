@@ -1,6 +1,6 @@
 package dev.webserver.cart;
 
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.payment.RaceConditionCartDbMapper;
 import dev.webserver.payment.CartTotalDbMapper;
 import org.springframework.data.jdbc.repository.query.Modifying;
@@ -45,7 +45,7 @@ public interface ICartRepository extends CrudRepository<Cart, Long> {
     INNER JOIN product_price_currency pc ON p.product_id = pc.product_id
     WHERE c.session_id = :sessionId AND pc.currency = :currency
     """)
-    List<CartTotalDbMapper> amountToPayForAllCartItemsForShoppingSession(long sessionId, SarreCurrency currency);
+    List<CartTotalDbMapper> amountToPayForAllCartItemsForShoppingSession(long sessionId, CapstoneCurrency currency);
 
     @Query("""
     SELECT

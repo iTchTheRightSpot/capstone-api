@@ -1,6 +1,6 @@
 package dev.webserver.product;
 
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -22,7 +22,7 @@ public interface ProductPriceCurrencyRepository extends CrudRepository<ProductPr
     WHERE p.uuid = :uuid AND c.currency = :#{#currency.name()}
     GROUP BY p.name, p.description, c.currency, c.price
     """)
-    Optional<PriceCurrencyDbMapper> priceCurrencyByProductUuidAndCurrency(final String uuid, final SarreCurrency currency);
+    Optional<PriceCurrencyDbMapper> priceCurrencyByProductUuidAndCurrency(final String uuid, final CapstoneCurrency currency);
 
     @Transactional
     @Modifying
@@ -32,6 +32,6 @@ public interface ProductPriceCurrencyRepository extends CrudRepository<ProductPr
     SET c.price = :price
     WHERE p.uuid = :uuid AND c.currency = :#{#currency.name()}
     """)
-    void updateProductPriceByProductUuidAndCurrency(final String uuid, final BigDecimal price, final SarreCurrency currency);
+    void updateProductPriceByProductUuidAndCurrency(final String uuid, final BigDecimal price, final CapstoneCurrency currency);
 
 }

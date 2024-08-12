@@ -1,7 +1,7 @@
 package dev.webserver.product;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 
 import java.math.BigDecimal;
 
@@ -17,7 +17,7 @@ public record ProductDbMapper(
         String description,
         // price currency
         BigDecimal price,
-        SarreCurrency currency,
+        CapstoneCurrency currency,
         // category
         @JsonProperty("category_name")
         String categoryName

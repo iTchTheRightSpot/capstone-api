@@ -1,6 +1,6 @@
 package dev.webserver.product;
 
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.util.Pageable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -29,7 +29,7 @@ class EmployeeProductController {
             @RequestParam(name = "currency", defaultValue = "ngn")
             final String currency
     ) {
-        final SarreCurrency c = SarreCurrency.valueOf(currency.toUpperCase());
+        final CapstoneCurrency c = CapstoneCurrency.valueOf(currency.toUpperCase());
         return service.allProducts(c, page, Math.min(size, 20));
     }
 

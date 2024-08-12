@@ -1,7 +1,7 @@
 package dev.webserver.payment;
 
 import dev.webserver.enumeration.PaymentStatus;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -36,7 +36,7 @@ public record PaymentDetail(
         @Size.List({@Size(max = 255, message = "payment_detail reference_id max length of 255")})
         @Column("reference_id")
         String referenceId, // equivalent to reference id
-        SarreCurrency currency,
+        CapstoneCurrency currency,
         BigDecimal amount,
         @NotNull(message = "payment_detail payment_provider cannot be null")
         @NotEmpty(message = "payment_detail payment_provider cannot be empty")

@@ -2,7 +2,7 @@ package dev.webserver;
 
 import com.github.javafaker.Faker;
 import dev.webserver.category.Category;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.product.*;
 import dev.webserver.util.CustomUtil;
 
@@ -29,13 +29,12 @@ public final class RepositoryTestData {
                         .weight(BigDecimal.valueOf(new Faker().number().randomDouble(3, 1, 50)))
                         .weightType("kg")
                         .categoryId(category.categoryId())
-                        .build()
-        );
+                        .build());
 
         productPriceCurrencyRepository
-                .save(new ProductPriceCurrency(null, new BigDecimal(new Faker().commerce().price()), SarreCurrency.NGN, product.productId()));
+                .save(new ProductPriceCurrency(null, new BigDecimal(new Faker().commerce().price()), CapstoneCurrency.NGN, product.productId()));
         productPriceCurrencyRepository
-                .save(new ProductPriceCurrency(null, new BigDecimal(new Faker().commerce().price()), SarreCurrency.USD, product.productId()));
+                .save(new ProductPriceCurrency(null, new BigDecimal(new Faker().commerce().price()), CapstoneCurrency.USD, product.productId()));
 
         final ProductDetail detail = detailRepo.save(
                 ProductDetail.builder()

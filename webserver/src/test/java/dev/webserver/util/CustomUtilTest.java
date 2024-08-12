@@ -15,8 +15,8 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.util.List;
 
-import static dev.webserver.enumeration.SarreCurrency.NGN;
-import static dev.webserver.enumeration.SarreCurrency.USD;
+import static dev.webserver.enumeration.CapstoneCurrency.NGN;
+import static dev.webserver.enumeration.CapstoneCurrency.USD;
 import static java.math.RoundingMode.FLOOR;
 import static org.junit.jupiter.api.Assertions.*;
 

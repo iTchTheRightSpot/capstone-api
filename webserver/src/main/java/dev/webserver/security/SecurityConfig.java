@@ -144,6 +144,8 @@ class SecurityConfig extends AbstractEnvironment {
                             .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
                             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                             .requestMatchers("/api/v1/actuator/**").hasRole(DEVELOPER.name())
+                            .requestMatchers(baseurl + "demo/**").hasRole(DEMO.name())
+                            .requestMatchers(GET, baseurl + "employee/**").hasRole(DEMO.name())
                             .requestMatchers(baseurl + "employee/**").hasRole(EMPLOYEE.name())
                             .requestMatchers(baseurl + "order/**").hasRole(USER.name())
                             .anyRequest().denyAll());

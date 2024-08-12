@@ -27,8 +27,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static dev.webserver.enumeration.SarreCurrency.NGN;
-import static dev.webserver.enumeration.SarreCurrency.USD;
+import static dev.webserver.enumeration.CapstoneCurrency.NGN;
+import static dev.webserver.enumeration.CapstoneCurrency.USD;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;

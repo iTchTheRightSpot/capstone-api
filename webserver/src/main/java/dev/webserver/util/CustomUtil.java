@@ -3,7 +3,7 @@ package dev.webserver.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.category.CategoryResponse;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.payment.CartTotalDbMapper;
 import dev.webserver.payment.CheckoutPair;
@@ -34,8 +34,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static dev.webserver.enumeration.SarreCurrency.NGN;
-import static dev.webserver.enumeration.SarreCurrency.USD;
+import static dev.webserver.enumeration.CapstoneCurrency.NGN;
+import static dev.webserver.enumeration.CapstoneCurrency.USD;
 import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.FLOOR;
 import static java.math.RoundingMode.UP;
@@ -61,11 +61,11 @@ public class CustomUtil {
      * This method checks whether the array contains exactly two elements, and
      * verifies that each {@link PriceCurrencyDto} object has a non-negative
      * price value. Additionally, it ensures that the array contains both only
-     * {@link SarreCurrency}.
+     * {@link CapstoneCurrency}.
      *
      * @param dto An array of {@link PriceCurrencyDto} objects to be validated.
      * @return true if the array is in the correct format and contains only
-     * {@link SarreCurrency}.
+     * {@link CapstoneCurrency}.
      */
     public static boolean validateContainsCurrencies(final PriceCurrencyDto[] dto) {
         if (dto.length != 2) {
@@ -122,14 +122,14 @@ public class CustomUtil {
      * @param currencyConversion The conversion rate to the lowest
      *                           currency denomination.
      * @param currency The currency to convert to, represented by
-     * {@link SarreCurrency}.
+     * {@link CapstoneCurrency}.
      * @param amount The amount to convert to the lowest currency denomination.
      * @return The amount converted to the lowest currency denomination,
      * represented as a {@link BigDecimal}.
      */
     public static BigDecimal convertCurrency(
             final String currencyConversion,
-            final SarreCurrency currency,
+            final CapstoneCurrency currency,
             final BigDecimal amount
     ) {
         final BigDecimal total = amount

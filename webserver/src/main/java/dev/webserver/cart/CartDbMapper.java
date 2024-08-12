@@ -1,7 +1,7 @@
 package dev.webserver.cart;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 
 import java.math.BigDecimal;
 
@@ -19,7 +19,7 @@ public record CartDbMapper (
         String sku,
         // price currency
         BigDecimal price,
-        SarreCurrency currency,
+        CapstoneCurrency currency,
         // product detail
         String colour,
         // cart

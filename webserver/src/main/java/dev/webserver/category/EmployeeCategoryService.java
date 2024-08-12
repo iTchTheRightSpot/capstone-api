@@ -1,7 +1,7 @@
 package dev.webserver.category;
 
 import dev.webserver.AbstractEnvironment;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.exception.CustomBadRequestException;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.DuplicateException;
@@ -50,7 +50,7 @@ public class EmployeeCategoryService extends AbstractEnvironment {
     }
 
     public Pageable<ProductResponse> allProductsByCategoryId(
-            final SarreCurrency currency,
+            final CapstoneCurrency currency,
             final long categoryId,
             final int page,
             final int size

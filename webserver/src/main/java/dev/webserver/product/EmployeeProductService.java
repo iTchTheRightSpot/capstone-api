@@ -2,7 +2,7 @@ package dev.webserver.product;
 
 import dev.webserver.AbstractEnvironment;
 import dev.webserver.category.EmployeeCategoryService;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.exception.*;
 import dev.webserver.util.CustomUtil;
 import dev.webserver.util.Page;
@@ -24,8 +24,8 @@ import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
-import static dev.webserver.enumeration.SarreCurrency.NGN;
-import static dev.webserver.enumeration.SarreCurrency.USD;
+import static dev.webserver.enumeration.CapstoneCurrency.NGN;
+import static dev.webserver.enumeration.CapstoneCurrency.USD;
 import static java.math.RoundingMode.FLOOR;
 
 @Service
@@ -51,7 +51,7 @@ public class EmployeeProductService extends AbstractEnvironment {
     }
 
     public Pageable<ProductResponse> allProducts(
-            final SarreCurrency currency, final int page, final int size
+            final CapstoneCurrency currency, final int page, final int size
     ) {
         final Page of = Page.of(page, size);
         final int count = productRepository.countAllProductsForAdminFront();
@@ -164,7 +164,7 @@ public class EmployeeProductService extends AbstractEnvironment {
         );
 
         // update price
-        final var currency = SarreCurrency.valueOf(dto.currency().toUpperCase());
+        final var currency = CapstoneCurrency.valueOf(dto.currency().toUpperCase());
         currencyRepo.updateProductPriceByProductUuidAndCurrency(dto.uuid(), price, currency);
     }
 
@@ -198,7 +198,7 @@ public class EmployeeProductService extends AbstractEnvironment {
     /**
      * Retrieves the price based on the currency.
      * */
-    final BiFunction<PriceCurrencyDto[], SarreCurrency, BigDecimal> truncateAmount = (arr, curr) -> Arrays
+    final BiFunction<PriceCurrencyDto[], CapstoneCurrency, BigDecimal> truncateAmount = (arr, curr) -> Arrays
             .stream(arr)
             .filter(priceCurrencyDTO -> priceCurrencyDTO.currency().equals(curr.name()))
             .map(obj -> obj.price().setScale(2, FLOOR))

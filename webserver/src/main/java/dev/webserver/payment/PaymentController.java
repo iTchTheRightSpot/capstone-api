@@ -1,6 +1,6 @@
 package dev.webserver.payment;
 
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -34,7 +34,7 @@ public class PaymentController {
             final String country,
             final HttpServletRequest req
     ) {
-        final var sc = SarreCurrency.valueOf(currency.toUpperCase());
+        final var sc = CapstoneCurrency.valueOf(currency.toUpperCase());
         return raceConditionService.raceCondition(req, country, sc);
     }
 

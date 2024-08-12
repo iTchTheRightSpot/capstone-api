@@ -2,7 +2,7 @@ package dev.webserver.cart;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -13,7 +13,7 @@ public record CartResponse(
         String url,
         String product_name,
         BigDecimal price,
-        SarreCurrency currency,
+        CapstoneCurrency currency,
         String colour,
         String size,
         String sku,

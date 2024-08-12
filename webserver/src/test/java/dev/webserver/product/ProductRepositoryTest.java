@@ -6,7 +6,7 @@ import dev.webserver.RepositoryTestData;
 import dev.webserver.TestUtility;
 import dev.webserver.category.Category;
 import dev.webserver.category.CategoryRepository;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.util.Page;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -63,11 +63,7 @@ final class ProductRepositoryTest extends AbstractRepositoryTest {
     @Test
     void allProductsAdminFront() {
         // given
-        final var cat = categoryRepo
-                .save(Category.builder()
-                        .name("category")
-                        .isVisible(true)
-                        .build());
+        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
         RepositoryTestData
                 .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
@@ -77,7 +73,7 @@ final class ProductRepositoryTest extends AbstractRepositoryTest {
         assertThat(products.isEmpty()).isFalse();
 
         // method to test
-        final var page = productRepository.allProductsForAdminFront(Page.of(0, 20), SarreCurrency.NGN);
+        final var page = productRepository.allProductsForAdminFront(Page.of(0, 20), CapstoneCurrency.NGN);
 
         // assert
         assertThat(page.size()).isNotEqualTo(0);
@@ -91,36 +87,6 @@ final class ProductRepositoryTest extends AbstractRepositoryTest {
             assertThat(pojo.weightType()).isNotNull();
             assertThat(pojo.currency()).isNotNull();
             assertThat(pojo.price()).isNotNull();
-            assertThat(pojo.categoryName()).isNotNull();
-        }
-    }
-
-    @Test
-    void allProductsByCurrencyClient() {
-        // given
-        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
-
-        RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
-
-        // when
-        final var products = TestUtility.toList(productRepository.findAll());
-        assertFalse(products.isEmpty());
-
-        // then
-        final var page = productRepository.allProductsByCurrencyClient(Page.of(0, 20), SarreCurrency.NGN);
-
-        assertThat(page.size()).isNotEqualTo(0);
-
-        for (final ProductDbMapper pojo : page) {
-            assertThat(pojo.uuid()).isNotNull();
-            assertThat(pojo.name()).isNotNull();
-            assertThat(pojo.description()).isNotNull();
-            assertThat(pojo.currency()).isNotNull();
-            assertThat(pojo.price()).isNotNull();
-            assertThat(pojo.imageKey()).isNotNull();
-            assertThat(pojo.weight()).isNotNull();
-            assertThat(pojo.weightType()).isNotNull();
             assertThat(pojo.categoryName()).isNotNull();
         }
     }
@@ -201,13 +167,14 @@ final class ProductRepositoryTest extends AbstractRepositoryTest {
         assertFalse(products.isEmpty());
 
         // then
-        final var list = productRepository.productsByNameAndCurrency(products.getFirst().name(), SarreCurrency.USD);
+        final var list = productRepository.productsByNameAndCurrency(products.getFirst().name(), CapstoneCurrency.USD);
 
-        assertThat(list.size()).isNotEqualTo(0);
+        assertThat(list.isEmpty()).isFalse();
 
         for (final ProductDbMapper pojo : list) {
             assertThat(pojo.uuid()).isNotNull();
             assertThat(pojo.name()).isNotNull();
+            assertThat(pojo.description()).isNotNull();
             assertThat(pojo.currency()).isNotNull();
             assertThat(pojo.price()).isNotNull();
             assertThat(pojo.imageKey()).isNotNull();
@@ -222,8 +189,7 @@ final class ProductRepositoryTest extends AbstractRepositoryTest {
         // given
         final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
 
-        RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
+        RepositoryTestData.createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
 
         // when
         final var products = TestUtility.toList(productRepository.findAll());
@@ -251,8 +217,8 @@ final class ProductRepositoryTest extends AbstractRepositoryTest {
                         .categoryId(cat.categoryId())
                         .build());
 
-        currencyRepo.save(new ProductPriceCurrency(null, new BigDecimal("45750"), SarreCurrency.NGN, product.productId()));
-        currencyRepo.save(new ProductPriceCurrency(null, new BigDecimal("10.52"), SarreCurrency.USD, product.productId()));
+        currencyRepo.save(new ProductPriceCurrency(null, new BigDecimal("45750"), CapstoneCurrency.NGN, product.productId()));
+        currencyRepo.save(new ProductPriceCurrency(null, new BigDecimal("10.52"), CapstoneCurrency.USD, product.productId()));
 
         // then
         assertFalse(TestUtility.toList(currencyRepo.findAll()).isEmpty());
@@ -270,6 +236,50 @@ final class ProductRepositoryTest extends AbstractRepositoryTest {
 
         // method to test
         assertThat(productRepository.countAllProductsForAdminFront()).isEqualTo(1);
+    }
+
+    @Test
+    void test_RetrievingProductsToStoreFront() {
+        final var cat = categoryRepo.save(Category.builder().name("category").isVisible(true).build());
+        final var men = categoryRepo.save(Category.builder().name("men").isVisible(true).parentId(cat.categoryId()).build());
+        final var tshirt = categoryRepo.save(Category.builder().name("t-shirt").isVisible(false).parentId(men.categoryId()).build());
+        final var blue = categoryRepo.save(Category.builder().name("blue t-shirt").isVisible(true).parentId(tshirt.categoryId()).build());
+
+        // 5 products for category
+        for (int i = 0; i < 5; i++)
+            RepositoryTestData.createProduct(3, cat, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
+        // 7 products for men
+        for (int i = 0; i < 7; i++)
+            RepositoryTestData.createProduct(3, men, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
+        // 2 products for tshirt
+        for (int i = 0; i < 2; i++)
+            RepositoryTestData.createProduct(3, tshirt, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
+        // 3 products for blue tshirt
+        for (int i = 0; i < 3; i++)
+            RepositoryTestData.createProduct(3, blue, productRepository, detailRepo, productPriceCurrencyRepository, imageRepo, skuRepo);
+
+        // method to test and assert
+        assertThat(productRepository.countAllProductsStoreFront()).isEqualTo(12);
+        final var list = productRepository.allProductsByCurrencyStoreFront(Page.of(0, 30), CapstoneCurrency.NGN);
+        assertThat(list.size()).isEqualTo(12);
+
+        for (final ProductDbMapper pojo : list) {
+            assertThat(pojo.uuid()).isNotNull();
+            assertThat(pojo.name()).isNotNull();
+            assertThat(pojo.description()).isNotNull();
+            assertThat(pojo.imageKey()).isNotNull();
+            assertThat(pojo.weight()).isNotNull();
+            assertThat(pojo.weightType()).isNotNull();
+            assertThat(pojo.currency()).isNotNull();
+            assertThat(pojo.price()).isNotNull();
+            assertThat(pojo.categoryName()).isNotNull();
+        }
+
+        // update tshirt visibility
+        categoryRepo.update(tshirt.name(), true, tshirt.parentId(), tshirt.categoryId());
+
+        // method to test and assert
+        assertThat(productRepository.countAllProductsStoreFront()).isEqualTo(17);
     }
 
 }

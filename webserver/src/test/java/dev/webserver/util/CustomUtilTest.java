@@ -174,10 +174,9 @@ final class CustomUtilTest extends AbstractUnitTest {
 
     private static List<CategoryResponse> res() {
         // super parentId
-        final var category = CategoryResponse.builder()
-                .categoryId(1).parentId(null).name("category").visible(true).children(new ArrayList<>()).build();
+        final var category = new CategoryResponse(1, null, "category", true, new ArrayList<>());
 
-        final var clothes = CategoryResponse.builder().categoryId(2).parentId(category.categoryId()).name("clothes").visible(true).children(new ArrayList<>()).build();
+        final var clothes = new CategoryResponse(2, category.categoryId(), "clothes", true, new ArrayList<>());
         category.addToChildren(clothes);
 
         final var top = new CategoryResponse(3L, clothes.categoryId(), "top", true, new ArrayList<>());

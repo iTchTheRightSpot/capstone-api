@@ -28,7 +28,7 @@ final class NativeEmployeeCategoryTest extends AbstractNative {
                 path,
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                CategoryResponse.class
+                String.class
         );
 
         assertEquals(HttpStatusCode.valueOf(200), get.getStatusCode());

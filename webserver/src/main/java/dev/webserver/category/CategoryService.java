@@ -30,9 +30,8 @@ class CategoryService extends AbstractEnvironment {
                 .map(c -> CategoryResponse.builder()
                         .categoryId(c.categoryId())
                         .name(c.name())
-                        .children(null)
-                        .visible(null)
                         .parentId(c.parentId())
+                        .visible(null)
                         .build())
                 .toList();
     }

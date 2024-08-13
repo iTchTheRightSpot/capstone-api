@@ -1,7 +1,7 @@
 package dev.webserver.product;
 
 import dev.webserver.AbstractEnvironment;
-import dev.webserver.category.EmployeeCategoryService;
+import dev.webserver.category.CategoryRepository;
 import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.exception.*;
 import dev.webserver.util.CustomUtil;
@@ -37,16 +37,16 @@ public class EmployeeProductService extends AbstractEnvironment {
     private final ProductRepository productRepository;
     private final EmployeeProductDetailService detailService;
     private final ProductSkuService skuService;
-    private final EmployeeCategoryService categoryService;
+    private final CategoryRepository categoryRepository;
     private final ProductImageService productImageService;
 
-    protected EmployeeProductService(final Environment environment, final ProductPriceCurrencyRepository currencyRepo, final ProductRepository productRepository, final EmployeeProductDetailService detailService, final ProductSkuService skuService, final EmployeeCategoryService categoryService, final ProductImageService productImageService) {
+    protected EmployeeProductService(final Environment environment, final ProductPriceCurrencyRepository currencyRepo, final ProductRepository productRepository, final EmployeeProductDetailService detailService, final ProductSkuService skuService, final CategoryRepository categoryRepository, final ProductImageService productImageService) {
         super(environment);
         this.currencyRepo = currencyRepo;
         this.productRepository = productRepository;
         this.detailService = detailService;
         this.skuService = skuService;
-        this.categoryService = categoryService;
+        this.categoryRepository = categoryRepository;
         this.productImageService = productImageService;
     }
 
@@ -91,7 +91,8 @@ public class EmployeeProductService extends AbstractEnvironment {
             throw new CustomInvalidFormatException("please check currencies and prices");
         }
 
-        final var category = categoryService.findById(dto.categoryId());
+        final var category = categoryRepository.findById(dto.categoryId())
+                .orElseThrow(() -> new CustomNotFoundException("category not found"));
 
         // throw error if product exits
         if (productRepository.productByName(dto.name().trim()).isPresent()) {
@@ -152,7 +153,8 @@ public class EmployeeProductService extends AbstractEnvironment {
             throw new DuplicateException(dto.name() + " exists");
         }
 
-        final var category = categoryService.findById(dto.categoryId());
+        final var category = categoryRepository.findById(dto.categoryId())
+                .orElseThrow(() -> new CustomNotFoundException("category not found"));
 
         productRepository.updateProduct(
                 dto.uuid().trim(),

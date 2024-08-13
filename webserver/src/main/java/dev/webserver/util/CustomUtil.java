@@ -7,9 +7,9 @@ import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.payment.CartTotalDbMapper;
 import dev.webserver.payment.CheckoutPair;
+import dev.webserver.product.CustomMultiPart;
 import dev.webserver.product.PriceCurrencyDto;
 import dev.webserver.product.ProductDetailDbMapper;
-import dev.webserver.product.CustomMultiPart;
 import dev.webserver.product.Variant;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -183,7 +183,7 @@ public class CustomUtil {
         final Map<Long, CategoryResponse> map = new HashMap<>();
 
         // hierarchy is built by inject root
-        map.put(-1L, new CategoryResponse("root"));
+        map.put(-1L, CategoryResponse.builder().name("root").categoryId(-1).parentId(-1L).children(new ArrayList<>()).build());
 
         // add all to map
         for (final CategoryResponse cat : list) {

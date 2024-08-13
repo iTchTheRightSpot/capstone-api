@@ -23,7 +23,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 @Service
-public class EmployeeCategoryService extends AbstractEnvironment {
+class EmployeeCategoryService extends AbstractEnvironment {
 
     private static final Logger log = LoggerFactory.getLogger(EmployeeCategoryService.class);
 
@@ -44,7 +44,6 @@ public class EmployeeCategoryService extends AbstractEnvironment {
                         .name(c.name())
                         .visible(c.isVisible())
                         .parentId(c.parentId())
-                        .children(null)
                         .build())
                 .toList();
     }
@@ -73,6 +72,11 @@ public class EmployeeCategoryService extends AbstractEnvironment {
 
         final var products = CustomUtil.asynchronousTasks(futures).join();
         return new Pageable<>(of, count, products);
+    }
+
+    private Category findById(final long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CustomNotFoundException("category not found"));
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -121,11 +125,6 @@ public class EmployeeCategoryService extends AbstractEnvironment {
             log.error("tried deleting a category with children attached {}", e.getMessage());
             throw new ResourceAttachedException("resource attached to category");
         }
-    }
-
-    public Category findById(final long categoryId) {
-        return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new CustomNotFoundException("category id not found"));
     }
 
 }

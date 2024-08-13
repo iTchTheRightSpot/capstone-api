@@ -1,9 +1,9 @@
 package dev.webserver.product;
 
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.category.Category;
-import dev.webserver.category.EmployeeCategoryService;
 import dev.webserver.TestData;
+import dev.webserver.category.Category;
+import dev.webserver.category.CategoryRepository;
 import dev.webserver.exception.DuplicateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +29,7 @@ final class EmployeeProductServiceTest extends AbstractUnitTest {
     @Mock private EmployeeProductDetailService detailService;
     @Mock private ProductImageService productImageService;
     @Mock private ProductSkuService skuService;
-    @Mock private EmployeeCategoryService categoryService;
+    @Mock private CategoryRepository categoryRepository;
 
     @BeforeEach
     void setUp() {
@@ -39,7 +39,7 @@ final class EmployeeProductServiceTest extends AbstractUnitTest {
                 productRepository,
                 detailService,
                 skuService,
-                categoryService,
+                categoryRepository,
                 productImageService
         );
         super.setUpEnvironmentVariables(productService);
@@ -48,16 +48,13 @@ final class EmployeeProductServiceTest extends AbstractUnitTest {
     @Test
     void shouldSuccessfullyCreateAProduct() {
         // Given
-        var sizeDtoArray = TestData.sizeInventoryDTOArray(3);
-        var files = TestData.files();
-        var dto = TestData.createProductDTO(1, sizeDtoArray);
-        var category = Category.builder()
-                .categoryId(dto.categoryId())
-                .name("category")
-                .build();
+        final var sizeDtoArray = TestData.sizeInventoryDTOArray(3);
+        final var files = TestData.files();
+        final var dto = TestData.createProductDTO(1, sizeDtoArray);
+        final var category = Category.builder().categoryId(dto.categoryId()).name("category").build();
 
         // When
-        when(categoryService.findById(anyLong())).thenReturn(category);
+        when(categoryRepository.findById(anyLong())).thenReturn(Optional.of(category));
         when(productRepository.productByName(anyString())).thenReturn(Optional.empty());
         when(productRepository.save(any(Product.class))).thenReturn(Product.builder().productId(1L).build());
 
@@ -69,17 +66,14 @@ final class EmployeeProductServiceTest extends AbstractUnitTest {
     @Test
     void shouldThrowExceptionWhenCreatingANewProductDueToDuplicateName() {
         // Given
-        var sizeDtoArray = TestData.sizeInventoryDTOArray(3);
-        var files = TestData.files();
-        var dto = TestData.createProductDTO(1, sizeDtoArray);
-        var category = Category.builder()
-                .categoryId(dto.categoryId())
-                .name("category")
-                .build();
-        var product = Product.builder().name(dto.name()).uuid("uuid").build();
+        final var sizeDtoArray = TestData.sizeInventoryDTOArray(3);
+        final var files = TestData.files();
+        final var dto = TestData.createProductDTO(1, sizeDtoArray);
+        final var category = Category.builder().categoryId(dto.categoryId()).name("category").build();
+        final var product = Product.builder().name(dto.name()).uuid("uuid").build();
 
         // When
-        when(categoryService.findById(anyLong())).thenReturn(category);
+        when(categoryRepository.findById(anyLong())).thenReturn(Optional.of(category));
         when(productRepository.productByName(anyString())).thenReturn(Optional.of(product));
 
         // Then
@@ -89,17 +83,17 @@ final class EmployeeProductServiceTest extends AbstractUnitTest {
     @Test
     void shouldSuccessfullyUpdateAProduct() {
         // Given
-        var payload = TestData
+        final var payload = TestData
                 .updateProductDTO(
                         "",
                         "",
                         1
                 );
-        var category = Category.builder().categoryId(payload.categoryId()).build();
+        final var category = Category.builder().categoryId(payload.categoryId()).build();
 
         // When
         when(productRepository.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
-        when(categoryService.findById(anyLong())).thenReturn(category);
+        when(categoryRepository.findById(anyLong())).thenReturn(Optional.of(category));
 
         // Then
         productService.update(payload);
@@ -117,17 +111,17 @@ final class EmployeeProductServiceTest extends AbstractUnitTest {
     @DisplayName(value = "Update a new product. collection and collection_id are empty")
     void updateEmpty() {
         // Given
-        var payload = TestData
+        final var payload = TestData
                 .updateProductDTO(
                         "",
                         "",
                         1
                 );
-        var category = Category.builder().categoryId(payload.categoryId()).build();
+        final var category = Category.builder().categoryId(payload.categoryId()).build();
 
         // When
         when(productRepository.nameNotAssociatedToUuid(anyString(), anyString())).thenReturn(0);
-        when(categoryService.findById(anyLong())).thenReturn(category);
+        when(categoryRepository.findById(anyLong())).thenReturn(Optional.of(category));
 
         // Then
         productService.update(payload);

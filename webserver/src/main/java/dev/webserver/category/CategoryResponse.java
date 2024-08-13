@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 @Builder
@@ -19,18 +18,6 @@ public record CategoryResponse(
         Boolean visible,
         List<CategoryResponse> children
 ) implements Serializable {
-
-    public CategoryResponse(final String name) {
-        this(-1, -1L, name);
-    }
-
-    public CategoryResponse(final long categoryId, final Long parentId, final String name, final boolean visible) {
-        this(categoryId, parentId, name, visible, new ArrayList<>());
-    }
-
-    public CategoryResponse(final long categoryId, final Long parentId, final String name) {
-        this(categoryId, parentId, name, false);
-    }
 
     public void addToChildren(final CategoryResponse child) {
         children.add(child);

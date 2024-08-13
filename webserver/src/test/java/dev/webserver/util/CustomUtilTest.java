@@ -13,6 +13,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 
 import static dev.webserver.enumeration.CapstoneCurrency.NGN;
@@ -20,7 +21,7 @@ import static dev.webserver.enumeration.CapstoneCurrency.USD;
 import static java.math.RoundingMode.FLOOR;
 import static org.junit.jupiter.api.Assertions.*;
 
-class CustomUtilTest extends AbstractUnitTest {
+final class CustomUtilTest extends AbstractUnitTest {
 
     private record AmountConversion(BigDecimal given, BigDecimal expected) { }
 
@@ -138,8 +139,7 @@ class CustomUtilTest extends AbstractUnitTest {
         };
 
         for (final AmountConversion obj : arr) {
-            assertEquals(obj.expected(), CustomUtil
-                    .convertCurrency("0.34", NGN, obj.given()));
+            assertEquals(obj.expected(), CustomUtil.convertCurrency("0.34", NGN, obj.given()));
         }
     }
 
@@ -152,51 +152,47 @@ class CustomUtilTest extends AbstractUnitTest {
         };
 
         for (final AmountConversion obj : arr) {
-            assertEquals(obj.expected(), CustomUtil
-                    .convertCurrency("100", USD, obj.given())
-            );
+            assertEquals(obj.expected(), CustomUtil.convertCurrency("100", USD, obj.given()));
         }
     }
 
     @Test
     void shouldCreateHierarchyForCategory() {
-        final var actual = CustomUtil.createCategoryHierarchy(db());
-        assertEquals(res(), actual);
+        assertEquals(res(), CustomUtil.createCategoryHierarchy(db));
     }
 
-    final List<CategoryResponse> db() {
-        return List.of(
-                new CategoryResponse(1L, null, "category", true),
-                new CategoryResponse(2L, 1L, "clothes", true),
-                new CategoryResponse(3L, 2L, "top", true),
-                new CategoryResponse(4L, null, "collection", true),
-                new CategoryResponse(5L, 4L, "fall 2023", true),
-                new CategoryResponse(6L, 4L, "summer 2023", true),
-                new CategoryResponse(7L, 5L, "jacket fall 2023", true),
-                new CategoryResponse(8L, 3L, "long-sleeve", true)
-        );
-    }
+    private static final List<CategoryResponse> db = List.of(
+            new CategoryResponse(1, null, "category", true, new ArrayList<>()),
+            new CategoryResponse(2, 1L, "clothes", true, new ArrayList<>()),
+            new CategoryResponse(3, 2L, "top", true, new ArrayList<>()),
+            new CategoryResponse(4, null, "collection", true, new ArrayList<>()),
+            new CategoryResponse(5, 4L, "fall 2023", true, new ArrayList<>()),
+            new CategoryResponse(6, 4L, "summer 2023", true, new ArrayList<>()),
+            new CategoryResponse(7, 5L, "jacket fall 2023", true, new ArrayList<>()),
+            new CategoryResponse(8, 3L, "long-sleeve", true, new ArrayList<>())
+    );
 
-    final List<CategoryResponse> res() {
+    private static List<CategoryResponse> res() {
         // super parentId
-        final var category = new CategoryResponse(1L, null, "category", true);
+        final var category = CategoryResponse.builder()
+                .categoryId(1).parentId(null).name("category").visible(true).children(new ArrayList<>()).build();
 
-        final var clothes = new CategoryResponse(2L, category.categoryId(), "clothes", true);
+        final var clothes = CategoryResponse.builder().categoryId(2).parentId(category.categoryId()).name("clothes").visible(true).children(new ArrayList<>()).build();
         category.addToChildren(clothes);
 
-        final var top = new CategoryResponse(3L, clothes.categoryId(), "top", true);
+        final var top = new CategoryResponse(3L, clothes.categoryId(), "top", true, new ArrayList<>());
         clothes.addToChildren(top);
 
-        top.addToChildren(new CategoryResponse(8L, top.categoryId(), "long-sleeve", true));
+        top.addToChildren(new CategoryResponse(8L, top.categoryId(), "long-sleeve", true, new ArrayList<>()));
 
         // super parentId
-        final var collection = new CategoryResponse(4L, null, "collection", true);
+        final var collection = new CategoryResponse(4L, null, "collection", true, new ArrayList<>());
 
-        final var fall = new CategoryResponse(5L, collection.categoryId(), "fall 2023", true);
+        final var fall = new CategoryResponse(5L, collection.categoryId(), "fall 2023", true, new ArrayList<>());
         collection.addToChildren(fall);
-        fall.addToChildren(new CategoryResponse(7L, fall.categoryId(), "jacket fall 2023", true));
+        fall.addToChildren(new CategoryResponse(7L, fall.categoryId(), "jacket fall 2023", true, new ArrayList<>()));
 
-        final var summer = new CategoryResponse(6L, collection.categoryId(), "summer 2023", true);
+        final var summer = new CategoryResponse(6L, collection.categoryId(), "summer 2023", true, new ArrayList<>());
         collection.addToChildren(summer);
 
         return List.of(category, collection);

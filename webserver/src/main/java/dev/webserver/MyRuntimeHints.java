@@ -3,6 +3,7 @@ package dev.webserver;
 import dev.webserver.cart.CartDto;
 import dev.webserver.cart.CartResponse;
 import dev.webserver.category.CategoryDto;
+import dev.webserver.category.CategoryResponse;
 import dev.webserver.category.UpdateCategoryDto;
 import dev.webserver.external.log.DiscordPayload;
 import dev.webserver.payment.*;
@@ -61,7 +62,7 @@ final class MyRuntimeHints implements RuntimeHintsRegistrar {
                 .registerType(CronJob.CustomCronJobObject.class)
                 .registerType(LoginDto.class)
                 .registerType(Pageable.class)
-                .registerType(Page.class);
+                .registerType(Page.class)
+                .registerType(CategoryResponse.class);
     }
-
 }

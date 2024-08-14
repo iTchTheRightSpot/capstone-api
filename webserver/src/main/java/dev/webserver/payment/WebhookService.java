@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import dev.webserver.AbstractEnvironment;
 import dev.webserver.exception.CustomServerError;
 import dev.webserver.external.log.ILogEventPublisher;
+import dev.webserver.product.IProductCachePublisher;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,11 +24,18 @@ class WebhookService extends AbstractEnvironment {
 
     private final PaymentDetailService paymentDetailService;
     private final ILogEventPublisher publisher;
+    private final IProductCachePublisher productCachePublisher;
 
-    protected WebhookService(final Environment environment, final PaymentDetailService paymentDetailService, final ILogEventPublisher publisher) {
+    protected WebhookService(
+            final Environment environment,
+            final PaymentDetailService paymentDetailService,
+            final ILogEventPublisher publisher,
+            final IProductCachePublisher productCachePublisher
+    ) {
         super(environment);
         this.paymentDetailService = paymentDetailService;
         this.publisher = publisher;
+        this.productCachePublisher = productCachePublisher;
     }
 
     /**
@@ -56,8 +64,9 @@ class WebhookService extends AbstractEnvironment {
                 final JsonNode metadata = data.get("metadata");
                 final String email = metadata.get("email").asText();
 
-                if (!paymentDetailService.paymentDetailExists(email, reference)) {
+                if (paymentDetailService.isPaymentDetailMissingByEmailAndReference(email, reference)) {
                     onSuccessWebHook(data);
+                    productCachePublisher.evictAll();
                     publisher.publishPurchase(metadata.get("name").asText(), email);
                     log.info("successfully performed business logic on successful webhook request.");
                 } else {

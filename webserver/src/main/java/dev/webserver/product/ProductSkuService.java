@@ -1,5 +1,6 @@
 package dev.webserver.product;
 
+import dev.webserver.cache.CacheImpl;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.exception.ResourceAttachedException;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -19,6 +21,7 @@ public class ProductSkuService {
     private static final Logger log = LoggerFactory.getLogger(ProductSkuService.class);
 
     private final ProductSkuRepository repository;
+    private final CacheImpl<String, List<DetailResponse>> listOfDetailResponseCache;
 
     /**
      * Saves {@link ProductSku} based on {@link SizeInventoryDto} array.
@@ -38,15 +41,15 @@ public class ProductSkuService {
     /**
      * Deletes a {@link ProductSku} by sku.
      *
-     * @throws ResourceAttachedException if {@link ProductSku}
-     * has children entities attached to it.
+     * @throws ResourceAttachedException if {@link ProductSku} has children entities attached to it.
      * */
     public void delete(final String sku) {
         try {
             repository.deleteProductSkuBySku(sku);
+            listOfDetailResponseCache.evictAll();
         } catch (DataIntegrityViolationException e) {
             log.error("resources attached to ProductSku {}", e.getMessage());
-            throw new ResourceAttachedException("resource(s) attached to product");
+            throw new ResourceAttachedException("resource(s) attached to product variation");
         }
     }
 

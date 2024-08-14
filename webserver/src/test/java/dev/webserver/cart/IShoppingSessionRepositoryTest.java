@@ -9,8 +9,10 @@ import dev.webserver.product.*;
 import dev.webserver.util.CustomUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.simple.JdbcClient;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static dev.webserver.enumeration.CapstoneCurrency.NGN;
 import static dev.webserver.enumeration.CapstoneCurrency.USD;
@@ -36,6 +38,8 @@ final class IShoppingSessionRepositoryTest extends AbstractRepositoryTest {
     private ProductPriceCurrencyRepository productPriceCurrencyRepository;
     @Autowired
     private ProductImageRepository imageRepository;
+    @Autowired
+    private JdbcClient client;
 
     @Test
     void shoppingSessionByCookie() {
@@ -71,16 +75,40 @@ final class IShoppingSessionRepositoryTest extends AbstractRepositoryTest {
                 .isEqualTo(sessionRepository.findById(session.sessionId()).orElseThrow().expireAt().toLocalDate());
     }
 
+    private List<ProductSku> skus(final long productDetailId) {
+        return client.sql("SELECT * FROM product_sku WHERE detail_id = :id")
+                .param("id", productDetailId)
+                .query(ProductSku.class)
+                .list();
+    }
+
+    private List<ProductDetail> details(final long productId) {
+        return client.sql("SELECT * FROM product_detail WHERE product_id = :id")
+                .param("id", productId)
+                .query(ProductDetail.class)
+                .list();
+    }
+
+    private void updateVisibility (final long productDetailId) {
+        client.sql("UPDATE product_detail SET is_visible = FALSE WHERE detail_id = :id")
+                .param("id", productDetailId)
+                .update();
+    }
+
     @Test
     void cartItemsByCookieValue() {
         // given
         final var cat = categoryRepository.save(Category.builder().name("category").isVisible(true).build());
 
-        RepositoryTestData
-                .createProduct(3, cat, productRepository, detailRepository, productPriceCurrencyRepository, imageRepository, skuRepository);
+        for (int i = 0; i < 3; i++)
+            RepositoryTestData
+                    .createProductAndMultipleDetails(3, cat, productRepository, detailRepository, productPriceCurrencyRepository, imageRepository, skuRepository);
 
-        final var skus = TestUtility.toList(skuRepository.findAll());
-        assertEquals(3, skus.size());
+        final var products = TestUtility.toList(productRepository.findAll());
+        assertEquals(3, products.size());
+
+        final var details = details(products.getFirst().productId());
+        assertEquals(3, details.size());
 
         final var ldt = TO_GREENWICH.apply(null);
         final ShoppingSession session = sessionRepository.save(ShoppingSession.builder()
@@ -90,15 +118,16 @@ final class IShoppingSessionRepositoryTest extends AbstractRepositoryTest {
                 .expireAt(ldt.plusHours(1))
                 .build());
 
-        for (final ProductSku sku : skus)
+        for (final ProductSku sku : skus(details.getFirst().detailId()))
             iCartRepository.save(new Cart(null, sku.inventory() - 1, session.sessionId(), sku.skuId()));
 
-        // when
-        final var usd = sessionRepository.cartItemsByCookieValue(USD, "cookie");
-        final var ngn = sessionRepository.cartItemsByCookieValue(NGN, "cookie");
+        for (final ProductSku sku : skus(details.get(1).detailId()))
+            iCartRepository.save(new Cart(null, sku.inventory() - 1, session.sessionId(), sku.skuId()));
 
-        assertEquals(3, usd.size());
-        assertEquals(3, ngn.size());
+        // method to test and assert
+        final var usd = sessionRepository.cartItemsByCookieValue(USD, "cookie");
+
+        assertFalse(usd.isEmpty());
 
         for (final CartDbMapper p : usd) {
             assertNotNull(p.uuid());
@@ -115,6 +144,12 @@ final class IShoppingSessionRepositoryTest extends AbstractRepositoryTest {
             assertNotNull(p.weight());
             assertNotNull(p.weightType());
         }
+
+        updateVisibility(details.get(1).detailId());
+
+        // method to test and assert
+        final var ngn = sessionRepository.cartItemsByCookieValue(NGN, "cookie");
+        assertFalse(ngn.isEmpty());
 
         for (final CartDbMapper p : ngn) {
             assertNotNull(p.uuid());

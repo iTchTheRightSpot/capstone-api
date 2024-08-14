@@ -5,10 +5,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.AbstractUnitTest;
 import dev.webserver.external.log.ILogEventPublisher;
+import dev.webserver.product.IProductCachePublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.core.env.Environment;
+
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 final class WebhookServiceTest extends AbstractUnitTest {
 
@@ -20,10 +24,12 @@ final class WebhookServiceTest extends AbstractUnitTest {
     private PaymentDetailService paymentDetailService;
     @Mock
     private ILogEventPublisher publisher;
+    @Mock
+    private IProductCachePublisher productCachePublisher;
 
     @BeforeEach
     void setUpWebHookService() {
-        webhookService = new WebhookService(environment, paymentDetailService, publisher);
+        webhookService = new WebhookService(environment, paymentDetailService, publisher, productCachePublisher);
         super.setUpEnvironmentVariables(webhookService);
     }
 
@@ -33,7 +39,11 @@ final class WebhookServiceTest extends AbstractUnitTest {
         final JsonNode node = new ObjectMapper().readValue(dummyPaystackWebhook, JsonNode.class);
 
         // method to test
-        webhookService.onSuccessWebHook(node.get("data"));
+        final JsonNode data = node.get("data");
+        webhookService.onSuccessWebHook(data);
+
+        // verify
+        verify(paymentDetailService, times(1)).onSuccessfulPayment(data);
     }
 
     static final String dummyPaystackWebhook = """

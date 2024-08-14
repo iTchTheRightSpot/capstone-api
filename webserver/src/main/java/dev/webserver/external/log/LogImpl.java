@@ -20,7 +20,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 @RequiredArgsConstructor
-class LogImpl extends AppenderBase<ILoggingEvent> {
+final class LogImpl extends AppenderBase<ILoggingEvent> {
 
     private static final Queue<String> queue = new ConcurrentLinkedDeque<>();
     private static final Set<String> set = Collections.synchronizedSet(new LinkedHashSet<>());

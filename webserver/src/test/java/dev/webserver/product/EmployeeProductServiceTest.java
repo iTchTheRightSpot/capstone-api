@@ -26,10 +26,11 @@ final class EmployeeProductServiceTest extends AbstractUnitTest {
     @Mock private Environment environment;
     @Mock private ProductPriceCurrencyRepository currencyRepo;
     @Mock private ProductRepository productRepository;
-    @Mock private EmployeeProductDetailService detailService;
+    @Mock private ProductDetailRepository detailRepository;
     @Mock private ProductImageService productImageService;
     @Mock private ProductSkuService skuService;
     @Mock private CategoryRepository categoryRepository;
+    @Mock private IProductCachePublisher cachePublisher;
 
     @BeforeEach
     void setUp() {
@@ -37,10 +38,11 @@ final class EmployeeProductServiceTest extends AbstractUnitTest {
                 environment,
                 currencyRepo,
                 productRepository,
-                detailService,
+                detailRepository,
                 skuService,
                 categoryRepository,
-                productImageService
+                productImageService,
+                cachePublisher
         );
         super.setUpEnvironmentVariables(productService);
     }
@@ -83,12 +85,7 @@ final class EmployeeProductServiceTest extends AbstractUnitTest {
     @Test
     void shouldSuccessfullyUpdateAProduct() {
         // Given
-        final var payload = TestData
-                .updateProductDTO(
-                        "",
-                        "",
-                        1
-                );
+        final var payload = TestData.updateProductDTO("", "", 1);
         final var category = Category.builder().categoryId(payload.categoryId()).build();
 
         // When

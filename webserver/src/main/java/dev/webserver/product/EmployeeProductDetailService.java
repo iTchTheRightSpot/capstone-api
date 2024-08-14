@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import static dev.webserver.cache.CacheEnum.STORE_FRONT;
+
 @Service
 class EmployeeProductDetailService extends AbstractEnvironment {
 
@@ -21,13 +23,22 @@ class EmployeeProductDetailService extends AbstractEnvironment {
     private final ProductSkuService skuService;
     private final ProductRepository productRepository;
     private final ProductImageService productImageService;
+    private final IProductCachePublisher publisher;
 
-    protected EmployeeProductDetailService(final Environment environment, final ProductDetailRepository detailRepo, final ProductSkuService skuService, final ProductRepository productRepository, final ProductImageService productImageService) {
+    protected EmployeeProductDetailService(
+            final Environment environment,
+            final ProductDetailRepository detailRepo,
+            final ProductSkuService skuService,
+            final ProductRepository productRepository,
+            final ProductImageService productImageService,
+            final IProductCachePublisher publisher
+    ) {
         super(environment);
         this.detailRepo = detailRepo;
         this.skuService = skuService;
         this.productRepository = productRepository;
         this.productImageService = productImageService;
+        this.publisher = publisher;
     }
 
     /**
@@ -40,29 +51,37 @@ class EmployeeProductDetailService extends AbstractEnvironment {
      * Each {@link DetailResponse} object encapsulates information such as visibility, color, URLs, and variants.
      */
     public List<DetailResponse> productDetailsByProductUuid(final String uuid) {
+        final String key = "productDetailsByProductUuid_%s_%s".formatted(STORE_FRONT, uuid);
+        final var cache = publisher.listOfDetailResponse(key);
+
+        if (cache.isPresent()) return cache.get();
+
         final var futures = detailRepo
                 .productDetailsByProductUuidAdminFront(uuid)
                 .stream()
                 .map(pojo -> (Supplier<DetailResponse>) () -> {
-                    final var req = Arrays
+                    final var images = Arrays
                             .stream(pojo.imageKey().split(","))
-                            .map(key -> (Supplier<String>) () -> productImageService.preSignedUrl(super.awsbucket, key))
+                            .map(imageKey -> (Supplier<String>) () -> productImageService.preSignedUrl(super.awsbucket, imageKey))
                             .toList();
 
-                    final var urls = CustomUtil.asynchronousTasks(req).join();
+                    final var urls = CustomUtil.asynchronousTasks(images).join();
 
                     final var variants = CustomUtil.toVariantArray(pojo.variants(), EmployeeProductDetailService.class);
 
                     return DetailResponse.builder()
                             .isVisible(pojo.isVisible())
                             .colour(pojo.colour())
-                            .urls(urls)
+                            .imageKeys(urls)
+                            .isVisible(pojo.isVisible())
                             .variants(variants)
                             .build();
                 })
                 .toList();
 
-        return CustomUtil.asynchronousTasks(futures).join();
+        final var list = CustomUtil.asynchronousTasks(futures).join();
+        publisher.addListOfDetailResponseToCache(key, list);
+        return list;
     }
 
     /**
@@ -98,6 +117,7 @@ class EmployeeProductDetailService extends AbstractEnvironment {
         skuService.save(dto.sizeInventory(), detail);
 
         productImageService.saveProductImages(detail, files, super.awsbucket);
+        publisher.evictAll();
     }
 
     /**
@@ -114,19 +134,7 @@ class EmployeeProductDetailService extends AbstractEnvironment {
                 dto.qty(),
                 dto.size()
         );
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public ProductDetail productDetail(
-            final Product product,
-            final String colour,
-            final boolean visible
-    ) {
-        return detailRepo.save(ProductDetail.builder()
-                .productId(product.productId())
-                .colour(colour)
-                .isVisible(visible)
-                .build());
+        publisher.evictAll();
     }
 
 }

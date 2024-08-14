@@ -40,8 +40,8 @@ public class PaymentDetailService {
      *                  from the 3rd party service.
      * @return true is {@link PaymentDetail} exists else false.
      */
-    public boolean paymentDetailExists(final String email, final String reference) {
-        return paymentDetailRepository.paymentDetailByEmailAndReference(email, reference).isPresent();
+    public boolean isPaymentDetailMissingByEmailAndReference(final String email, final String reference) {
+        return paymentDetailRepository.paymentDetailByEmailAndReference(email, reference).isEmpty();
     }
 
     /**

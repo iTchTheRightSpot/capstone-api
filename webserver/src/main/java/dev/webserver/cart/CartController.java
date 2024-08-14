@@ -26,17 +26,17 @@ class CartController {
     @GetMapping(produces = APPLICATION_JSON_VALUE)
     public List<CartResponse> cartItems(
             @RequestParam(name = "currency", defaultValue = "ngn")
-            String currency,
-            HttpServletRequest req,
-            HttpServletResponse res
+            final String currency,
+            final HttpServletRequest req,
+            final HttpServletResponse res
     ) {
-        CapstoneCurrency s = CapstoneCurrency.valueOf(currency.toUpperCase());
+        final CapstoneCurrency s = CapstoneCurrency.valueOf(currency.toUpperCase());
         return cartService.cartItems(s, req, res);
     }
 
     @ResponseStatus(CREATED)
     @PostMapping(consumes = APPLICATION_JSON_VALUE)
-    public void create(@Valid @RequestBody CartDto dto, HttpServletRequest req) {
+    public void create(@Valid @RequestBody final CartDto dto, final HttpServletRequest req) {
         cartService.create(dto, req);
     }
 
@@ -46,8 +46,8 @@ class CartController {
             @NotNull(message = "sku cannot be null")
             @NotEmpty(message = "sku cannot be empty")
             @RequestParam(name = "sku")
-            String sku,
-            HttpServletRequest req
+            final String sku,
+            final HttpServletRequest req
     ) {
         cartService.deleteFromCart(req, sku.trim());
     }

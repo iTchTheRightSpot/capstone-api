@@ -2,13 +2,17 @@ package dev.webserver.category;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractUnitTest;
+import dev.webserver.cache.CacheEnum;
+import dev.webserver.cache.CacheImpl;
 import dev.webserver.exception.DuplicateException;
 import dev.webserver.external.aws.IS3Service;
+import dev.webserver.product.IProductCachePublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.core.env.Environment;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -22,10 +26,12 @@ final class EmployeeCategoryServiceTest extends AbstractUnitTest {
     @Mock private Environment environment;
     @Mock private CategoryRepository categoryRepository;
     @Mock private IS3Service s3Service;
+    @Mock private CacheImpl<CacheEnum, List<CategoryResponse>> allCategoriesCache;
+    @Mock private IProductCachePublisher productCachePublisher;
 
     @BeforeEach
     void setUp() {
-        categoryService = new EmployeeCategoryService(environment, categoryRepository, s3Service);
+        categoryService = new EmployeeCategoryService(environment, categoryRepository, s3Service, allCategoriesCache, productCachePublisher);
     }
 
     /** Simulates creating a new ProductCategory when CategoryDTO param parentId is empty */

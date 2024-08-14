@@ -24,6 +24,7 @@ final class EmployeeProductDetailServiceTest extends AbstractUnitTest {
     @Mock private ProductSkuService skuService;
     @Mock private ProductDetailRepository detailRepo;
     @Mock private ProductImageService productImageService;
+    @Mock private IProductCachePublisher publisher;
 
     @BeforeEach
     void setUp() {
@@ -32,7 +33,8 @@ final class EmployeeProductDetailServiceTest extends AbstractUnitTest {
                 detailRepo,
                 skuService,
                 productRepository,
-                productImageService
+                productImageService,
+                publisher
         );
         super.setUpEnvironmentVariables(detailService);
     }

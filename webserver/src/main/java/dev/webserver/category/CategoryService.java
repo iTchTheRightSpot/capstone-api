@@ -1,6 +1,8 @@
 package dev.webserver.category;
 
 import dev.webserver.AbstractEnvironment;
+import dev.webserver.cache.CacheImpl;
+import dev.webserver.cache.CacheEnum;
 import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.external.aws.IS3Service;
 import dev.webserver.product.ProductResponse;
@@ -13,19 +15,29 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static dev.webserver.cache.CacheEnum.STORE_FRONT;
+
 @Service
 class CategoryService extends AbstractEnvironment {
-    private final CategoryRepository categoryRepository;
+    private final CategoryRepository repository;
     private final IS3Service s3Service;
+    private final CacheImpl<CacheEnum, List<CategoryResponse>> allCategoriesCache;
+    private final CacheImpl<String, Pageable<ProductResponse>> productResponsePageableCache;
 
-    protected CategoryService(final Environment environment, final CategoryRepository categoryRepository, final IS3Service s3Service) {
+    protected CategoryService(final Environment environment, final CategoryRepository repository, final IS3Service s3Service, final CacheImpl<CacheEnum, List<CategoryResponse>> allCategoriesCache, final CacheImpl<String, Pageable<ProductResponse>> productResponsePageableCache) {
         super(environment);
-        this.categoryRepository = categoryRepository;
+        this.repository = repository;
         this.s3Service = s3Service;
+        this.allCategoriesCache = allCategoriesCache;
+        this.productResponsePageableCache = productResponsePageableCache;
     }
 
     public List<CategoryResponse> allCategories() {
-        return categoryRepository.allCategoriesStoreFront()
+        final var optional = allCategoriesCache.getIfPresent(STORE_FRONT);
+
+        if (optional.isPresent()) return optional.get();
+
+        final var list = repository.allCategoriesStoreFront()
                 .stream()
                 .map(c -> CategoryResponse.builder()
                         .categoryId(c.categoryId())
@@ -34,6 +46,10 @@ class CategoryService extends AbstractEnvironment {
                         .visible(null)
                         .build())
                 .toList();
+
+        allCategoriesCache.put(STORE_FRONT, list);
+
+        return list;
     }
 
     public Pageable<ProductResponse> allProductsByCategoryId(
@@ -42,10 +58,15 @@ class CategoryService extends AbstractEnvironment {
             final int page,
             final int size
     ) {
+        final String key = String.format("%s_%s_%d_%d_%d", STORE_FRONT, currency, categoryId, page, size);
+        final var cache = productResponsePageableCache.getIfPresent(key);
+
+        if (cache.isPresent()) return cache.get();
+
         final Page of = Page.of(page, size);
 
-        final int count = categoryRepository.countAllProductsByCategoryIdWhereInStockAndIsVisible(categoryId);
-        final var listOfProducts = categoryRepository.allProductsByCategoryIdWhereInStockAndIsVisible(categoryId, currency, of);
+        final int count = repository.countAllProductsByCategoryIdWhereInStockAndIsVisible(categoryId);
+        final var listOfProducts = repository.allProductsByCategoryIdWhereInStockAndIsVisible(categoryId, currency, of);
 
         final var futures = listOfProducts.stream()
                 .map(p -> (Supplier<ProductResponse>) () -> ProductResponse.builder()
@@ -58,8 +79,11 @@ class CategoryService extends AbstractEnvironment {
                         .build())
                 .toList();
 
-        final var products = CustomUtil.asynchronousTasks(futures).join();
-        return new Pageable<>(of, count, products);
+        final var response = new Pageable<>(of, count, CustomUtil.asynchronousTasks(futures).join());
+
+        productResponsePageableCache.put(key, response);
+
+        return response;
     }
 
 }

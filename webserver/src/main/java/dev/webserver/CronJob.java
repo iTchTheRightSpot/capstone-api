@@ -3,12 +3,13 @@ package dev.webserver;
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.webserver.cart.Cart;
 import dev.webserver.cart.ICartRepository;
-import dev.webserver.cart.ShoppingSession;
 import dev.webserver.cart.IShoppingSessionRepository;
+import dev.webserver.cart.ShoppingSession;
 import dev.webserver.external.log.ILogEventPublisher;
 import dev.webserver.payment.OrderReservation;
 import dev.webserver.payment.OrderReservationRepository;
 import dev.webserver.payment.PaymentDetailService;
+import dev.webserver.product.IProductCachePublisher;
 import dev.webserver.product.ProductSku;
 import dev.webserver.product.ProductSkuRepository;
 import dev.webserver.util.CustomUtil;
@@ -46,6 +47,7 @@ class CronJob extends AbstractEnvironment {
     private final ICartRepository cartRepository;
     private final PaymentDetailService paymentDetailService;
     private final ILogEventPublisher publisher;
+    private final IProductCachePublisher productCachePublisher;
 
     public CronJob(
             final RestClient.Builder clientBuilder,
@@ -55,7 +57,8 @@ class CronJob extends AbstractEnvironment {
             final ICartRepository cartRepository,
             final PaymentDetailService paymentDetailService,
             final ILogEventPublisher publisher,
-            final Environment environment
+            final Environment environment,
+            final IProductCachePublisher productCachePublisher
     ) {
         super(environment);
         this.skuRepo = skuRepo;
@@ -65,6 +68,7 @@ class CronJob extends AbstractEnvironment {
         this.paymentDetailService = paymentDetailService;
         restClient = clientBuilder.build();
         this.publisher = publisher;
+        this.productCachePublisher = productCachePublisher;
     }
 
     /**
@@ -83,7 +87,6 @@ class CronJob extends AbstractEnvironment {
      * using the current date as a reference point. For each expired session, it deletes all
      * {@link Cart} associated with that session and then deletes the session itself.
      */
-    @Transactional(rollbackFor = Exception.class)
     public void onDeleteShoppingSessions() {
         sessionRepo.allExpiredShoppingSession(CustomUtil.TO_GREENWICH.apply(null))
                 .forEach(session -> {
@@ -116,8 +119,9 @@ class CronJob extends AbstractEnvironment {
                         final String email = metadata.get("email").asText();
                         final String reference = data.get("reference").textValue();
 
-                        if (!paymentDetailService.paymentDetailExists(email, reference)) {
+                        if (paymentDetailService.isPaymentDetailMissingByEmailAndReference(email, reference)) {
                             paymentDetailService.onSuccessfulPayment(data);
+                            productCachePublisher.evictAll();
                             publisher.publishPurchase(metadata.get("name").asText(), email);
                         }
                     }
@@ -140,9 +144,7 @@ class CronJob extends AbstractEnvironment {
      * {@link OrderReservation}s.
      * @see <a href="https://paystack.com/docs/payments/verify-payments/">documentation</a>
      */
-    private List<CustomCronJobObject> onResponseFromPaystack(
-            final List<OrderReservation> reservations
-    ) {
+    private List<CustomCronJobObject> onResponseFromPaystack(final List<OrderReservation> reservations) {
         final var futures = reservations.stream()
                 .map(reservation -> (Supplier<CustomCronJobObject>) () -> {
                     final var uri = UriComponentsBuilder

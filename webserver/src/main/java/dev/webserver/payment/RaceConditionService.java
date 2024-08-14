@@ -38,7 +38,13 @@ public class RaceConditionService extends AbstractEnvironment {
     private final OrderReservationRepository reservationRepository;
     private final CheckoutService checkoutService;
 
-    protected RaceConditionService(final Environment environment, final ProductSkuRepository productSkuRepository, final ICartRepository cartRepository, final OrderReservationRepository reservationRepository, final CheckoutService checkoutService) {
+    protected RaceConditionService(
+            final Environment environment,
+            final ProductSkuRepository productSkuRepository,
+            final ICartRepository cartRepository,
+            final OrderReservationRepository reservationRepository,
+            final CheckoutService checkoutService
+    ) {
         super(environment);
         this.productSkuRepository = productSkuRepository;
         this.cartRepository = cartRepository;
@@ -85,7 +91,7 @@ public class RaceConditionService extends AbstractEnvironment {
 
         final String reference = UUID.randomUUID().toString();
 
-        raceConditionImpl(reference, reservations, obj.cartItems(), ldt.plusSeconds(raceConditionExpirationBound), obj.session());
+        raceConditionImpl(reference, reservations, obj.cartItems(), ldt.plusSeconds(super.raceConditionExpirationBound), obj.session());
 
         final var list = cartRepository
                 .amountToPayForAllCartItemsForShoppingSession(obj.session().sessionId(), currency);
@@ -105,7 +111,7 @@ public class RaceConditionService extends AbstractEnvironment {
                 super.payStackCredentials().pubKey(),
                 currency,
                 CustomUtil.convertCurrency(
-                        currency.equals(CapstoneCurrency.NGN) ? ngnConversion : usdConversion,
+                        currency.equals(CapstoneCurrency.NGN) ? super.ngnConversion : super.usdConversion,
                         currency,
                         total
                 )

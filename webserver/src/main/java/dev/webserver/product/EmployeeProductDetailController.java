@@ -49,7 +49,11 @@ class EmployeeProductDetailController {
 
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping(path = "/sku")
-    public void deleteProductSku(@NotNull(message = "ProductSku sku cannot be null") @RequestParam(value = "sku") final String sku) {
+    public void deleteProductSku(
+            @NotNull(message = "ProductSku sku cannot be null")
+            @RequestParam(value = "sku")
+            final String sku
+    ) {
         skuService.delete(sku);
     }
 

@@ -39,17 +39,15 @@ class EmployeeProductController {
     @ResponseStatus(CREATED)
     @PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
     public void create(
-            @Valid @RequestPart final CreateProductDto dto,
-            @NotNull @RequestPart final MultipartFile[] files
+            @Valid @RequestPart
+            final CreateProductDto dto,
+            @NotNull(message = "please upload images for said product")
+            @RequestPart
+            final MultipartFile[] files
     ) {
         service.create(dto, files);
     }
 
-    /**
-     * Update a Product
-     *
-     * @param dto of type {@link UpdateProductDto}
-     */
     @ResponseStatus(NO_CONTENT)
     @PutMapping(consumes = APPLICATION_JSON_VALUE)
     public void update(@Valid @RequestBody final UpdateProductDto dto) {

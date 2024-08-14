@@ -40,7 +40,7 @@ public interface IShoppingSessionRepository extends CrudRepository<ShoppingSessi
     INNER JOIN product_detail d ON ps.detail_id = d.detail_id
     INNER JOIN product p ON d.product_id = p.product_id
     INNER JOIN product_price_currency cur ON p.product_id = cur.product_id
-    WHERE s.cookie = :cookie AND cur.currency = :currency
+    WHERE s.cookie = :cookie AND cur.currency = :currency AND d.is_visible IS TRUE
     GROUP BY p.uuid, s.session_id, p.default_image_key, p.name, cur.currency, cur.price, d.colour, ps.size, ps.sku, c.qty
     """)
     List<CartDbMapper> cartItemsByCookieValue(final CapstoneCurrency currency, final String cookie);

@@ -3,7 +3,10 @@ package dev.webserver.product;
 import dev.webserver.AbstractEnvironment;
 import dev.webserver.category.CategoryRepository;
 import dev.webserver.enumeration.CapstoneCurrency;
-import dev.webserver.exception.*;
+import dev.webserver.exception.CustomInvalidFormatException;
+import dev.webserver.exception.CustomNotFoundException;
+import dev.webserver.exception.DuplicateException;
+import dev.webserver.exception.ResourceAttachedException;
 import dev.webserver.util.CustomUtil;
 import dev.webserver.util.Page;
 import dev.webserver.util.Pageable;
@@ -24,6 +27,7 @@ import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
+import static dev.webserver.cache.CacheEnum.EMPLOYEE_FRONT;
 import static dev.webserver.enumeration.CapstoneCurrency.NGN;
 import static dev.webserver.enumeration.CapstoneCurrency.USD;
 import static java.math.RoundingMode.FLOOR;
@@ -35,29 +39,44 @@ public class EmployeeProductService extends AbstractEnvironment {
 
     private final ProductPriceCurrencyRepository currencyRepo;
     private final ProductRepository productRepository;
-    private final EmployeeProductDetailService detailService;
+    private final ProductDetailRepository productDetailRepository;
     private final ProductSkuService skuService;
     private final CategoryRepository categoryRepository;
     private final ProductImageService productImageService;
+    private final IProductCachePublisher cachePublisher;
 
-    protected EmployeeProductService(final Environment environment, final ProductPriceCurrencyRepository currencyRepo, final ProductRepository productRepository, final EmployeeProductDetailService detailService, final ProductSkuService skuService, final CategoryRepository categoryRepository, final ProductImageService productImageService) {
+    protected EmployeeProductService(
+            final Environment environment,
+            final ProductPriceCurrencyRepository currencyRepo,
+            final ProductRepository productRepository,
+            final ProductDetailRepository productDetailRepository,
+            final ProductSkuService skuService,
+            final CategoryRepository categoryRepository,
+            final ProductImageService productImageService,
+            final IProductCachePublisher cachePublisher
+    ) {
         super(environment);
         this.currencyRepo = currencyRepo;
         this.productRepository = productRepository;
-        this.detailService = detailService;
+        this.productDetailRepository = productDetailRepository;
         this.skuService = skuService;
         this.categoryRepository = categoryRepository;
         this.productImageService = productImageService;
+        this.cachePublisher = cachePublisher;
     }
 
-    public Pageable<ProductResponse> allProducts(
-            final CapstoneCurrency currency, final int page, final int size
-    ) {
+    public Pageable<ProductResponse> allProducts(final CapstoneCurrency currency, final int page, final int size) {
+        final String key = "allProducts_%s_%s_%d_%d".formatted(EMPLOYEE_FRONT, currency, page, size);
+
+        final var cache = cachePublisher.pageOfProductResponse(key);
+
+        if (cache.isPresent()) return cache.get();
+
         final Page of = Page.of(page, size);
         final int count = productRepository.countAllProductsForAdminFront();
-        final var listOfProducts = productRepository.allProductsForAdminFront(of, currency);
 
-        final var futures = listOfProducts.stream()
+        final var futures = productRepository.allProductsForAdminFront(of, currency)
+                .stream()
                 .map(p -> (Supplier<ProductResponse>) () -> new ProductResponse(
                         p.uuid(),
                         p.name(),
@@ -71,20 +90,13 @@ public class EmployeeProductService extends AbstractEnvironment {
                 ))
                 .toList();
 
-        final var products = CustomUtil.asynchronousTasks(futures).join();
-        return new Pageable<>(of, count, products);
+        final var pageable = new Pageable<>(of, count, CustomUtil.asynchronousTasks(futures).join());
+
+        cachePublisher.addPageOfProductResponseToCache(key, pageable);
+
+        return pageable;
     }
 
-    /**
-     * Create a new {@link Product}.
-     *
-     * @param multipartFiles of type {@link MultipartFile}.
-     * @param dto   of type {@link CreateProductDto}.
-     * @throws CustomNotFoundException is thrown if categoryId name does not exist in database.
-     * or currency passed in truncateAmount does not contain in dto property priceCurrency.
-     * @throws CustomServerError      is thrown if File is not an image.
-     * @throws DuplicateException      is thrown if dto image exists in for Product.
-     */
     @Transactional(rollbackFor = Exception.class)
     public void create(final CreateProductDto dto, final MultipartFile[] multipartFiles) {
         if (!CustomUtil.validateContainsCurrencies(dto.priceCurrency())) {
@@ -121,23 +133,21 @@ public class EmployeeProductService extends AbstractEnvironment {
         currencyRepo.save(new ProductPriceCurrency(null, usd, USD, product.productId()));
 
         // save ProductDetails
-        final var detail = detailService.productDetail(product, dto.colour(), dto.visible());
+        final var detail = productDetailRepository.save(ProductDetail.builder()
+                .productId(product.productId())
+                .colour(dto.colour())
+                .isVisible(dto.visible())
+                .build());
 
         // save ProductSKUs
         skuService.save(dto.sizeInventory(), detail);
 
         // build and save ProductImages (save to s3)
         productImageService.saveProductImages(detail, files, awsbucket);
+
+        cachePublisher.evictAll();
     }
 
-    /**
-     * Method updates a {@link Product} obj based on its UUID.
-     *
-     * @param dto of type {@link UpdateProductDto}.
-     * @throws CustomNotFoundException when dto category_id or collection_id does not exist.
-     * @throws DuplicateException      when new product name exist but not associated to product uuid.
-     * @throws CustomInvalidFormatException if price is less than zero.
-     */
     @Transactional(rollbackFor = Exception.class)
     public void update(final UpdateProductDto dto) {
         if (dto.price().compareTo(BigDecimal.ZERO) < 0) {
@@ -167,14 +177,11 @@ public class EmployeeProductService extends AbstractEnvironment {
         // update price
         final var currency = CapstoneCurrency.valueOf(dto.currency().toUpperCase());
         currencyRepo.updateProductPriceByProductUuidAndCurrency(dto.uuid(), price, currency);
+
+        cachePublisher.evictAll();
     }
 
     /**
-     * Permanently deletes a {@link Product}.
-     *
-     * @param uuid is a unique string for every {@link Product}.
-     * @throws ResourceAttachedException is thrown if Product has ProductDetails attached.
-     * @throws CustomServerError               is thrown when an error occurs when deleting from s3.
      * @see <a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javav2/example_code/s3/src/main/java/com/example/s3/DeleteMultiObjects.java">documentation</a>
      */
     @Transactional(rollbackFor = Exception.class)
@@ -196,6 +203,7 @@ public class EmployeeProductService extends AbstractEnvironment {
         keys.add(ObjectIdentifier.builder().key(product.defaultKey()).build());
 
         productImageService.deleteFromS3(keys, awsbucket);
+        cachePublisher.evictAll();
     }
 
     /**

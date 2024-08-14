@@ -15,9 +15,10 @@ public record DetailResponse (
         String currency,
         BigDecimal price,
         String desc,
-        @JsonProperty(value = "is_visible")
-        boolean isVisible,
+        @JsonProperty(value = "visible")
+        Boolean isVisible,
         String colour,
-        List<String> urls,
+        @JsonProperty("image_keys")
+        List<String> imageKeys,
         Variant[] variants
 ) implements Serializable {}

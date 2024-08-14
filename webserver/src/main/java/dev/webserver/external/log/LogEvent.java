@@ -8,7 +8,7 @@ final class LogEvent extends ApplicationEvent {
 
     private final Queue<String> queue;
 
-    public LogEvent(Object source, Queue<String> queue) {
+    public LogEvent(final Object source, final Queue<String> queue) {
         super(source);
         this.queue = queue;
     }

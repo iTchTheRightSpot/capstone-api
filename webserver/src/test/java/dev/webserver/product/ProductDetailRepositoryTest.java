@@ -290,6 +290,7 @@ final class ProductDetailRepositoryTest extends AbstractRepositoryTest {
         assertEquals(2, res2.size());
 
         for (final ProductDetailDbMapper pojo : res2) {
+            assertNotNull(pojo.isVisible());
             assertNotNull(pojo.variants());
             assertNotNull(pojo.colour());
             assertNotNull(pojo.imageKey());
@@ -316,7 +317,7 @@ final class ProductDetailRepositoryTest extends AbstractRepositoryTest {
                 assertEquals(7, array.length);
             }
 
-            for (Variant variant : array) {
+            for (final Variant variant : array) {
                 assertFalse(variant.sku().isEmpty());
                 String inv = variant.inventory();
                 assertFalse(inv.isEmpty());

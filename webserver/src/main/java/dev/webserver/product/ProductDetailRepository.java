@@ -67,18 +67,18 @@ public interface ProductDetailRepository extends CrudRepository<ProductDetail, L
 
     @Query(value = """
     SELECT
-            d.is_visible AS is_visible,
-    d.colour AS colour,
-            GROUP_CONCAT(DISTINCT i.image_key) AS image_key,
-    CONCAT('[',
-        GROUP_CONCAT(
-            DISTINCT JSON_OBJECT(
-                'sku', s.sku,
-                'inventory', s.inventory,
-                'size', s.size
-            )
-        ),
-    ']') AS variants
+        d.is_visible AS is_visible,
+        d.colour AS colour,
+        GROUP_CONCAT(DISTINCT i.image_key) AS image_key,
+        CONCAT('[',
+            GROUP_CONCAT(
+                DISTINCT JSON_OBJECT(
+                    'sku', s.sku,
+                    'inventory', s.inventory,
+                    'size', s.size
+                )
+            ),
+        ']') AS variants
     FROM product_detail d
     INNER JOIN product_image i ON d.detail_id = i.detail_id
     INNER JOIN product p ON d.product_id = p.product_id

@@ -47,6 +47,10 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 @EnableWebSecurity
 class SecurityConfig extends AbstractEnvironment {
 
+    protected SecurityConfig(final Environment environment) {
+        super(environment);
+    }
+
     /**
      * Reason for Consumer<ResponseCookie.ResponseCookieBuilder> as per docs secure, domain
      * name and path are deprecated.
@@ -65,10 +69,6 @@ class SecurityConfig extends AbstractEnvironment {
         csrf.setCookieCustomizer(consumer);
         return csrf;
     };
-
-    protected SecurityConfig(final Environment environment) {
-        super(environment);
-    }
 
     @Bean
     public UserDetailsService userDetailsService(final UserRepository repository, final RoleRepository roleRepository) {
@@ -128,7 +128,7 @@ class SecurityConfig extends AbstractEnvironment {
                     .authorizeHttpRequests(registry -> registry.anyRequest().permitAll());
         } else {
             final String[] pubRoutes = {"/error", "/api/v1/actuator/health", baseurl + "demo/**", baseurl + "csrf", baseurl + "category/**", baseurl + "product/**", baseurl + "cart/**", baseurl + "payment/**", baseurl + "checkout/**", baseurl + "active/**"};
-            final var csrfTokenRepository = CSRF_REPO.apply(cookiesecure, cookiesamesite);
+            final var csrfTokenRepository = CSRF_REPO.apply(super.cookiesecure, super.cookiesamesite);
 
             http
                     // csrf config

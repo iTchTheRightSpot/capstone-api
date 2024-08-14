@@ -67,19 +67,18 @@ class JwtConfiguration extends AbstractEnvironment {
      */
     @Bean
     public BearerTokenResolver bearerTokenResolver(final JwtDecoder decoder, final JwtService service) {
-        return new BearerResolver(jsessionid, decoder, service);
-    }
-
-    private record BearerResolver(String jsessionid, JwtDecoder decoder, JwtService service) implements BearerTokenResolver {
-        @Override
-        public String resolve(HttpServletRequest request) {
-            final Cookie[] cookies = request.getCookies();
-            return cookies == null ? null : Arrays.stream(cookies)
-                    .filter(cookie -> cookie.getName().equals(jsessionid) && service.jwtNoneExpired(cookie.getValue()))
-                    .map(Cookie::getValue)
-                    .findFirst()
-                    .orElse(null);
+        record BearerResolver(String jsessionid, JwtDecoder decoder, JwtService service) implements BearerTokenResolver {
+            @Override
+            public String resolve(HttpServletRequest request) {
+                final Cookie[] cookies = request.getCookies();
+                return cookies == null ? null : Arrays.stream(cookies)
+                        .filter(cookie -> cookie.getName().equals(jsessionid) && service.jwtNoneExpired(cookie.getValue()))
+                        .map(Cookie::getValue)
+                        .findFirst()
+                        .orElse(null);
+            }
         }
+        return new BearerResolver(super.jsessionid, decoder, service);
     }
 
 }

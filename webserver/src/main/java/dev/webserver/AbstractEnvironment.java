@@ -13,8 +13,8 @@ public abstract class AbstractEnvironment {
     protected String developerEmail;
     protected String developerFirstname;
     protected String developerLastName;
-    protected String paystackPubKey;
-    protected String paystackSecretKey;
+    private String paystackPubKey;
+    private String paystackSecretKey;
     protected String ngnConversion;
     protected String usdConversion;
     protected Long raceConditionExpirationBound;

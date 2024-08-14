@@ -19,6 +19,7 @@
         <aws.java.sdk.version>2.25.39</aws.java.sdk.version>
         <jakarta.xml.bind.version>4.0.1</jakarta.xml.bind.version>
         <google.guava.version>33.2.0-jre</google.guava.version>
+        <exec.maven-plugin.version>3.3.0</exec.maven-plugin.version>
     </properties>
 
     <build>
@@ -48,6 +49,44 @@
                     </image>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>${exec.maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>npm-install-maven-initialize</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <executable>npm</executable>
+                            <workingDirectory>src/main/frontend</workingDirectory>
+                            <arguments>
+                                <argument>install</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-build-maven-initialize</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <executable>npm</executable>
+                            <workingDirectory>src/main/frontend</workingDirectory>
+                            <arguments>
+                                <argument>run</argument>
+                                <argument>build</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 

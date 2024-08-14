@@ -34,11 +34,11 @@ public class Application extends AbstractEnvironment {
     @Bean
     public CommandLineRunner commandLineRunner(final UserRepository repository, final RoleRepository roleRepository) {
         return args -> {
-            if (repository.userByPrincipal(developerEmail.trim()).isEmpty()) {
+            if (repository.userByPrincipal(super.developerEmail.trim()).isEmpty()) {
                 final User user = repository.save(User.builder()
-                        .email(developerEmail)
-                        .firstname(developerFirstname)
-                        .fullname(developerLastName)
+                        .email(super.developerEmail)
+                        .firstname(super.developerFirstname)
+                        .fullname(super.developerLastName)
                         .build());
 
                 roleRepository.save(new Role(null, RoleEnum.USER, user.userId()));

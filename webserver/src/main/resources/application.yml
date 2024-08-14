@@ -101,9 +101,9 @@ api:
     baseurl: ${API_PREFIX:api/v1/}
 
 developer:
-  email: ${DEVELOPER_EMAIL:admin@admin.com}
-  firstname: ${DEVELOPER_FIRSTNAME:developer}
-  lastname: ${DEVELOPER_LASTNAME:developer}
+  email: ${DEVELOPER_EMAIL:iTchTheRightSpot@capstone.com}
+  firstname: ${DEVELOPER_FIRSTNAME:iTchTheRightSpot}
+  lastname: ${DEVELOPER_LASTNAME:iTchTheRightSpot}
 
 paystack:
   pub:

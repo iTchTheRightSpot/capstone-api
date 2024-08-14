@@ -22,7 +22,6 @@ server:
 logging:
   level:
     org:
-      hibernate: error
       springframework:
         jdbc: trace
         security: trace
@@ -88,23 +87,23 @@ spring:
       "[mail.smtp.starttls.enable]": true
       "[mail.smtp.starttls.required]": true
     application:
-      contact-email: ${MAIL_APPLICATION_CONTACT-EMAIL:developer@email.com}
+      contact-email: ${MAIL_APPLICATION_CONTACT-EMAIL:iTchTheRightSpot@capstone.com}
 
 management:
   endpoints:
     web:
       exposure:
-        include: "health,info"
+        include: 'health,info'
       base-path: /api/v1/actuator
 
 api:
   endpoint:
     baseurl: ${API_PREFIX:api/v1/}
 
-application:
-  log:
-    webhook:
-      discord: ${APPLICATION_LOG_WEBHOOK_DISCORD:discord}
+developer:
+  email: ${DEVELOPER_EMAIL:iTchTheRightSpot@capstone.com}
+  firstname: ${DEVELOPER_FIRSTNAME:iTchTheRightSpot}
+  lastname: ${DEVELOPER_LASTNAME:iTchTheRightSpot}
 
 paystack:
   pub:
@@ -131,6 +130,11 @@ capstone:
   ngn:
     to:
       kobo: 0.34
+
+application:
+  log:
+    webhook:
+      discord: ${APPLICATION_LOG_WEBHOOK_DISCORD:discord}
 
 race-condition:
   expiration:

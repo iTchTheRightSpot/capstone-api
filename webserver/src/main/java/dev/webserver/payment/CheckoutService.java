@@ -8,9 +8,9 @@ import dev.webserver.cart.ShoppingSession;
 import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.exception.CustomNotFoundException;
 import dev.webserver.shipping.ShipSetting;
-import dev.webserver.shipping.ShippingService;
+import dev.webserver.shipping.ShippingRepository;
 import dev.webserver.tax.Tax;
-import dev.webserver.tax.TaxService;
+import dev.webserver.tax.TaxRepository;
 import dev.webserver.util.CustomUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,15 +25,21 @@ import java.util.Optional;
 @Service
 class CheckoutService extends AbstractEnvironment {
 
-    private final ShippingService shippingService;
-    private final TaxService taxService;
+    private final ShippingRepository shippingRepository;
+    private final TaxRepository taxRepository;
     private final IShoppingSessionRepository sessionRepository;
     private final ICartRepository cartRepository;
 
-    protected CheckoutService(final Environment environment, final ShippingService shippingService, final TaxService taxService, final IShoppingSessionRepository sessionRepository, final ICartRepository cartRepository) {
+    protected CheckoutService(
+            final Environment environment,
+            final ShippingRepository shippingRepository,
+            final TaxRepository taxRepository,
+            final IShoppingSessionRepository sessionRepository,
+            final ICartRepository cartRepository
+    ) {
         super(environment);
-        this.shippingService = shippingService;
-        this.taxService = taxService;
+        this.shippingRepository = shippingRepository;
+        this.taxRepository = taxRepository;
         this.sessionRepository = sessionRepository;
         this.cartRepository = cartRepository;
     }
@@ -130,9 +136,13 @@ class CheckoutService extends AbstractEnvironment {
 
         if (carts.isEmpty()) throw new CustomNotFoundException("cart is empty");
 
-        final ShipSetting ship = shippingService.shippingByCountryElseReturnDefault(country);
+        final ShipSetting ship = shippingRepository.shippingByCountryElseReturnDefault(country)
+                .orElseThrow(() -> new CustomNotFoundException(
+                        "country to ship to is not allowed. Please reach out to our customer service."
+                ));
 
-        final Tax tax = taxService.taxById(1);
+        final Tax tax = taxRepository.findById(1L)
+                .orElseThrow(() -> new CustomNotFoundException("cannot find tax information"));
 
         return new CustomCheckoutObject(session, carts, ship, tax);
     }

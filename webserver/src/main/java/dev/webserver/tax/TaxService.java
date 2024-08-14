@@ -12,7 +12,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class TaxService {
+class TaxService {
 
     private static final Logger log = LoggerFactory.getLogger(TaxService.class);
 
@@ -39,7 +39,7 @@ public class TaxService {
                     .updateTaxByTaxId(dto.id(), dto.name().toUpperCase().trim(), dto.rate());
         } catch (RuntimeException e) {
             log.error(e.getMessage());
-            String error = dto.name().length() > 5
+            final String error = dto.name().length() > 5
                     ? "%s has to have a max length of 5".formatted(dto.name())
                     : """
                     invalid tax percentage format e.g. 25% tax should be 0.25.
@@ -47,11 +47,6 @@ public class TaxService {
                     """;
             throw new CustomNotFoundException(error);
         }
-    }
-
-    public Tax taxById(final long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new CustomNotFoundException("cannot find tax information"));
     }
 
 }

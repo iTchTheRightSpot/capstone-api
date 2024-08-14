@@ -5,9 +5,9 @@ import dev.webserver.cart.ICartRepository;
 import dev.webserver.cart.IShoppingSessionRepository;
 import dev.webserver.cart.ShoppingSession;
 import dev.webserver.shipping.ShipSetting;
-import dev.webserver.shipping.ShippingService;
+import dev.webserver.shipping.ShippingRepository;
 import dev.webserver.tax.Tax;
-import dev.webserver.tax.TaxService;
+import dev.webserver.tax.TaxRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Assertions;
@@ -34,9 +34,9 @@ final class CheckoutServiceTest extends AbstractUnitTest {
     @Mock
     private Environment environment;
     @Mock
-    private ShippingService shippingService;
+    private ShippingRepository shippingRepository;
     @Mock
-    private TaxService taxService;
+    private TaxRepository repository;
     @Mock
     private IShoppingSessionRepository sessionRepo;
     @Mock
@@ -46,8 +46,8 @@ final class CheckoutServiceTest extends AbstractUnitTest {
     void setUp() {
         checkoutService = new CheckoutService(
                 environment,
-                shippingService,
-                taxService,
+                shippingRepository,
+                repository,
                 sessionRepo,
                 ICartRepository
         );
@@ -73,8 +73,8 @@ final class CheckoutServiceTest extends AbstractUnitTest {
         when(req.getCookies()).thenReturn(cookies);
         when(sessionRepo.shoppingSessionByCookie(anyString())).thenReturn(Optional.of(session));
         when(ICartRepository.cartsByShoppingSessionId(anyLong())).thenReturn(cartItems);
-        when(shippingService.shippingByCountryElseReturnDefault(anyString())).thenReturn(ship);
-        when(taxService.taxById(anyLong())).thenReturn(tax);
+        when(shippingRepository.shippingByCountryElseReturnDefault(anyString())).thenReturn(Optional.of(ship));
+        when(repository.findById(anyLong())).thenReturn(Optional.of(tax));
 
         // method to test
         final CustomCheckoutObject obj = checkoutService.validateCurrentShoppingSession(req, "nigeria");
@@ -87,8 +87,8 @@ final class CheckoutServiceTest extends AbstractUnitTest {
 
         verify(sessionRepo, times(1)).shoppingSessionByCookie(anyString());
         verify(ICartRepository, times(1)).cartsByShoppingSessionId(anyLong());
-        verify(shippingService, times(1)).shippingByCountryElseReturnDefault(anyString());
-        verify(taxService, times(1)).taxById(anyLong());
+        verify(shippingRepository, times(1)).shippingByCountryElseReturnDefault(anyString());
+        verify(repository, times(1)).findById(anyLong());
     }
 
 }

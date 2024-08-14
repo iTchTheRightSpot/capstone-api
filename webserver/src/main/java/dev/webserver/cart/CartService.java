@@ -1,6 +1,7 @@
 package dev.webserver.cart;
 
 import dev.webserver.AbstractEnvironment;
+import dev.webserver.cache.CacheImpl;
 import dev.webserver.enumeration.CapstoneCurrency;
 import dev.webserver.exception.CustomInvalidFormatException;
 import dev.webserver.exception.CustomNotFoundException;
@@ -23,6 +24,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.regex.PatternSyntaxException;
@@ -40,13 +42,22 @@ class CartService extends AbstractEnvironment {
     private final ICartRepository cartRepository;
     private final ProductSkuService productSkuService;
     private final IS3Service s3Service;
+    private final CacheImpl<String, List<CartResponse>> listOfCartResponseCache;
 
-    protected CartService(final Environment environment, final IShoppingSessionRepository sessionRepository, final ICartRepository cartRepository, final ProductSkuService productSkuService, IS3Service s3Service) {
+    protected CartService(
+            final Environment environment,
+            final IShoppingSessionRepository sessionRepository,
+            final ICartRepository cartRepository,
+            final ProductSkuService productSkuService,
+            final IS3Service s3Service,
+            final CacheImpl<String, List<CartResponse>> listOfCartResponseCache
+    ) {
         super(environment);
         this.sessionRepository = sessionRepository;
         this.cartRepository = cartRepository;
         this.productSkuService = productSkuService;
         this.s3Service = s3Service;
+        this.listOfCartResponseCache = listOfCartResponseCache;
     }
 
     /**
@@ -128,7 +139,14 @@ class CartService extends AbstractEnvironment {
             return List.of();
         }
 
+        final var cache = listOfCartResponseCache.getIfPresent(cookie.getValue());
         validateCookieExpiration(res, cookie);
+
+        if (cache.isPresent()) {
+            final var value = cache.get();
+            listOfCartResponseCache.put(cookie.getValue(), value);
+            return value;
+        }
 
         final String[] arr = cookie.getValue().split(super.cartCookieSplit);
 
@@ -150,7 +168,11 @@ class CartService extends AbstractEnvironment {
                 ))
                 .toList();
 
-        return CustomUtil.asynchronousTasks(futures).join();
+        final var list = CustomUtil.asynchronousTasks(futures).join();
+
+        listOfCartResponseCache.put(cookie.getValue(), list);
+
+        return list;
     }
 
     /**
@@ -178,17 +200,15 @@ class CartService extends AbstractEnvironment {
     public void create(final CartDto dto, final HttpServletRequest req) {
         final Cookie cookie = CustomUtil.cookie(req, cartcookie);
 
-        if (cookie == null) {
+        if (cookie == null)
             throw new CustomNotFoundException("please refresh your tab");
-        }
 
         final var sku = productSkuService.productSkuBySku(dto.sku());
 
         final int qty = sku.inventory();
 
-        if (qty <= 0 || dto.qty() > qty) {
-            throw new OutOfStockException("product or selected quantity is out of stock.");
-        }
+        if (qty <= 0 || dto.qty() > qty)
+            throw new OutOfStockException("product or selected quantity is out of stock");
 
         try {
             final String[] arr = cookie.getValue().split(super.cartCookieSplit);
@@ -199,6 +219,7 @@ class CartService extends AbstractEnvironment {
             } else {
                 addToExistingShoppingSession(optional.get().sessionId(), dto.qty(), sku);
             }
+            listOfCartResponseCache.evict(cookie.getValue());
         } catch (PatternSyntaxException | NumberFormatException ex) {
             log.error("CartService create method , {}", ex.getMessage());
             throw new CustomInvalidFormatException("invalid cookie");
@@ -250,6 +271,7 @@ class CartService extends AbstractEnvironment {
         final String[] arr = cookie.getValue().split(super.cartCookieSplit);
 
         cartRepository.deleteCartByCookieAndProductSku(arr[0], sku);
+        listOfCartResponseCache.evict(cookie.getValue());
     }
 
 }

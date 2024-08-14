@@ -1,6 +1,7 @@
 package dev.webserver.cart;
 
 import dev.webserver.AbstractUnitTest;
+import dev.webserver.cache.CacheImpl;
 import dev.webserver.external.aws.IS3Service;
 import dev.webserver.product.ProductSkuService;
 import jakarta.servlet.http.Cookie;
@@ -13,6 +14,7 @@ import org.springframework.core.env.Environment;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -31,6 +33,8 @@ final class CartServiceTest extends AbstractUnitTest {
     private ProductSkuService productSKUService;
     @Mock
     private IS3Service s3Service;
+    @Mock
+    private CacheImpl<String, List<CartResponse>> listOfCartResponseCache;
 
     @BeforeEach
     void setUp() {
@@ -39,7 +43,8 @@ final class CartServiceTest extends AbstractUnitTest {
                 sessionRepository,
                 cartRepository,
                 productSKUService,
-                s3Service
+                s3Service,
+                listOfCartResponseCache
         );
         super.setUpEnvironmentVariables(cartService);
     }

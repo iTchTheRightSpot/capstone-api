@@ -4,9 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.cart.ICartRepository;
-import dev.webserver.enumeration.PaymentStatus;
 import dev.webserver.enumeration.CapstoneCurrency;
-import dev.webserver.exception.CustomServerError;
+import dev.webserver.enumeration.PaymentStatus;
+import dev.webserver.exception.CustomServerException;
 import dev.webserver.user.UserService;
 import dev.webserver.util.CustomUtil;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class PaymentDetailService {
 
-    static final Logger log = LoggerFactory.getLogger(PaymentDetailService.class);
+    private static final Logger log = LoggerFactory.getLogger(PaymentDetailService.class);
 
     private final PaymentDetailRepository paymentDetailRepository;
     private final UserService userService;
@@ -31,15 +31,6 @@ public class PaymentDetailService {
     private final ICartRepository cartRepository;
     private final OrderDetailRepository orderDetailRepository;
 
-    /**
-     * Retrieves a {@link PaymentDetail} based on its indexed properties.
-     *
-     * @param email     an index column representing the customers email.
-     * @param reference a unique index column representing the details of the
-     *                  customers payment. Its is also unique payment detail
-     *                  from the 3rd party service.
-     * @return true is {@link PaymentDetail} exists else false.
-     */
     public boolean isPaymentDetailMissingByEmailAndReference(final String email, final String reference) {
         return paymentDetailRepository.paymentDetailByEmailAndReference(email, reference).isEmpty();
     }
@@ -54,26 +45,26 @@ public class PaymentDetailService {
         // TODO only process in production
         final String domain = data.get("domain").textValue();
 
-        var mapper = new ObjectMapper();
+        final var mapper = new ObjectMapper();
 
         try {
             final String reference = data.get("reference").textValue();
 
-            var amount = WebHookUtil
+            final var amount = WebHookUtil
                     .fromNumberToBigDecimal(mapper.treeToValue(data.get("amount"), Number.class));
 
-            var metadata = mapper.treeToValue(data.get("metadata"), WebhookMetaData.class);
-            var webAuth = mapper
+            final var metadata = mapper.treeToValue(data.get("metadata"), WebhookMetaData.class);
+            final var webAuth = mapper
                     .treeToValue(data.get("authorization"), WebhookAuthorization.class);
 
-            var detail = paymentDetail(data, metadata, reference, amount);
+            final var detail = paymentDetail(data, metadata, reference, amount);
             address(metadata, detail);
             paymentAuthorization(webAuth, detail);
             orderDetail(detail, reference);
 
         } catch (JsonProcessingException e) {
             log.error(e.getMessage());
-            throw new CustomServerError("error saving a PaymentDetail");
+            throw new CustomServerException("error saving a PaymentDetail");
         }
     }
 
@@ -94,9 +85,9 @@ public class PaymentDetailService {
             final BigDecimal amount
     ) {
         // find user
-        var user = userService.userByPrincipal(metadata.principal()).orElse(null);
+        final var user = userService.userByPrincipal(metadata.principal()).orElse(null);
 
-        var currency = CapstoneCurrency.valueOf(data.get("currency").textValue().toUpperCase());
+        final var currency = CapstoneCurrency.valueOf(data.get("currency").textValue().toUpperCase());
 
         // save PaymentDetail
         return paymentDetailRepository.save(

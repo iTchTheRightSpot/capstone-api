@@ -44,7 +44,7 @@ class ControllerAdvices {
         return new ResponseEntity<>(res, PAYLOAD_TOO_LARGE);
     }
 
-    @ExceptionHandler({S3Exception.class, CustomServerError.class})
+    @ExceptionHandler({S3Exception.class, CustomServerException.class})
     public ResponseEntity<ExceptionResponse> awsException(final RuntimeException ex) {
         final String message = ex.getCause() != null ? formatErrorMessage.apply(ex.getCause().getClass(), ex.getMessage()) : ex.getMessage();
         final var res = new ExceptionResponse(message, "", INTERNAL_SERVER_ERROR);
@@ -63,10 +63,11 @@ class ControllerAdvices {
         return new ResponseEntity<>(new ExceptionResponse(message, "", BAD_REQUEST), BAD_REQUEST);
     }
 
-    @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<ExceptionResponse> missingRequestParameterException(final MissingServletRequestParameterException ex) {
-        return new ResponseEntity<>(new ExceptionResponse(ex.getMessage(), "", BAD_REQUEST), BAD_REQUEST);
-    }
+//    @ExceptionHandler(MissingServletRequestParameterException.class)
+//    public ResponseEntity<ExceptionResponse> missingRequestParameterException(final MissingServletRequestParameterException ex) {
+//        int i = 0;
+//        return new ResponseEntity<>(new ExceptionResponse(ex.getMessage(), "", BAD_REQUEST), BAD_REQUEST);
+//    }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ExceptionResponse> handlerMethodException(final HandlerMethodValidationException ex) {

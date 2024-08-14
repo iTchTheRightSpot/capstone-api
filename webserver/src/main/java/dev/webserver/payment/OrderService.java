@@ -3,7 +3,7 @@ package dev.webserver.payment;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.AbstractEnvironment;
-import dev.webserver.exception.CustomServerError;
+import dev.webserver.exception.CustomServerException;
 import dev.webserver.external.aws.IS3Service;
 import dev.webserver.util.CustomUtil;
 import org.slf4j.Logger;
@@ -44,7 +44,7 @@ class OrderService extends AbstractEnvironment {
      *
      * @return A list of {@link OrderHistoryDto} objects, representing
      * the order history for the currently authenticated user.
-     * @throws CustomServerError if an error occurs transforming
+     * @throws CustomServerException if an error occurs transforming
      * {@link OrderDetailDbMapper} property to a {@link OrderHistoryDbMapper} array.
      */
     public List<OrderHistoryDto> orderHistory() {
@@ -70,7 +70,7 @@ class OrderService extends AbstractEnvironment {
                         );
                     } catch (JsonProcessingException e) {
                         log.error("error retrieving customer %s order history \n %s".formatted(principal, e.getMessage()));
-                        throw new CustomServerError(
+                        throw new CustomServerException(
                                 """
                                 An error occurred retrieving your order history.
                                 Please reach out to our customer service.

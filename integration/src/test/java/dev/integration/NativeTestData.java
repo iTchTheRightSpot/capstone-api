@@ -1,7 +1,7 @@
 package dev.integration;
 
 import com.github.javafaker.Faker;
-import dev.webserver.exception.CustomServerError;
+import dev.webserver.exception.CustomServerException;
 import dev.webserver.product.CreateProductDto;
 import dev.webserver.product.PriceCurrencyDto;
 import dev.webserver.product.SizeInventoryDto;
@@ -85,7 +85,7 @@ public class NativeTestData {
                                 Files.readAllBytes(file.toPath())
                         );
                     } catch (IOException ignored) {
-                        throw new CustomServerError("unable to convert files in %s to a file".formatted(path.toString()));
+                        throw new CustomServerException("unable to convert files in %s to a file".formatted(path.toString()));
                     }
                 })
                 .toArray(MockMultipartFile[]::new);

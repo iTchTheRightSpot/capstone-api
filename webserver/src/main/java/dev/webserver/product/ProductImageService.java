@@ -1,6 +1,6 @@
 package dev.webserver.product;
 
-import dev.webserver.exception.CustomServerError;
+import dev.webserver.exception.CustomServerException;
 import dev.webserver.external.aws.IS3Service;
 import dev.webserver.util.CustomUtil;
 import jakarta.validation.constraints.NotNull;
@@ -42,7 +42,7 @@ class ProductImageService {
      *              the images to be uploaded.
      * @param bucket The name of the Amazon S3 bucket to which the images will
      *               be uploaded.
-     * @throws CustomServerError if there is an error executing the tasks.
+     * @throws CustomServerException if there is an error executing the tasks.
      */
     @Transactional(rollbackFor = Exception.class)
     public void saveProductImages(@NotNull final ProductDetail detail, @NotNull final CustomMultiPart[] files, @NotNull final String bucket) {
@@ -57,7 +57,7 @@ class ProductImageService {
         CustomUtil.asynchronousTasks(futures)
                 .exceptionally(ex -> {
                     log.error(ex.getMessage());
-                    throw new CustomServerError("internal server error");
+                    throw new CustomServerException("internal server error");
                 })
                 .join()
                 .forEach(e -> repository.save(new ProductImage(null, e.key(), detail.detailId())));

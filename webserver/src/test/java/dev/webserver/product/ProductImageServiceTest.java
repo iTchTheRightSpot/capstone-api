@@ -1,7 +1,7 @@
 package dev.webserver.product;
 
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.exception.CustomServerError;
+import dev.webserver.exception.CustomServerException;
 import dev.webserver.external.aws.IS3Service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,19 +65,19 @@ final class ProductImageServiceTest extends AbstractUnitTest {
         // when
         for (int i = 0; i < files.length; i++) {
             if (i == (files.length - 1))
-                doThrow(new CustomServerError("simulate exception"))
+                doThrow(new CustomServerException("simulate exception"))
                         .when(s3Service)
                         .uploadToS3(any(File.class), anyMap(), anyString(), anyString());
         }
 
         // method to test and assert
-        assertThrows(CustomServerError.class,
+        assertThrows(CustomServerException.class,
                 () -> {
                     try {
                         service.saveProductImages(detail, files, "bucket");
                     } catch (CompletionException e) {
                         // Unwrap the exception and rethrow the cause if it's a CustomServerError
-                        if (e.getCause() instanceof CustomServerError) {
+                        if (e.getCause() instanceof CustomServerException) {
                             throw e.getCause();
                         }
                         throw e;

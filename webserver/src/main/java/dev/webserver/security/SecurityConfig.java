@@ -127,15 +127,26 @@ class SecurityConfig extends AbstractEnvironment {
             http.csrf(AbstractHttpConfigurer::disable)
                     .authorizeHttpRequests(registry -> registry.anyRequest().permitAll());
         } else {
-            final String[] pubRoutes = {"/error", "/api/v1/actuator/health", baseurl + "demo/**", baseurl + "csrf", baseurl + "category/**", baseurl + "product/**", baseurl + "cart/**", baseurl + "payment/**", baseurl + "checkout/**", baseurl + "active/**"};
-            final var csrfTokenRepository = CSRF_REPO.apply(super.cookiesecure, super.cookiesamesite);
+            final String[] pubRoutes = {
+                    "/error",
+                    "/api/v1/actuator/health",
+                    baseurl + "demo/**",
+                    baseurl + "csrf",
+                    baseurl + "category/**",
+                    baseurl + "product/**",
+                    baseurl + "cart/**",
+                    baseurl + "payment/**",
+                    baseurl + "checkout/**",
+                    baseurl + "active/**",
+                    baseurl + "mail/**"
+            };
 
             http
                     // csrf config
                     // https://docs.spring.io/spring-security/reference/5.8/migration/servlet/exploits.html
                     .csrf(csrf -> csrf
                             .ignoringRequestMatchers(antMatcher(POST, baseurl + "payment/webhook"))
-                            .csrfTokenRepository(csrfTokenRepository)
+                            .csrfTokenRepository(CSRF_REPO.apply(super.cookiesecure, super.cookiesamesite))
                             .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                     .addFilterAfter(new CookieCsrfFilter(), BasicAuthenticationFilter.class)
 

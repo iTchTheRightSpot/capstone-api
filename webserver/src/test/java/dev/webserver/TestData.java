@@ -2,7 +2,7 @@ package dev.webserver;
 
 import com.github.javafaker.Faker;
 import dev.webserver.category.Category;
-import dev.webserver.exception.CustomServerError;
+import dev.webserver.exception.CustomServerException;
 import dev.webserver.product.*;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.mock.web.MockMultipartFile;
@@ -21,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public final class TestData {
 
     @NotNull
-    public static SizeInventoryDto[] sizeInventoryDTOArray(int size) {
-        SizeInventoryDto[] dto = new SizeInventoryDto[size];
+    public static SizeInventoryDto[] sizeInventoryDTOArray(final int size) {
+        final SizeInventoryDto[] dto = new SizeInventoryDto[size];
         for (int i = 0; i < size; i++) {
             dto[i] = new SizeInventoryDto(new Faker().number().randomDigitNotZero() + 1, "tall " + i);
         }
@@ -34,14 +34,14 @@ public final class TestData {
      * */
     @NotNull
     public static MockMultipartFile[] files() {
-        Path path = Paths.get("src/test/resources/uploads/");
+        final Path path = Paths.get("src/test/resources/uploads/");
 
         assertTrue(Files.exists(path));
 
-        File dir = new File(path.toUri());
+        final File dir = new File(path.toUri());
         assertNotNull(dir);
 
-        File[] files = dir.listFiles();
+        final File[] files = dir.listFiles();
         assertNotNull(files);
 
         return Arrays.stream(files).map(file -> {
@@ -53,14 +53,14 @@ public final class TestData {
                                 Files.readAllBytes(file.toPath())
                         );
                     } catch (IOException ignored) {
-                        throw new CustomServerError("unable to convert files in %s to a file".formatted(path.toString()));
+                        throw new CustomServerException("unable to convert files in %s to a file".formatted(path.toString()));
                     }
                 })
                 .toArray(MockMultipartFile[]::new);
     }
 
     @NotNull
-    public static CreateProductDto createProductDTO(long categoryId, SizeInventoryDto[] dtos) {
+    public static CreateProductDto createProductDTO(final long categoryId, final SizeInventoryDto[] dtos) {
         return productDTO(
                 categoryId,
                 new Faker().commerce().productName(),
@@ -71,21 +71,21 @@ public final class TestData {
 
     @NotNull
     public static CreateProductDto createProductDTO(
-            String productName,
-            long categoryId,
-            SizeInventoryDto[] dtos
+            final String productName,
+            final long categoryId,
+            final SizeInventoryDto[] dtos
     ) {
         return productDTO(categoryId, productName, dtos, new Faker().commerce().color());
     }
 
     @NotNull
     public static CreateProductDto productDTOWeight(
-            long categoryId,
-            String productName,
-            SizeInventoryDto[] dtos,
-            PriceCurrencyDto[] pcDto,
-            String colour,
-            BigDecimal weight
+            final long categoryId,
+            final String productName,
+            final SizeInventoryDto[] dtos,
+            final PriceCurrencyDto[] pcDto,
+            final String colour,
+            final BigDecimal weight
     ) {
         return new CreateProductDto(
                 categoryId,
@@ -101,12 +101,12 @@ public final class TestData {
 
     @NotNull
     public static CreateProductDto productDTO(
-            long categoryId,
-            String productName,
-            SizeInventoryDto[] dtos,
-            String colour
+            final long categoryId,
+            final String productName,
+            final SizeInventoryDto[] dtos,
+            final String colour
     ) {
-        PriceCurrencyDto[] arr = {
+        final PriceCurrencyDto[] arr = {
                 new PriceCurrencyDto(new BigDecimal(new Faker().commerce().price()), "USD"),
                 new PriceCurrencyDto(new BigDecimal(new Faker().number().numberBetween(10000, 700000)), "NGN"),
         };
@@ -124,15 +124,15 @@ public final class TestData {
     }
 
     @NotNull
-    public static ProductDetailDto productDetailDTO(String productID, String colour, SizeInventoryDto[] dtos) {
+    public static ProductDetailDto productDetailDTO(final String productID, final String colour, final SizeInventoryDto[] dtos) {
         return new ProductDetailDto(productID, false, colour, dtos);
     }
 
     @NotNull
     public static UpdateProductDto updateProductDTO(
-            String productId,
-            String productName,
-            long categoryId
+            final String productId,
+            final String productName,
+            final long categoryId
     ) {
         return new UpdateProductDto(
                 productId,
@@ -146,18 +146,18 @@ public final class TestData {
     }
 
     @NotNull
-    public static void dummyProducts(Category cat, int num, EmployeeProductService service) {
-        var images = TestData.files();
+    public static void dummyProducts(final Category cat, final int num, final EmployeeProductService service) {
+        final var images = TestData.files();
 
         for (int i = 0; i < num; i++) {
-            var data = TestData
+            final var data = TestData
                     .productDTO(
                             cat.categoryId(),
                             new Faker().commerce().productName() + " " + i,
                             new SizeInventoryDto[]{
-                                    new SizeInventoryDto(new Faker().number().numberBetween(1, 40), "medium"),
-                                    new SizeInventoryDto(new Faker().number().numberBetween(1, 40), "small"),
-                                    new SizeInventoryDto(new Faker().number().numberBetween(1, 40), "large")
+                                    new SizeInventoryDto(new Faker().number().numberBetween(20, 40), "medium"),
+                                    new SizeInventoryDto(new Faker().number().numberBetween(20, 40), "small"),
+                                    new SizeInventoryDto(new Faker().number().numberBetween(20, 40), "large")
                             },
                             new Faker().commerce().color() + " " + i
                     );
@@ -168,17 +168,17 @@ public final class TestData {
 
     @NotNull
     public static void dummyProductsTestTotalAmount(
-            Category cat,
-            PriceCurrencyDto[] arr,
-            int numOfProducts,
-            int variantQty,
-            BigDecimal weight,
-            EmployeeProductService service
+            final Category cat,
+            final PriceCurrencyDto[] arr,
+            final int numOfProducts,
+            final int variantQty,
+            final BigDecimal weight,
+            final EmployeeProductService service
     ) {
-        var images = TestData.files();
+        final var images = TestData.files();
 
         for (int i = 0; i < numOfProducts; i++) {
-            var data = TestData
+            final var data = TestData
                     .productDTOWeight(
                             cat.categoryId(),
                             new Faker().commerce().productName() + " " + i,

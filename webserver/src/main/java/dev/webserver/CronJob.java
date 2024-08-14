@@ -87,7 +87,7 @@ class CronJob extends AbstractEnvironment {
      * using the current date as a reference point. For each expired session, it deletes all
      * {@link Cart} associated with that session and then deletes the session itself.
      */
-    public void onDeleteShoppingSessions() {
+    void onDeleteShoppingSessions() {
         sessionRepo.allExpiredShoppingSession(CustomUtil.TO_GREENWICH.apply(null))
                 .forEach(session -> {
                     cartRepository.deleteCartByShoppingSessionId(session.sessionId());
@@ -105,7 +105,7 @@ class CronJob extends AbstractEnvironment {
      * @see
      * <a href="https://paystack.com/docs/api/integration/#update-timeout">updating the timeout</a>.
      */
-    public void onDeleteOrderReservations() {
+    void onDeleteOrderReservations() {
         final var reservations = reservationRepo
                 .allPendingExpiredReservations(CustomUtil.TO_GREENWICH.apply(null), PENDING);
 
@@ -124,12 +124,12 @@ class CronJob extends AbstractEnvironment {
                             productCachePublisher.evictAll();
                             publisher.publishPurchase(metadata.get("name").asText(), email);
                         }
+                    } else {
+                        skuRepo.updateProductSkuInventoryByAddingToExistingInventory(
+                                obj.reservation().skuId(),
+                                obj.reservation().qty()
+                        );
                     }
-
-                    skuRepo.updateProductSkuInventoryByAddingToExistingInventory(
-                            obj.reservation().skuId(),
-                            obj.reservation().qty()
-                    );
 
                     reservationRepo.deleteById(obj.reservation().reservationId());
                 });
@@ -164,14 +164,14 @@ class CronJob extends AbstractEnvironment {
                         return new CustomCronJobObject(reservation, node, OK);
                     } catch (Exception e) {
                         final var status = switch (e) {
-                            case HttpClientErrorException.BadRequest ignored1 -> BAD_REQUEST;
-                            case HttpClientErrorException.NotFound ignored2 -> NOT_FOUND;
+                            case HttpClientErrorException.NotFound ignored1 -> NOT_FOUND;
+                            case HttpClientErrorException.BadRequest ignored2 -> BAD_REQUEST;
                             case HttpClientErrorException.Forbidden ignored3 -> FORBIDDEN;
                             case HttpClientErrorException.Unauthorized ignored4 -> UNAUTHORIZED;
                             default -> INTERNAL_SERVER_ERROR;
                         };
 
-                        log.error("Status is %s \nMessage %s".formatted(status, e.getMessage()));
+                        log.error("CronJob Status is %s \nMessage %s".formatted(status, e.getMessage()));
 
                         return new CustomCronJobObject(reservation, null, status);
                     }

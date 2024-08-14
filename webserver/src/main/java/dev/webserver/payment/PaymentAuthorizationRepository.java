@@ -1,6 +1,6 @@
 package dev.webserver.payment;
 
-import dev.webserver.exception.CustomServerError;
+import dev.webserver.exception.CustomServerException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -34,7 +34,7 @@ public class PaymentAuthorizationRepository {
                 .param(13, authorization.signature())
                 .update();
 
-        if (update < 1) throw new CustomServerError("error saving PaymentAuthorization");
+        if (update < 1) throw new CustomServerException("error saving PaymentAuthorization");
 
         return authorization;
     }

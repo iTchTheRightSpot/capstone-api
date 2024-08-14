@@ -20,12 +20,10 @@ class AwsConfiguration {
     private final Region REGION;
     private final AwsCredentialsProvider PROVIDER;
 
-    public AwsConfiguration(Environment env) {
-        String region = env.getProperty("aws.region", "ca-central-1");
+    public AwsConfiguration(final Environment env) {
+        REGION = Region.of(env.getProperty("aws.region", "ca-central-1"));
 
-        REGION = Region.of(region);
-
-        String profile = env.getProperty("spring.profiles.active", "default");
+        final String profile = env.getProperty("spring.profiles.active", "default");
 
         log.info("S3Config current active profile {}", profile);
 

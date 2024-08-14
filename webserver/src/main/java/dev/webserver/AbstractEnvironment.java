@@ -35,6 +35,7 @@ public abstract class AbstractEnvironment {
     protected Long shoppingSessionExpirationBoundInSeconds;
     protected String discord;
     protected String applicationContactEmail;
+    protected String mailEncoding;
 
     protected AbstractEnvironment(final Environment environment) {
         // developer
@@ -69,6 +70,8 @@ public abstract class AbstractEnvironment {
         // aws
         awsbucket = environment.getProperty("aws.bucket", "development");
         discord = environment.getProperty("application.log.webhook.discord", "discord");
+        // mail
+        mailEncoding = environment.getProperty("spring.mail.default-encoding", "UTF-8");
     }
 
     protected final PaymentCredentialObj payStackCredentials() {

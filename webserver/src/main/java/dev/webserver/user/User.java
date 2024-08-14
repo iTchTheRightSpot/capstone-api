@@ -27,7 +27,7 @@ public class User {
         @NotNull(message = "user fullname cannot be null")
         @NotEmpty(message = "user fullname cannot be empty")
         @Size.List({
-                @Size(min = 255, message = "user fullname max length of 255"),
+                @Size(min = 255, message = "user fullname min length of 255"),
                 @Size(max = 255, message = "user fullname max length of 255")
         })
         private final String fullname;

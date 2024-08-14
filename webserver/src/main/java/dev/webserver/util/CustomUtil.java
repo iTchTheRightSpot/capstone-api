@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.category.CategoryResponse;
 import dev.webserver.enumeration.CapstoneCurrency;
-import dev.webserver.exception.CustomServerError;
+import dev.webserver.exception.CustomServerException;
 import dev.webserver.payment.CartTotalDbMapper;
 import dev.webserver.payment.CheckoutPair;
 import dev.webserver.product.CustomMultiPart;
@@ -257,7 +257,7 @@ public class CustomUtil {
      * @param schedules The list of tasks to execute asynchronously.
      * @return A {@link CompletableFuture} holding a list of results from all completed
      * tasks.
-     * @throws CustomServerError if an error occurs when performing an asynchronous
+     * @throws CustomServerException if an error occurs when performing an asynchronous
      * task.
      */
     public static <T> CompletableFuture<List<T>> asynchronousTasks(final List<Supplier<T>> schedules) {
@@ -291,7 +291,7 @@ public class CustomUtil {
                             final String contentType = Files.probeContentType(file.toPath());
                             if (!contentType.startsWith("image/")) {
                                 log.error("File is not an image");
-                                throw new CustomServerError("File is not an image");
+                                throw new CustomServerException("File is not an image");
                             }
 
                             // create file metadata
@@ -312,7 +312,7 @@ public class CustomUtil {
                             return new CustomMultiPart(file, metadata, key);
                         } catch (IOException e) {
                             log.error("error either writing multipart to file or getting file type. {}", e.getMessage());
-                            throw new CustomServerError("please verify files are images");
+                            throw new CustomServerException("please verify files are images");
                         }
                     }) //
                     .toArray(CustomMultiPart[]::new);

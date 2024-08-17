@@ -28,11 +28,21 @@ class LogEventPublisher implements ILogEventPublisher {
         final String date = utc.toLocalDate().format(DateTimeFormatter.ofPattern("E dd MMMM uuuu"));
         final String time = utc.toLocalTime().format(DateTimeFormatter.ofPattern("H:m a"));
         final String message = """
-                ## __**Registration or Sign in**__ on %s at %s @everyone
+                ## __**Purchase Alert!**__ on %s at %s @everyone
                 ### <--- Name: %s ---> <--- Email: %s --->
                 """.formatted(date, time, name, email);
 
         publisher.publishEvent(new LogEvent(this, new ConcurrentLinkedDeque<>(List.of(message))));
+    }
+
+    @Override
+    public void publishSignInOrRegistration(final String firstname, final String email) {
+
+    }
+
+    @Override
+    public void publishRegistrationException(final String firstname, final String email) {
+
     }
 
 }

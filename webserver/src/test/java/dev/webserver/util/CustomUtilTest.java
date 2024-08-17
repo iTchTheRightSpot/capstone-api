@@ -2,57 +2,41 @@ package dev.webserver.util;
 
 import com.github.javafaker.Faker;
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.category.response.CategoryResponse;
-import dev.webserver.checkout.CheckoutPair;
-import dev.webserver.data.TestData;
-import dev.webserver.payment.projection.TotalPojo;
-import dev.webserver.product.dto.PriceCurrencyDto;
+import dev.webserver.TestData;
+import dev.webserver.category.CategoryResponse;
+import dev.webserver.payment.CartTotalDbMapper;
+import dev.webserver.payment.CheckoutPair;
+import dev.webserver.product.PriceCurrencyDto;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.core.sync.RequestBody;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 
-import static dev.webserver.enumeration.SarreCurrency.NGN;
-import static dev.webserver.enumeration.SarreCurrency.USD;
+import static dev.webserver.enumeration.CapstoneCurrency.NGN;
+import static dev.webserver.enumeration.CapstoneCurrency.USD;
 import static java.math.RoundingMode.FLOOR;
 import static org.junit.jupiter.api.Assertions.*;
 
-class CustomUtilTest extends AbstractUnitTest {
+final class CustomUtilTest extends AbstractUnitTest {
 
     private record AmountConversion(BigDecimal given, BigDecimal expected) { }
-
-    private record HelperObj(int qty, BigDecimal price, double weight) implements TotalPojo {
-        @Override
-        public Integer getQty() {
-            return HelperObj.this.qty;
-        }
-
-        @Override
-        public BigDecimal getPrice() {
-            return HelperObj.this.price;
-        }
-
-        @Override
-        public Double getWeight() {
-            return HelperObj.this.weight;
-        }
-    }
 
     @Test
     void shouldSuccessfullyCreateTransformMultipartFilesToFile() throws IOException {
         // given
-        var mockFiles = TestData.files();
+        final var mockFiles = TestData.files();
 
         // when
-        var objs = CustomUtil.transformMultipartFile.apply(mockFiles, new StringBuilder());
+        final var objs = CustomUtil.transformMultipartFile.apply(mockFiles, new StringBuilder());
 
         // then
-        for (var obj : objs) {
+        for (final var obj : objs) {
             assertTrue(Files.exists(obj.file().toPath()));
-            var body = RequestBody.fromFile(obj.file());
+            final var body = RequestBody.fromFile(obj.file());
             assertEquals(Files.probeContentType(obj.file().toPath()), body.contentType());
             assertFalse(obj.key().isBlank());
             assertFalse(obj.metadata().isEmpty());
@@ -62,10 +46,10 @@ class CustomUtilTest extends AbstractUnitTest {
     @Test
     public void testCartItemsTotalAndTotalWeightNGN() {
         // given
-        final List<TotalPojo> list = List.of(
-                new HelperObj(1, new BigDecimal("1800"), 2.5),
-                new HelperObj(5, new BigDecimal("20750"), 3.5),
-                new HelperObj(2, new BigDecimal("39065"), 5)
+        final List<CartTotalDbMapper> list = List.of(
+                new CartTotalDbMapper(1, new BigDecimal("1800"), 2.5),
+                new CartTotalDbMapper(5, new BigDecimal("20750"), 3.5),
+                new CartTotalDbMapper(2, new BigDecimal("39065"), 5.0)
         );
 
         // when
@@ -79,10 +63,10 @@ class CustomUtilTest extends AbstractUnitTest {
     @Test
     public void testCartItemsTotalAndTotalWeightUSD() {
         // given
-        final List<TotalPojo> list = List.of(
-                new HelperObj(3, new BigDecimal("110.00"), 10.3),
-                new HelperObj(1, new BigDecimal("120.00"), 1.4),
-                new HelperObj(5, new BigDecimal("30.39"), 6.7)
+        final List<CartTotalDbMapper> list = List.of(
+                new CartTotalDbMapper(3, new BigDecimal("110.00"), 10.3),
+                new CartTotalDbMapper(1, new BigDecimal("120.00"), 1.4),
+                new CartTotalDbMapper(5, new BigDecimal("30.39"), 6.7)
         );
 
         // when
@@ -97,7 +81,7 @@ class CustomUtilTest extends AbstractUnitTest {
     void calculateTotalInNGN() {
         // when
         final BigDecimal res = CustomUtil
-                .calculateTotal(new BigDecimal("1200"), 0.0725, new BigDecimal("500"))
+                .calculateTotal(new BigDecimal("1200"), new BigDecimal("0.0725"), new BigDecimal("500"))
                 .setScale(2, FLOOR);
 
         // then
@@ -107,8 +91,8 @@ class CustomUtilTest extends AbstractUnitTest {
     @Test
     void calculateTotalInUSD() {
         // when
-        BigDecimal res = CustomUtil
-                .calculateTotal(new BigDecimal("75.00"), 0.05, new BigDecimal("10.48"))
+        final BigDecimal res = CustomUtil
+                .calculateTotal(new BigDecimal("75.00"), new BigDecimal("0.05"), new BigDecimal("10.48"))
                 .setScale(2, FLOOR);
 
         // then
@@ -155,65 +139,59 @@ class CustomUtilTest extends AbstractUnitTest {
         };
 
         for (final AmountConversion obj : arr) {
-            assertEquals(obj.expected(), CustomUtil
-                    .convertCurrency("0.34", NGN, obj.given()));
+            assertEquals(obj.expected(), CustomUtil.convertCurrency("0.34", NGN, obj.given()));
         }
     }
 
     @Test
     void fromUsdToCent() {
-        AmountConversion[] arr = {
+        final AmountConversion[] arr = {
                 new AmountConversion(new BigDecimal("0"), new BigDecimal("0")),
                 new AmountConversion(new BigDecimal("1"), new BigDecimal("100.00")),
                 new AmountConversion(new BigDecimal("20.00"), new BigDecimal("2000.00")),
         };
 
-        for (AmountConversion obj : arr) {
-            assertEquals(obj.expected(), CustomUtil
-                    .convertCurrency("100", USD, obj.given())
-            );
+        for (final AmountConversion obj : arr) {
+            assertEquals(obj.expected(), CustomUtil.convertCurrency("100", USD, obj.given()));
         }
     }
 
     @Test
     void shouldCreateHierarchyForCategory() {
-        var actual = CustomUtil.createCategoryHierarchy(db());
-        assertEquals(res(), actual);
+        assertEquals(res(), CustomUtil.createCategoryHierarchy(db));
     }
 
-    final List<CategoryResponse> db() {
-        return List.of(
-                new CategoryResponse(1L, null, "category", true),
-                new CategoryResponse(2L, 1L, "clothes", true),
-                new CategoryResponse(3L, 2L, "top", true),
-                new CategoryResponse(4L, null, "collection", true),
-                new CategoryResponse(5L, 4L, "fall 2023", true),
-                new CategoryResponse(6L, 4L, "summer 2023", true),
-                new CategoryResponse(7L, 5L, "jacket fall 2023", true),
-                new CategoryResponse(8L, 3L, "long-sleeve", true)
-        );
-    }
+    private static final List<CategoryResponse> db = List.of(
+            new CategoryResponse(1, null, "category", true, new ArrayList<>()),
+            new CategoryResponse(2, 1L, "clothes", true, new ArrayList<>()),
+            new CategoryResponse(3, 2L, "top", true, new ArrayList<>()),
+            new CategoryResponse(4, null, "collection", true, new ArrayList<>()),
+            new CategoryResponse(5, 4L, "fall 2023", true, new ArrayList<>()),
+            new CategoryResponse(6, 4L, "summer 2023", true, new ArrayList<>()),
+            new CategoryResponse(7, 5L, "jacket fall 2023", true, new ArrayList<>()),
+            new CategoryResponse(8, 3L, "long-sleeve", true, new ArrayList<>())
+    );
 
-    final List<CategoryResponse> res() {
+    private static List<CategoryResponse> res() {
         // super parentId
-        var category = new CategoryResponse(1L, null, "category", true);
+        final var category = new CategoryResponse(1, null, "category", true, new ArrayList<>());
 
-        var clothes = new CategoryResponse(2L, category.categoryId(), "clothes", true);
+        final var clothes = new CategoryResponse(2, category.categoryId(), "clothes", true, new ArrayList<>());
         category.addToChildren(clothes);
 
-        var top = new CategoryResponse(3L, clothes.categoryId(), "top", true);
+        final var top = new CategoryResponse(3L, clothes.categoryId(), "top", true, new ArrayList<>());
         clothes.addToChildren(top);
 
-        top.addToChildren(new CategoryResponse(8L, top.categoryId(), "long-sleeve", true));
+        top.addToChildren(new CategoryResponse(8L, top.categoryId(), "long-sleeve", true, new ArrayList<>()));
 
         // super parentId
-        var collection = new CategoryResponse(4L, null, "collection", true);
+        final var collection = new CategoryResponse(4L, null, "collection", true, new ArrayList<>());
 
-        var fall = new CategoryResponse(5L, collection.categoryId(), "fall 2023", true);
+        final var fall = new CategoryResponse(5L, collection.categoryId(), "fall 2023", true, new ArrayList<>());
         collection.addToChildren(fall);
-        fall.addToChildren(new CategoryResponse(7L, fall.categoryId(), "jacket fall 2023", true));
+        fall.addToChildren(new CategoryResponse(7L, fall.categoryId(), "jacket fall 2023", true, new ArrayList<>()));
 
-        var summer = new CategoryResponse(6L, collection.categoryId(), "summer 2023", true);
+        final var summer = new CategoryResponse(6L, collection.categoryId(), "summer 2023", true, new ArrayList<>());
         collection.addToChildren(summer);
 
         return List.of(category, collection);

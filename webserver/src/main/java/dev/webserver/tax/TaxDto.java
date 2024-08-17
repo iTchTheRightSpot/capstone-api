@@ -5,14 +5,15 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 public record TaxDto(
         @JsonProperty("tax_id")
-        @NotNull
+        @NotNull(message = "tax tax_id cannot be null")
         Long id,
-        @NotNull
-        @NotEmpty
+        @NotNull(message = "tax name cannot be null")
+        @NotEmpty(message = "tax name cannot be empty")
         String name,
-        @NotNull
-        Double rate
+        @NotNull(message = "tax rate cannot be null")
+        BigDecimal rate
 ) implements Serializable {}

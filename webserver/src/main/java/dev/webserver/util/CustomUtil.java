@@ -2,15 +2,15 @@ package dev.webserver.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.webserver.category.response.CategoryResponse;
-import dev.webserver.checkout.CheckoutPair;
-import dev.webserver.enumeration.SarreCurrency;
-import dev.webserver.exception.CustomServerError;
-import dev.webserver.payment.projection.TotalPojo;
-import dev.webserver.product.dto.PriceCurrencyDto;
-import dev.webserver.product.projection.DetailPojo;
-import dev.webserver.product.response.CustomMultiPart;
-import dev.webserver.product.response.Variant;
+import dev.webserver.category.CategoryResponse;
+import dev.webserver.enumeration.CapstoneCurrency;
+import dev.webserver.exception.CustomServerException;
+import dev.webserver.payment.CartTotalDbMapper;
+import dev.webserver.payment.CheckoutPair;
+import dev.webserver.product.CustomMultiPart;
+import dev.webserver.product.PriceCurrencyDto;
+import dev.webserver.product.ProductDetailDbMapper;
+import dev.webserver.product.Variant;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -23,34 +23,36 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-import static dev.webserver.enumeration.SarreCurrency.NGN;
-import static dev.webserver.enumeration.SarreCurrency.USD;
+import static dev.webserver.enumeration.CapstoneCurrency.NGN;
+import static dev.webserver.enumeration.CapstoneCurrency.USD;
 import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.FLOOR;
 import static java.math.RoundingMode.UP;
-import static org.hibernate.validator.internal.util.Contracts.assertTrue;
 
 public class CustomUtil {
 
     private static final Logger log = LoggerFactory.getLogger(CustomUtil.class);
 
     /**
-     * Converts date to UTC {@link Date}.
-     *
-     * @param date of type java.util.date
-     * @return {@link Date} in utc
+     * Converts the current date and time of the specified timezone to Greenwich Mean Time (GMT).
+     * <p>
+     * If the input timezone is null, "America/Toronto" will be used as the default timezone.
      */
-    public static Date toUTC(final Date date) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return calendar.getTime();
-    }
+    public static final Function<String, LocalDateTime> TO_GREENWICH = (timezone) -> ZonedDateTime
+            .now(ZoneId.of(timezone == null ? "America/Toronto" : timezone))
+            .withZoneSameInstant(ZoneOffset.UTC)
+            .toLocalDateTime();
 
     /**
      * Validates that the provided array of {@link PriceCurrencyDto} objects is
@@ -59,14 +61,13 @@ public class CustomUtil {
      * This method checks whether the array contains exactly two elements, and
      * verifies that each {@link PriceCurrencyDto} object has a non-negative
      * price value. Additionally, it ensures that the array contains both only
-     * {@link SarreCurrency}.
+     * {@link CapstoneCurrency}.
      *
      * @param dto An array of {@link PriceCurrencyDto} objects to be validated.
      * @return true if the array is in the correct format and contains only
-     * {@link SarreCurrency}.
+     * {@link CapstoneCurrency}.
      */
-    public static boolean validateContainsCurrencies(
-            final PriceCurrencyDto[] dto) {
+    public static boolean validateContainsCurrencies(final PriceCurrencyDto[] dto) {
         if (dto.length != 2) {
             return false;
         }
@@ -91,14 +92,14 @@ public class CustomUtil {
 
     /**
      * Converts a String obtained from the getVariants method of
-     * {@link DetailPojo}
+     * {@link ProductDetailDbMapper}
      * to an array of {@link Variant} objects.
      * <p>
      * This method uses the {@link ObjectMapper} to deserialize
      * the input String into an array of {@link Variant} objects.
      *
      * @param str The String obtained from the getVariants method in
-     * {@link DetailPojo}.
+     * {@link ProductDetailDbMapper}.
      * @param clazz The class that invokes this method.
      * @return An array of {@link Variant} objects if successful,
      * or null if an error occurs during deserialization.
@@ -107,7 +108,7 @@ public class CustomUtil {
         try {
             return new ObjectMapper().readValue(str, Variant[].class);
         } catch (JsonProcessingException e) {
-            log.error("error converting from ProductSKUs to Variant. " + clazz);
+            log.error("error converting from ProductSKUs to Variant. {}", clazz);
             return null;
         }
     }
@@ -121,14 +122,14 @@ public class CustomUtil {
      * @param currencyConversion The conversion rate to the lowest
      *                           currency denomination.
      * @param currency The currency to convert to, represented by
-     * {@link SarreCurrency}.
+     * {@link CapstoneCurrency}.
      * @param amount The amount to convert to the lowest currency denomination.
      * @return The amount converted to the lowest currency denomination,
      * represented as a {@link BigDecimal}.
      */
     public static BigDecimal convertCurrency(
             final String currencyConversion,
-            final SarreCurrency currency,
+            final CapstoneCurrency currency,
             final BigDecimal amount
     ) {
         final BigDecimal total = amount
@@ -155,7 +156,7 @@ public class CustomUtil {
      * if not found.
      */
     public static Cookie cookie (final HttpServletRequest req, final String name) {
-        Cookie[] cookies = req.getCookies();
+        final Cookie[] cookies = req.getCookies();
         return cookies == null
                 ? null
                 : Arrays.stream(cookies)
@@ -178,26 +179,25 @@ public class CustomUtil {
      *             into a hierarchy.
      * @return A list of {@link CategoryResponse} objects representing the root categories in the hierarchy.
      */
-    public static List<CategoryResponse> createCategoryHierarchy(
-            final List<CategoryResponse> list) {
+    public static List<CategoryResponse> createCategoryHierarchy(final List<CategoryResponse> list) {
         final Map<Long, CategoryResponse> map = new HashMap<>();
 
         // hierarchy is built by inject root
-        map.put(-1L, new CategoryResponse("root"));
+        map.put(-1L, CategoryResponse.builder().name("root").categoryId(-1).parentId(-1L).children(new ArrayList<>()).build());
 
         // add all to map
-        for (CategoryResponse cat : list) {
+        for (final CategoryResponse cat : list) {
             map.put(cat.categoryId(), cat);
         }
 
-        for (CategoryResponse entry : list) {
+        for (final CategoryResponse entry : list) {
             if (entry.parentId() == null) {
                 // create a new leaf from root as parentId category seen
                 map.get(-1L).addToChildren(entry);
             } else {
                 // add child to parentId
-                var parent = map.get(entry.parentId());
-                var child = map.get(entry.categoryId());
+                final var parent = map.get(entry.parentId());
+                final var child = map.get(entry.categoryId());
                 parent.addToChildren(child);
             }
         }
@@ -216,12 +216,8 @@ public class CustomUtil {
      * @param shippingPrice  The price for shipping the items in the shopping cart.
      * @return The total cost of the shopping cart including tax and shipping as a BigDecimal value.
      */
-    public static BigDecimal calculateTotal(
-            final BigDecimal cartItemsTotal, final double tax, final BigDecimal shippingPrice) {
-        var newTax = cartItemsTotal.multiply(BigDecimal.valueOf(tax));
-        return cartItemsTotal
-                .add(newTax)
-                .add(shippingPrice);
+    public static BigDecimal calculateTotal(final BigDecimal cartItemsTotal, final BigDecimal tax, final BigDecimal shippingPrice) {
+        return cartItemsTotal.add(cartItemsTotal.multiply(tax)).add(shippingPrice);
     }
 
     /**
@@ -231,22 +227,22 @@ public class CustomUtil {
      * The total cost for each item is calculated by using the
      * formula: total = weight + (price * quantity).
      * <p>
-     * This method takes a lis of {@link TotalPojo} objects,
+     * This method takes a lis of {@link CartTotalDbMapper} objects,
      * where each object represents an item in the shopping
      * cart with information about quantity, price, and weight.
      *
-     * @param list The list of {@link TotalPojo} items for which
+     * @param list The list of {@link CartTotalDbMapper} items for which
      *             to calculate the total price and weights.
      * @return A {@link CheckoutPair} object containing the total
      * of weight and the total price of the {@code list}.
      */
-    public static CheckoutPair cartItemsTotalAndTotalWeight(final List<TotalPojo> list) {
+    public static CheckoutPair cartItemsTotalAndTotalWeight(final List<CartTotalDbMapper> list) {
         final double sumOfWeight = list.stream()
-                .mapToDouble(TotalPojo::getWeight)
+                .mapToDouble(CartTotalDbMapper::weight)
                 .sum();
 
         final BigDecimal total = list.stream()
-                .map(p -> p.getPrice().multiply(BigDecimal.valueOf(p.getQty())))
+                .map(p -> p.price().multiply(BigDecimal.valueOf(p.qty())))
                 .reduce(ZERO, BigDecimal::add)
                 .setScale(2, FLOOR);
 
@@ -259,29 +255,21 @@ public class CustomUtil {
      * concurrently, leveraging the new Virtual Thread.
      *
      * @param schedules The list of tasks to execute asynchronously.
-     * @param clazz The class that called this method.
      * @return A {@link CompletableFuture} holding a list of results from all completed
      * tasks.
-     * @throws CustomServerError if an error occurs when performing an asynchronous
+     * @throws CustomServerException if an error occurs when performing an asynchronous
      * task.
      */
-    public static <T, C> CompletableFuture<List<T>> asynchronousTasks(
-            final List<T> schedules, final Class<C> clazz
-    ) {
-        final List<CompletableFuture<T>> futures = new ArrayList<>();
+    public static <T> CompletableFuture<List<T>> asynchronousTasks(final List<Supplier<T>> schedules) {
+        final List<CompletableFuture<Supplier<T>>> futures = new ArrayList<>();
+
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            for (final T s : schedules) {
-                futures.add(CompletableFuture
-                        .supplyAsync(() -> s, executor)
-                        .exceptionally(e -> {
-                            log.error("%s thrown %s".formatted(clazz.getName(), e.getMessage()));
-                            throw new CustomServerError(e.getMessage());
-                        })
-                );
+            for (final Supplier<T> s : schedules) {
+                futures.add(CompletableFuture.supplyAsync(() -> s, executor));
             }
         }
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenApply(v -> futures.stream().map(CompletableFuture::join).toList());
+                .thenApply(v -> futures.stream().map(CompletableFuture::join).map(Supplier::get).toList());
     }
 
     /**
@@ -303,7 +291,7 @@ public class CustomUtil {
                             final String contentType = Files.probeContentType(file.toPath());
                             if (!contentType.startsWith("image/")) {
                                 log.error("File is not an image");
-                                throw new CustomServerError("File is not an image");
+                                throw new CustomServerException("File is not an image");
                             }
 
                             // create file metadata
@@ -324,7 +312,7 @@ public class CustomUtil {
                             return new CustomMultiPart(file, metadata, key);
                         } catch (IOException e) {
                             log.error("error either writing multipart to file or getting file type. {}", e.getMessage());
-                            throw new CustomServerError("please verify files are images");
+                            throw new CustomServerException("please verify files are images");
                         }
                     }) //
                     .toArray(CustomMultiPart[]::new);

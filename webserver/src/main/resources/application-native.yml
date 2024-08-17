@@ -22,7 +22,6 @@ server:
 logging:
   level:
     org:
-      hibernate: error
       springframework:
         jdbc: trace
         security: trace
@@ -34,7 +33,7 @@ spring:
     virtual:
       enabled: true
   profiles:
-    active: default
+    active: native-test
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/capstone_db}
@@ -60,37 +59,46 @@ spring:
       max-file-size: 6MB
       max-request-size: 10MB
       enabled: true
-  jpa:
-    generate-ddl: true
-    hibernate:
-      ddl-auto: validate
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:google-client-secret}
+            redirectUri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - profile
+              - email
+              - openid
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    protocol: smtp
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:test}
+    password: ${SPRING_MAIL_PASSWORD:mail-password}
+    default-encoding: UTF-8
     properties:
-      jakarta:
-        persistence:
-          sharedCache:
-            mode: ALL
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: true
-    open-in-view: false
-    defer-datasource-initialization: false
-  sql:
-    init:
-      mode: always
+      "[mail.mime.charset]": UTF
+      "[mail.smtp.connectiontimeout]": 5000 # 5 secs
+      "[mail.smtp.timeout]": 5000
+      "[mail.smtp.writetimeout]": 5000
+      "[mail.smtp.auth]": true
+      "[mail.smtp.starttls.enable]": true
+      "[mail.smtp.starttls.required]": true
+    application:
+      contact-email: developer@email.com
 
 management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: 'health,info'
+      base-path: /api/v1/actuator
 
 api:
   endpoint:
     baseurl: ${API_PREFIX:api/v1/}
-
-user:
-  principal: ${USER_PRINCIPAL:admin@admin.com}
-  password: ${USER_PASSWORD:password123}
 
 paystack:
   pub:
@@ -98,18 +106,12 @@ paystack:
   secret:
     key: ${PAYSTACK_SECRET_KEY:paystack-secret}
 
-jwt:
-  claim: role
-
 cors:
   ui:
     domain: http://localhost:4200/
 
 aws:
   bucket: development
-  paystack:
-    secret:
-      id: ${AWS_PAYSTACK_SECRET_ID:pay}
 
 application:
   log:
@@ -121,7 +123,7 @@ cart:
     name: CARTCOOKIE
   split: '%'
 
-sarre:
+capstone:
   usd:
     to:
       cent: 100
@@ -131,8 +133,8 @@ sarre:
 
 race-condition:
   expiration:
-    bound: 15
+    bound: 900
 shopping:
   session:
     expiration:
-      bound: 5
+      bound: 1800

@@ -4,7 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.webserver.AbstractUnitTest;
-import dev.webserver.enumeration.SarreCurrency;
+import dev.webserver.enumeration.CapstoneCurrency;
+import dev.webserver.payment.WebHookUtil;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -39,11 +40,11 @@ class WebHookUtilTest extends AbstractUnitTest {
         BigDecimal cents = new BigDecimal("10000");
 
         assertEquals(new BigDecimal("39650.00"), WebHookUtil
-                .fromLowestCurrencyFormToCurrency(kobo, SarreCurrency.NGN)
+                .fromLowestCurrencyFormToCurrency(kobo, CapstoneCurrency.NGN)
         );
 
         assertEquals(new BigDecimal("100.00"), WebHookUtil
-                .fromLowestCurrencyFormToCurrency(cents, SarreCurrency.USD)
+                .fromLowestCurrencyFormToCurrency(cents, CapstoneCurrency.USD)
         );
     }
 

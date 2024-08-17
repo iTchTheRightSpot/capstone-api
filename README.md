@@ -3,10 +3,10 @@ An e-commerce multi module application.
 
 ## Technologies
 * Java 21.
-* Spring Boot 3.3.0
+* Spring Boot 3.3.2
     * Spring Starter Web.
     * Spring Starter Validation.
-    * Spring Data JPA.
+    * Spring Data JDBC.
     * Spring Oauth2 Resource Server (manual authentication and authorization using jwt).
     * Spring Session.
 * MySQL.

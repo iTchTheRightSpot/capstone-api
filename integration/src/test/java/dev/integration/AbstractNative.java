@@ -91,7 +91,7 @@ public abstract class AbstractNative {
         }
 
         try {
-            CustomRunInitScripts.processScript(dburl, dbUser, dbPass);
+            NativeCustomRunInitScripts.processScript(dburl, dbUser, dbPass);
         } catch (SQLException e) {
             throw new RuntimeException("error running native test init sql script: " + e.getMessage());
         }

@@ -1,0 +1,24 @@
+package dev.webserver.product;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.webserver.enumeration.CapstoneCurrency;
+
+import java.math.BigDecimal;
+
+public record ProductDbMapper(
+        // product
+        String uuid,
+        String name,
+        @JsonProperty("image_key")
+        String imageKey,
+        BigDecimal weight,
+        @JsonProperty("weight_type")
+        String weightType,
+        String description,
+        // price currency
+        BigDecimal price,
+        CapstoneCurrency currency,
+        // category
+        @JsonProperty("category_name")
+        String categoryName
+) {}

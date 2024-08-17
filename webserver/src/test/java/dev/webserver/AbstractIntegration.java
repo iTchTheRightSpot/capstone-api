@@ -16,5 +16,5 @@ public abstract class AbstractIntegration extends SuperAbstract {
     @Autowired
     protected MockMvc mockMvc;
     @Autowired
-    protected ObjectMapper objectMapper;
+    protected ObjectMapper mapper;
 }

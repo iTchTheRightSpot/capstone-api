@@ -1,0 +1,15 @@
+{
+  "name": "capstone-serverside-frontend-build",
+  "private": false,
+  "author": "iTchTheRightSpot",
+  "scripts": {
+    "build": "npx tailwindcss -i ./tailwind.css -o ../resources/static/api/index.css"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.4"
+  },
+  "dependencies": {
+    "build": "^0.1.4",
+    "run": "^1.5.0"
+  }
+}

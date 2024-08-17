@@ -1,0 +1,177 @@
+package dev.webserver.payment;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.webserver.cart.ICartRepository;
+import dev.webserver.enumeration.CapstoneCurrency;
+import dev.webserver.enumeration.PaymentStatus;
+import dev.webserver.exception.CustomServerException;
+import dev.webserver.user.UserService;
+import dev.webserver.util.CustomUtil;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+
+@Service
+@RequiredArgsConstructor
+public class PaymentDetailService {
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentDetailService.class);
+
+    private final PaymentDetailRepository paymentDetailRepository;
+    private final UserService userService;
+    private final AddressRepository addressRepository;
+    private final OrderReservationRepository orderReservationRepository;
+    private final PaymentAuthorizationRepository paymentAuthorizationRepository;
+    private final ICartRepository cartRepository;
+    private final OrderDetailRepository orderDetailRepository;
+
+    public boolean isPaymentDetailMissingByEmailAndReference(final String email, final String reference) {
+        return paymentDetailRepository.paymentDetailByEmailAndReference(email, reference).isEmpty();
+    }
+
+    /**
+     * Constructs a {@link PaymentDetail} after a successful payment.
+     *
+     * @param data contains details of a successful payment.
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void onSuccessfulPayment(final JsonNode data) {
+        // TODO only process in production
+        final String domain = data.get("domain").textValue();
+
+        final var mapper = new ObjectMapper();
+
+        try {
+            final String reference = data.get("reference").textValue();
+
+            final var amount = WebHookUtil
+                    .fromNumberToBigDecimal(mapper.treeToValue(data.get("amount"), Number.class));
+
+            final var metadata = mapper.treeToValue(data.get("metadata"), WebhookMetaData.class);
+            final var webAuth = mapper
+                    .treeToValue(data.get("authorization"), WebhookAuthorization.class);
+
+            final var detail = paymentDetail(data, metadata, reference, amount);
+            address(metadata, detail);
+            paymentAuthorization(webAuth, detail);
+            orderDetail(detail, reference);
+
+        } catch (JsonProcessingException e) {
+            log.error(e.getMessage());
+            throw new CustomServerException("error saving a PaymentDetail");
+        }
+    }
+
+    /**
+     * Creates and saves a {@link PaymentDetail} object based on the webhook metadata, transaction data,
+     * and user information.
+     *
+     * @param data      The {@link JsonNode} containing transaction data.
+     * @param metadata  The metadata extracted from the webhook containing customer information.
+     * @param reference The reference ID associated with the payment.
+     * @param amount    The amount of the payment.
+     * @return The saved {@link PaymentDetail} object.
+     */
+    private PaymentDetail paymentDetail(
+            final JsonNode data,
+            final WebhookMetaData metadata,
+            final String reference,
+            final BigDecimal amount
+    ) {
+        // find user
+        final var user = userService.userByPrincipal(metadata.principal()).orElse(null);
+
+        final var currency = CapstoneCurrency.valueOf(data.get("currency").textValue().toUpperCase());
+
+        // save PaymentDetail
+        return paymentDetailRepository.save(
+                PaymentDetail.builder()
+                        .fullname(metadata.name())
+                        .email(metadata.email())
+                        .phone(metadata.phone())
+                        .referenceId(reference)
+                        .currency(currency)
+                        .amount(WebHookUtil.fromLowestCurrencyFormToCurrency(amount, currency))
+                        .paymentProvider("Paystack")
+                        .paymentStatus(PaymentStatus.CONFIRMED)
+                        .paidAt(data.get("paid_at").textValue())
+                        .createAt(CustomUtil.TO_GREENWICH.apply(null))
+                        .userId(user != null ? user.userId() : null)
+                        .build()
+        );
+    }
+
+    /**
+     * Saves an {@link Address} object based on the {@link WebhookMetaData} and {@link PaymentDetail}.
+     *
+     * @param metadata The metadata extracted from the webhook containing customer information.
+     * @param detail   an associated property of an {@link Address}.
+     */
+    private void address(final WebhookMetaData metadata, final PaymentDetail detail) {
+        addressRepository.save(new Address(
+                detail.paymentId(),
+                metadata.address(),
+                metadata.city(),
+                metadata.state(),
+                metadata.postcode(),
+                metadata.country(),
+                metadata.deliveryInfo())
+        );
+    }
+
+    /**
+     * Saves an {@link PaymentAuthorization} object based on the {@link WebhookAuthorization} and
+     * {@link PaymentDetail}.
+     *
+     * @param auth   The metadata extracted from the webhook containing payment information.
+     * @param detail an associated property of an {@link PaymentAuthorization}.
+     */
+    private void paymentAuthorization(final WebhookAuthorization auth, final PaymentDetail detail) {
+        paymentAuthorizationRepository.save(
+                PaymentAuthorization.builder()
+                        .authorizationCode(auth.authorization_code())
+                        .bin(auth.bin())
+                        .last4(auth.last4())
+                        .expirationMonth(auth.exp_month())
+                        .expirationYear(auth.exp_year())
+                        .channel(auth.channel())
+                        .cardType(auth.card_type())
+                        .bank(auth.bank())
+                        .countryCode(auth.country_code())
+                        .brand(auth.brand())
+                        .isReusable(auth.reusable())
+                        .signature(auth.signature())
+                        .authorizationId(detail.paymentId())
+                        .build()
+        );
+    }
+
+    /**
+     * Saves {@link OrderDetail}s and deletes the items currently bought in the users cart and
+     * {@link OrderReservation}.
+     *
+     * @param detail    The {@link PaymentDetail} associated with the order.
+     * @param reference The reference id associated to an {@link OrderReservation}.
+     */
+    private void orderDetail(final PaymentDetail detail, final String reference) {
+        final var reservations = orderReservationRepository.allReservationsByReference(reference);
+
+        // save OrderDetails
+        reservations.forEach(obj -> orderDetailRepository
+                .saveOrderDetail(obj.qty(), obj.skuId(), detail.paymentId()));
+
+        // delete CartItems
+        cartRepository.cartIdsByOrderReservationReference(reference)
+                .forEach(cartRepository::deleteById);
+
+        // delete OrderReservations
+        reservations.forEach(o -> orderReservationRepository.deleteById(o.reservationId()));
+    }
+
+}
